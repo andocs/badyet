@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 2 Auth, DB and plans
-- **Gate:** Gate 2: Slice 2 awaiting approval
-- **Next action:** User creates Supabase project, applies migration, fills .env.local, tests login + plans; then approve and start Slice 3 (Pay)
-- **User to-do now:** See handoff block: Supabase project, run migration SQL, .env.local, add user, disable signups
+- **Active slice / milestone:** 3 Pay
+- **Gate:** building
+- **Next action:** Build Slice 3 (Pay screen: annual base to per-cutoff net)
+- **User to-do now:** Slice 2 setup (Supabase) still needed before login/plans can be tried
 
 ## 3. Execution log
 
@@ -35,6 +35,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:16 | slice-1 | Revision at Gate 2: user reported dashboard not centered / not spanning page width. Fixed (content fills column, max 1680px centered). Runner PASS. | 1794447
 - 2026-11-19 21:16 | slice-1 | Gate 2 APPROVED by user. Slice 1 merged to master (local, no remote). | 1794447
 - 2026-11-19 21:20 | slice-2 | Slice 2 built: proxy.ts login gate, magic-link login (shouldCreateUser false, ALLOWED_EMAIL checked in action, callback and proxy), plans migration with RLS + activate_plan(), plans CRUD pages/actions, Past plans read-only. Disabled cacheComponents (not needed). Runner PASS 70 tests, typecheck, lint, build. Not tested against live Supabase. | 01e9ad8
+- 2026-11-19 21:29 | slice-2 | Gate 2 APPROVED by user. Slice 2 merged to master (local). | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

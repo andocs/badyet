@@ -206,3 +206,13 @@ h2 { font-size: 18px; margin: 0 0 12px; }
 .rail .signout .btn { width: 100%; }
 a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 @media (max-width: 760px) { .form-row { grid-template-columns: 1fr; } }
+
+/* pay */
+.paytable { width: 100%; border-collapse: collapse; }
+.paytable th, .paytable td { padding: 10px 0; border-top: 1px solid var(--line); text-align: right; }
+.paytable thead th { border-top: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.paytable tbody th { text-align: left; font-weight: 600; }
+.paytable tr.strong th, .paytable tr.strong td { font-weight: 800; border-top: 2px solid var(--ink); }
+.notice.warn { background: color-mix(in srgb, var(--bucket-3) 16%, transparent); color: var(--ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.input:disabled { opacity: 0.6; cursor: not-allowed; }
