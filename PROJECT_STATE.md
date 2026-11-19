@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 9 Dashboard on real data
-- **Gate:** building
-- **Next action:** Build Slice 9 (replace sample fixture with real plan data)
-- **User to-do now:** Apply migration 20261127000000_savings.sql if not done
+- **Gate:** Gate 2: Slice 9 awaiting approval
+- **Next action:** User checks the dashboard on real data; on approval merge, then Phase 3 revisions
+- **User to-do now:** Try the dashboard with your real data
 
 ## 3. Execution log
 
@@ -37,6 +37,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:19 | slice-7 | Gate 2 APPROVED by user. Slice 7 merged to master (local). Note: a git remote is now configured but the last push failed with a server-side write error; commits are safe locally. | -
 - 2026-11-19 22:21 | slice-8 | Slice 8 built: savings_settings + savings_overrides tables with RLS, lib/savings (settings parsing, forecast wiring over domain allocateForecast), SavingsChart, /savings page. Runner PASS 127 tests, typecheck, lint, build. | 83231c1
 - 2026-11-19 22:21 | slice-8 | Gate 2 APPROVED by user. Slice 8 merged to master. | -
+- 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -52,7 +53,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 366,967 | 1,684,541 | 86,317 | 512,501 | 63,253,470 | 353,832 |  |
+| **Cumulative** | 380,180 | 1,791,495 | 89,767 | 540,628 | 70,615,073 | 375,273 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -62,6 +63,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
+| Slice 9 | 13,213 | 106,954 | 3,450 | 25,855 | 6,810,767 | 19,024 |  |
 
 <!-- END SUMMARY -->
 
@@ -107,6 +109,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 9: what you do now
+1. Get the code:   git checkout slice/9-dashboard-data   (merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       no new migrations. All earlier ones (plans ... savings) must be applied.
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000
+6. Check these:    (a) the greeting, big "Left to send", wallet cards and Pending transfers now come from your real budget lines for the current cutoff (1st = days 1 to 15, 2nd = 16 to month end); (b) tap "Pending · tap to mark sent" on a transfer, or "Mark all sent": the balance drops, confetti fires, Pip smiles, and the same ticks show on the Cutoff (Transfer) page; (c) the Emergency fund forecast chart uses your Savings settings (or invites you to set them up); (d) the 13th month ring counts days to your next 13th month event with its estimated net; (e) "Spend by cutoff" shows your Essentials / Wants / Savings split for both cutoffs; (f) with no plan, no lines or no savings setup you see friendly prompts instead of empty charts; (g) Theme button and phone width still work
+7. Known limits:   the cutoff split (1st = days 1 to 15) is an assumption (open question Q1); not tested against a live Supabase from my side; tax table, PhilHealth and the 90,000 bonus cap are unverified (Q2); all amounts you see are only as good as what you entered; sheet import was not built (you type your data in)
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 8: what you do now
 1. Get the code:   git checkout slice/8-savings   (local branch; merge to master after you approve)
