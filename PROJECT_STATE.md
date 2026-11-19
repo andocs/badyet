@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 7 Bonuses
-- **Gate:** building
-- **Next action:** Build Slice 7 (13th month and CIP with allocation checklists)
-- **User to-do now:** Apply migration 20261125000000_installments_subscriptions.sql if not done
+- **Gate:** Gate 2: Slice 7 awaiting approval
+- **Next action:** User applies windfalls migration and tries /bonuses; on approval merge and start Slice 8 (Savings forecast)
+- **User to-do now:** Run migration 20261126000000_windfalls.sql; try /bonuses
 
 ## 3. Execution log
 
@@ -33,6 +33,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:04 | slice-5 | Gate 2 APPROVED by user. Slice 5 merged to master (local). | -
 - 2026-11-19 22:09 | slice-6 | Slice 6 built: installments (domain schedule with interest) + subscriptions tables with RLS, pages, Sync to budget (budget_lines.source), shared WalletSelect. Runner PASS 108 tests, typecheck, lint, build. | 889c44e
 - 2026-11-19 22:11 | slice-6 | Gate 2 APPROVED by user. Slice 6 merged to master (local). | -
+- 2026-11-19 22:13 | slice-7 | Slice 7 built: windfall_events + windfall_allocations tables with RLS, lib/windfall (net via domain netCutoff, shared yearly 90k exemption, CIP via domain cipGross), /bonuses page with allocation checklists, buildItems exported from pay compute. Runner PASS 119 tests, typecheck, lint, build. | 3a5514f
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -48,7 +49,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 350,185 | 1,584,667 | 83,368 | 460,551 | 54,358,718 | 315,288 |  |
+| **Cumulative** | 356,734 | 1,649,493 | 85,497 | 487,638 | 58,960,345 | 335,716 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -56,6 +57,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
+| Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 
 <!-- END SUMMARY -->
 
@@ -101,6 +103,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 7: what you do now
+1. Get the code:   git checkout slice/7-bonuses   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261126000000_windfalls.sql (adds tables windfall_events and windfall_allocations; earlier migrations must be applied). Rollback: drop table public.windfall_allocations; drop table public.windfall_events;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/bonuses (needs an active plan and Pay set up)
+6. Check these:    (a) add a 13th month (leave gross blank = one month of your basic) with a pay date and cutoff: it shows gross, tax-free part, ESTIMATED net, and what is left to allocate; (b) add a CIP: eligible earnings, component % (e.g. 13.81505) and multiplier (e.g. 1.25) give the gross (600,000 x 13.81505% x 1.25 = 103,612.88); (c) under an event, add allocations ("Emergency fund 20,000" etc.): "Left to allocate" goes down, and over-allocating turns it red; (d) tap the circle to mark an allocation as moved: it does NOT change what is left (that is the old app's rule); (e) the yearly 90,000 tax-free cap is shared across events in the same year, so a second bonus in the same year shows less tax-free
+7. Known limits:   net amounts are estimates: the 90,000 cap and the method of taxing a bonus (annualizing the cutoff) come from your old app and are unverified (open question Q2); compare with a real payslip; tax overrides on regular pay are not applied to bonus estimates; not tested against live Supabase
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 6: what you do now
 1. Get the code:   git checkout slice/6-installments   (local branch; merge to master after you approve)
