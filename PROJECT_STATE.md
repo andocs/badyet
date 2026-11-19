@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 6 Installments and subscriptions
-- **Gate:** Gate 2: Slice 6 awaiting approval
-- **Next action:** User applies installments migration and tries it; on approval merge and start Slice 7 (Bonuses)
-- **User to-do now:** Run migration 20261125000000_installments_subscriptions.sql; try /installments and /subscriptions
+- **Active slice / milestone:** 7 Bonuses
+- **Gate:** building
+- **Next action:** Build Slice 7 (13th month and CIP with allocation checklists)
+- **User to-do now:** Apply migration 20261125000000_installments_subscriptions.sql if not done
 
 ## 3. Execution log
 

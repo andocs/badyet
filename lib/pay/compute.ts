@@ -32,7 +32,8 @@ function withTax(pay: CutoffPay, tax: Money | null): CutoffPay {
   return { ...pay, tax, netBeforePlan, takeHome: sub(netBeforePlan, pay.plan) };
 }
 
-export function computePay(profile: PayProfile): PayResult {
+/** The regular pay items for a profile (basic, allowance, contributions, savings plan). */
+export function buildItems(profile: PayProfile): { items: PayItem[]; basic: Money; philhealth: Money } {
   const basic = divRound(profile.annualBase, CUTOFFS_PER_YEAR);
   const philhealth = profile.philhealthOverride ?? percentOfBasic(basic, PHILHEALTH_BP);
   const items: PayItem[] = [
@@ -43,6 +44,11 @@ export function computePay(profile: PayProfile): PayResult {
     { name: "Pag-IBIG", kind: "deduction", amount: profile.pagibig, scope: "second" },
     { name: "Savings plan", kind: "contribution", amount: percentOfBasic(basic, profile.savingsPlanBp), scope: "both" },
   ];
+  return { items, basic, philhealth };
+}
+
+export function computePay(profile: PayProfile): PayResult {
+  const { items, basic, philhealth } = buildItems(profile);
   const first = withTax(netCutoff(items, "first", TAX_ROWS), profile.taxOverrideFirst);
   const second = withTax(netCutoff(items, "second", TAX_ROWS), profile.taxOverrideSecond);
   const month: CutoffPay = {
