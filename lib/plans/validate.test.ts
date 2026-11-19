@@ -43,3 +43,17 @@ describe("isUuid", () => {
     expect(isUuid("1; drop table plans")).toBe(false);
   });
 });
+
+describe("ongoing plans (no end date)", () => {
+  it("accepts a blank end date as an ongoing plan", () => {
+    const r = validatePlan({ name: "Current", startDate: "2026-12-10", endDate: "" });
+    expect(r).toEqual({ ok: true, value: { name: "Current", startDate: "2026-12-10", endDate: null } });
+  });
+  it("still rejects a bad end date when one is given", () => {
+    expect(validatePlan({ name: "A", startDate: "2026-12-10", endDate: "nope" }).ok).toBe(false);
+    expect(validatePlan({ name: "A", startDate: "2026-12-10", endDate: "2026-12-01" }).ok).toBe(false);
+  });
+  it("never treats an ongoing plan as past", () => {
+    expect(isPastPlan(null, "2099-01-01")).toBe(false);
+  });
+});

@@ -9,3 +9,9 @@ describe("formatRange", () => {
     expect(formatRange("2026-12-16", "2027-01-15")).toBe("Dec 16, 2026 to Jan 15, 2027");
   });
 });
+
+describe("formatRange ongoing", () => {
+  it("shows onwards when there is no end date", () => {
+    expect(formatRange("2026-12-10", null)).toBe("Dec 10, 2026 onwards");
+  });
+});

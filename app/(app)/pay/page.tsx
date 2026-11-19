@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { formatPesos, money, type Money } from "@/lib/domain/money";
-import { computePay, type PayProfile } from "@/lib/pay/compute";
+import { PayBreakdown } from "@/components/pay-breakdown";
+import { PayWizard, type WizardInitial } from "@/components/pay-wizard";
+import { formatPesos, money } from "@/lib/domain/money";
+import type { PayProfile } from "@/lib/pay/compute";
 import { formatRange } from "@/lib/plans/format";
 import { isPastPlan } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
@@ -12,8 +14,7 @@ const ERRORS: Record<string, string> = {
   past: "This plan has ended, so its pay is read-only.",
 };
 
-const peso = (m: Money) => formatPesos(m, { symbol: false });
-const field = (m: number | null | undefined) => (m === null || m === undefined ? "" : peso(money(m)));
+const field = (m: number | null | undefined) => (m === null || m === undefined ? "" : formatPesos(money(m), { symbol: false }));
 
 export default async function PayPage({ searchParams }: PageProps<"/pay">) {
   const params = await searchParams;
@@ -44,6 +45,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
   }
 
   const past = isPastPlan(plan.end_date);
+  const wizardOpen = !past && (!row || params.edit === "1");
   const profile: PayProfile | null = row
     ? {
         annualBase: money(row.annual_base),
@@ -56,7 +58,16 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
         taxOverrideSecond: row.tax_override_second === null ? null : money(row.tax_override_second),
       }
     : null;
-  const result = profile ? computePay(profile) : null;
+  const initial: WizardInitial = {
+    annualBase: field(row?.annual_base),
+    allowanceSecond: field(row?.allowance_second),
+    sss: field(row?.sss),
+    pagibig: field(row?.pagibig),
+    savingsPlanPercent: row ? String(row.savings_plan_bp / 100) : "",
+    philhealthOverride: field(row?.philhealth_override),
+    taxOverrideFirst: field(row?.tax_override_first),
+    taxOverrideSecond: field(row?.tax_override_second),
+  };
 
   return (
     <main className="main">
@@ -64,83 +75,26 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
         <div>
           <span className="lab">{plan.name} · {formatRange(plan.start_date, plan.end_date)}</span>
           <h1 style={{ marginTop: 6 }}>Pay</h1>
-          <p className="sub">From your annual base to what lands in your account, cutoff by cutoff.</p>
+          <p className="sub">From your base salary to what lands in your account, cutoff by cutoff.</p>
         </div>
+        {!wizardOpen && !past && <Link href="/pay?edit=1" className="btn ghost">Edit pay</Link>}
       </div>
       {error && <p className="notice err" role="alert" style={{ marginBottom: 18 }}>{error}</p>}
       {params.saved === "1" && <p className="notice ok" role="status" style={{ marginBottom: 18 }}>Saved.</p>}
 
-      <div className="split">
-        <section className="card" aria-labelledby="in-h">
-          <h2 id="in-h">Your numbers</h2>
-          <form action={savePay} className="form">
-            <input type="hidden" name="planId" value={plan.id} />
-            <label className="field"><span className="lab">Annual base salary</span><input className="input" name="annualBase" inputMode="decimal" required disabled={past} defaultValue={field(row?.annual_base)} placeholder="600,000.00" /></label>
-            <label className="field"><span className="lab">Allowance, 2nd cutoff (not taxed)</span><input className="input" name="allowanceSecond" inputMode="decimal" disabled={past} defaultValue={field(row?.allowance_second)} placeholder="0.00" /></label>
-            <label className="field"><span className="lab">SSS, 2nd cutoff</span><input className="input" name="sss" inputMode="decimal" disabled={past} defaultValue={field(row?.sss)} placeholder="0.00" /></label>
-            <label className="field"><span className="lab">Pag-IBIG, 2nd cutoff</span><input className="input" name="pagibig" inputMode="decimal" disabled={past} defaultValue={field(row?.pagibig)} placeholder="0.00" /></label>
-            <label className="field"><span className="lab">Savings plan, % of basic (not tax-affecting)</span><input className="input" name="savingsPlanPercent" inputMode="decimal" disabled={past} defaultValue={row ? String(row.savings_plan_bp / 100) : ""} placeholder="0" /></label>
-            <p className="sub" style={{ margin: 0 }}>Overrides: leave blank to use the calculated value.</p>
-            <label className="field"><span className="lab">PhilHealth override</span><input className="input" name="philhealthOverride" inputMode="decimal" disabled={past} defaultValue={field(row?.philhealth_override)} placeholder={result ? peso(result.philhealth) : "calculated"} /></label>
-            <label className="field"><span className="lab">Tax override, 1st cutoff</span><input className="input" name="taxOverrideFirst" inputMode="decimal" disabled={past} defaultValue={field(row?.tax_override_first)} placeholder={result ? peso(result.first.tax) : "calculated"} /></label>
-            <label className="field"><span className="lab">Tax override, 2nd cutoff</span><input className="input" name="taxOverrideSecond" inputMode="decimal" disabled={past} defaultValue={field(row?.tax_override_second)} placeholder={result ? peso(result.second.tax) : "calculated"} /></label>
-            {past ? (
-              <p className="sub" style={{ margin: 0 }}>This plan has ended, so pay is read-only.</p>
-            ) : (
-              <button type="submit" className="btn">Save pay</button>
-            )}
-          </form>
-        </section>
-
-        <section className="card" aria-labelledby="out-h">
-          <h2 id="out-h">What you take home</h2>
-          {!result || !profile ? (
-            <p className="sub" style={{ margin: 0 }}>Enter your annual base to see the breakdown.</p>
-          ) : (
-            <>
-              <table className="paytable">
-                <thead>
-                  <tr>
-                    <th scope="col"><span className="sr-only">Line</span></th>
-                    <th scope="col">1st cutoff</th>
-                    <th scope="col">2nd cutoff</th>
-                    <th scope="col">Month</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <PayRow label="Basic pay" a={result.first.taxable} b={result.second.taxable} c={result.month.taxable} />
-                  <PayRow label="Allowance" a={result.first.nontaxable} b={result.second.nontaxable} c={result.month.nontaxable} />
-                  <PayRow label="SSS, PhilHealth, Pag-IBIG" a={result.first.mandatory} b={result.second.mandatory} c={result.month.mandatory} minus />
-                  <PayRow label={`Withholding tax${profile.taxOverrideFirst !== null || profile.taxOverrideSecond !== null ? " (override)" : ""}`} a={result.first.tax} b={result.second.tax} c={result.month.tax} minus />
-                  <PayRow label="Net to budget" a={result.first.netBeforePlan} b={result.second.netBeforePlan} c={result.month.netBeforePlan} strong />
-                  <PayRow label="Savings plan" a={result.first.plan} b={result.second.plan} c={result.month.plan} minus />
-                  <PayRow label="Lands in your account" a={result.first.takeHome} b={result.second.takeHome} c={result.month.takeHome} strong />
-                </tbody>
-              </table>
-              <p className="sub">
-                PhilHealth {peso(result.philhealth)}
-                {profile.philhealthOverride !== null ? " (override)" : " (5% of basic)"}. Basic per cutoff {peso(result.basicPerCutoff)}.
-              </p>
-              <p className="notice warn">
-                The tax table (TRAIN, as of 2023) and the 5% PhilHealth rate are carried over from your old app and not re-checked
-                against current rules. Use the override fields if your payslip differs.
-              </p>
-            </>
-          )}
-        </section>
-      </div>
+      <section className="card" aria-labelledby="pay-h" style={{ maxWidth: wizardOpen ? 640 : undefined }}>
+        <h2 id="pay-h" className={wizardOpen ? "sr-only" : undefined}>{wizardOpen ? "Pay setup" : "What you take home"}</h2>
+        {wizardOpen ? (
+          <PayWizard planId={plan.id} initial={initial} action={savePay} canCancel={!!row} />
+        ) : profile ? (
+          <>
+            <PayBreakdown profile={profile} />
+            {past && <p className="sub">This plan has ended, so pay is read-only.</p>}
+          </>
+        ) : (
+          <p className="sub" style={{ margin: 0 }}>This plan ended before any pay was entered, so there is nothing to show.</p>
+        )}
+      </section>
     </main>
-  );
-}
-
-function PayRow({ label, a, b, c, minus, strong }: { label: string; a: Money; b: Money; c: Money; minus?: boolean; strong?: boolean }) {
-  const cell = (m: Money) => `${minus && m !== 0 ? "−" : ""}${peso(m)}`;
-  return (
-    <tr className={strong ? "strong" : undefined}>
-      <th scope="row">{label}</th>
-      <td className="num">{cell(a)}</td>
-      <td className="num">{cell(b)}</td>
-      <td className="num">{cell(c)}</td>
-    </tr>
   );
 }

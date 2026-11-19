@@ -24,7 +24,7 @@ export default async function EditPlanPage({ params, searchParams }: PageProps<"
       </div>
       {query.error === "invalid" && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
-          Check the plan: it needs a name, valid dates, and the end date cannot be before the start date.
+          Check the plan: it needs a name and a valid start date. If you set an end date, it cannot be before the start date.
         </p>
       )}
       <section className="card">
@@ -32,7 +32,7 @@ export default async function EditPlanPage({ params, searchParams }: PageProps<"
           <input type="hidden" name="id" value={plan.id} />
           <label className="field"><span className="lab">Name</span><input className="input" name="name" maxLength={60} required defaultValue={plan.name} disabled={past} /></label>
           <label className="field"><span className="lab">Starts</span><input className="input" type="date" name="startDate" required defaultValue={plan.start_date} disabled={past} /></label>
-          <label className="field"><span className="lab">Ends</span><input className="input" type="date" name="endDate" required defaultValue={plan.end_date} disabled={past} /></label>
+          <label className="field"><span className="lab">Ends (blank = ongoing)</span><input className="input" type="date" name="endDate" defaultValue={plan.end_date ?? ""} disabled={past} /></label>
           {!past && <button type="submit" className="btn">Save changes</button>}
         </form>
       </section>

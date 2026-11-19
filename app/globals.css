@@ -216,3 +216,14 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .notice.warn { background: color-mix(in srgb, var(--bucket-3) 16%, transparent); color: var(--ink); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* pay wizard */
+.steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 4px; flex-wrap: wrap; }
+.steps li { padding: 4px 12px; border-radius: var(--radius-ctl); background: var(--soft); color: var(--muted); font-weight: 600; font-size: 13px; }
+.steps li[aria-current="step"] { background: var(--tint); color: var(--accent-text); }
+.steps li.done { color: var(--ink); }
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-ctl); overflow: hidden; width: fit-content; }
+.segmented button { font: inherit; font-weight: 700; border: 0; background: transparent; color: var(--muted); padding: 9px 20px; min-height: 40px; cursor: pointer; }
+.segmented button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.wizard-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; }
+.form h2 { margin: 0; }

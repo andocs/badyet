@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { activatePlan, createPlan, deletePlan, duplicatePlan } from "./actions";
 
 const ERRORS: Record<string, string> = {
-  invalid: "Check the plan: it needs a name, valid dates, and the end date cannot be before the start date.",
+  invalid: "Check the plan: it needs a name and a valid start date. If you set an end date, it cannot be before the start date.",
   failed: "That did not work. Try again.",
   past: "Past plans are read-only. Duplicate it to make an editable copy.",
   active: "You cannot delete the active plan. Activate another plan first.",
@@ -36,7 +36,7 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
         <form action={createPlan} className="form-row">
           <label className="field"><span className="lab">Name</span><input className="input" name="name" maxLength={60} required placeholder="December 2026" /></label>
           <label className="field"><span className="lab">Starts</span><input className="input" type="date" name="startDate" required /></label>
-          <label className="field"><span className="lab">Ends</span><input className="input" type="date" name="endDate" required /></label>
+          <label className="field"><span className="lab">Ends (blank = ongoing)</span><input className="input" type="date" name="endDate" /></label>
           <button type="submit" className="btn">Create</button>
         </form>
       </section>

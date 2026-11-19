@@ -3,7 +3,8 @@
 export interface PlanInput {
   name: string;
   startDate: string;
-  endDate: string;
+  /** null = an ongoing plan with no end date. */
+  endDate: string | null;
 }
 
 export type PlanResult = { ok: true; value: PlanInput } | { ok: false; error: string };
@@ -26,10 +27,11 @@ export function isUuid(text: string): boolean {
 export function validatePlan(raw: { name?: unknown; startDate?: unknown; endDate?: unknown }): PlanResult {
   const name = typeof raw.name === "string" ? raw.name.trim() : "";
   const startDate = typeof raw.startDate === "string" ? raw.startDate : "";
-  const endDate = typeof raw.endDate === "string" ? raw.endDate : "";
+  const endRaw = typeof raw.endDate === "string" ? raw.endDate.trim() : "";
+  const endDate = endRaw === "" ? null : endRaw;
   if (name.length < 1 || name.length > 60) return { ok: false, error: "Give the plan a name (1 to 60 characters)." };
-  if (!isValidIsoDate(startDate) || !isValidIsoDate(endDate)) return { ok: false, error: "Pick a valid start and end date." };
-  if (endDate < startDate) return { ok: false, error: "The end date cannot be before the start date." };
+  if (!isValidIsoDate(startDate) || (endDate !== null && !isValidIsoDate(endDate))) return { ok: false, error: "Pick a valid start date, and an end date if the plan has one." };
+  if (endDate !== null && endDate < startDate) return { ok: false, error: "The end date cannot be before the start date." };
   return { ok: true, value: { name, startDate, endDate } };
 }
 
@@ -38,7 +40,7 @@ export function todayManila(now: Date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
 
-// Past plans (ended before today) are read-only.
-export function isPastPlan(endDate: string, today: string = todayManila()): boolean {
-  return endDate < today;
+// Past plans (ended before today) are read-only. A plan with no end date never ends.
+export function isPastPlan(endDate: string | null, today: string = todayManila()): boolean {
+  return endDate !== null && endDate < today;
 }
