@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 4 Budget split
-- **Gate:** building
-- **Next action:** Build Slice 4 (budget lines per cutoff, left-to-budget, monthly roll-up)
-- **User to-do now:** Apply pending Supabase migrations (plans, pay_profiles, plans_open_ended) if not done
+- **Gate:** Gate 2: Slice 4 awaiting approval
+- **Next action:** User applies budget_lines migration and tries /budget; on approval merge and start Slice 5 (To Transfer)
+- **User to-do now:** Run migration 20261123000000_budget_lines.sql; try /budget
 
 ## 3. Execution log
 
@@ -27,6 +27,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:52 | slice-3 | User reported Pay/Plans not saving. Cannot test against live Supabase from here. Added dev-only Technical detail line + server console.error for DB errors in plans and pay actions. Runner PASS 85 tests. Waiting for user to retry and report the message. | 6a160b2
 - 2026-11-19 21:54 | slice-3 | Bug fix: pay wizard auto-submitted when clicking Next on step 3 (button type swapped button->submit mid-click). Fixed with distinct React keys. Runner PASS 85 tests. | 8762ef0
 - 2026-11-19 21:55 | slice-3 | Gate 2 APPROVED by user. Slice 3 (with revisions and fixes) merged to master (local). | -
+- 2026-11-19 21:57 | slice-4 | Slice 4 built: budget_lines migration with RLS, lib/budget (validation, summary on domain budgetLeft), /budget screen (cutoff tabs, three buckets, add/edit/delete, left-to-budget states, month roll-up), shared requireAuthed helper. Runner PASS 93 tests, typecheck, lint, build. | 0dad2b8
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -42,11 +43,12 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 323,607 | 1,435,589 | 78,530 | 384,684 | 41,057,860 | 255,541 |  |
+| **Cumulative** | 328,459 | 1,473,943 | 79,381 | 404,424 | 44,501,827 | 271,980 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
 | Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
+| Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
 
 <!-- END SUMMARY -->
 
@@ -92,6 +94,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 4: what you do now
+1. Get the code:   git checkout slice/4-budget   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261123000000_budget_lines.sql (adds table budget_lines with row-level security; earlier migrations must already be applied). Rollback: drop table public.budget_lines;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/budget (needs an active plan and Pay set up)
+6. Check these:    (a) the top card shows net pay to budget for the chosen cutoff and "X has no job yet" until you allocate it all; (b) add lines under Essentials, Wants and Savings, edit an amount and Save, delete one; (c) when lines add up to the net it says "Every peso has a job", and if you overshoot it says "Over by" in red; (d) switch 1st / 2nd cutoff, each has its own lines; (e) Month roll-up shows net, budgeted and left for 1st, 2nd and the month; (f) a negative amount (like -2,099) is accepted for reimbursements
+7. Known limits:   wallets per line and the To Transfer checklist come in Slice 5; lines are typed in by hand (no import from your sheet yet); not tested against live Supabase; the net amount is "net to budget" (before the payroll savings plan), as the old sheet budgeted
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 3 (revision): what you do now
 1. Get the code:   git checkout slice/3-pay   (local branch; merge to master after you approve)
