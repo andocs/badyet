@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 8 Savings forecast
-- **Gate:** Gate 2: Slice 8 awaiting approval
-- **Next action:** User applies savings migration and tries /savings; on approval merge and start Slice 9 (wire dashboard to real data)
-- **User to-do now:** Run migration 20261127000000_savings.sql; try /savings
+- **Active slice / milestone:** 9 Dashboard on real data
+- **Gate:** building
+- **Next action:** Build Slice 9 (replace sample fixture with real plan data)
+- **User to-do now:** Apply migration 20261127000000_savings.sql if not done
 
 ## 3. Execution log
 

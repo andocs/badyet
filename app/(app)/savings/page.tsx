@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { SavingsChart } from "@/components/savings-chart";
 import type { GoalId } from "@/lib/domain/allocator";
-import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
+import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { formatRange } from "@/lib/plans/format";
 import { isPastPlan } from "@/lib/plans/validate";
-import { runForecast } from "@/lib/savings/forecast";
-import { GOAL_LABEL, PRIORITIES, isGoal, priorityLabel, type SavingsInput } from "@/lib/savings/input";
+import { loadSavings } from "@/lib/savings/load";
+import { GOAL_LABEL, PRIORITIES, priorityLabel } from "@/lib/savings/input";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonth } from "@/lib/transfer/month";
-import { computeEvents } from "@/lib/windfall/compute";
 import { saveSettings, setOverride } from "./actions";
 
 const ERRORS: Record<string, string> = {
@@ -43,63 +42,8 @@ export default async function SavingsPage({ searchParams }: PageProps<"/savings"
     );
   }
 
-  const [{ data: row }, { data: overrideRows }, { data: lineRows }, { data: pay }, { data: cipRows }] = await Promise.all([
-    supabase.from("savings_settings").select("*").eq("plan_id", plan.id).maybeSingle(),
-    supabase.from("savings_overrides").select("month,goal").eq("plan_id", plan.id),
-    supabase.from("budget_lines").select("amount").eq("plan_id", plan.id).eq("bucket", "savings"),
-    supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle(),
-    supabase.from("windfall_events").select("*").eq("plan_id", plan.id).eq("kind", "cip"),
-  ]);
-
+  const { row, overrides, monthlyPool, cipByMonth, savings, results } = await loadSavings(supabase, plan.id);
   const past = isPastPlan(plan.end_date);
-  const monthlyPool = sum((lineRows ?? []).map((l) => money(l.amount)));
-  const overrides: Record<string, GoalId> = {};
-  for (const o of overrideRows ?? []) if (isGoal(o.goal)) overrides[o.month] = o.goal;
-
-  // CIP net lands in the pool of the month it is paid (needs Pay set up for the estimate).
-  const cipByMonth: Record<string, Money> = {};
-  if (pay && cipRows && cipRows.length > 0) {
-    const profile = {
-      annualBase: money(pay.annual_base),
-      allowanceSecond: money(pay.allowance_second),
-      sss: money(pay.sss),
-      pagibig: money(pay.pagibig),
-      savingsPlanBp: pay.savings_plan_bp,
-      philhealthOverride: pay.philhealth_override === null ? null : money(pay.philhealth_override),
-      taxOverrideFirst: null,
-      taxOverrideSecond: null,
-    };
-    const events = cipRows.map((e) => ({
-      id: e.id as string,
-      kind: "cip" as const,
-      cutoff: e.cutoff as "first" | "second",
-      payDate: e.pay_date as string,
-      gross: e.gross === null ? null : money(e.gross),
-      cipEligible: e.cip_eligible === null ? null : money(e.cip_eligible),
-      cipComponentNum: e.cip_component_num as number | null,
-      cipMultiplierNum: e.cip_multiplier_num as number | null,
-    }));
-    computeEvents(profile, events).forEach((r, i) => {
-      const m = events[i].payDate.slice(0, 7);
-      cipByMonth[m] = money((cipByMonth[m] ?? 0) + r.net);
-    });
-  }
-
-  const savings: SavingsInput | null = row
-    ? {
-        startMonth: row.start_month,
-        start: { ef: money(row.start_ef), travel: money(row.start_travel), wants: money(row.start_wants) },
-        priority: row.priority,
-        settings: {
-          efTranche: money(row.ef_tranche),
-          efHardCap: money(row.ef_hard_cap),
-          travelCap: money(row.travel_cap),
-          wantsCap: money(row.wants_cap),
-          defaultOrder: String(row.priority).split(",") as GoalId[],
-        },
-      }
-    : null;
-  const results = savings ? runForecast({ savings, monthlyPool, cipByMonth, overrides }) : [];
   const field = (m: number | null | undefined) => (m === null || m === undefined || m === 0 ? "" : peso(money(m)));
 
   return (
