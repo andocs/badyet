@@ -1,9 +1,12 @@
 import type { Cutoff } from "@/lib/budget/validate";
 import { monthLabel } from "@/lib/transfer/month";
 
-// ASSUMPTION (open question Q1): the 1st cutoff is the 1st to the 15th, the 2nd is the 16th to month end.
-export function currentCutoff(todayIso: string): Cutoff {
-  return Number(todayIso.slice(8, 10)) <= 15 ? "first" : "second";
+// The 1st cutoff runs from day 1 up to the day before `secondStart`; the 2nd from `secondStart` to month end.
+// `secondStart` is the user's setting (default 16, so the 1st cutoff is 1 to 15).
+export const DEFAULT_SECOND_START = 16;
+
+export function currentCutoff(todayIso: string, secondStart: number = DEFAULT_SECOND_START): Cutoff {
+  return Number(todayIso.slice(8, 10)) < secondStart ? "first" : "second";
 }
 
 export function daysInMonthOf(month: string): number {
@@ -11,9 +14,11 @@ export function daysInMonthOf(month: string): number {
   return new Date(Date.UTC(y, m, 0)).getUTCDate();
 }
 
-export function cutoffLabel(month: string, cutoff: Cutoff): string {
+export function cutoffLabel(month: string, cutoff: Cutoff, secondStart: number = DEFAULT_SECOND_START): string {
   const mon = monthLabel(month).split(" ")[0];
-  return cutoff === "first" ? `First cutoff · ${mon} 1 to 15` : `Second cutoff · ${mon} 16 to ${daysInMonthOf(month)}`;
+  return cutoff === "first"
+    ? `First cutoff · ${mon} 1 to ${secondStart - 1}`
+    : `Second cutoff · ${mon} ${secondStart} to ${daysInMonthOf(month)}`;
 }
 
 // Whole days from `fromIso` to `toIso` (both YYYY-MM-DD). Negative if `toIso` is earlier.

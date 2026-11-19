@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Dashboard, type DashData } from "@/components/dashboard";
 import { money } from "@/lib/domain/money";
-import { currentCutoff, cutoffLabel, daysBetween } from "@/lib/dashboard/helpers";
+import { DEFAULT_SECOND_START, currentCutoff, cutoffLabel, daysBetween } from "@/lib/dashboard/helpers";
 import type { PayProfile } from "@/lib/pay/compute";
 import { todayManila } from "@/lib/plans/validate";
 import { loadSavings } from "@/lib/savings/load";
@@ -34,7 +34,9 @@ export default async function Home() {
 
   const today = todayManila();
   const month = currentMonth();
-  const cutoff = currentCutoff(today);
+  const { data: settingsRow } = await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle();
+  const secondStart: number = settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START;
+  const cutoff = currentCutoff(today, secondStart);
 
   const [{ data: walletRows }, { data: lineRows }, { data: markRows }, { data: pay }, { data: bonusRows }, savings] = await Promise.all([
     supabase.from("wallets").select("id,name").order("created_at"),
@@ -106,7 +108,7 @@ export default async function Home() {
     planName: plan.name,
     month,
     cutoff,
-    cutoffLabel: cutoffLabel(month, cutoff),
+    cutoffLabel: cutoffLabel(month, cutoff, secondStart),
     wallets: walletRows ?? [],
     lines: mine.map((l) => ({ id: l.id, name: l.name, bucket: l.bucket, walletId: l.wallet_id, amount: Number(l.amount) })),
     sentIds: (markRows ?? []).map((r) => r.line_id as string),

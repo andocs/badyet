@@ -7,6 +7,13 @@ describe("dashboard helpers", () => {
     expect(currentCutoff("2026-12-16")).toBe("second");
     expect(currentCutoff("2026-12-01")).toBe("first");
   });
+  it("follows the second-cutoff start day setting", () => {
+    expect(currentCutoff("2026-12-10", 11)).toBe("first");
+    expect(currentCutoff("2026-12-11", 11)).toBe("second");
+    expect(currentCutoff("2026-12-25", 26)).toBe("first");
+    expect(cutoffLabel("2026-12", "first", 11)).toBe("First cutoff · Dec 1 to 10");
+    expect(cutoffLabel("2026-12", "second", 11)).toBe("Second cutoff · Dec 11 to 31");
+  });
   it("knows month lengths including leap years", () => {
     expect(daysInMonthOf("2026-12")).toBe(31);
     expect(daysInMonthOf("2028-02")).toBe(29);

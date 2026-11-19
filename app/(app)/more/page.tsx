@@ -20,6 +20,10 @@ const GROUPS: { title: string; items: { label: string; href: string; hint: strin
       { label: "Subscriptions", href: "/subscriptions", hint: "Monthly charges" },
     ],
   },
+  {
+    title: "App",
+    items: [{ label: "Settings", href: "/settings", hint: "When your 2nd cutoff starts" }],
+  },
 ];
 
 export default function MorePage() {
@@ -46,7 +50,7 @@ export default function MorePage() {
         </section>
       ))}
       <section className="card more-group" aria-labelledby="g-app">
-        <h2 id="g-app">App</h2>
+        <h2 id="g-app">Appearance and account</h2>
         <div className="more-actions">
           <ThemeToggle />
           <form action={signOut}>

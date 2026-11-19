@@ -21,13 +21,14 @@ export const SIDE_ITEMS: Item[] = [
   { label: "Subscriptions", href: "/subscriptions" },
   { label: "Bonuses", href: "/bonuses" },
   { label: "Savings", href: "/savings" },
+  { label: "Settings", href: "/settings" },
 ];
 export const TAB_ITEMS: Item[] = [
   { label: "Home", href: "/" },
   { label: "Plans", href: "/plans" },
   { label: "Transfer", href: "/transfer" },
   { label: "Budget", href: "/budget" },
-  { label: "More", href: "/more", also: ["/pay", "/bonuses", "/installments", "/subscriptions", "/savings"] },
+  { label: "More", href: "/more", also: ["/pay", "/bonuses", "/installments", "/subscriptions", "/savings", "/settings"] },
 ];
 
 export function NavLinks({ items }: { items: Item[] }) {
