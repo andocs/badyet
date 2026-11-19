@@ -30,6 +30,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:57 | slice-4 | Slice 4 built: budget_lines migration with RLS, lib/budget (validation, summary on domain budgetLeft), /budget screen (cutoff tabs, three buckets, add/edit/delete, left-to-budget states, month roll-up), shared requireAuthed helper. Runner PASS 93 tests, typecheck, lint, build. | 0dad2b8
 - 2026-11-19 22:00 | slice-4 | Gate 2 APPROVED by user. Slice 4 merged to master (local). | -
 - 2026-11-19 22:02 | slice-5 | Slice 5 built: wallets + transfer_marks migration with RLS, wallet per budget line, /transfer checklist grouped by wallet (month + cutoff), default wallets button. Runner PASS 100 tests, typecheck, lint, build. | 27e8601
+- 2026-11-19 22:04 | slice-5 | Gate 2 APPROVED by user. Slice 5 merged to master (local). | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
