@@ -34,6 +34,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:09 | slice-6 | Slice 6 built: installments (domain schedule with interest) + subscriptions tables with RLS, pages, Sync to budget (budget_lines.source), shared WalletSelect. Runner PASS 108 tests, typecheck, lint, build. | 889c44e
 - 2026-11-19 22:11 | slice-6 | Gate 2 APPROVED by user. Slice 6 merged to master (local). | -
 - 2026-11-19 22:13 | slice-7 | Slice 7 built: windfall_events + windfall_allocations tables with RLS, lib/windfall (net via domain netCutoff, shared yearly 90k exemption, CIP via domain cipGross), /bonuses page with allocation checklists, buildItems exported from pay compute. Runner PASS 119 tests, typecheck, lint, build. | 3a5514f
+- 2026-11-19 22:19 | slice-7 | Gate 2 APPROVED by user. Slice 7 merged to master (local). Note: a git remote is now configured but the last push failed with a server-side write error; commits are safe locally. | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
