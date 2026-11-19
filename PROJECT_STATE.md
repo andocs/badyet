@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-2 Duplicate copies everything
-- **Gate:** building
-- **Next action:** Build rev-2
-- **User to-do now:** -
+- **Gate:** Gate 3: rev-2 awaiting approval
+- **Next action:** User applies duplicate_plan migration and tries Duplicate; on approval start rev-3 (cutoff days)
+- **User to-do now:** Run migration 20261128000000_duplicate_plan.sql; try Duplicate
 
 ## 3. Execution log
 
@@ -28,6 +28,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:27 | phase3 | Gap analysis done. User selected all 10 items (rev-1 to rev-10), including the 3 nice-to-haves. Found: phone More menu dead (Pay, Bonuses, Installments, Subscriptions, Savings unreachable on phone); duplicate plan copies only name/dates; cutoff 1-15 assumption; unverified tax/PhilHealth/cap; no import/deploy/visual QA/e2e. | -
 - 2026-11-19 22:28 | rev-1 | rev-1 built: /more page (Pay, Bonuses, Savings, Installments, Subscriptions, Theme, Sign out), More tab links to it and stays active on those pages. Runner PASS 131 tests, typecheck, lint, build. | b117c9b
 - 2026-11-19 22:29 | rev-1 | Gate 3 APPROVED by user. Merged to master (local). User asked to do ALL remaining revisions on ONE branch: rev/phase3-revisions (per-revision gates stay). | -
+- 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -43,7 +44,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 383,824 | 1,833,850 | 90,860 | 553,893 | 74,125,631 | 385,331 |  |
+| **Cumulative** | 387,423 | 1,876,270 | 91,794 | 561,344 | 76,508,963 | 390,864 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -55,6 +56,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
 | Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
 | Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
+| Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
 
 <!-- END SUMMARY -->
 
