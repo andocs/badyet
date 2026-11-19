@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 4 Budget split
-- **Gate:** Gate 2: Slice 4 awaiting approval
-- **Next action:** User applies budget_lines migration and tries /budget; on approval merge and start Slice 5 (To Transfer)
-- **User to-do now:** Run migration 20261123000000_budget_lines.sql; try /budget
+- **Active slice / milestone:** 5 To Transfer
+- **Gate:** building
+- **Next action:** Build Slice 5 (wallets, wallet per budget line, per-cutoff per-month checklist)
+- **User to-do now:** Apply migration 20261123000000_budget_lines.sql if not done
 
 ## 3. Execution log
 

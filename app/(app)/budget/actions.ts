@@ -6,6 +6,13 @@ import { requireAuthed } from "@/lib/auth/require";
 import { isBucket, isCutoff, validateLine, type Cutoff } from "@/lib/budget/validate";
 import { isPastPlan, isUuid } from "@/lib/plans/validate";
 
+// A blank wallet means "no wallet yet"; anything else must be a real id (RLS scopes it to the user).
+function walletOf(formData: FormData): string | null | undefined {
+  const w = String(formData.get("walletId") ?? "");
+  if (w === "") return null;
+  return isUuid(w) ? w : undefined;
+}
+
 type Supabase = Awaited<ReturnType<typeof requireAuthed>>;
 
 function back(cutoff: Cutoff, code?: string, err?: { message: string } | null): never {
@@ -32,13 +39,14 @@ export async function addLine(formData: FormData) {
   const cutoff = cutoffOf(formData);
   const planId = String(formData.get("planId") ?? "");
   const bucket = formData.get("bucket");
-  if (!isUuid(planId) || !isBucket(bucket)) back(cutoff, "failed");
+  const walletId = walletOf(formData);
+  if (!isUuid(planId) || !isBucket(bucket) || walletId === undefined) back(cutoff, "failed");
   const parsed = validateLine({ name: formData.get("name"), amount: formData.get("amount") });
   if (!parsed.ok) back(cutoff, "invalid");
   await assertEditable(supabase, planId, cutoff);
   const { error } = await supabase
     .from("budget_lines")
-    .insert({ plan_id: planId, cutoff, bucket, name: parsed.value.name, amount: parsed.value.amount });
+    .insert({ plan_id: planId, cutoff, bucket, name: parsed.value.name, amount: parsed.value.amount, wallet_id: walletId });
   back(cutoff, error ? "failed" : undefined, error);
 }
 
@@ -55,9 +63,14 @@ export async function updateLine(formData: FormData) {
   const supabase = await requireAuthed();
   const cutoff = cutoffOf(formData);
   const id = await lineGuard(supabase, formData, cutoff);
+  const walletId = walletOf(formData);
+  if (walletId === undefined) back(cutoff, "failed");
   const parsed = validateLine({ name: formData.get("name"), amount: formData.get("amount") });
   if (!parsed.ok) back(cutoff, "invalid");
-  const { error } = await supabase.from("budget_lines").update({ name: parsed.value.name, amount: parsed.value.amount }).eq("id", id);
+  const { error } = await supabase
+    .from("budget_lines")
+    .update({ name: parsed.value.name, amount: parsed.value.amount, wallet_id: walletId })
+    .eq("id", id);
   back(cutoff, error ? "failed" : undefined, error);
 }
 

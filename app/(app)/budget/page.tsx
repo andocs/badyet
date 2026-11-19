@@ -30,7 +30,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
   const { data: rows } =
     plan && supabase
-      ? await supabase.from("budget_lines").select("id,cutoff,bucket,name,amount").eq("plan_id", plan.id).order("created_at")
+      ? await supabase.from("budget_lines").select("id,cutoff,bucket,name,amount,wallet_id").eq("plan_id", plan.id).order("created_at")
       : { data: null };
 
   if (!plan || !pay) {
@@ -49,6 +49,8 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
     );
   }
 
+  const { data: walletRows } = supabase ? await supabase.from("wallets").select("id,name").order("created_at") : { data: null };
+  const wallets = walletRows ?? [];
   const past = isPastPlan(plan.end_date);
   const result = computePay({
     annualBase: money(pay.annual_base),
@@ -61,6 +63,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
     taxOverrideSecond: pay.tax_override_second === null ? null : money(pay.tax_override_second),
   });
   const lines: Line[] = (rows ?? []).map((r) => ({ id: r.id, cutoff: r.cutoff, bucket: r.bucket, name: r.name, amount: money(r.amount) }));
+  const rowWallet = new Map((rows ?? []).map((r) => [r.id, r.wallet_id as string | null]));
   const s = summarize(lines, result.first.netBeforePlan, result.second.netBeforePlan);
   const cur = cutoff === "first" ? s.first : s.second;
   const state = cur.left === 0 ? "ok" : cur.left < 0 ? "over" : "free";
@@ -126,6 +129,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
                     <input type="hidden" name="cutoff" value={cutoff} />
                     <input className="input" name="name" defaultValue={l.name} maxLength={60} aria-label={`Name of ${l.name}`} disabled={past} />
                     <input className="input num" name="amount" defaultValue={peso(l.amount)} inputMode="decimal" aria-label={`Amount for ${l.name}`} disabled={past} />
+                    <WalletSelect wallets={wallets} value={rowWallet.get(l.id) ?? ""} disabled={past} label={`Wallet for ${l.name}`} />
                     {!past && (
                       <>
                         <button type="submit" className="btn sm ghost">Save</button>
@@ -141,6 +145,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
                     <input type="hidden" name="bucket" value={b.id} />
                     <input className="input" name="name" placeholder={`New ${b.label.toLowerCase()} line`} maxLength={60} aria-label={`New ${b.label} line name`} required />
                     <input className="input num" name="amount" placeholder="0.00" inputMode="decimal" aria-label={`New ${b.label} line amount`} required />
+                    <WalletSelect wallets={wallets} value="" label={`Wallet for new ${b.label} line`} />
                     <button type="submit" className="btn sm">Add</button>
                   </form>
                 )}
@@ -170,5 +175,16 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
         </section>
       </div>
     </main>
+  );
+}
+
+function WalletSelect({ wallets, value, disabled, label }: { wallets: { id: string; name: string }[]; value: string; disabled?: boolean; label: string }) {
+  return (
+    <select className="input" name="walletId" defaultValue={value} disabled={disabled} aria-label={label}>
+      <option value="">No wallet</option>
+      {wallets.map((w) => (
+        <option key={w.id} value={w.id}>{w.name}</option>
+      ))}
+    </select>
   );
 }

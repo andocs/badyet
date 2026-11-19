@@ -9,7 +9,7 @@ interface Item { label: string; href?: string }
 export const SIDE_ITEMS: Item[] = [
   { label: "Dashboard", href: "/" },
   { label: "Plans", href: "/plans" },
-  { label: "Cutoff" },
+  { label: "Cutoff", href: "/transfer" },
   { label: "Pay", href: "/pay" },
   { label: "Budget", href: "/budget" },
   { label: "Installments" },
@@ -20,8 +20,8 @@ export const SIDE_ITEMS: Item[] = [
 export const TAB_ITEMS: Item[] = [
   { label: "Home", href: "/" },
   { label: "Plans", href: "/plans" },
+  { label: "Transfer", href: "/transfer" },
   { label: "Budget", href: "/budget" },
-  { label: "Savings" },
   { label: "More" },
 ];
 
