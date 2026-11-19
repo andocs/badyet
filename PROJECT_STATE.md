@@ -31,6 +31,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
 - 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
 - 2026-11-19 22:32 | rev-3 | rev-3 built: user_settings table (second_cutoff_start_day, default 16), /settings page, dashboard currentCutoff/cutoffLabel use it, linked from More and rail. Checks pending in batch run. | c76967b
+- 2026-11-19 22:33 | rev-4 | rev-4 done: TRAIN 2023+ table and 90,000 bonus exemption match published 2026 guides (third-party, not BIR circulars). PhilHealth fixed: employee share 2.5% of monthly basic with 10,000 floor and 100,000 ceiling (250 to 2,500 a month), was 5% of semi-monthly basic with no limits. UI notices updated. Runner PASS 135 tests. | b4e344a
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

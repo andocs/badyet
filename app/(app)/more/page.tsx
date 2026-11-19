@@ -22,7 +22,10 @@ const GROUPS: { title: string; items: { label: string; href: string; hint: strin
   },
   {
     title: "App",
-    items: [{ label: "Settings", href: "/settings", hint: "When your 2nd cutoff starts" }],
+    items: [
+      { label: "Settings", href: "/settings", hint: "When your 2nd cutoff starts" },
+      { label: "Import", href: "/import", hint: "Bring in a snapshot of your old sheet" },
+    ],
   },
 ];
 
