@@ -1,0 +1,9 @@
+{
+  "model": "sonnet",
+  "permissions": {
+    "allow": [
+      "Bash(node .claude/scripts/token_ledger.js:*)",
+      "Bash(node .claude/scripts/:*)"
+    ]
+  }
+}

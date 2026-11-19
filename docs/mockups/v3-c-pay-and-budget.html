@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) · v3 · Pay and Budget</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F6F8;--panel:#FFFFFF;--ink:#0E1116;--muted:#575E6B;--line:#DCDFE5;--accent:#2748F0;--band:#E8ECFE;--err:#B3261E;--ok:#1B7F4B;--rail:#0E4A3A;--rail-ink:#E6F2EC;--yel:#FFC72C}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0B0D12;--panel:#12151C;--ink:#ECEEF3;--muted:#9AA1AF;--line:#272C37;--accent:#8FA2FF;--band:#1A2040;--err:#FF8A80;--ok:#5FD08F;--rail:#0A2A21;--rail-ink:#D3E6DC}}
+:root[data-theme=dark]{--bg:#0B0D12;--panel:#12151C;--ink:#ECEEF3;--muted:#9AA1AF;--line:#272C37;--accent:#8FA2FF;--band:#1A2040;--err:#FF8A80;--ok:#5FD08F;--rail:#0A2A21;--rail-ink:#D3E6DC}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Familjen Grotesk",system-ui,sans-serif}
+.num{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.93em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--accent);color:var(--bg)}
+.app{display:grid;grid-template-columns:224px 1fr;min-height:100vh}
+nav.side{padding:22px 14px;background:var(--rail);color:var(--rail-ink);position:sticky;top:0;height:100vh}
+nav.side b{display:block;font-size:20px;font-weight:700;padding:0 10px 18px}
+nav.side a{display:block;padding:8px 10px;border-radius:6px;color:var(--rail-ink);opacity:.85;text-decoration:none}
+nav.side a:hover{background:rgba(255,255,255,.08);opacity:1}
+nav.side a[aria-current]{background:var(--yel);color:#12201B;font-weight:700;opacity:1}
+main{padding:26px 32px 64px;max-width:1180px;width:100%}
+.head{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:end;justify-content:space-between;margin-bottom:18px}
+h1{font-size:28px;font-weight:700;margin:0;letter-spacing:-.015em}.sub{color:var(--muted);margin:2px 0 0}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{font:inherit;border:0;background:none;color:var(--muted);padding:7px 14px;min-height:36px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--bg);font-weight:600}
+.btn{font:inherit;min-height:36px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:20px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+h2{font-size:17px;font-weight:700;margin:0 0 8px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:9px 0;border-bottom:1px solid var(--line);text-align:left;font-weight:400}
+td:last-child,th:last-child{text-align:right}
+tr.sum td{font-weight:700;border-bottom:2px solid var(--ink)}
+tr.ded td:last-child{color:var(--muted)}
+.edit{font:inherit;width:6.5rem;text-align:right;padding:5px 8px;min-height:36px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink)}
+.edit:hover{border-color:var(--muted)}
+.bk{margin-top:16px}.bk:first-of-type{margin-top:6px}
+.bk h3{display:flex;justify-content:space-between;margin:0;font-size:15px;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+.f{display:inline-block;width:16px;height:12px;border:1.5px solid var(--ink);margin-right:7px;vertical-align:-1px}
+.f-E{background:var(--ink)}.f-W{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 6px)}.f-S{background:radial-gradient(var(--ink) 1.1px,transparent 1.3px) 0 0/6px 6px}
+.split{display:flex;height:22px;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;margin:6px 0 14px}
+.split i{display:block;border-right:1.5px solid var(--ink)}.split i:last-child{border:0}
+.state{padding:10px 12px;border-radius:8px;border:1px solid var(--line);margin-bottom:14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.state.ok{border-color:var(--ok);color:var(--ok)}.state.bad{border-color:var(--err);color:var(--err);font-weight:600}
+.roll{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.roll div{border:1px solid var(--line);border-radius:8px;padding:10px 12px}.roll b{display:block;margin-top:2px;font-size:17px}
+.mnav{display:none}
+@media (max-width:900px){.app{grid-template-columns:1fr}nav.side{display:none}main{padding:18px 16px 100px}.grid{grid-template-columns:1fr}h1{font-size:24px}
+.roll{grid-template-columns:1fr}
+.mnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);z-index:5}
+.mnav a{padding:14px 4px;text-align:center;font-size:13px;color:var(--muted);text-decoration:none;min-height:48px}
+.mnav a[aria-current]{color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--yel)}}
+</style></head><body>
+<div class="app">
+<nav class="side" aria-label="Main"><b>Bad(yet)</b><a href="#">Cutoff</a><a href="#" aria-current="page">Budget</a><a href="#">Pay</a><a href="#">Installments</a><a href="#">Subscriptions</a><a href="#">Bonuses</a><a href="#">Savings forecast</a><a href="#">Plans</a></nav>
+<main>
+<div class="head"><div><h1>Budget</h1><p class="sub">Take-home goes in, every peso gets a job. December 2026 plan.</p></div>
+<div class="tools"><div class="seg" role="group" aria-label="Cutoff"><button id="b1" aria-pressed="true">1st cutoff</button><button id="b2" aria-pressed="false">2nd cutoff</button></div><button class="btn" id="theme">Theme</button></div></div>
+<div class="grid">
+<section class="card" aria-labelledby="p"><h2 id="p">Pay, this cutoff</h2>
+<table><tr><td>Basic pay</td><td class="num">24,000.00</td></tr><tr><td>Allowance</td><td class="num">3,000.00</td></tr><tr class="sum"><td>Gross</td><td class="num">27,000.00</td></tr>
+<tr class="ded"><td>SSS</td><td class="num">−1,125.00</td></tr><tr class="ded"><td>PhilHealth</td><td class="num">−625.00</td></tr><tr class="ded"><td>Pag-IBIG</td><td class="num">−200.00</td></tr><tr class="ded"><td>Withholding tax</td><td class="num">−1,600.00</td></tr>
+<tr class="sum"><td>Take-home</td><td class="num" id="net">23,450.00</td></tr></table>
+<p class="sub" style="margin-top:10px">Figures are synthetic. Auto-calculated from your annual base; any line can be overridden.</p></section>
+<section class="card" aria-labelledby="s"><h2 id="s">Where it goes</h2>
+<div class="state ok" id="st"></div><div class="split" id="split" aria-hidden="true"></div><div id="bk"></div></section>
+</div>
+<section class="card" aria-labelledby="r"><h2 id="r">Month roll-up</h2>
+<div class="roll"><div>1st cutoff<b class="num">₱23,450.00</b></div><div>2nd cutoff<b class="num">₱24,100.00</b></div><div>Month total<b class="num">₱47,550.00</b></div></div></section>
+</main></div>
+<nav class="mnav" aria-label="Main"><a href="#">Cutoff</a><a href="#" aria-current="page">Budget</a><a href="#">Pay</a><a href="#">Savings</a><a href="#">More</a></nav>
+<script>
+const B={E:["Essentials",[["Transpo",2400],["Food",2000],["Contingency",550],["Rent share",3000],["Internet",1299],["Installments",3000]]],W:["Wants",[["Wants",5200]]],S:["Savings",[["Emergency fund",4000],["Travel fund",2001]]]};
+const NET=23450,f=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2}),m=n=>"₱"+f(n);
+function draw(){let tot=0,sp="";const out=Object.keys(B).map(k=>{const sub=B[k][1].reduce((a,x)=>a+x[1],0);tot+=sub;sp+=`<i class="f-${k}" style="flex:${sub}"></i>`;
+return `<div class="bk"><h3><span><span class="f f-${k}"></span>${B[k][0]}</span><span class="num">${f(sub)}</span></h3><table>${B[k][1].map((x,i)=>`<tr><td><label for="${k}${i}">${x[0]}</label></td><td><input class="edit num" id="${k}${i}" data-k="${k}" data-i="${i}" inputmode="decimal" value="${f(x[1])}"></td></tr>`).join("")}</table></div>`}).join("");
+const left=NET-tot,s=document.getElementById("st");s.className="state "+(left==0?"ok":left<0?"bad":"");
+s.innerHTML=left==0?`<span>Every peso has a job.</span><span class="num">Left: ₱0.00</span>`:left<0?`<span>Over by ${m(-left)}. Trim a line below.</span><span class="num">Left: −${m(-left)}</span>`:`<span>${m(left)} has no job yet.</span><span class="num">Left: ${m(left)}</span>`;
+split.innerHTML=sp+(left>0?`<i style="flex:${left};background:var(--band)"></i>`:"");bk.innerHTML=out}
+bk.addEventListener("change",e=>{const v=parseFloat(e.target.value.replace(/,/g,""));if(!isNaN(v)&&v>=0)B[e.target.dataset.k][1][e.target.dataset.i][1]=v;draw()});
+b1.onclick=b2.onclick=e=>{b1.setAttribute("aria-pressed",e.target==b1);b2.setAttribute("aria-pressed",e.target==b2)};
+theme.onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).getPropertyValue("--bg").trim()=="#0B0D12"?"light":"dark"};
+draw();
+</script></body></html>

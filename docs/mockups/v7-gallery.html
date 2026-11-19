@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) · Gallery 3 · Departure Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--g-bg:#101614;--g-ink:#F1F2F5;--g-mu:#A5AAB5;--g-ln:#2A3631}
+*{box-sizing:border-box}
+body{margin:0;background:var(--g-bg);color:var(--g-ink);font:15px/1.4 system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
+.bar{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--g-ln);flex-wrap:wrap}
+.bar b{font-size:16px}.bar p{margin:0;color:var(--g-mu);flex:1;min-width:200px}
+.bar button{font:inherit;color:var(--g-ink);background:#1F2A26;border:1px solid var(--g-ln);border-radius:8px;padding:7px 14px;min-height:38px;cursor:pointer}
+.bar button[aria-pressed=true]{background:var(--g-ink);color:var(--g-bg)}
+.dots{display:flex;gap:6px}.dots button{padding:0 10px;min-width:38px}
+.wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:18px;background:#0A0F0D}
+.frame{width:100%;max-width:1280px;border-radius:14px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5);align-self:flex-start;min-height:calc(100vh - 150px);transition:max-width .25s;position:relative}
+.frame.phone{max-width:390px}
+/* ===== design scope ===== */
+.d{background:var(--bg);color:var(--ink);font:500 15px/1.45 "DM Sans",sans-serif;container-type:inline-size;min-height:inherit;position:relative;overflow:hidden}
+.d *{box-sizing:border-box}
+.d h1,.d h2,.d .disp{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;letter-spacing:-.02em}
+.d h1{font-size:32px;line-height:1.1;margin:0}.d h2{font-size:19px;margin:0 0 10px}
+.d .lab{font:700 11px/1 "JetBrains Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--mu)}
+.d .num{font-family:"JetBrains Mono",monospace;font-variant-numeric:tabular-nums;font-weight:500}
+.d .sub{color:var(--mu);margin:4px 0 0}
+.d .card{background:var(--sf);border:1px solid var(--ln);border-radius:20px;padding:20px;box-shadow:var(--sh)}
+.d .btn{font:700 14px "DM Sans",sans-serif;background:var(--ac);color:#fff;border:0;border-radius:999px;padding:10px 20px;min-height:42px;cursor:pointer;transition:transform .14s cubic-bezier(.16,1,.3,1)}
+.d .btn:hover{transform:translateY(-1px)}.d .btn:active{transform:scale(.97)}
+.d .gh{background:var(--soft);color:var(--ink)}
+.d .chip{display:inline-flex;align-items:center;gap:6px;font:700 11px "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;border-radius:999px;padding:4px 10px;background:var(--tlt);color:var(--tl)}
+.d .chip.w{background:var(--tint);color:var(--act)}
+.d .app{display:grid;grid-template-columns:200px 1fr;min-height:inherit}
+.d .rail{background:var(--rl);color:var(--rli);padding:20px 12px;border-right:1px solid var(--ln)}
+.d .rail b{display:block;font:800 21px "Bricolage Grotesque",sans-serif;padding:0 10px 16px;letter-spacing:-.02em}
+.d .rail a{display:block;padding:9px 12px;border-radius:14px;color:inherit;opacity:.8;text-decoration:none;margin-bottom:2px}
+.d .rail a.on{background:var(--ac);color:#fff;opacity:1;font-weight:700}
+.d .main{padding:24px 28px 50px}
+.d .head{display:flex;justify-content:space-between;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:20px}
+.d .g2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:18px;align-items:start}
+.d .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.d .stack{display:grid;gap:18px}
+.d .mt{margin-top:18px}
+/* departure board tiles */
+.d .bd{display:inline-flex;gap:4px;align-items:center;background:var(--bd);padding:12px 14px;border-radius:16px;flex-wrap:nowrap}
+.d .tl{width:var(--tw,30px);height:var(--th,46px);background:linear-gradient(var(--bd2) 0 50%,var(--bd) 50% 100%);border-radius:7px;color:var(--bda);display:grid;place-items:center;font:700 var(--tf,27px) "JetBrains Mono",monospace;position:relative;transform-origin:50% 50%;animation:flip .6s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*45ms)}
+.d .tl::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:var(--sm)}
+.d .sep{color:var(--bda);font:700 var(--tf,27px) "JetBrains Mono",monospace;opacity:.8;padding:0 1px}
+@keyframes flip{from{transform:rotateX(-90deg);opacity:0}to{transform:none;opacity:1}}
+/* ticket */
+.d .tk{display:grid;grid-template-columns:1fr 1px auto;align-items:center;background:var(--sf);border:1px solid var(--ln);border-radius:20px;position:relative;margin-bottom:10px;min-height:76px;animation:pop .45s cubic-bezier(.16,1,.3,1) both;animation-delay:calc(var(--i)*70ms)}
+.d .tk::before,.d .tk::after{content:"";position:absolute;right:calc(var(--st,120px) - 7px);width:14px;height:14px;border-radius:50%;background:var(--bg);border:1px solid var(--ln)}
+.d .tk::before{top:-8px;border-bottom-color:transparent;border-left-color:transparent;transform:rotate(45deg)}.d .tk::after{bottom:-8px;border-top-color:transparent;border-right-color:transparent;transform:rotate(45deg)}
+.d .tk .l{padding:12px 18px;display:flex;gap:14px;align-items:center}.d .tk .perf{align-self:stretch;margin:10px 0;border-left:2px dashed var(--ln2)}
+.d .tk .r{padding:12px 18px;text-align:right;min-width:var(--st,120px)}
+.d .tk .gate{width:44px;height:44px;border-radius:14px;background:var(--c);color:#fff;display:grid;place-items:center;font:700 13px "JetBrains Mono",monospace;flex:none}
+.d .tk.x{opacity:.55}.d .tk.x .nm{text-decoration:line-through}
+.d .tk .nm{font-weight:700}
+@keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
+.d .pr{height:10px;background:var(--soft);border-radius:999px;overflow:hidden}.d .pr i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--tl),var(--ac));animation:grow 1s cubic-bezier(.16,1,.3,1) both}
+@keyframes grow{from{width:0}}
+.d .row{display:flex;justify-content:space-between;gap:10px;align-items:center;min-height:44px;border-top:1px solid var(--ln)}.d .row:first-child{border-top:0}
+.d .dt{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:8px}
+.d .hero{background:var(--hg);color:#fff;border-radius:28px;padding:26px 28px;position:relative;overflow:hidden;border:0}
+.d .hero::before{content:"";position:absolute;right:-60px;top:-80px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(79,195,174,.45),transparent 65%)}
+.d .hero>*{position:relative}.d .hero .lab,.d .hero .sub{color:#B7DDD3}
+.d .mas{width:var(--ms,120px);height:var(--ms,120px);flex:none;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px) rotate(-2deg)}}
+.d.hp .mas .m1{display:none}.d:not(.hp) .mas .m2{display:none}
+.d .cf{position:absolute;width:9px;height:14px;border-radius:2px;pointer-events:none;animation:fall 1.2s ease-out forwards;z-index:30}
+@keyframes fall{to{transform:translate(var(--dx),var(--dy)) rotate(540deg);opacity:0}}
+.d .mnav{display:none}
+@media (prefers-reduced-motion:reduce){.d *{animation:none!important}}
+@container (max-width:760px){
+ .d .app{grid-template-columns:1fr}.d .rail{display:none}.d .main{padding:16px 14px 90px}.d h1{font-size:26px}
+ .d .g2,.d .g3{grid-template-columns:1fr}.d .tl{--tw:24px;--th:38px;--tf:21px}.d .bd{padding:10px}
+ .d .mnav{display:grid;grid-template-columns:repeat(5,1fr);position:sticky;bottom:0;background:var(--sf);border-top:1px solid var(--ln);z-index:5}
+ .d .mnav a{text-align:center;padding:14px 2px;font-size:12px;color:var(--mu);text-decoration:none}.d .mnav a.on{color:var(--act);font-weight:700;box-shadow:inset 0 3px 0 var(--ac)}
+ .d .hero{padding:20px}.d .mas{--ms:84px}}
+</style></head><body>
+<div class="bar"><b>Bad(yet) gallery 3</b><p id="desc"></p><div class="dots" id="dots"></div><button id="prev" aria-label="Previous">←</button><button id="nxt" aria-label="Next">→</button><button id="dk" aria-pressed="true">Desktop</button><button id="ph" aria-pressed="false">Phone</button></div>
+<div class="wrap"><div class="frame" id="frame"></div></div>
+<script>
+const T=o=>Object.entries(o).map(([k,v])=>`--${k}:${v}`).join(";");
+const LIGHT={bg:"#EEF3F0",sf:"#FFFFFF",soft:"#E6EEEA",ink:"#10302B",mu:"#4F6B65",ln:"#E1EAE6",ln2:"#C4D5CE",ac:"#C93F1B",act:"#B53714",tint:"#FBE6DF",tl:"#0E6B5C",tlt:"#DDF0EB",bd:"#10302B",bd2:"#163A34",bda:"#FFB400",sm:"#0A1F1B",c1:"#0E6B5C",c2:"#C93F1B",c3:"#2F5D8A",c4:"#8A4A7B",rl:"#FFFFFF",rli:"#10302B",sh:"0 6px 20px rgba(16,48,43,.05)",hg:"linear-gradient(135deg,#12392F,#0E6B5C)"};
+const NIGHT={bg:"#0E1917",sf:"#16231F",soft:"#1D2D29",ink:"#E8F0EC",mu:"#9DBDB4",ln:"#2A3B36",ln2:"#3A4F48",ac:"#CC4520",act:"#FF8A66",tint:"#3A1D14",tl:"#4FC3AE",tlt:"#123530",bd:"#070E0D",bd2:"#0C1715",bda:"#FFB400",sm:"#040908",c1:"#4FC3AE",c2:"#FF8A66",c3:"#7FB2F0",c4:"#D29BC4",rl:"#0A1210",rli:"#9DBDB4",sh:"none",hg:"linear-gradient(135deg,#0F2A24,#0B4A40)"};
+const DES=[
+{n:"Departure Board",l:1,t:LIGHT,d:"Money as a departure board: split-flap tiles for what is left, boarding-pass tickets for each transfer, donut for the split."},
+{n:"Night Board",l:2,t:NIGHT,d:"Night mode. Teal glow, mascot, savings forecast area chart and stacked cutoff bars."},
+{n:"Atlas",l:3,t:LIGHT,d:"Big gradient hero with the mascot, wallet routes as bars, countdown to the 13th month."},
+{n:"Boarding Pass (phone)",l:4,t:LIGHT,d:"Phone-first: a stack of boarding passes with a tab bar. Press Mark all sent for confetti."},
+{n:"Control Room",l:5,t:NIGHT,d:"Data-rich night view: four charts and a full transfer table."}
+];
+const WN=["Gcash","Maya","BPI","Vybe"],GT=["GC","MY","BP","VY"],C=i=>`var(--c${i+1})`,f=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2});
+const LN=[["Transpo","Essentials",0,2400,1],["Food","Essentials",0,2000,1],["Contingency","Essentials",0,550],["Rent share","Essentials",2,3000],["Internet","Essentials",1,1299],["Installments","Essentials",2,3000],["Wants","Wants",2,5200],["Emergency fund","Savings",1,4000],["Travel fund","Savings",3,2001]];
+const ws=i=>LN.filter(l=>l[2]==i).reduce((a,l)=>a+l[3],0);
+const nav=["Dashboard","Cutoff","Pay","Budget","Installments","Subscriptions","Bonuses","Savings"];
+const rail=`<nav class="rail"><b>Bad(yet)</b>${nav.map((x,i)=>`<a href="#" class="${i?"":"on"}">${x}</a>`).join("")}</nav>`;
+const mnav=`<nav class="mnav"><a class="on" href="#">Home</a><a href="#">Cutoff</a><a href="#">Budget</a><a href="#">Savings</a><a href="#">More</a></nav>`;
+const board=(s,o="")=>`<div class="bd" role="img" aria-label="${s}" style="${o}">${[...s].map((c,i)=>/\d/.test(c)?`<span class="tl" style="--i:${i}">${c}</span>`:`<span class="sep">${c}</span>`).join("")}</div>`;
+const mascot=(s)=>`<svg class="mas" viewBox="0 0 120 120" style="${s||""}" role="img" aria-label="Pip the coin"><ellipse cx="60" cy="112" rx="30" ry="5" fill="#000" opacity=".15"/><circle cx="60" cy="58" r="48" fill="#F2B100"/><circle cx="60" cy="58" r="38" fill="#FFD24D"/><circle cx="60" cy="58" r="38" fill="none" stroke="#E09A00" stroke-width="2" stroke-dasharray="3 6"/><ellipse cx="45" cy="52" rx="5" ry="7" fill="#10302B"/><ellipse cx="75" cy="52" rx="5" ry="7" fill="#10302B"/><circle cx="46.5" cy="49" r="1.8" fill="#fff"/><circle cx="76.5" cy="49" r="1.8" fill="#fff"/><circle cx="36" cy="66" r="6" fill="#FF8A66" opacity=".7"/><circle cx="84" cy="66" r="6" fill="#FF8A66" opacity=".7"/><path class="m1" d="M50 70 Q60 76 70 70" stroke="#10302B" stroke-width="3.5" fill="none" stroke-linecap="round"/><path class="m2" d="M48 66 Q60 84 72 66 Z" fill="#10302B"/><path d="M52 14 L60 2 L68 14 Z" fill="#C93F1B"/><rect x="50" y="12" width="20" height="5" rx="2.5" fill="#10302B"/></svg>`;
+const tickets=(k)=>LN.filter(l=>!l[4]).slice(0,k).map((l,j)=>`<div class="tk" style="--c:${C(l[2])};--i:${j}"><div class="l"><span class="gate">${GT[l[2]]}</span><div><div class="nm">${l[0]}</div><span class="lab">To ${WN[l[2]]} · ${l[1]}</span></div></div><span class="perf"></span><div class="r"><div class="num" style="font-size:17px">${f(l[3])}</div><span class="lab">Pending</span></div></div>`).join("");
+// charts
+function donut(parts,size=170){let tot=parts.reduce((a,p)=>a+p[1],0),off=0,r=62,cir=2*Math.PI*r;return `<svg viewBox="0 0 170 170" width="${size}" height="${size}" role="img" aria-label="Budget split"><circle cx="85" cy="85" r="${r}" fill="none" stroke="var(--soft)" stroke-width="22"/>${parts.map(p=>{const len=p[1]/tot*cir,e=`<circle cx="85" cy="85" r="${r}" fill="none" stroke="${p[2]}" stroke-width="22" stroke-dasharray="${len-3} ${cir-len+3}" stroke-dashoffset="${-off}" transform="rotate(-90 85 85)" style="animation:grow2 1s ${off/cir}s both"/>`;off+=len;return e}).join("")}<text x="85" y="82" text-anchor="middle" font-family="JetBrains Mono" font-weight="700" font-size="19" fill="var(--ink)">23,450</text><text x="85" y="102" text-anchor="middle" font-family="JetBrains Mono" font-size="9.5" letter-spacing="1.4" fill="var(--mu)">TAKE-HOME</text></svg>`}
+const bud=[["Essentials",12249,"var(--c1)"],["Wants",5200,"var(--c2)"],["Savings",6001,"var(--c3)"]];
+const legend=`<div style="flex:1;min-width:150px">${bud.map(b=>`<div class="row"><span><span class="dt" style="--c:${b[2]}"></span>${b[0]}</span><span class="num">${f(b[1])}</span></div>`).join("")}</div>`;
+function area(w=520,h=170){const pts=[38,43,48,52,56,60,60],cap=60,mx=64,x=i=>30+i*(w-50)/6,y=v=>h-26-v/mx*(h-44);const d=pts.map((v,i)=>(i?"L":"M")+x(i)+" "+y(v)).join(" ");const mo=["Dec","Jan","Feb","Mar","Apr","May","Jun"];
+return `<svg viewBox="0 0 ${w} ${h}" width="100%" role="img" aria-label="Emergency fund reaches its 60k cap in June"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--tl)" stop-opacity=".45"/><stop offset="1" stop-color="var(--tl)" stop-opacity="0"/></linearGradient></defs>${[0,20,40,60].map(v=>`<line x1="30" x2="${w-20}" y1="${y(v)}" y2="${y(v)}" stroke="var(--ln)"/><text x="2" y="${y(v)+4}" font-size="10" font-family="JetBrains Mono" fill="var(--mu)">${v}k</text>`).join("")}<line x1="30" x2="${w-20}" y1="${y(cap)}" y2="${y(cap)}" stroke="var(--ac)" stroke-dasharray="5 5" stroke-width="2"/><path d="${d} L${x(6)} ${y(0)} L${x(0)} ${y(0)} Z" fill="url(#ag)"/><path d="${d}" fill="none" stroke="var(--tl)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" style="stroke-dasharray:1;animation:draw 1.4s cubic-bezier(.16,1,.3,1) both"/>${pts.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="var(--sf)" stroke="var(--tl)" stroke-width="3"/>`).join("")}${mo.map((m,i)=>`<text x="${x(i)}" y="${h-6}" text-anchor="middle" font-size="10" font-family="JetBrains Mono" fill="var(--mu)">${m}</text>`).join("")}<text x="${w-22}" y="${y(cap)-7}" text-anchor="end" font-size="10" font-family="JetBrains Mono" font-weight="700" fill="var(--act)">CAP 60K</text></svg>`}
+function stacked(){const a=[[12249,"var(--c1)"],[5200,"var(--c2)"],[6001,"var(--c3)"]],b=[[10550,"var(--c1)"],[5500,"var(--c2)"],[8050,"var(--c3)"]];const col=(L,x,lab)=>{let y=150;return L.map(p=>{const h=p[0]/24100*130;y-=h;return `<rect x="${x}" y="${y}" width="74" height="${h-2}" rx="8" fill="${p[1]}" style="transform-origin:${x+37}px 150px;animation:rise .9s both"/>`}).join("")+`<text x="${x+37}" y="168" text-anchor="middle" font-size="11" font-family="JetBrains Mono" font-weight="700" fill="var(--mu)">${lab}</text>`};return `<svg viewBox="0 0 260 176" width="100%" role="img" aria-label="Spending by bucket per cutoff">${col(a,28,"1ST")}${col(b,150,"2ND")}</svg>`}
+function bars(){const mx=11200;return WN.map((w,i)=>`<div style="margin:10px 0"><div class="row" style="border:0;min-height:26px"><span><span class="dt" style="--c:${C(i)}"></span>${w}</span><span class="num">${f(ws(i))}</span></div><div class="pr" style="height:12px"><i style="width:${ws(i)/mx*100}%;background:${C(i)}"></i></div></div>`).join("")}
+const css=document.createElement("style");css.textContent="@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes rise{from{transform:scaleY(0)}}@keyframes grow2{from{opacity:0}}";document.head.append(css);
+const head=(t,s)=>`<div class="head"><div><span class="lab">First cutoff · Dec 1 to 15</span><h1 style="margin-top:8px">${t}</h1>${s?`<p class="sub">${s}</p>`:""}</div><button class="btn gh">Dec 2026 plan ▾</button></div>`;
+const coming=`<div class="row"><span>Internet <span class="chip w">Dec 3</span></span><span class="num">1,299.00</span></div><div class="row"><span>Phone installment <span class="chip w">Dec 8</span></span><span class="num">3,000.00</span></div><div class="row"><span>13th month <span class="chip">Dec 15 · est.</span></span><span class="num">+24,000.00</span></div>`;
+const L={
+1:()=>`<div class="app">${rail}<div class="main">${head("Payday. Here is where it goes.")}<section class="card" style="margin-bottom:18px"><div style="display:flex;gap:22px;align-items:center;flex-wrap:wrap"><div><span class="lab">Left to send</span><div style="margin:10px 0 12px">${board("19,050.00")}</div></div><div style="flex:1;min-width:220px"><div class="pr"><i style="width:19%"></i></div><p class="sub">₱4,400 of ₱23,450 sent · 7 transfers to go</p><button class="btn" data-cf style="margin-top:12px">Mark all sent</button></div></div></section>
+<div class="g2"><section><h2>Next departures</h2>${tickets(4)}</section><div class="stack"><section class="card"><h2>Where it goes</h2><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${donut(bud,150)}${legend}</div></section><section class="card"><h2>Coming up</h2>${coming}</section></div></div></div></div>${mnav}`,
+2:()=>`<div class="app">${rail}<div class="main">${head("Good evening.","Tonight: 7 transfers left. You got this.")}<section class="hero" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap"><div><span class="lab">Left to send</span><div style="margin:10px 0 14px">${board("19,050.00")}</div><button class="btn" data-cf>Mark all sent</button></div>${mascot()}</div></section>
+<div class="g2"><section class="card"><div class="head" style="margin:0 0 6px"><h2 style="margin:0">Emergency fund forecast</h2><span class="chip">Cap in Jun 2027</span></div>${area()}</section><section class="card"><h2>Spend by cutoff</h2>${stacked()}<div style="display:flex;gap:12px;flex-wrap:wrap">${bud.map(b=>`<span class="lab"><span class="dt" style="--c:${b[2]}"></span>${b[0]}</span>`).join("")}</div></section></div><div class="mt">${tickets(3)}</div></div></div>${mnav}`,
+3:()=>`<div class="app">${rail}<div class="main"><section class="hero" style="margin-bottom:18px;padding:32px"><div style="display:flex;justify-content:space-between;gap:18px;align-items:center;flex-wrap:wrap"><div style="max-width:520px"><span class="lab">First cutoff · Dec 1 to 15</span><h1 style="margin:10px 0 8px">₱19,050 still to send.<br>Nice pace so far.</h1><p class="sub">2 of 9 transfers done. Next: Contingency to Gcash.</p><div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap"><button class="btn" data-cf>Mark next sent</button><button class="btn" style="background:#ffffff22">Open checklist</button></div></div>${mascot("--ms:150px")}</div><div style="display:flex;gap:6px;margin-top:22px;align-items:center">${WN.map((w,i)=>`<span style="flex:${ws(i)};height:12px;border-radius:999px;background:${["#4FC3AE","#FF8A66","#7FB2F0","#D29BC4"][i]}"></span>`).join("")}</div><div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">${WN.map((w,i)=>`<span class="lab" style="color:#B7DDD3">${w} ${f(ws(i)).split(".")[0]}</span>`).join("")}</div></section>
+<div class="g3"><section class="card"><h2>Where it goes</h2>${donut(bud,150)}${legend}</section><section class="card"><h2>By wallet</h2>${bars()}</section><section class="card"><h2>13th month</h2><span class="lab">Lands in</span><div style="margin:10px 0">${board("11","--tw:34px;--th:52px;--tf:30px")}<span class="lab" style="margin-left:8px">days</span></div><p class="sub">Estimated +₱24,000.00 gross. 3 allocation items waiting.</p><div class="mt">${coming.split('<div class="row">').slice(1,3).map(x=>'<div class="row">'+x).join("")}</div></section></div></div></div>${mnav}`,
+4:()=>`<div class="main" style="max-width:430px;margin:auto;padding-bottom:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div><span class="lab">First cutoff</span><h1 style="font-size:26px;margin-top:6px">Boarding now</h1></div>${mascot("--ms:76px")}</div><section class="card" style="margin:16px 0"><span class="lab">Left to send</span><div style="margin:10px 0 12px">${board("19,050.00","--tw:24px;--th:38px;--tf:21px;padding:10px")}</div><div class="pr"><i style="width:19%"></i></div><p class="sub">2 of 9 sent</p></section><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h2 style="margin:0">Next departures</h2><button class="btn" data-cf style="padding:8px 14px">Mark all sent</button></div>${tickets(5)}</div>${mnav}`,
+5:()=>`<div class="app">${rail}<div class="main">${head("Control room")}<div class="g2"><section class="card"><div class="head" style="margin:0 0 6px"><h2 style="margin:0">Emergency fund forecast</h2><span class="chip">Estimate</span></div>${area()}</section><section class="card" style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div>${donut(bud,150)}</div>${legend}</section></div>
+<div class="g2 mt"><section class="card"><h2>Spend by cutoff</h2>${stacked()}</section><section class="card"><h2>By wallet</h2>${bars()}</section></div>
+<section class="card mt"><h2>All transfers</h2>${LN.map(l=>`<div class="row"><span><span class="dt" style="--c:${C(l[2])}"></span>${l[0]} <span class="lab">${l[1]}</span></span><span class="num">${f(l[3])} <span class="chip ${l[4]?"":"w"}">${l[4]?"Sent":"Pending"}</span></span></div>`).join("")}</section></div></div>${mnav}`};
+let i=0;const fr=document.getElementById("frame");
+function show(n){i=(n+DES.length)%DES.length;const d=DES[i];fr.innerHTML=`<div class="d" style="${T(d.t)}">${L[d.l]()}</div>`;desc.innerHTML=`<b>${i+1}/${DES.length} · ${d.n}</b> · ${d.d}`;[...dots.children].forEach((b,j)=>b.setAttribute("aria-pressed",j==i))}
+DES.forEach((d,j)=>{const b=document.createElement("button");b.textContent=j+1;b.title=d.n;b.onclick=()=>show(j);dots.append(b)});
+fr.addEventListener("click",e=>{const b=e.target.closest("[data-cf]");if(!b)return;const d=fr.querySelector(".d"),r=b.getBoundingClientRect(),q=d.getBoundingClientRect();d.classList.add("hp");
+const cols=["#FFB400","#C93F1B","#4FC3AE","#7FB2F0","#D29BC4"];for(let k=0;k<44;k++){const s=document.createElement("span");s.className="cf";s.style.cssText=`left:${r.left-q.left+r.width/2}px;top:${r.top-q.top}px;background:${cols[k%5]};--dx:${(Math.random()-.5)*420}px;--dy:${Math.random()*260-60}px`;d.append(s);setTimeout(()=>s.remove(),1300)}});
+prev.onclick=()=>show(i-1);nxt.onclick=()=>show(i+1);
+dk.onclick=()=>{fr.classList.remove("phone");dk.setAttribute("aria-pressed",true);ph.setAttribute("aria-pressed",false)};
+ph.onclick=()=>{fr.classList.add("phone");ph.setAttribute("aria-pressed",true);dk.setAttribute("aria-pressed",false)};
+addEventListener("keydown",e=>{if(e.key=="ArrowRight")show(i+1);if(e.key=="ArrowLeft")show(i-1)});
+show(0);
+</script></body></html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction A · Passbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F4EFE4;--card:#FBF8F1;--ink:#1F1B16;--muted:#776E62;--rule:#D9CFBE;--accent:#B4532A;--olive:#5F6B3A}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.45 "IBM Plex Mono",monospace}
+.wrap{max-width:440px;margin:0 auto;padding:20px 16px 60px}
+h1,h2{font-family:Fraunces,serif;font-weight:600;margin:0}
+h1{font-size:30px;letter-spacing:-.5px}h2{font-size:19px;margin:28px 0 8px}
+.meta{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1.5px}
+.tabs{display:flex;gap:18px;margin:14px 0 18px;border-bottom:1px solid var(--rule)}
+.tabs a{padding:8px 0;color:var(--muted);text-decoration:none;font-size:13px}.tabs a.on{color:var(--ink);border-bottom:2px solid var(--accent)}
+.net{background:var(--card);border:1px solid var(--rule);padding:16px;position:relative}
+.net .big{font-family:Fraunces,serif;font-size:40px}
+.stamp{position:absolute;right:14px;top:14px;border:2px solid var(--olive);color:var(--olive);padding:2px 8px;transform:rotate(-6deg);font-size:11px;letter-spacing:2px}
+.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed var(--rule)}
+.row span:last-child{font-variant-numeric:tabular-nums}
+.split{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.split div{background:var(--card);border:1px solid var(--rule);padding:10px}.split b{display:block;font-family:Fraunces,serif;font-size:20px;font-weight:600}
+label.row{cursor:pointer}input{accent-color:var(--accent);margin-right:8px}
+.done span:first-child{text-decoration:line-through;color:var(--muted)}
+.wallet{color:var(--accent);font-size:11px;margin-left:6px}
+.note{margin-top:30px;font-size:12px;color:var(--muted);border-top:1px solid var(--rule);padding-top:10px}
+</style></head><body><div class="wrap">
+<div class="meta">Plan · Dec 10 onwards</div>
+<h1>First cutoff</h1>
+<nav class="tabs"><a class="on" href="#">Cutoff</a><a href="#">Pay</a><a href="#">Budget</a><a href="#">Bonuses</a><a href="#">Savings</a></nav>
+<div class="net"><div class="meta">Take-home</div><div class="big">₱25,008.38</div><div class="stamp">BALANCED</div>
+<div class="row"><span>Basic pay</span><span>30,557.50</span></div>
+<div class="row"><span>Income tax</span><span>−3,715.67</span></div>
+<div class="row"><span>Savings plan</span><span>−1,833.45</span></div></div>
+<h2>Split</h2>
+<div class="split"><div>Essentials<b>13,948</b></div><div>Wants<b>6,060</b></div><div>Savings<b>5,000</b></div></div>
+<h2>To transfer</h2>
+<label class="row done"><span><input type="checkbox" checked>Transpo<i class="wallet">GCASH</i></span><span>2,400</span></label>
+<label class="row done"><span><input type="checkbox" checked>Food<i class="wallet">GCASH</i></span><span>2,000</span></label>
+<label class="row"><span><input type="checkbox">Bigay<i class="wallet">BPI</i></span><span>3,000</span></label>
+<label class="row"><span><input type="checkbox">PLDT<i class="wallet">MAYA</i></span><span>2,099</span></label>
+<label class="row"><span><input type="checkbox">Emergency Fund<i class="wallet">MAYA</i></span><span>5,000</span></label>
+<h2>Per wallet</h2>
+<div class="row"><span>Gcash</span><span>5,849</span></div><div class="row"><span>Maya</span><span>7,099</span></div><div class="row"><span>BPI</span><span>12,060</span></div>
+<p class="note">Direction A, "Passbook": a warm paper bank-book look. Fraunces serif headings, Plex Mono figures, terracotta accent, and a stamp when the cutoff balances to zero.</p>
+</div></body></html>

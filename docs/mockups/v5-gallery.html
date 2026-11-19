@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) · Design gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;600;700&family=Spline+Sans+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Nunito:wght@400;600;800&family=DM+Mono:wght@400;500&family=Bricolage+Grotesque:wght@400;600;800&family=Fragment+Mono&family=Schibsted+Grotesk:wght@400;600;800&family=Geist+Mono:wght@400;500&family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--g-bg:#1B1D22;--g-ink:#F1F2F5;--g-mu:#A5AAB5;--g-ln:#32363F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--g-bg);color:var(--g-ink);font:15px/1.4 system-ui,sans-serif;display:flex;flex-direction:column;height:100vh}
+.bar{display:flex;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--g-ln);flex-wrap:wrap}
+.bar b{font-size:16px}.bar p{margin:0;color:var(--g-mu);flex:1;min-width:200px}
+.bar button{font:inherit;color:var(--g-ink);background:#2A2D35;border:1px solid var(--g-ln);border-radius:8px;padding:7px 14px;min-height:38px;cursor:pointer}
+.bar button:hover{background:#353944}.bar button[aria-pressed=true]{background:var(--g-ink);color:var(--g-bg)}
+.bar button:focus-visible{outline:2px solid #8FA2FF;outline-offset:2px}
+.dots{display:flex;gap:6px}.dots button{padding:0 10px;min-width:38px}
+.wrap{flex:1;overflow:auto;display:flex;justify-content:center;padding:18px;background:#101216}
+.frame{width:100%;max-width:1280px;border-radius:10px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5);transition:max-width .25s ease;align-self:flex-start;min-height:calc(100vh - 150px)}
+.frame.phone{max-width:390px}
+/* ---- design scope ---- */
+.d{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f);container-type:inline-size;min-height:inherit}
+.d .num{font-family:var(--m);font-variant-numeric:tabular-nums;font-size:.92em}
+.d .app{display:grid;grid-template-columns:210px 1fr;min-height:inherit}
+.d .side{background:var(--rl);color:var(--ri);padding:20px 12px;border-right:var(--bw) solid var(--ln)}
+.d .side b{display:block;font-size:20px;padding:0 10px 16px;font-weight:var(--hw)}
+.d .side a{display:block;padding:8px 10px;border-radius:calc(var(--r)*.6);color:var(--ri);opacity:.85;text-decoration:none}
+.d .side a.on{background:var(--ra);color:var(--rt);opacity:1;font-weight:700}
+.d main{padding:24px 28px 56px}
+.d h1{font-size:27px;line-height:1.15;margin:0;font-weight:var(--hw);letter-spacing:-.01em}
+.d h2{font-size:17px;margin:0 0 4px;font-weight:var(--hw)}
+.d .sub{margin:3px 0 0;color:var(--mu)}
+.d .head{display:flex;justify-content:space-between;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.d .card{background:var(--pn);border:var(--bw) solid var(--ln);border-radius:var(--r);padding:18px;margin-bottom:18px}
+.d .btn{font:inherit;font-weight:600;background:var(--ac);color:var(--oa);border:var(--bw) solid var(--ac);border-radius:calc(var(--r)*.6);padding:6px 14px;min-height:38px}
+.d .ghost{background:var(--pn);color:var(--ink);border-color:var(--ln)}
+.d .g2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:18px;align-items:start}
+.d .l1{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.d .prog{height:7px;background:var(--ln);border-radius:4px;overflow:hidden;margin:8px 0}.d .prog i{display:block;height:100%;background:var(--ac)}
+.d .next{list-style:none;margin:6px 0 0;padding:0}
+.d .next li{display:grid;grid-template-columns:12px 1fr auto auto;gap:12px;align-items:center;min-height:54px;border-top:1px solid var(--ln)}
+.d .next small{display:block;color:var(--mu)}
+.d .dotc{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.d .rows{list-style:none;margin:6px 0 0;padding:0}
+.d .rows li{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;min-height:44px;border-top:1px solid var(--ln)}
+.d .rows time{color:var(--mu);font-size:13px}
+.d .pill{font-size:12px;border:1px solid var(--ln);border-radius:999px;padding:3px 10px;color:var(--mu);white-space:nowrap}
+.d .fund{margin-top:12px}.d .fund .l1{font-size:14px}
+.d .cap{height:12px;border-radius:6px;background:var(--ln);overflow:hidden;margin-top:5px}.d .cap i{display:block;height:100%;background:var(--ink)}
+.d .mini{display:grid;grid-template-columns:1fr 10px 1fr;gap:0 8px;align-items:end;margin-top:12px}
+.d .col{display:flex;flex-direction:column-reverse;gap:2px;padding:5px;border-radius:calc(var(--r)*.6)}.d .col.on{background:var(--bn)}
+.d .stf{align-self:stretch;background:linear-gradient(var(--ink),var(--ink)) center/2px 100% no-repeat}
+.d .blk{border-radius:2px;background:var(--c)}.d .blk.x{opacity:.35}
+.d .wl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:var(--bw) solid var(--ln);border-radius:var(--r);background:var(--pn);overflow:hidden;margin-bottom:18px}
+.d .w{padding:14px 16px;border-right:1px solid var(--ln);border-top:5px solid var(--c)}.d .w:last-child{border-right:0}
+.d .w b{color:var(--c)}.d .w .num{display:block;font-size:19px;margin:2px 0}.d .w small{color:var(--mu)}
+.d .ds{display:flex;gap:5px;margin-top:7px}.d .ds i{width:13px;height:13px;border-radius:50%;border:3px solid var(--c)}.d .ds i.f{background:var(--c)}
+.d .tl{list-style:none;margin:8px 0 0;padding:0 0 0 18px;position:relative}
+.d .tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:4px;background:var(--ln);border-radius:2px}
+.d .tl li{position:relative;padding:8px 0;display:flex;justify-content:space-between;gap:10px}
+.d .tl li::before{content:"";position:absolute;left:-18px;top:14px;width:14px;height:14px;border-radius:50%;background:var(--pn);border:3px solid var(--ink)}
+.d .tl li.p::before{background:var(--ac)}
+.d .act{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:var(--ink);color:var(--bg);border-radius:var(--r);padding:16px 20px;margin-bottom:18px}
+.d .act b{font-size:19px}.d .act small{display:block;opacity:.8}.d .act .btn{border-color:var(--ac)}
+.d .rl{position:relative;height:140px;margin:34px 6px 28px;border-bottom:2px solid var(--ink)}
+.d .cut{position:absolute;top:0;bottom:0;background:var(--bn);border-radius:6px 6px 0 0}.d .cut span{position:absolute;left:8px;top:6px;font-size:12px;color:var(--mu)}
+.d .ev{position:absolute;bottom:0;width:0}.d .ev::before{content:"";display:block;width:2px;height:var(--h);background:var(--c);transform:translateX(-1px)}
+.d .ev i{position:absolute;left:0;top:calc(-1*var(--h));transform:translate(-50%,-100%);width:15px;height:15px;border-radius:3px;background:var(--c)}
+.d .ev.p i{border-radius:50%;border:3px solid var(--ink);background:var(--ac)}
+.d .ev em{position:absolute;left:0;top:calc(-1*var(--h) - 22px);transform:translate(-50%,-100%);font-style:normal;font-size:12px;white-space:nowrap}
+.d .tk{position:absolute;bottom:-24px;transform:translateX(-50%);font-size:12px;color:var(--mu)}
+.d .now{position:absolute;top:0;bottom:0;width:2px;background:var(--ac)}.d .now::after{content:"Today";position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:12px;font-weight:700;color:var(--ink)}
+.d .split{display:flex;height:16px;border-radius:4px;overflow:hidden;gap:2px;margin:10px 0}.d .split i{display:block;background:var(--c)}
+.d table{width:100%;border-collapse:collapse}.d td{padding:8px 0;border-bottom:1px solid var(--ln)}.d td:last-child{text-align:right}
+.d .chip{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:8px}
+.d .mnav{display:none}
+@container (max-width:760px){
+ .d .app{grid-template-columns:1fr}.d .side{display:none}.d main{padding:16px 16px 90px}.d h1{font-size:23px}
+ .d .g2{grid-template-columns:1fr}.d .wl{grid-template-columns:1fr 1fr}.d .w:nth-child(2){border-right:0}.d .w:nth-child(-n+2){border-bottom:1px solid var(--ln)}
+ .d .next li{grid-template-columns:12px 1fr auto}.d .next .btn{grid-column:2/4}.d .ev em{display:none}
+ .d .mnav{display:grid;grid-template-columns:repeat(5,1fr);position:sticky;bottom:0;background:var(--rl);color:var(--ri)}
+ .d .mnav a{text-align:center;padding:14px 2px;font-size:12px;color:var(--ri);text-decoration:none;opacity:.85}.d .mnav a.on{background:var(--ra);color:var(--rt);font-weight:700;opacity:1}}
+</style></head><body>
+<div class="bar"><b>Bad(yet) designs</b><p id="desc"></p>
+<div class="dots" id="dots"></div>
+<button id="prev" aria-label="Previous design">←</button><button id="next" aria-label="Next design">→</button>
+<button id="dk" aria-pressed="true">Desktop</button><button id="ph" aria-pressed="false">Phone</button></div>
+<div class="wrap"><div class="frame" id="frame"></div></div>
+<script>
+const T=(o)=>Object.entries(o).map(([k,v])=>`--${k}:${v}`).join(";");
+const DES=[
+{n:"Slate Score",l:1,d:"Dark-first take on Score. Cobalt-lavender accent, wallet-coloured blocks.",t:{bg:"#0B0D12",pn:"#12151C",ink:"#ECEEF3",mu:"#9AA1AF",ln:"#272C37",ac:"#8FA2FF",oa:"#0B0D12",bn:"#1A2040",c1:"#7BA7FF",c2:"#3FD1A0",c3:"#FF8A78",c4:"#C4A0FF",rl:"#12151C",ri:"#9AA1AF",ra:"#ECEEF3",rt:"#0B0D12",r:"12px",bw:"1px",hw:"700",f:'"Familjen Grotesk",sans-serif',m:'"Spline Sans Mono",monospace'}},
+{n:"Night Route",l:2,d:"Dark green with jeepney yellow. Wallet lines glow against the dark.",t:{bg:"#07120E",pn:"#0E1D17",ink:"#E6F0EA",mu:"#93A69C",ln:"#223029",ac:"#FFC72C",oa:"#12201B",bn:"#12291F",c1:"#7BA7FF",c2:"#3FD1A0",c3:"#FF8A78",c4:"#C4A0FF",rl:"#0A2A21",ri:"#D3E6DC",ra:"#FFC72C",rt:"#12201B",r:"14px",bw:"1px",hw:"700",f:'"Atkinson Hyperlegible Next",sans-serif',m:'"Atkinson Hyperlegible Mono",monospace'}},
+{n:"Pandan",l:2,d:"Soft, friendly and rounded. Fresh green, coconut white, big radii. The most playful.",t:{bg:"#EEF6EF",pn:"#FFFFFF",ink:"#16301F",mu:"#52705D",ln:"#D3E4D6",ac:"#1E7A45",oa:"#FFFFFF",bn:"#DDEEDF",c1:"#2F5FD0",c2:"#1E7A45",c3:"#C2412F",c4:"#8A4FC0",rl:"#FFFFFF",ri:"#52705D",ra:"#1E7A45",rt:"#FFFFFF",r:"22px",bw:"1px",hw:"800",f:'Nunito,sans-serif',m:'"DM Mono",monospace'}},
+{n:"Two-Ink",l:1,d:"Risograph print: one blue ink and one fluorescent pink, thick borders, flat and loud.",t:{bg:"#FBFBF8",pn:"#FFFFFF",ink:"#1B2FCB",mu:"#4A55A8",ln:"#1B2FCB",ac:"#FF4D94",oa:"#1B2FCB",bn:"#FFE1EE",c1:"#1B2FCB",c2:"#0B7A75",c3:"#C4175F",c4:"#6B3FA0",rl:"#1B2FCB",ri:"#FFFFFF",ra:"#FF4D94",rt:"#1B2FCB",r:"6px",bw:"2px",hw:"800",f:'"Bricolage Grotesque",sans-serif',m:'"Fragment Mono",monospace'}},
+{n:"Transit Paper",l:3,d:"Swiss transit signage. White, hairlines, four saturated line colours, one red accent.",t:{bg:"#FFFFFF",pn:"#FFFFFF",ink:"#111111",mu:"#5A5A5A",ln:"#D9D9D9",ac:"#D7261E",oa:"#FFFFFF",bn:"#F3F3F3",c1:"#0057B8",c2:"#00805A",c3:"#D7261E",c4:"#8B4DB8",rl:"#FFFFFF",ri:"#5A5A5A",ra:"#111111",rt:"#FFFFFF",r:"4px",bw:"1px",hw:"800",f:'"Schibsted Grotesk",sans-serif',m:'"Geist Mono",monospace'}},
+{n:"Dusk Timeline",l:3,d:"Deep navy with a teal accent. Calm after-work look, timeline first.",t:{bg:"#0A1424",pn:"#101D33",ink:"#E7EEF8",mu:"#97A7BF",ln:"#22324D",ac:"#5EEAD4",oa:"#08202A",bn:"#12274A",c1:"#7FB2FF",c2:"#5EEAD4",c3:"#FFA08A",c4:"#D2B4FF",rl:"#0D1A2E",ri:"#97A7BF",ra:"#5EEAD4",rt:"#08202A",r:"16px",bw:"1px",hw:"800",f:'Manrope,sans-serif',m:'"JetBrains Mono",monospace'}}
+];
+const WN=["Gcash","Maya","BPI","Vybe"],W=(i)=>`var(--c${i+1})`,f=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2});
+const NEXT=[["Contingency",0,550],["Rent share",2,3000],["Internet",1,1299]];
+const side=`<nav class="side" aria-label="Main"><b>Bad(yet)</b><a class="on" href="#">Dashboard</a><a href="#">Cutoff</a><a href="#">Pay</a><a href="#">Budget</a><a href="#">Installments</a><a href="#">Subscriptions</a><a href="#">Bonuses</a><a href="#">Savings forecast</a><a href="#">Plans</a></nav>`;
+const mnav=`<nav class="mnav"><a class="on" href="#">Home</a><a href="#">Cutoff</a><a href="#">Budget</a><a href="#">Savings</a><a href="#">More</a></nav>`;
+const head=(t)=>`<div class="head"><div><h1>${t}</h1><p class="sub">December 2026 plan · first cutoff, Dec 1 to 15</p></div><button class="btn ghost">Plan: December 2026</button></div>`;
+const nextL=(k)=>`<ul class="next">${NEXT.slice(0,k).map(x=>`<li style="--c:${W(x[1])}"><span class="dotc"></span><span>${x[0]}<small>to ${WN[x[1]]}</small></span><span class="num">${f(x[2])}</span><button class="btn">Mark sent</button></li>`).join("")}</ul>`;
+const funds=`<div class="fund"><div class="l1"><span>Emergency fund</span><span class="num">₱38,000 of ₱60,000</span></div><div class="cap"><i style="width:63%"></i></div></div><div class="fund"><div class="l1"><span>Travel fund</span><span class="num">₱12,000 of ₱30,000</span></div><div class="cap"><i style="width:40%"></i></div></div>`;
+const coming=`<ul class="rows"><li><time class="num">Dec 3</time><span>Internet</span><span class="num">1,299.00</span></li><li><time class="num">Dec 8</time><span>Phone installment <span class="pill">9 of 12</span></span><span class="num">3,000.00</span></li><li><time class="num">Dec 12</time><span>Streaming</span><span class="num">549.00</span></li><li><time class="num">Dec 15</time><span>13th month <span class="pill">estimate</span></span><span class="num">+24,000.00</span></li></ul>`;
+const A=[[2400,0,1],[2000,0,1],[550,0],[3000,2],[1299,1],[3000,2],[5200,2],[4000,1],[2001,3]],B=[[2400,0],[2000,0],[550,0],[2600,1],[3000,2],[5500,2],[4000,1],[4050,3]];
+const col=(L,on)=>`<div class="col${on?" on":""}">${L.map(l=>`<div class="blk${l[2]?" x":""}" style="--c:${W(l[1])};height:${Math.max(8,l[0]/110)}px"></div>`).join("")}</div>`;
+const mini=`<div class="l1" style="margin-top:10px"><b>1st</b><b>2nd</b></div><div class="mini">${col(A,1)}<div class="stf"></div>${col(B,0)}</div>`;
+const wl=`<div class="wl">${[[4950,3],[5299,2],[11200,3],[2001,1]].map((x,i)=>`<div class="w" style="--c:${W(i)}"><b>${WN[i]}</b><span class="num">₱${f(x[0])}</span><small>${i==0?2:0} of ${x[1]} sent</small><div class="ds">${Array.from({length:x[1]},(_,j)=>`<i class="${i==0&&j<2?"f":""}"></i>`).join("")}</div></div>`).join("")}</div>`;
+const pc=d=>((d-1)/30*100).toFixed(1)+"%";
+const ruler=`<div class="rl"><div class="cut" style="left:0;width:${pc(16)}"><span>1st cutoff</span></div>${[[1,"Pay day",8,"p"],[3,"Internet",30,"",1],[8,"Installment",56,"",2],[12,"Streaming",24,"",3],[15,"13th month",100,"p"],[16,"Pay day",8,"p"]].map(e=>`<div class="ev ${e[3]}" style="left:${pc(e[0])};--h:${e[2]}px;--c:${e[4]!=null?W(e[4]):"var(--ink)"}"><i></i><em>${e[1]}</em></div>`).join("")}${[1,8,15,22,29].map(d=>`<span class="tk" style="left:${pc(d)}">Dec ${d}</span>`).join("")}<div class="now" style="left:${pc(5)}"></div></div>`;
+const split=`<div class="split">${[4950,5299,11200,2001].map((v,i)=>`<i style="flex:${v};--c:${W(i)}"></i>`).join("")}</div><table>${[4950,5299,11200,2001].map((v,i)=>`<tr><td><span class="chip" style="--c:${W(i)}"></span>${WN[i]}</td><td class="num">${f(v)}</td></tr>`).join("")}</table>`;
+const TL=`<ul class="tl"><li><span>Internet</span><span class="num">Dec 3 · 1,299.00</span></li><li><span>Phone installment</span><span class="num">Dec 8 · 3,000.00</span></li><li class="p"><span>13th month lands</span><span class="num">Dec 15 · +24,000.00</span></li><li class="p"><span>Second cutoff pay</span><span class="num">Dec 16 · 24,100.00</span></li></ul>`;
+const L={
+1:()=>`<div class="app">${side}<main>${head("Hi. Here is your month.")}<div class="g2"><div><section class="card"><div class="l1"><h2>Send next</h2><span class="num">₱19,050.00 left</span></div><div class="prog"><i style="width:19%"></i></div>${nextL(3)}</section><section class="card"><h2>Savings funds</h2>${funds}</section></div><div><section class="card"><h2>The month, as a score</h2><p class="sub" style="margin:0">Blocks are as tall as the amount, coloured by wallet.</p>${mini}</section><section class="card"><h2>Coming up</h2>${coming}</section></div></div></main></div>${mnav}`,
+2:()=>`<div class="app">${side}<main>${head("Payday! Here is where it goes.")}${wl}<div class="g2"><div><section class="card"><div class="l1"><h2>Next stops</h2><span class="num">₱19,050.00 left</span></div><div class="prog"><i style="width:19%"></i></div>${nextL(3)}</section><section class="card"><h2>Savings funds</h2>${funds}</section></div><section class="card"><h2>Coming up</h2>${TL}</section></div></main></div>${mnav}`,
+3:()=>`<div class="app">${side}<main>${head("December at a glance")}<div class="act"><div><b>₱19,050.00 still to send in 7 transfers</b><small>Next up: Contingency, Gcash, ₱550.00</small></div><button class="btn">Mark Contingency sent</button></div><section class="card"><h2>The month, left to right</h2><p class="sub" style="margin:0">Pay days, bills and bonuses on their dates. Taller marks are bigger amounts.</p>${ruler}<div class="g2" style="margin-top:8px"><div><h2>Where this cutoff goes</h2>${split}</div><div><h2>Savings funds</h2>${funds}</div></div></section></main></div>${mnav}`};
+let i=0;const fr=document.getElementById("frame");
+function show(n){i=(n+DES.length)%DES.length;const d=DES[i];fr.innerHTML=`<div class="d" style="${T(d.t)}">${L[d.l]()}</div>`;desc.innerHTML=`<b>${i+1}/${DES.length} · ${d.n}</b> · ${d.d}`;[...dots.children].forEach((b,j)=>b.setAttribute("aria-pressed",j==i))}
+DES.forEach((d,j)=>{const b=document.createElement("button");b.textContent=j+1;b.title=d.n;b.setAttribute("aria-label",d.n);b.onclick=()=>show(j);dots.append(b)});
+prev.onclick=()=>show(i-1);next.onclick=()=>show(i+1);
+dk.onclick=()=>{fr.classList.remove("phone");dk.setAttribute("aria-pressed",true);ph.setAttribute("aria-pressed",false)};
+ph.onclick=()=>{fr.classList.add("phone");ph.setAttribute("aria-pressed",true);dk.setAttribute("aria-pressed",false)};
+addEventListener("keydown",e=>{if(e.key=="ArrowRight")show(i+1);if(e.key=="ArrowLeft")show(i-1)});
+show(0);
+</script></body></html>

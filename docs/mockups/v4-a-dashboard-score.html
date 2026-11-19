@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) · Dashboard A · Score</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F5F6F8;--panel:#FFFFFF;--ink:#0E1116;--muted:#575E6B;--line:#DCDFE5;--accent:#2748F0;--on-accent:#fff;--band:#E8ECFE;--ok:#1B7F4B}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0B0D12;--panel:#12151C;--ink:#ECEEF3;--muted:#9AA1AF;--line:#272C37;--accent:#8FA2FF;--on-accent:#0B0D12;--band:#1A2040;--ok:#5FD08F}}
+:root[data-theme=dark]{--bg:#0B0D12;--panel:#12151C;--ink:#ECEEF3;--muted:#9AA1AF;--line:#272C37;--accent:#8FA2FF;--on-accent:#0B0D12;--band:#1A2040;--ok:#5FD08F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Familjen Grotesk",system-ui,sans-serif}
+.num{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.93em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--accent);color:var(--on-accent)}
+.app{display:grid;grid-template-columns:224px 1fr;min-height:100vh}
+nav.side{border-right:1px solid var(--line);padding:22px 14px;background:var(--panel);position:sticky;top:0;height:100vh}
+nav.side b{display:block;font-size:20px;font-weight:700;padding:0 10px 18px}
+nav.side a{display:block;padding:8px 10px;border-radius:6px;color:var(--muted);text-decoration:none}
+nav.side a:hover{background:var(--bg);color:var(--ink)}
+nav.side a[aria-current]{background:var(--ink);color:var(--bg);font-weight:600}
+main{padding:26px 32px 64px;max-width:1200px;width:100%}
+.head{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:end;justify-content:space-between;margin-bottom:20px}
+h1{font-size:28px;margin:0;font-weight:700;letter-spacing:-.015em}.sub{margin:2px 0 0;color:var(--muted)}
+.btn{font:inherit;min-height:36px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+select.btn{padding-right:6px}
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:20px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:20px}
+h2{font-size:17px;margin:0 0 4px;font-weight:700}
+.line1{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.prog{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin:8px 0 6px}.prog i{display:block;height:100%;background:var(--accent)}
+.next{list-style:none;margin:10px 0 0;padding:0}
+.next li{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;min-height:54px;border-top:1px solid var(--line)}
+.next .who{display:block;font-weight:600}.next small{color:var(--muted)}
+.next li.gone{opacity:.5}
+.funds{display:grid;gap:14px;margin-top:10px}
+.fund .line1{font-size:14px}
+.cap{height:12px;border:1.5px solid var(--ink);border-radius:3px;position:relative;margin-top:5px;overflow:hidden}
+.cap i{position:absolute;inset:0 auto 0 0;background:repeating-linear-gradient(135deg,var(--ink) 0 2px,transparent 2px 6px)}
+.rows{margin:6px 0 0;padding:0;list-style:none}
+.rows li{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;min-height:44px;border-top:1px solid var(--line)}
+.rows time{color:var(--muted);font-size:13px}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted);white-space:nowrap}
+.mini{display:grid;grid-template-columns:1fr 12px 1fr;gap:0 8px;align-items:end;margin-top:12px}
+.mini .col{display:flex;flex-direction:column-reverse;gap:2px;padding:5px;border-radius:8px}.mini .col.on{background:var(--band)}
+.mini .staff{align-self:stretch;background:linear-gradient(var(--ink),var(--ink)) center/2px 100% no-repeat}
+.blk{border:1.5px solid var(--ink);border-radius:2px;background:var(--panel)}
+.blk.E{background:var(--ink)}.blk.W{background:repeating-linear-gradient(135deg,var(--ink) 0 2px,var(--panel) 2px 6px)}.blk.S{background:radial-gradient(var(--ink) 1.1px,var(--panel) 1.4px) 0 0/6px 6px}
+.blk.done{opacity:.35}
+.mini-h{display:grid;grid-template-columns:1fr 12px 1fr;gap:0 8px;font-size:13px;font-weight:600}.mini-h span:first-child{text-align:right}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+.mnav{display:none}
+@media (max-width:900px){.app{grid-template-columns:1fr}nav.side{display:none}main{padding:18px 16px 100px}.grid{grid-template-columns:1fr}h1{font-size:24px}
+.mnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);z-index:5}
+.mnav a{padding:14px 2px;text-align:center;font-size:13px;color:var(--muted);text-decoration:none;min-height:48px}
+.mnav a[aria-current]{color:var(--ink);font-weight:700;box-shadow:inset 0 -3px 0 var(--accent)}}
+</style></head><body>
+<div class="app">
+<nav class="side" aria-label="Main"><b>Bad(yet)</b><a href="#" aria-current="page">Dashboard</a><a href="#">Cutoff</a><a href="#">Pay</a><a href="#">Budget</a><a href="#">Installments</a><a href="#">Subscriptions</a><a href="#">Bonuses</a><a href="#">Savings forecast</a><a href="#">Plans</a></nav>
+<main>
+<div class="head"><div><h1>Hi. Here is your month.</h1><p class="sub">December 2026 plan · first cutoff, Dec 1 to 15</p></div><div><select class="btn" aria-label="Plan"><option>December 2026 (active)</option><option>2027 estimate</option></select> <button class="btn" id="theme">Theme</button></div></div>
+<div class="grid"><div>
+<section class="card" aria-labelledby="n"><div class="line1"><h2 id="n">Send next</h2><span class="num" id="left"></span></div>
+<div class="prog" role="progressbar" aria-label="Sent so far"><i id="bar"></i></div><p class="sub" id="said"></p><ul class="next" id="next"></ul></section>
+<section class="card" aria-labelledby="f"><h2 id="f">Savings funds</h2><div class="funds">
+<div class="fund"><div class="line1"><span>Emergency fund</span><span class="num">₱38,000 of ₱60,000 cap</span></div><div class="cap" role="img" aria-label="63 percent"><i style="width:63%"></i></div></div>
+<div class="fund"><div class="line1"><span>Travel fund</span><span class="num">₱12,000 of ₱30,000 cap</span></div><div class="cap" role="img" aria-label="40 percent"><i style="width:40%"></i></div></div>
+<p class="sub" style="margin:0">At this pace, Emergency fund reaches its cap in Jun 2027. Estimate.</p></div></section>
+</div><div>
+<section class="card" aria-labelledby="s"><h2 id="s">The month, as a score</h2><p class="sub" style="margin:0">Blocks are as tall as the amount. Faded means sent.</p>
+<div class="mini-h" style="margin-top:12px"><span>1st</span><span></span><span>2nd</span></div><div class="mini" id="mini"></div>
+<div class="leg"><span>Solid: Essentials</span><span>Hatched: Wants</span><span>Dotted: Savings</span></div></section>
+<section class="card" aria-labelledby="c"><h2 id="c">Coming up</h2><ul class="rows">
+<li><time class="num">Dec 3</time><span>Internet</span><span class="num">1,299.00</span></li>
+<li><time class="num">Dec 8</time><span>Phone installment <span class="pill">9 of 12</span></span><span class="num">3,000.00</span></li>
+<li><time class="num">Dec 12</time><span>Streaming</span><span class="num">549.00</span></li>
+<li><time class="num">Dec 15</time><span>13th month <span class="pill">estimate</span></span><span class="num">+24,000.00</span></li></ul></section>
+</div></div></main></div>
+<nav class="mnav" aria-label="Main"><a href="#" aria-current="page">Home</a><a href="#">Cutoff</a><a href="#">Budget</a><a href="#">Savings</a><a href="#">More</a></nav>
+<script>
+const L1=[["Transpo","E","Gcash",2400,1],["Food","E","Gcash",2000,1],["Contingency","E","Gcash",550],["Rent share","E","BPI",3000],["Internet","E","Maya",1299],["Installments","E","BPI",3000],["Wants","W","BPI",5200],["Emergency fund","S","Maya",4000],["Travel fund","S","Vybe",2001]];
+const L2=[["T","E",0,2400],["F","E",0,2000],["C","E",0,550],["U","E",0,2600],["I","E",0,3000],["W","W",0,5500],["E","S",0,4000],["T","S",0,4050]];
+const NET=23450,m=n=>"₱"+n.toLocaleString("en-PH",{minimumFractionDigits:2});
+function col(L,on){return `<div class="col${on?" on":""}">${L.map(l=>`<div class="blk ${l[1]}${l[4]?" done":""}" style="height:${Math.max(8,l[3]/110)}px"></div>`).join("")}</div>`}
+function draw(){const sent=L1.reduce((a,l)=>a+(l[4]?l[3]:0),0),todo=L1.map((l,i)=>[l,i]).filter(x=>!x[0][4]);
+left.textContent=m(NET-sent)+" left of "+m(NET);bar.style.width=sent/NET*100+"%";
+said.textContent=todo.length?`${todo.length} transfers to go. Next ${Math.min(3,todo.length)} below.`:"All sent. Go touch grass.";
+next.innerHTML=todo.slice(0,3).map(([l,i])=>`<li><span><span class="who">${l[0]}</span><small>to ${l[2]}</small></span><span class="num">${l[3].toLocaleString("en-PH",{minimumFractionDigits:2})}</span><button class="btn pri" data-i="${i}">Mark sent</button></li>`).join("");
+mini.innerHTML=col(L1,1)+'<div class="staff"></div>'+col(L2,0)}
+next.addEventListener("click",e=>{const b=e.target.closest("button");if(b){L1[b.dataset.i][4]=1;draw()}});
+theme.onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).getPropertyValue("--bg").trim()=="#0B0D12"?"light":"dark"};
+draw();
+</script></body></html>

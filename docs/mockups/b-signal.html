@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction B · Signal</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#10233F;--panel:#17304F;--ink:#FFFFFF;--muted:#9FB2C8;--yellow:#F2C230;--red:#D7372B;--green:#3FB68B}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 "Space Grotesk",sans-serif}
+.wrap{max-width:440px;margin:0 auto;padding:18px 16px 60px}
+.top{display:flex;justify-content:space-between;align-items:center}
+.pill{background:var(--yellow);color:var(--bg);font-weight:700;padding:4px 10px;font-size:12px}
+h1{font-family:"Archivo Black",sans-serif;font-size:44px;line-height:1;margin:18px 0 4px}
+.muted{color:var(--muted);font-size:13px}
+.bar{display:flex;height:16px;margin:18px 0 6px}.bar i{display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}.legend b{color:var(--ink)}
+.wallets{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
+.w{background:var(--panel);padding:14px;border-left:6px solid var(--yellow)}
+.w .n{font-size:12px;letter-spacing:2px;color:var(--muted)}.w .v{font-family:"Archivo Black";font-size:24px}
+.w .p{font-size:12px;margin-top:6px}.w.full{border-left-color:var(--green)}
+h2{font-family:"Archivo Black";font-size:16px;letter-spacing:1px;margin:22px 0 10px;text-transform:uppercase}
+.t{display:flex;align-items:center;gap:12px;background:var(--panel);padding:12px;margin-bottom:6px}
+.box{width:22px;height:22px;border:2px solid var(--yellow);flex:none}.t.done .box{background:var(--yellow)}
+.t.done{opacity:.55}.t .amt{margin-left:auto;font-weight:700}
+.tag{font-size:10px;background:#24456E;padding:2px 6px;margin-left:6px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#0B1A2F;display:flex;justify-content:space-around;padding:12px 0;font-size:12px;color:var(--muted)}nav .on{color:var(--yellow)}
+.note{font-size:12px;color:var(--muted);margin-top:26px}
+</style></head><body><div class="wrap">
+<div class="top"><span class="pill">1ST CUTOFF · DEC 10</span><span class="muted">2 of 11 sent</span></div>
+<h1>₱25,008</h1><div class="muted">take-home · fully allocated</div>
+<div class="bar"><i style="flex:13948;background:var(--yellow)"></i><i style="flex:6060;background:var(--red)"></i><i style="flex:5000;background:var(--green)"></i></div>
+<div class="legend"><span>Essentials <b>13,948</b></span><span>Wants <b>6,060</b></span><span>Savings <b>5,000</b></span></div>
+<div class="wallets">
+<div class="w"><div class="n">GCASH</div><div class="v">5,849</div><div class="p">4,400 sent</div></div>
+<div class="w"><div class="n">MAYA</div><div class="v">7,099</div><div class="p">0 sent</div></div>
+<div class="w"><div class="n">BPI</div><div class="v">12,060</div><div class="p">0 sent</div></div>
+<div class="w full"><div class="n">VYBE</div><div class="v">0</div><div class="p">nothing due</div></div></div>
+<h2>Send these</h2>
+<div class="t done"><span class="box"></span>Transpo<span class="tag">GCASH</span><span class="amt">2,400</span></div>
+<div class="t done"><span class="box"></span>Food<span class="tag">GCASH</span><span class="amt">2,000</span></div>
+<div class="t"><span class="box"></span>Bigay<span class="tag">BPI</span><span class="amt">3,000</span></div>
+<div class="t"><span class="box"></span>PLDT<span class="tag">MAYA</span><span class="amt">2,099</span></div>
+<div class="t"><span class="box"></span>Emergency Fund<span class="tag">MAYA</span><span class="amt">5,000</span></div>
+<p class="note">Direction B, "Signal": bold navy and road-sign yellow. Archivo Black numbers, wallet-first tiles, and a big-tap checklist built for payday on a phone.</p>
+</div>
+<nav><span class="on">Cutoff</span><span>Pay</span><span>Budget</span><span>Bonuses</span><span>Savings</span></nav>
+</body></html>

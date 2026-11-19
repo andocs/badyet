@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Direction C · Quiet Ledger</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F7F7F5;--card:#FFFFFF;--ink:#23262B;--muted:#6B7078;--line:#E3E3DF;--teal:#1F7A6E;--amber:#C98A1B;--plum:#7A4E6E}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "IBM Plex Sans",sans-serif}
+.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:200px 1fr;min-height:100vh}
+aside{border-right:1px solid var(--line);padding:20px 16px}aside b{display:block;margin-bottom:18px}
+aside a{display:block;padding:6px 8px;color:var(--muted);text-decoration:none;border-radius:4px}aside a.on{background:#EAF2F0;color:var(--teal);font-weight:500}
+main{padding:24px 28px;max-width:900px}
+.head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+h1{font-size:20px;font-weight:600;margin:0}select{font:inherit;padding:4px 8px;border:1px solid var(--line);background:var(--card)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+.k{background:var(--card);border:1px solid var(--line);padding:12px}.k small{color:var(--muted)}.k div{font-size:20px;margin-top:4px}
+.k.ok div{color:var(--teal)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);padding:14px}
+h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid var(--line)}td:last-child{text-align:right}
+tr.done td{color:var(--muted)}tr.done td:nth-child(2){text-decoration:line-through}
+input{accent-color:var(--teal)}
+.w{font-size:11px;color:var(--plum)}
+.stack{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:6px 0 12px}
+.note{font-size:12px;color:var(--muted);margin-top:22px}
+@media (max-width:720px){.app{grid-template-columns:1fr}aside{display:none}.kpis{grid-template-columns:1fr 1fr}.cols{grid-template-columns:1fr}main{padding:16px}}
+</style></head><body><div class="app">
+<aside><b>badyet</b><a class="on" href="#">Cutoff</a><a href="#">Pay</a><a href="#">Budget</a><a href="#">Installments</a><a href="#">Subscriptions</a><a href="#">Bonuses</a><a href="#">Savings forecast</a><a href="#">Plans</a></aside>
+<main>
+<div class="head"><h1>First cutoff</h1><select><option>Plan: Dec 10 onwards (active)</option><option>2027 estimate</option></select></div>
+<div class="kpis">
+<div class="k"><small>Take-home</small><div class="num">25,008.38</div></div>
+<div class="k"><small>Allocated</small><div class="num">25,008.38</div></div>
+<div class="k ok"><small>Budget left</small><div class="num">0.00</div></div>
+<div class="k"><small>Sent</small><div class="num">4,400 / 25,008</div></div></div>
+<div class="cols">
+<div class="card"><h2>Split</h2>
+<div class="stack"><i style="flex:13948;background:var(--teal)"></i><i style="flex:6060;background:var(--amber)"></i><i style="flex:5000;background:var(--plum)"></i></div>
+<table><tr><td>Essentials</td><td class="num">13,948.00</td></tr><tr><td>Wants</td><td class="num">6,060.00</td></tr><tr><td>Savings</td><td class="num">5,000.00</td></tr></table>
+<h2 style="margin-top:18px">Per wallet</h2>
+<table><tr><td>Gcash</td><td class="num">5,849.00</td></tr><tr><td>Maya</td><td class="num">7,099.00</td></tr><tr><td>BPI</td><td class="num">12,060.00</td></tr><tr><td>Vybe</td><td class="num">0.00</td></tr></table></div>
+<div class="card"><h2>To transfer</h2><table>
+<tr class="done"><td><input type="checkbox" checked></td><td>Transpo <span class="w">Gcash</span></td><td class="num">2,400</td></tr>
+<tr class="done"><td><input type="checkbox" checked></td><td>Food <span class="w">Gcash</span></td><td class="num">2,000</td></tr>
+<tr><td><input type="checkbox"></td><td>Contingency <span class="w">Gcash</span></td><td class="num">550</td></tr>
+<tr><td><input type="checkbox"></td><td>Bigay <span class="w">BPI</span></td><td class="num">3,000</td></tr>
+<tr><td><input type="checkbox"></td><td>PLDT (reimbursed) <span class="w">Maya</span></td><td class="num">2,099</td></tr>
+<tr><td><input type="checkbox"></td><td>Installments <span class="w">BPI</span></td><td class="num">3,000</td></tr>
+<tr><td><input type="checkbox"></td><td>Wants <span class="w">BPI</span></td><td class="num">6,060</td></tr>
+<tr><td><input type="checkbox"></td><td>Emergency Fund <span class="w">Maya</span></td><td class="num">5,000</td></tr></table></div></div>
+<p class="note">Direction C, "Quiet Ledger": calm and dense like the sheet itself. Plex Sans with mono figures, a sidebar on desktop that collapses on phones, and teal/amber/plum for the three buckets.</p>
+</main></div></body></html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) · Dashboard B · Route Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--rail:#0E4A3A;--rail-ink:#E6F2EC;--bg:#EDF1EB;--panel:#FFFFFF;--ink:#12201B;--muted:#516059;--line:#D5DDD6;--yel:#FFC72C;--on-yel:#12201B;--gc:#1F5FD6;--my:#0B7A5A;--bp:#C93626;--vy:#7A3FC4}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--rail:#0A2A21;--rail-ink:#D3E6DC;--bg:#08110E;--panel:#101C17;--ink:#E6F0EA;--muted:#93A69C;--line:#223029;--gc:#7BA7FF;--my:#3FD1A0;--bp:#FF8A78;--vy:#C4A0FF}}
+:root[data-theme=dark]{--rail:#0A2A21;--rail-ink:#D3E6DC;--bg:#08110E;--panel:#101C17;--ink:#E6F0EA;--muted:#93A69C;--line:#223029;--gc:#7BA7FF;--my:#3FD1A0;--bp:#FF8A78;--vy:#C4A0FF}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Atkinson Hyperlegible Next",system-ui,sans-serif}
+.num{font-family:"Atkinson Hyperlegible Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;font-size:.94em}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+::selection{background:var(--yel);color:var(--on-yel)}
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+nav.side{background:var(--rail);color:var(--rail-ink);padding:22px 14px;position:sticky;top:0;height:100vh}
+nav.side b{display:block;font-size:22px;padding:0 10px 20px}nav.side b em{font-style:normal;color:var(--yel)}
+nav.side a{display:block;padding:9px 10px;border-radius:8px;color:var(--rail-ink);text-decoration:none;opacity:.82}
+nav.side a:hover{opacity:1;background:rgba(255,255,255,.08)}
+nav.side a[aria-current]{background:var(--yel);color:var(--on-yel);font-weight:700;opacity:1}
+main{padding:26px 32px 64px;max-width:1160px;width:100%}
+.head{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:end;justify-content:space-between;margin-bottom:18px}
+h1{font-size:30px;line-height:1.15;margin:0;text-wrap:balance}.sub{margin:4px 0 0;color:var(--muted)}
+.btn{font:inherit;min-height:40px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);border-radius:10px;padding:6px 14px;cursor:pointer}
+.btn.pri{background:var(--yel);border-color:var(--yel);color:var(--on-yel);font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:20px}
+h2{font-size:18px;margin:0 0 2px}
+.wallets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border:1px solid var(--line);border-radius:14px;background:var(--panel);overflow:hidden;margin-bottom:20px}
+.w{padding:16px 18px;border-right:1px solid var(--line);border-top:5px solid var(--c)}.w:last-child{border-right:0}
+.w b{color:var(--c);font-size:16px}.w .num{display:block;font-size:20px;margin:2px 0}.w small{color:var(--muted)}
+.dots{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+.dots i{width:14px;height:14px;border-radius:50%;border:3px solid var(--c);background:var(--panel)}.dots i.d{background:var(--c)}
+.two{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:20px;align-items:start}
+.next{list-style:none;margin:8px 0 0;padding:0}
+.next li{display:grid;grid-template-columns:12px 1fr auto auto;gap:12px;align-items:center;min-height:56px;border-top:1px solid var(--line)}
+.next .c{width:12px;height:12px;border-radius:50%;background:var(--c)}
+.next small{color:var(--muted);display:block}
+.prog{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:10px 0 4px}.prog i{display:block;height:100%;background:var(--ink);transition:width .35s}
+.tl{list-style:none;margin:10px 0 0;padding:0 0 0 18px;position:relative}
+.tl::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:4px;background:var(--line);border-radius:2px}
+.tl li{position:relative;padding:8px 0;display:flex;justify-content:space-between;gap:10px}
+.tl li::before{content:"";position:absolute;left:-18px;top:14px;width:14px;height:14px;border-radius:50%;background:var(--panel);border:3px solid var(--ink)}
+.tl li.pay::before{background:var(--yel);border-color:var(--ink)}
+.tl time{color:var(--muted);font-size:14px}
+.pill{font-size:12px;border:1px solid var(--line);border-radius:999px;padding:1px 9px;color:var(--muted)}
+.fund{margin-top:12px}.fund .l{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--my)}
+.mnav{display:none}
+@media (max-width:900px){.app{grid-template-columns:1fr}nav.side{display:none}main{padding:18px 16px 100px}h1{font-size:25px}
+.wallets{grid-template-columns:1fr 1fr}.w:nth-child(2){border-right:0}.w:nth-child(-n+2){border-bottom:1px solid var(--line)}.two{grid-template-columns:1fr}
+.next li{grid-template-columns:12px 1fr auto}.next .btn{grid-column:2/4}
+.mnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--rail);z-index:5}
+.mnav a{color:var(--rail-ink);text-align:center;text-decoration:none;padding:15px 2px;font-size:13px;min-height:50px;opacity:.85}
+.mnav a[aria-current]{background:var(--yel);color:var(--on-yel);font-weight:700;opacity:1}}
+</style></head><body>
+<div class="app">
+<nav class="side" aria-label="Main"><b>Bad<em>(</em>yet<em>)</em></b><a href="#" aria-current="page">Dashboard</a><a href="#">Cutoff</a><a href="#">Pay</a><a href="#">Budget</a><a href="#">Installments</a><a href="#">Subscriptions</a><a href="#">Bonuses</a><a href="#">Savings forecast</a><a href="#">Plans</a></nav>
+<main>
+<div class="head"><div><h1>Payday! Here is where it goes.</h1><p class="sub">First cutoff, Dec 1 to 15 · December 2026 plan · <span class="num" id="left"></span> still to send</p></div><button class="btn" id="theme">Theme</button></div>
+<div class="wallets" id="wallets"></div>
+<div class="two"><div>
+<section class="card" aria-labelledby="n"><h2 id="n">Next stops</h2><div class="prog" role="progressbar" aria-label="Sent so far"><i id="bar"></i></div><p class="sub" id="said" style="margin:0"></p><ul class="next" id="next"></ul></section>
+<section class="card" aria-labelledby="f"><h2 id="f">Savings funds</h2>
+<div class="fund"><div class="l"><span>Emergency fund</span><span class="num">₱38,000 of ₱60,000</span></div><div class="bar" role="img" aria-label="63 percent"><i style="width:63%"></i></div></div>
+<div class="fund"><div class="l"><span>Travel fund</span><span class="num">₱12,000 of ₱30,000</span></div><div class="bar" role="img" aria-label="40 percent"><i style="width:40%"></i></div></div></section>
+</div><div>
+<section class="card" aria-labelledby="c"><h2 id="c">Coming up</h2><ul class="tl">
+<li><span>Internet <span class="pill">Maya</span></span><span><time>Dec 3</time> <span class="num">1,299.00</span></span></li>
+<li><span>Phone installment <span class="pill">9 of 12</span></span><span><time>Dec 8</time> <span class="num">3,000.00</span></span></li>
+<li><span>Streaming</span><span><time>Dec 12</time> <span class="num">549.00</span></span></li>
+<li class="pay"><span>13th month lands <span class="pill">estimate</span></span><span><time>Dec 15</time> <span class="num">+24,000.00</span></span></li>
+<li class="pay"><span>Second cutoff pay</span><span><time>Dec 16</time> <span class="num">24,100.00</span></span></li></ul></section>
+</div></div></main></div>
+<nav class="mnav" aria-label="Main"><a href="#" aria-current="page">Home</a><a href="#">Cutoff</a><a href="#">Budget</a><a href="#">Savings</a><a href="#">More</a></nav>
+<script>
+const C={Gcash:"var(--gc)",Maya:"var(--my)",BPI:"var(--bp)",Vybe:"var(--vy)"},NET=23450;
+const L=[["Transpo","Gcash",2400,1],["Food","Gcash",2000,1],["Contingency","Gcash",550],["Rent share","BPI",3000],["Installments","BPI",3000],["Wants","BPI",5200],["Internet","Maya",1299],["Emergency fund","Maya",4000],["Travel fund","Vybe",2001]];
+const f=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2}),m=n=>"₱"+f(n);
+function draw(){const sent=L.reduce((a,l)=>a+(l[3]?l[2]:0),0),todo=L.map((l,i)=>[l,i]).filter(x=>!x[0][3]);
+left.textContent=m(NET-sent);bar.style.width=sent/NET*100+"%";said.textContent=todo.length?todo.length+" stops to go.":"Everything is sent. Go touch grass.";
+wallets.innerHTML=Object.keys(C).map(w=>{const a=L.filter(l=>l[1]==w);return `<div class="w" style="--c:${C[w]}"><b>${w}</b><span class="num">${m(a.reduce((s,l)=>s+l[2],0))}</span><small>${a.filter(l=>l[3]).length} of ${a.length} sent</small><div class="dots" aria-hidden="true">${a.map(l=>`<i class="${l[3]?"d":""}"></i>`).join("")}</div></div>`}).join("");
+next.innerHTML=todo.slice(0,4).map(([l,i])=>`<li style="--c:${C[l[1]]}"><span class="c"></span><span>${l[0]}<small>to ${l[1]}</small></span><span class="num">${f(l[2])}</span><button class="btn pri" data-i="${i}">Mark sent</button></li>`).join("")}
+next.addEventListener("click",e=>{const b=e.target.closest("button");if(b){L[b.dataset.i][3]=1;draw()}});
+theme.onclick=()=>{const r=document.documentElement;r.dataset.theme=getComputedStyle(r).getPropertyValue("--bg").trim()=="#08110E"?"light":"dark"};
+draw();
+</script></body></html>

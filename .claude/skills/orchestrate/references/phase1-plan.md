@@ -1,0 +1,10 @@
+# Phase 1: Plan & design
+
+Size it to the project. **Quick mode** (small app, MVP, personal tool): one short audit paragraph, one question round, 2 design directions, no per-phase ledger rows. Full mode only for large or regulated projects.
+
+1. **Discovery & audit.** Scout brief of existing code/docs (or "empty repo"; skip the Scout then). Assess feasibility, compliance (data protection, payments, licences), security (authN/Z, injection, secrets, uploads, SSRF, multi-tenant leaks, dependency risk) and architectural weak spots. Record only the important findings: `state.js put "Assumptions" <<'EOF' ...`.
+2. **Clarification loop.** Every edge case, ambiguity, conflict: `state.js q add "..."`. Ask the blocking ones with `AskUserQuestion` (max 4 per call, tappable options, recommended first). No planning past this point until answered; `state.js q done <n> "<answer>"` for each.
+3. **Milestone slicing.** Small vertical slices that each end runnable (e.g. Slice 1 Auth & login, Slice 2 Core dashboard). For each: goal, 3-6 acceptance criteria, dependencies, **sequential or parallel** (parallel only if files and schema are disjoint). Mark every item Needed / Nice-to-have. Save with `state.js put "Slice plan"` (table: # | Slice | Depends on | Run | Status | Branch). Group tiny items into one slice.
+4. **Run & verify guide.** From the Scout (or by decision for a new project): install, migrate, seed, start, test commands, URL, env vars. Save with `state.js put "Run & verify"`. Every later handoff uses these.
+5. **UI/UX mockups.** 2 distinct directions (3 only if the user asks): name, mood, type pairing, palette hex, layout idea, what keeps it from looking generic. Load the `frontend-design` skill (or any installed UI/design skill, e.g. impeccable) before building. Avoid default AI looks: purple-blue gradients, Inter/Roboto-only type, centered hero + three cards, emoji icons, generic shadows. One self-contained HTML file per direction in `docs/mockups/`, key screens only, low-fi is fine. Tell the user the paths.
+6. **Gate 1.** `state.js ledger "Phase 1" phase1`, `set`, `log`, then gate: approve plan, slices, order and one design direction.
