@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** Gap analysis
-- **Gate:** Gate 3: revision list awaiting approval
-- **Next action:** Approve rev-1..rev-10 order, then build rev-1 (phone menu)
-- **User to-do now:** Approve the revision plan
+- **Active slice / milestone:** rev-1 Phone menu
+- **Gate:** building
+- **Next action:** Build rev-1
+- **User to-do now:** -
 
 ## 3. Execution log
 
@@ -55,7 +55,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 380,180 | 1,791,495 | 89,767 | 540,628 | 70,615,073 | 375,273 |  |
+| **Cumulative** | 380,180 | 1,791,495 | 89,767 | 547,168 | 72,359,824 | 381,460 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -65,7 +65,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
-| Slice 9 | 13,213 | 106,954 | 3,450 | 25,855 | 6,810,767 | 19,024 |  |
+| Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
 
 <!-- END SUMMARY -->
 
