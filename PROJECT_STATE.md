@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 1 Scaffold + theme + Dashboard (sample data)
-- **Gate:** Gate 2: Slice 1 awaiting approval
-- **Next action:** User reviews dashboard at localhost:3000; on approval merge to master and start Slice 2 (auth, DB, plans)
-- **User to-do now:** Run npm run dev and check the dashboard; add a git remote when ready (git remote add origin <url>)
+- **Active slice / milestone:** 2 Auth, DB and plans
+- **Gate:** blocked on user input
+- **Next action:** Need Supabase project (URL, anon key, service-role key) and ALLOWED_EMAIL before building Slice 2
+- **User to-do now:** Create a free Supabase project and give me the details (see question)
 
 ## 3. Execution log
 
@@ -32,6 +32,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:05 | phase1 | User chose v9 design 1 (Night Emerald). Wrote DESIGN.md (tokens dark+light, Plus Jakarta Sans + Manrope, components). Slice plan updated: slice 1 now includes theme + shell; new slice 8 Dashboard. Gate 1 awaiting plan approval. | -
 - 2026-11-19 21:07 | phase1 | Gate 1 APPROVED by user: Night Emerald design + plan, with changes: dashboard first (Slice 1 now scaffold+theme+dashboard on sample data; auth/plans moved to Slice 2; real-data wiring is Slice 9) and less round corners with contrast (square cards, round controls) recorded in DESIGN.md. | -
 - 2026-11-19 21:14 | slice-1 | Slice 1 built: Next.js 16 scaffold, tokens (dark/light, square cards + round controls), shell, dashboard on sample data, domain logic copied (56 tests pass). Runner PASS (test, typecheck, lint, build). Committed locally on slice/1-scaffold-dashboard (no remote). | 21640c6
+- 2026-11-19 21:16 | slice-1 | Revision at Gate 2: user reported dashboard not centered / not spanning page width. Fixed (content fills column, max 1680px centered). Runner PASS. | 1794447
+- 2026-11-19 21:16 | slice-1 | Gate 2 APPROVED by user. Slice 1 merged to master (local, no remote). | 1794447
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

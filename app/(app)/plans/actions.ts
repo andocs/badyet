@@ -1,0 +1,84 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { isAllowedEmail } from "@/lib/auth/allowed";
+import { isPastPlan, isUuid, validatePlan } from "@/lib/plans/validate";
+import { createClient } from "@/lib/supabase/server";
+
+// Every action re-checks the login itself (the proxy is not the only guard).
+// Row-level security in the database is the final guard: rows are scoped to the signed-in user.
+async function authed() {
+  const supabase = await createClient();
+  if (!supabase) redirect("/login?error=setup");
+  const { data } = await supabase.auth.getUser();
+  if (!data.user || !isAllowedEmail(data.user.email, process.env.ALLOWED_EMAIL)) redirect("/login");
+  return supabase;
+}
+
+function back(code?: string): never {
+  revalidatePath("/plans");
+  redirect(code ? `/plans?error=${code}` : "/plans");
+}
+
+function idOf(formData: FormData): string {
+  const id = String(formData.get("id") ?? "");
+  if (!isUuid(id)) back("failed");
+  return id;
+}
+
+function planFields(formData: FormData) {
+  return validatePlan({ name: formData.get("name"), startDate: formData.get("startDate"), endDate: formData.get("endDate") });
+}
+
+export async function createPlan(formData: FormData) {
+  const supabase = await authed();
+  const parsed = planFields(formData);
+  if (!parsed.ok) back("invalid");
+  const { name, startDate, endDate } = parsed.value;
+  const { error } = await supabase.from("plans").insert({ name, start_date: startDate, end_date: endDate });
+  back(error ? "failed" : undefined);
+}
+
+export async function updatePlan(formData: FormData) {
+  const supabase = await authed();
+  const id = idOf(formData);
+  const parsed = planFields(formData);
+  if (!parsed.ok) redirect(`/plans/${id}?error=invalid`);
+  const { data: existing } = await supabase.from("plans").select("end_date").eq("id", id).single();
+  if (!existing) back("failed");
+  if (isPastPlan(existing.end_date)) back("past");
+  const { name, startDate, endDate } = parsed.value;
+  const { error } = await supabase.from("plans").update({ name, start_date: startDate, end_date: endDate }).eq("id", id);
+  back(error ? "failed" : undefined);
+}
+
+export async function duplicatePlan(formData: FormData) {
+  const supabase = await authed();
+  const id = idOf(formData);
+  const { data: src } = await supabase.from("plans").select("name,start_date,end_date").eq("id", id).single();
+  if (!src) back("failed");
+  const name = `${src.name} (copy)`.slice(0, 60);
+  const { error } = await supabase.from("plans").insert({ name, start_date: src.start_date, end_date: src.end_date });
+  back(error ? "failed" : undefined);
+}
+
+export async function activatePlan(formData: FormData) {
+  const supabase = await authed();
+  const id = idOf(formData);
+  const { data: plan } = await supabase.from("plans").select("end_date").eq("id", id).single();
+  if (!plan) back("failed");
+  if (isPastPlan(plan.end_date)) back("past");
+  const { error } = await supabase.rpc("activate_plan", { p_id: id });
+  back(error ? "failed" : undefined);
+}
+
+export async function deletePlan(formData: FormData) {
+  const supabase = await authed();
+  const id = idOf(formData);
+  const { data: plan } = await supabase.from("plans").select("is_active").eq("id", id).single();
+  if (!plan) back("failed");
+  if (plan.is_active) back("active");
+  const { error } = await supabase.from("plans").delete().eq("id", id);
+  back(error ? "failed" : undefined);
+}
