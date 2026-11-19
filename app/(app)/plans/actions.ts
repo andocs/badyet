@@ -48,10 +48,8 @@ export async function updatePlan(formData: FormData) {
 export async function duplicatePlan(formData: FormData) {
   const supabase = await requireAuthed();
   const id = idOf(formData);
-  const { data: src } = await supabase.from("plans").select("name,start_date,end_date").eq("id", id).single();
-  if (!src) back("failed");
-  const name = `${src.name} (copy)`.slice(0, 60);
-  const { error } = await supabase.from("plans").insert({ name, start_date: src.start_date, end_date: src.end_date });
+  // One database function copies the plan, its pay, budget lines (with wallets) and savings settings atomically.
+  const { error } = await supabase.rpc("duplicate_plan", { p_id: id });
   back(error ? "failed" : undefined, error);
 }
 
