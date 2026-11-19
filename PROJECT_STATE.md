@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 7 Bonuses
-- **Gate:** Gate 2: Slice 7 awaiting approval
-- **Next action:** User applies windfalls migration and tries /bonuses; on approval merge and start Slice 8 (Savings forecast)
-- **User to-do now:** Run migration 20261126000000_windfalls.sql; try /bonuses
+- **Active slice / milestone:** 8 Savings forecast
+- **Gate:** building
+- **Next action:** Build Slice 8 (funds with caps, priority rules, projection)
+- **User to-do now:** Apply migration 20261126000000_windfalls.sql if not done; check why git push failed
 
 ## 3. Execution log
 
