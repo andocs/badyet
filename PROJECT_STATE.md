@@ -46,7 +46,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
-| Slice 3 | 323,607 | 1,435,589 | 78,530 | 384,684 | 41,057,860 | 255,541 | no mark 'slice-3': all-time |
+| Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
 
 <!-- END SUMMARY -->
 

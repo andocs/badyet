@@ -11,7 +11,7 @@ export const SIDE_ITEMS: Item[] = [
   { label: "Plans", href: "/plans" },
   { label: "Cutoff" },
   { label: "Pay", href: "/pay" },
-  { label: "Budget" },
+  { label: "Budget", href: "/budget" },
   { label: "Installments" },
   { label: "Subscriptions" },
   { label: "Bonuses" },
@@ -20,7 +20,7 @@ export const SIDE_ITEMS: Item[] = [
 export const TAB_ITEMS: Item[] = [
   { label: "Home", href: "/" },
   { label: "Plans", href: "/plans" },
-  { label: "Budget" },
+  { label: "Budget", href: "/budget" },
   { label: "Savings" },
   { label: "More" },
 ];

@@ -2,19 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAllowedEmail } from "@/lib/auth/allowed";
+import { requireAuthed } from "@/lib/auth/require";
 import { isPastPlan, isUuid, validatePlan } from "@/lib/plans/validate";
-import { createClient } from "@/lib/supabase/server";
-
-// Every action re-checks the login itself (the proxy is not the only guard).
-// Row-level security in the database is the final guard: rows are scoped to the signed-in user.
-async function authed() {
-  const supabase = await createClient();
-  if (!supabase) redirect("/login?error=setup");
-  const { data } = await supabase.auth.getUser();
-  if (!data.user || !isAllowedEmail(data.user.email, process.env.ALLOWED_EMAIL)) redirect("/login");
-  return supabase;
-}
 
 // `err` is the database error, if any: logged on the server and shown (dev only) on the page.
 function back(code?: string, err?: { message: string } | null): never {
@@ -35,7 +24,7 @@ function planFields(formData: FormData) {
 }
 
 export async function createPlan(formData: FormData) {
-  const supabase = await authed();
+  const supabase = await requireAuthed();
   const parsed = planFields(formData);
   if (!parsed.ok) back("invalid");
   const { name, startDate, endDate } = parsed.value;
@@ -44,7 +33,7 @@ export async function createPlan(formData: FormData) {
 }
 
 export async function updatePlan(formData: FormData) {
-  const supabase = await authed();
+  const supabase = await requireAuthed();
   const id = idOf(formData);
   const parsed = planFields(formData);
   if (!parsed.ok) redirect(`/plans/${id}?error=invalid`);
@@ -57,7 +46,7 @@ export async function updatePlan(formData: FormData) {
 }
 
 export async function duplicatePlan(formData: FormData) {
-  const supabase = await authed();
+  const supabase = await requireAuthed();
   const id = idOf(formData);
   const { data: src } = await supabase.from("plans").select("name,start_date,end_date").eq("id", id).single();
   if (!src) back("failed");
@@ -67,7 +56,7 @@ export async function duplicatePlan(formData: FormData) {
 }
 
 export async function activatePlan(formData: FormData) {
-  const supabase = await authed();
+  const supabase = await requireAuthed();
   const id = idOf(formData);
   const { data: plan } = await supabase.from("plans").select("end_date").eq("id", id).single();
   if (!plan) back("failed");
@@ -77,7 +66,7 @@ export async function activatePlan(formData: FormData) {
 }
 
 export async function deletePlan(formData: FormData) {
-  const supabase = await authed();
+  const supabase = await requireAuthed();
   const id = idOf(formData);
   const { data: plan } = await supabase.from("plans").select("is_active").eq("id", id).single();
   if (!plan) back("failed");

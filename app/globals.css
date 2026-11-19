@@ -227,3 +227,15 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
 .wizard-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; }
 .form h2 { margin: 0; }
+
+/* budget */
+.segmented a { font-weight: 700; color: var(--muted); padding: 9px 20px; min-height: 40px; display: inline-flex; align-items: center; text-decoration: none; }
+.segmented a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+.budget-state { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--radius-sm); font-weight: 700; border: 1px solid var(--line); }
+.budget-state.ok { color: var(--accent-text); border-color: var(--accent-text); }
+.budget-state.over { color: var(--err); border-color: var(--err); }
+.split-bar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; gap: 2px; margin-top: 12px; background: var(--soft); }
+.bline { display: grid; grid-template-columns: minmax(0, 1fr) 9rem auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); margin: 0; }
+.bline.add { border-top: 1px dashed var(--line); }
+.bline .input.num { text-align: right; }
+@media (max-width: 760px) { .bline { grid-template-columns: minmax(0, 1fr) 7rem; } .bline .btn { grid-column: auto; } }

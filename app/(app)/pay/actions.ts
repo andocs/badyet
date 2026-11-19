@@ -2,16 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { isAllowedEmail } from "@/lib/auth/allowed";
+import { requireAuthed } from "@/lib/auth/require";
 import { parsePayForm } from "@/lib/pay/input";
 import { isPastPlan, isUuid } from "@/lib/plans/validate";
-import { createClient } from "@/lib/supabase/server";
 
 export async function savePay(formData: FormData) {
-  const supabase = await createClient();
-  if (!supabase) redirect("/login?error=setup");
-  const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user || !isAllowedEmail(auth.user.email, process.env.ALLOWED_EMAIL)) redirect("/login");
+  const supabase = await requireAuthed();
 
   const planId = String(formData.get("planId") ?? "");
   if (!isUuid(planId)) redirect("/pay?error=failed");
