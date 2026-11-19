@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 6 Installments and subscriptions
-- **Gate:** building
-- **Next action:** Confirm approach with user, then build Slice 6
-- **User to-do now:** Apply migration 20261124000000_wallets_transfers.sql if not done
+- **Gate:** Gate 2: Slice 6 awaiting approval
+- **Next action:** User applies installments migration and tries it; on approval merge and start Slice 7 (Bonuses)
+- **User to-do now:** Run migration 20261125000000_installments_subscriptions.sql; try /installments and /subscriptions
 
 ## 3. Execution log
 
@@ -31,6 +31,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:00 | slice-4 | Gate 2 APPROVED by user. Slice 4 merged to master (local). | -
 - 2026-11-19 22:02 | slice-5 | Slice 5 built: wallets + transfer_marks migration with RLS, wallet per budget line, /transfer checklist grouped by wallet (month + cutoff), default wallets button. Runner PASS 100 tests, typecheck, lint, build. | 27e8601
 - 2026-11-19 22:04 | slice-5 | Gate 2 APPROVED by user. Slice 5 merged to master (local). | -
+- 2026-11-19 22:09 | slice-6 | Slice 6 built: installments (domain schedule with interest) + subscriptions tables with RLS, pages, Sync to budget (budget_lines.source), shared WalletSelect. Runner PASS 108 tests, typecheck, lint, build. | 889c44e
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -46,13 +47,14 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 331,407 | 1,514,607 | 80,258 | 423,872 | 48,108,152 | 288,402 |  |
+| **Cumulative** | 350,185 | 1,584,667 | 83,368 | 460,551 | 54,358,718 | 315,288 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
 | Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
+| Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 
 <!-- END SUMMARY -->
 
@@ -98,6 +100,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 6: what you do now
+1. Get the code:   git checkout slice/6-installments   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261125000000_installments_subscriptions.sql (adds tables installments and subscriptions and a "source" column on budget_lines; the wallets migration must already be applied). Rollback: alter table public.budget_lines drop column source; drop table public.subscriptions; drop table public.installments;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/installments and /subscriptions
+6. Check these:    (a) add an installment (price, optional down payment, number of payments, yearly interest %, first payment date, cutoff, wallet): the list shows the monthly payment, payments left and end month, plus interest cost; try 20,000 at 6% over 60 payments: 386.66 each, interest 3,199.36; (b) add a subscription with an amount, cutoff and wallet; Pause and Resume it; (c) press "Sync to budget": the Budget page now has Essentials lines "Installments" and "Subscriptions" per cutoff equal to what is due this month; edit your installment, sync again and the line updates (your own other budget lines are never touched); (d) the lines show on the Transfer checklist under their wallet once you pick a wallet for them on the Budget page
+7. Known limits:   sync uses what is due in the current month (Manila time); it does not auto-run, press it when things change; installments are not marked paid one by one (remaining is counted by due date); not tested against live Supabase
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 5: what you do now
 1. Get the code:   git checkout slice/5-transfer   (local branch; merge to master after you approve)
