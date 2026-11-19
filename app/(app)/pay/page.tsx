@@ -19,6 +19,7 @@ const field = (m: number | null | undefined) => (m === null || m === undefined ?
 export default async function PayPage({ searchParams }: PageProps<"/pay">) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
+  const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
   const supabase = await createClient();
   const { data: plan } = supabase
     ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
@@ -79,7 +80,12 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
         </div>
         {!wizardOpen && !past && <Link href="/pay?edit=1" className="btn ghost">Edit pay</Link>}
       </div>
-      {error && <p className="notice err" role="alert" style={{ marginBottom: 18 }}>{error}</p>}
+      {error && (
+        <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
+          {error}
+          {detail && <small style={{ display: "block", marginTop: 4, fontWeight: 500 }}>Technical detail: {detail}</small>}
+        </p>
+      )}
       {params.saved === "1" && <p className="notice ok" role="status" style={{ marginBottom: 18 }}>Saved.</p>}
 
       <section className="card" aria-labelledby="pay-h" style={{ maxWidth: wizardOpen ? 640 : undefined }}>

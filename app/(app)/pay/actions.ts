@@ -39,5 +39,9 @@ export async function savePay(formData: FormData) {
     { onConflict: "plan_id" },
   );
   revalidatePath("/pay");
-  redirect(error ? "/pay?error=failed" : "/pay?saved=1");
+  if (error) {
+    console.error("[pay] database error:", error.message);
+    redirect(`/pay?error=failed&detail=${encodeURIComponent(error.message)}`);
+  }
+  redirect("/pay?saved=1");
 }

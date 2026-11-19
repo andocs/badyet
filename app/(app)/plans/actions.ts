@@ -16,9 +16,12 @@ async function authed() {
   return supabase;
 }
 
-function back(code?: string): never {
+// `err` is the database error, if any: logged on the server and shown (dev only) on the page.
+function back(code?: string, err?: { message: string } | null): never {
+  if (err) console.error("[plans] database error:", err.message);
   revalidatePath("/plans");
-  redirect(code ? `/plans?error=${code}` : "/plans");
+  const detail = err ? `&detail=${encodeURIComponent(err.message)}` : "";
+  redirect(code ? `/plans?error=${code}${detail}` : "/plans");
 }
 
 function idOf(formData: FormData): string {
@@ -37,7 +40,7 @@ export async function createPlan(formData: FormData) {
   if (!parsed.ok) back("invalid");
   const { name, startDate, endDate } = parsed.value;
   const { error } = await supabase.from("plans").insert({ name, start_date: startDate, end_date: endDate });
-  back(error ? "failed" : undefined);
+  back(error ? "failed" : undefined, error);
 }
 
 export async function updatePlan(formData: FormData) {
@@ -50,7 +53,7 @@ export async function updatePlan(formData: FormData) {
   if (isPastPlan(existing.end_date)) back("past");
   const { name, startDate, endDate } = parsed.value;
   const { error } = await supabase.from("plans").update({ name, start_date: startDate, end_date: endDate }).eq("id", id);
-  back(error ? "failed" : undefined);
+  back(error ? "failed" : undefined, error);
 }
 
 export async function duplicatePlan(formData: FormData) {
@@ -60,7 +63,7 @@ export async function duplicatePlan(formData: FormData) {
   if (!src) back("failed");
   const name = `${src.name} (copy)`.slice(0, 60);
   const { error } = await supabase.from("plans").insert({ name, start_date: src.start_date, end_date: src.end_date });
-  back(error ? "failed" : undefined);
+  back(error ? "failed" : undefined, error);
 }
 
 export async function activatePlan(formData: FormData) {
@@ -70,7 +73,7 @@ export async function activatePlan(formData: FormData) {
   if (!plan) back("failed");
   if (isPastPlan(plan.end_date)) back("past");
   const { error } = await supabase.rpc("activate_plan", { p_id: id });
-  back(error ? "failed" : undefined);
+  back(error ? "failed" : undefined, error);
 }
 
 export async function deletePlan(formData: FormData) {
@@ -80,5 +83,5 @@ export async function deletePlan(formData: FormData) {
   if (!plan) back("failed");
   if (plan.is_active) back("active");
   const { error } = await supabase.from("plans").delete().eq("id", id);
-  back(error ? "failed" : undefined);
+  back(error ? "failed" : undefined, error);
 }

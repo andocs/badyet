@@ -14,6 +14,7 @@ const ERRORS: Record<string, string> = {
 export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
+  const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
   const supabase = await createClient();
   const { data: plans } = supabase
     ? await supabase.from("plans").select("id,name,start_date,end_date,is_active").order("start_date", { ascending: false })
@@ -29,7 +30,12 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
         </div>
       </div>
 
-      {error && <p className="notice err" role="alert" style={{ marginBottom: 18 }}>{error}</p>}
+      {error && (
+        <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
+          {error}
+          {detail && <small style={{ display: "block", marginTop: 4, fontWeight: 500 }}>Technical detail: {detail}</small>}
+        </p>
+      )}
 
       <section className="card" aria-labelledby="new-h" style={{ marginBottom: 18 }}>
         <h2 id="new-h">New plan</h2>
