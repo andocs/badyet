@@ -147,9 +147,9 @@ export function PayWizard({
           ) : null}
         </span>
         {step < 3 ? (
-          <button type="button" className="btn" onClick={next}>Next</button>
+          <button key="next" type="button" className="btn" onClick={next}>Next</button>
         ) : (
-          <button type="submit" className="btn">Save pay</button>
+          <button key="save" type="submit" className="btn">Save pay</button>
         )}
       </div>
     </form>

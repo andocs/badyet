@@ -38,6 +38,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:29 | slice-2 | Gate 2 APPROVED by user. Slice 2 merged to master (local). | -
 - 2026-11-19 21:32 | slice-3 | Slice 3 built: lib/pay (TRAIN table, computePay on domain netCutoff, form parsing), pay_profiles migration with RLS, /pay screen with overrides, Pay nav enabled. Runner PASS 81 tests, typecheck, lint, build. Hand-worked synthetic test cases; unverified tax/PhilHealth rules flagged in UI. | e77050c
 - 2026-11-19 21:49 | slice-3 | Gate 2 revision requested: (1) plans can be ongoing with no end date (migration 20261122000000_plans_open_ended.sql); (2) Pay is now a 4-step wizard: monthly or annual base salary, auto-computed PhilHealth/tax/net, review then save. Runner PASS 85 tests, typecheck, lint, build. | 5a5b139
+- 2026-11-19 21:52 | slice-3 | User reported Pay/Plans not saving. Cannot test against live Supabase from here. Added dev-only Technical detail line + server console.error for DB errors in plans and pay actions. Runner PASS 85 tests. Waiting for user to retry and report the message. | 6a160b2
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
