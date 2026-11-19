@@ -8,28 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 3 Pay
-- **Gate:** Gate 2: Slice 3 revision awaiting approval
-- **Next action:** User applies pay_profiles migration and tries /pay; on approval merge and start Slice 4 (Budget split)
-- **User to-do now:** Run migration 20261121000000_pay_profiles.sql in Supabase SQL Editor; try /pay
+- **Active slice / milestone:** 4 Budget split
+- **Gate:** building
+- **Next action:** Build Slice 4 (budget lines per cutoff, left-to-budget, monthly roll-up)
+- **User to-do now:** Apply pending Supabase migrations (plans, pay_profiles, plans_open_ended) if not done
 
 ## 3. Execution log
 
-- 2026-11-19 --:-- | Phase 1 | Read all 14 sheet tabs; found existing Expo app in D:\badyet; user chose a new web app in D:\projects\badyet reusing its logic; decisions D1-D8 recorded | -
-- 2026-11-19 20:08 | Phase 1 | PROJECT_STATE.md created from state-sync template; ledger marks project-start and phase1 set | -
-- 2026-11-19 --:-- | Phase 1 | 3 design mockups written to docs/mockups/: a-passbook.html (warm paper, Fraunces + Plex Mono, terracotta #B4532A), b-signal.html (navy #10233F + yellow #F2C230, Archivo Black + Space Grotesk, wallet tiles), c-quiet-ledger.html (Plex Sans/Mono, teal #1F7A6E / amber #C98A1B / plum #7A4E6E, sidebar desktop) | -
-- 2026-11-19 --:-- | Phase 1 / Gate 1 | PAUSED by user: all 3 mockups rejected (files kept as reference). New mockups to be made with /impeccable, which is not installed in this session. On resume: install /impeccable, restart Claude Code, regenerate directions, re-run Gate 1 (design pick + plan approval) | -
-- 2026-11-19 --:-- | Phase 1 | Installed impeccable skill (npx skills add pbakaus/impeccable) to .claude/skills/impeccable; skills.sh audit: Gen Safe, Socket 0 alerts, Snyk Critical Risk (unreviewed). Needs Claude Code restart before /impeccable works | -
-- 2026-11-19 --:-- | Phase 1 | Impeccable: hooks on, PRODUCT.md written (web, phone+desktop, playful voice, WCAG AA + dark mode). 3 new Operate-mode mockups in docs/mockups/: v2-a-score.html (labanotation-style month score, cobalt/ink, Familjen Grotesk), v2-b-route-board.html (wallet transit routes, deep green rail + yellow, Atkinson Hyperlegible), v2-c-side-a-side-b.html (mixtape j-card, ballpoint blue + red, Patrick Hand headings). Synthetic data, not sheet values. Not visually verified (no Chrome for impeccable shot); awaiting user pick | -
-- 2026-11-19 20:32 | phase1 | User leaning v2-a/v2-b. Added v3 set in docs/mockups/: v3-a-score-plus.html (A score + B green rail, blocks coloured by wallet), v3-b-route-by-amount.html (B route map in A calm cobalt palette, stops spaced by amount), v3-c-pay-and-budget.html (Pay + Budget screen in the hybrid world, editable lines with over/under states). Hook scanned clean; not visually verified (no Chrome). Gate 1 still awaiting pick. | -
-- 2026-11-19 20:35 | phase1 | User wants dashboard first. Added 3 dashboard mockups in docs/mockups/: v4-a-dashboard-score.html (next-send list + month score + funds + coming up), v4-b-dashboard-route.html (wallet tiles with stop dots, next stops, timeline), v4-c-dashboard-timeline.html (next-action bar + month ruler with pay days/bills/13th month). Hook clean; not visually verified (no Chrome). Gate 1 awaiting pick. | -
-- 2026-11-19 20:39 | phase1 | Added docs/mockups/v5-gallery.html: one file, 6 new dashboard designs (Slate Score, Night Route, Pandan, Two-Ink, Transit Paper, Dusk Timeline) with arrow-key browsing and Desktop/Phone toggle. Hook clean; not visually verified. Gate 1 awaiting pick. | -
-- 2026-11-19 20:44 | phase1 | User disliked v2-v5. Added docs/mockups/v6-gallery.html (built without impeccable workflow): 6 familiar-style designs (Mint, Pocket, Sheet, Boards, Bento, Calendar), each a different layout. Awaiting user pick/feedback. | -
-- 2026-11-19 20:50 | phase1 | User: designs felt plain/off; wants rich+premium, charts, mascot, gradients, motion, like their trip planner app (K:\projects\trip-planner, Atlas x Departure Board). Added docs/mockups/v7-gallery.html: 5 designs in that visual language (split-flap board for amounts, boarding-pass tickets per transfer, donut/area/stacked charts, coin mascot Pip, confetti). Hook clean; not visually verified. Awaiting feedback/pick. | -
-- 2026-11-19 20:54 | phase1 | User liked v7 designs 2,3,5 (Night Board, Atlas, Control Room) but wants a finance feel, not travel, and different fonts. Added docs/mockups/v8-gallery.html: 3 designs (Night, Daylight, Control Room), Plus Jakarta Sans + Manrope, emerald/blue/gold palette, transaction rows and bank-style wallet cards replace tickets and flap board, Pip mascot keeps (sprout instead of cap), Light/Dark toggle. Hook clean; not visually verified. Awaiting feedback/pick. | -
-- 2026-11-19 20:58 | phase1 | User liked v8 dash 1 layout (greeting + big balance), wallet cards and 13th month ring. Added docs/mockups/v9-gallery.html: 5 variants combining them (Night Emerald, Ink and Gold, Daylight Blue, Fresh Mint, Violet Night), different palettes/fonts/layout arrangements. JS syntax + render smoke test passed; not visually verified (no Chrome). Awaiting pick. | -
-- 2026-11-19 21:04 | phase1 | User leaning to v9 design 1 (Night Emerald) but too rounded; wants other colour schemes. Added docs/mockups/v10-gallery.html: 5 variants of that layout with sharper corners (4-14px) and new palettes (Cobalt Night, Amber Ledger, Rose Night, Graphite Lime, Navy and Orange light). Checks: syntax, render, no global-name collisions; not visually verified. | -
-- 2026-11-19 21:05 | phase1 | User chose v9 design 1 (Night Emerald). Wrote DESIGN.md (tokens dark+light, Plus Jakarta Sans + Manrope, components). Slice plan updated: slice 1 now includes theme + shell; new slice 8 Dashboard. Gate 1 awaiting plan approval. | -
+- earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
 - 2026-11-19 21:07 | phase1 | Gate 1 APPROVED by user: Night Emerald design + plan, with changes: dashboard first (Slice 1 now scaffold+theme+dashboard on sample data; auth/plans moved to Slice 2; real-data wiring is Slice 9) and less round corners with contrast (square cards, round controls) recorded in DESIGN.md. | -
 - 2026-11-19 21:14 | slice-1 | Slice 1 built: Next.js 16 scaffold, tokens (dark/light, square cards + round controls), shell, dashboard on sample data, domain logic copied (56 tests pass). Runner PASS (test, typecheck, lint, build). Committed locally on slice/1-scaffold-dashboard (no remote). | 21640c6
 - 2026-11-19 21:16 | slice-1 | Revision at Gate 2: user reported dashboard not centered / not spanning page width. Fixed (content fills column, max 1680px centered). Runner PASS. | 1794447
@@ -39,6 +25,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:32 | slice-3 | Slice 3 built: lib/pay (TRAIN table, computePay on domain netCutoff, form parsing), pay_profiles migration with RLS, /pay screen with overrides, Pay nav enabled. Runner PASS 81 tests, typecheck, lint, build. Hand-worked synthetic test cases; unverified tax/PhilHealth rules flagged in UI. | e77050c
 - 2026-11-19 21:49 | slice-3 | Gate 2 revision requested: (1) plans can be ongoing with no end date (migration 20261122000000_plans_open_ended.sql); (2) Pay is now a 4-step wizard: monthly or annual base salary, auto-computed PhilHealth/tax/net, review then save. Runner PASS 85 tests, typecheck, lint, build. | 5a5b139
 - 2026-11-19 21:52 | slice-3 | User reported Pay/Plans not saving. Cannot test against live Supabase from here. Added dev-only Technical detail line + server console.error for DB errors in plans and pay actions. Runner PASS 85 tests. Waiting for user to retry and report the message. | 6a160b2
+- 2026-11-19 21:54 | slice-3 | Bug fix: pay wizard auto-submitted when clicking Next on step 3 (button type swapped button->submit mid-click). Fixed with distinct React keys. Runner PASS 85 tests. | 8762ef0
+- 2026-11-19 21:55 | slice-3 | Gate 2 APPROVED by user. Slice 3 (with revisions and fixes) merged to master (local). | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -54,11 +42,11 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 306,497 | 1,314,780 | 75,685 | 350,583 | 32,929,363 | 229,110 |  |
+| **Cumulative** | 323,607 | 1,435,589 | 78,530 | 384,684 | 41,057,860 | 255,541 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
-| Slice 3 | 27,915 | 40,877 | 6,467 | 33,999 | 5,501,977 | 23,885 | estimate: cumulative now minus cumulative at Slice 2 gate (mark was missed) |
+| Slice 3 | 323,607 | 1,435,589 | 78,530 | 384,684 | 41,057,860 | 255,541 | no mark 'slice-3': all-time |
 
 <!-- END SUMMARY -->
 
