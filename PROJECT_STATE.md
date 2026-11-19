@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-1 Phone menu
-- **Gate:** building
-- **Next action:** Build rev-1
-- **User to-do now:** -
+- **Gate:** Gate 3: rev-1 awaiting approval
+- **Next action:** User checks More on a phone-width window; on approval merge and start rev-2
+- **User to-do now:** Open the app at phone width and try More
 
 ## 3. Execution log
 
@@ -40,6 +40,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
 - 2026-11-19 22:25 | slice-9 | Gate 2 APPROVED by user. Slice 9 merged to master (local). All 9 planned slices approved: Phase 2 complete. | -
 - 2026-11-19 22:27 | phase3 | Gap analysis done. User selected all 10 items (rev-1 to rev-10), including the 3 nice-to-haves. Found: phone More menu dead (Pay, Bonuses, Installments, Subscriptions, Savings unreachable on phone); duplicate plan copies only name/dates; cutoff 1-15 assumption; unverified tax/PhilHealth/cap; no import/deploy/visual QA/e2e. | -
+- 2026-11-19 22:28 | rev-1 | rev-1 built: /more page (Pay, Bonuses, Savings, Installments, Subscriptions, Theme, Sign out), More tab links to it and stays active on those pages. Runner PASS 131 tests, typecheck, lint, build. | b117c9b
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -55,7 +56,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 380,180 | 1,791,495 | 89,767 | 547,168 | 72,359,824 | 381,460 |  |
+| **Cumulative** | 383,824 | 1,833,850 | 90,860 | 553,893 | 74,125,631 | 385,331 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -66,6 +67,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
 | Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
+| Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
 
 <!-- END SUMMARY -->
 
@@ -113,6 +115,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-1 (phone menu): what you do now
+1. Get the code:   git checkout rev/1-phone-menu   (merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000 and narrow the window below 760px (or open it on your phone)
+6. Check these:    (a) bottom bar shows Home, Plans, Transfer, Budget, More; (b) tap More: a page lists Pay, Bonuses, Savings forecast, Installments, Subscriptions, plus Theme and Sign out; (c) open one (for example Pay): the More tab stays highlighted; (d) Theme and Sign out work from this page
+7. Known limits:   desktop is unchanged (the left rail already lists everything); not visually checked in a browser (rev-9 does that)
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 9: what you do now
 1. Get the code:   git checkout slice/9-dashboard-data   (merge to master after you approve)
