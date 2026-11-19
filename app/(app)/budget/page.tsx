@@ -6,6 +6,7 @@ import { computePay } from "@/lib/pay/compute";
 import { formatRange } from "@/lib/plans/format";
 import { isPastPlan } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
+import { WalletSelect } from "@/components/wallet-select";
 import { addLine, deleteLine, updateLine } from "./actions";
 
 const ERRORS: Record<string, string> = {
@@ -145,7 +146,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
                     <input type="hidden" name="bucket" value={b.id} />
                     <input className="input" name="name" placeholder={`New ${b.label.toLowerCase()} line`} maxLength={60} aria-label={`New ${b.label} line name`} required />
                     <input className="input num" name="amount" placeholder="0.00" inputMode="decimal" aria-label={`New ${b.label} line amount`} required />
-                    <WalletSelect wallets={wallets} value="" label={`Wallet for new ${b.label} line`} />
+                    <WalletSelect wallets={wallets} label={`Wallet for new ${b.label} line`} />
                     <button type="submit" className="btn sm">Add</button>
                   </form>
                 )}
@@ -178,13 +179,3 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   );
 }
 
-function WalletSelect({ wallets, value, disabled, label }: { wallets: { id: string; name: string }[]; value: string; disabled?: boolean; label: string }) {
-  return (
-    <select className="input" name="walletId" defaultValue={value} disabled={disabled} aria-label={label}>
-      <option value="">No wallet</option>
-      {wallets.map((w) => (
-        <option key={w.id} value={w.id}>{w.name}</option>
-      ))}
-    </select>
-  );
-}

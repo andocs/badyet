@@ -252,3 +252,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .check::before { content: ""; position: absolute; inset: 10px; border-radius: 50%; border: 2px solid var(--muted); transition: background 0.15s, border-color 0.15s; }
 .check[aria-pressed="true"]::before { background: var(--accent); border-color: var(--accent); }
 .check[aria-pressed="true"]::after { content: ""; position: absolute; left: 17px; top: 13px; width: 6px; height: 12px; border: solid var(--on-accent); border-width: 0 2.5px 2.5px 0; transform: rotate(40deg); }
+
+/* installments and subscriptions */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } }
