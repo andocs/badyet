@@ -30,11 +30,12 @@ export function PayBreakdown({ profile }: { profile: PayProfile }) {
       </table>
       <p className="sub">
         PhilHealth {peso(r.philhealth)}
-        {profile.philhealthOverride !== null ? " (override)" : " (5% of basic)"}. Basic per cutoff {peso(r.basicPerCutoff)}.
+        {profile.philhealthOverride !== null ? " (override)" : " (2.5% of monthly basic)"}. Basic per cutoff {peso(r.basicPerCutoff)}.
       </p>
       <p className="notice warn">
-        The tax table (TRAIN, as of 2023) and the 5% PhilHealth rate are carried over from your old app and not re-checked against
-        current rules. Use the override fields if your payslip differs.
+        Tax uses the TRAIN table in force since 2023, and PhilHealth is 2.5% of monthly basic (10,000 to 100,000 range). Both were checked
+        against published 2026 guides in Nov 2026, not against official circulars. SSS and Pag-IBIG are what you typed. If your payslip
+        differs, use the override fields.
       </p>
     </>
   );

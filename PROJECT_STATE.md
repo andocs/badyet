@@ -30,6 +30,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:29 | rev-1 | Gate 3 APPROVED by user. Merged to master (local). User asked to do ALL remaining revisions on ONE branch: rev/phase3-revisions (per-revision gates stay). | -
 - 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
 - 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
+- 2026-11-19 22:32 | rev-3 | rev-3 built: user_settings table (second_cutoff_start_day, default 16), /settings page, dashboard currentCutoff/cutoffLabel use it, linked from More and rail. Checks pending in batch run. | c76967b
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

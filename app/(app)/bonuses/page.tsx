@@ -88,8 +88,8 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
         </p>
       )}
       <p className="notice warn" style={{ marginBottom: 18 }}>
-        These are estimates. The 90,000 tax-free cap and the way tax is worked out on a bonus come from your old app and have not been
-        re-checked against current rules. Compare with your payslip.
+        These are estimates. The 90,000 yearly tax-free cap matches published 2026 guides. The way tax is worked out on a bonus (the cutoff
+        is annualized, as your old app did) is an approximation, so compare with your payslip.
       </p>
 
       <div className="split">
