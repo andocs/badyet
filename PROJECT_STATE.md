@@ -38,6 +38,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:21 | slice-8 | Slice 8 built: savings_settings + savings_overrides tables with RLS, lib/savings (settings parsing, forecast wiring over domain allocateForecast), SavingsChart, /savings page. Runner PASS 127 tests, typecheck, lint, build. | 83231c1
 - 2026-11-19 22:21 | slice-8 | Gate 2 APPROVED by user. Slice 8 merged to master. | -
 - 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
+- 2026-11-19 22:25 | slice-9 | Gate 2 APPROVED by user. Slice 9 merged to master (local). All 9 planned slices approved: Phase 2 complete. | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
