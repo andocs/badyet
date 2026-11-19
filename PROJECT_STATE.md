@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 5 To Transfer
-- **Gate:** building
-- **Next action:** Build Slice 5 (wallets, wallet per budget line, per-cutoff per-month checklist)
-- **User to-do now:** Apply migration 20261123000000_budget_lines.sql if not done
+- **Gate:** Gate 2: Slice 5 awaiting approval
+- **Next action:** User applies wallets migration, tries /transfer; on approval merge and start Slices 6 and 7
+- **User to-do now:** Run migration 20261124000000_wallets_transfers.sql; try /transfer
 
 ## 3. Execution log
 
@@ -29,6 +29,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:55 | slice-3 | Gate 2 APPROVED by user. Slice 3 (with revisions and fixes) merged to master (local). | -
 - 2026-11-19 21:57 | slice-4 | Slice 4 built: budget_lines migration with RLS, lib/budget (validation, summary on domain budgetLeft), /budget screen (cutoff tabs, three buckets, add/edit/delete, left-to-budget states, month roll-up), shared requireAuthed helper. Runner PASS 93 tests, typecheck, lint, build. | 0dad2b8
 - 2026-11-19 22:00 | slice-4 | Gate 2 APPROVED by user. Slice 4 merged to master (local). | -
+- 2026-11-19 22:02 | slice-5 | Slice 5 built: wallets + transfer_marks migration with RLS, wallet per budget line, /transfer checklist grouped by wallet (month + cutoff), default wallets button. Runner PASS 100 tests, typecheck, lint, build. | 27e8601
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -44,12 +45,13 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 328,459 | 1,473,943 | 79,381 | 404,424 | 44,501,827 | 271,980 |  |
+| **Cumulative** | 331,407 | 1,514,607 | 80,258 | 423,872 | 48,108,152 | 288,402 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
 | Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
+| Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 
 <!-- END SUMMARY -->
 
@@ -95,6 +97,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 5: what you do now
+1. Get the code:   git checkout slice/5-transfer   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261124000000_wallets_transfers.sql (adds tables wallets and transfer_marks, and a wallet_id column on budget_lines; earlier migrations must be applied). Rollback: drop table public.transfer_marks; alter table public.budget_lines drop column wallet_id; drop table public.wallets;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/transfer (left rail "Cutoff")
+6. Check these:    (a) first visit: press "Add Gcash, Maya, BPI, Vybe" in the Wallets card (or add your own); (b) Budget page: each line now has a wallet dropdown, pick one and Save; (c) Transfer page: lines appear grouped by wallet with totals, tap the circle to tick a transfer sent, tap again to undo; (d) the top card shows "X left of Y" and a progress bar, and "All sent" when done; (e) switch 1st / 2nd cutoff and step months with the arrows: ticks are kept per month, so next month starts fresh; (f) deleting a wallet keeps its lines under "No wallet yet"
+7. Known limits:   dashboard still uses sample data until Slice 9; not tested against live Supabase; "sent" is per line per month (a plan can run for many months)
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 4: what you do now
 1. Get the code:   git checkout slice/4-budget   (local branch; merge to master after you approve)
