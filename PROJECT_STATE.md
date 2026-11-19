@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 2 Auth, DB and plans
-- **Gate:** blocked on user input
-- **Next action:** Need Supabase project (URL, anon key, service-role key) and ALLOWED_EMAIL before building Slice 2
-- **User to-do now:** Create a free Supabase project and give me the details (see question)
+- **Gate:** Gate 2: Slice 2 awaiting approval
+- **Next action:** User creates Supabase project, applies migration, fills .env.local, tests login + plans; then approve and start Slice 3 (Pay)
+- **User to-do now:** See handoff block: Supabase project, run migration SQL, .env.local, add user, disable signups
 
 ## 3. Execution log
 
@@ -34,6 +34,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:14 | slice-1 | Slice 1 built: Next.js 16 scaffold, tokens (dark/light, square cards + round controls), shell, dashboard on sample data, domain logic copied (56 tests pass). Runner PASS (test, typecheck, lint, build). Committed locally on slice/1-scaffold-dashboard (no remote). | 21640c6
 - 2026-11-19 21:16 | slice-1 | Revision at Gate 2: user reported dashboard not centered / not spanning page width. Fixed (content fills column, max 1680px centered). Runner PASS. | 1794447
 - 2026-11-19 21:16 | slice-1 | Gate 2 APPROVED by user. Slice 1 merged to master (local, no remote). | 1794447
+- 2026-11-19 21:20 | slice-2 | Slice 2 built: proxy.ts login gate, magic-link login (shouldCreateUser false, ALLOWED_EMAIL checked in action, callback and proxy), plans migration with RLS + activate_plan(), plans CRUD pages/actions, Past plans read-only. Disabled cacheComponents (not needed). Runner PASS 70 tests, typecheck, lint, build. Not tested against live Supabase. | 01e9ad8
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -49,9 +50,10 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 264,569 | 1,152,024 | 66,120 | 282,241 | 21,092,630 | 177,881 |  |
+| **Cumulative** | 278,582 | 1,273,903 | 69,218 | 316,584 | 27,427,386 | 205,225 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
+| Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
 
 <!-- END SUMMARY -->
 
@@ -89,12 +91,24 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | What | Command |
 |---|---|
 | Install deps | `npm install` |
+| Env vars | copy `.env.example` to `.env.local`, fill NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, ALLOWED_EMAIL |
+| Apply DB migration | easiest: paste `supabase/migrations/20261120000000_plans.sql` into Supabase dashboard > SQL Editor > Run. Or CLI: `npx supabase login`, `npx supabase link --project-ref <ref>`, `npx supabase db push` |
 | Start the app | `npm run dev` then open http://localhost:3000 |
-| Run tests | `npm test` (56 domain tests) |
+| Run tests | `npm test` (70 tests) |
 | Typecheck / lint / build | `npm run typecheck` / `npm run lint` / `npm run build` |
-| DB migrations, seed, env vars | none yet (arrive in Slice 2) |
+| Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 2: what you do now
+1. Get the code:   git checkout slice/2-auth-db-plans   (local branch; merge to master after you approve)
+2. Install deps:   npm install   (new: @supabase/supabase-js, @supabase/ssr)
+3. Database:       create a free project at supabase.com. Open SQL Editor, paste supabase/migrations/20261120000000_plans.sql, Run. Creates table "plans" with row-level security. Empty project, so no backup needed. Rollback: run the last line of that file (drop function public.activate_plan(uuid); drop table public.plans;).
+4. Config:         copy .env.example to .env.local and fill: NEXT_PUBLIC_SUPABASE_URL (Project Settings > API > Project URL), NEXT_PUBLIC_SUPABASE_ANON_KEY (same page, anon public key), ALLOWED_EMAIL=<your email>. In Supabase: Authentication > Users > Add user > your email (tick auto-confirm). Then Authentication > Sign In / Providers > Email: turn OFF "Allow new users to sign up". Authentication > URL Configuration: Site URL http://localhost:3000 and add http://localhost:3000/auth/callback to Redirect URLs.
+5. Start the app:  npm run dev  ->  open http://localhost:3000 (you are sent to /login)
+6. Check these:    (a) enter your email, get the magic link, click it, land on the dashboard; (b) a different email gets the same "check your inbox" message but no mail; (c) Plans page: create a plan, duplicate it, activate one (the other loses "Active"), edit dates, delete a non-active plan; (d) a plan whose end date is before today shows "Past, read-only" and cannot be edited or activated; (e) Sign out (left rail) returns to /login and / is blocked until you log in again
+7. Known limits:   I could not test against a live Supabase from here, so the login and plans flow is unverified end to end (70 unit tests, typecheck, lint and build pass). Dashboard still shows sample data until Slice 9. Seed script skeleton is deferred to Slice 4 where the data lands.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 1: what you do now
 1. Get the code:   git checkout slice/1-scaffold-dashboard   (local branch, no remote yet; merge to master after you approve)
