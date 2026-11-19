@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 1 Scaffold + theme + Dashboard (sample data)
-- **Gate:** building
-- **Next action:** Build Slice 1; then gate
-- **User to-do now:** git init and add a remote (needed for slice branches/push)
+- **Gate:** Gate 2: Slice 1 awaiting approval
+- **Next action:** User reviews dashboard at localhost:3000; on approval merge to master and start Slice 2 (auth, DB, plans)
+- **User to-do now:** Run npm run dev and check the dashboard; add a git remote when ready (git remote add origin <url>)
 
 ## 3. Execution log
 
@@ -31,6 +31,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:04 | phase1 | User leaning to v9 design 1 (Night Emerald) but too rounded; wants other colour schemes. Added docs/mockups/v10-gallery.html: 5 variants of that layout with sharper corners (4-14px) and new palettes (Cobalt Night, Amber Ledger, Rose Night, Graphite Lime, Navy and Orange light). Checks: syntax, render, no global-name collisions; not visually verified. | -
 - 2026-11-19 21:05 | phase1 | User chose v9 design 1 (Night Emerald). Wrote DESIGN.md (tokens dark+light, Plus Jakarta Sans + Manrope, components). Slice plan updated: slice 1 now includes theme + shell; new slice 8 Dashboard. Gate 1 awaiting plan approval. | -
 - 2026-11-19 21:07 | phase1 | Gate 1 APPROVED by user: Night Emerald design + plan, with changes: dashboard first (Slice 1 now scaffold+theme+dashboard on sample data; auth/plans moved to Slice 2; real-data wiring is Slice 9) and less round corners with contrast (square cards, round controls) recorded in DESIGN.md. | -
+- 2026-11-19 21:14 | slice-1 | Slice 1 built: Next.js 16 scaffold, tokens (dark/light, square cards + round controls), shell, dashboard on sample data, domain logic copied (56 tests pass). Runner PASS (test, typecheck, lint, build). Committed locally on slice/1-scaffold-dashboard (no remote). | 21640c6
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -46,8 +47,9 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
+| **Cumulative** | 264,569 | 1,152,024 | 66,120 | 282,241 | 21,092,630 | 177,881 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
+| Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 
 <!-- END SUMMARY -->
 
@@ -81,20 +83,27 @@ in = fresh input + cache writes, cached = cache reads, out = output.
   - D8 Money stored as integer centavos; dates in Asia/Manila.
 
 ## Run & verify guide (detected by Scout, kept current)
-Planned from the Phase 1 plan; not yet verified (app not scaffolded). Node 22.
+
 | What | Command |
 |---|---|
 | Install deps | `npm install` |
-| Apply DB migrations | `npx supabase link`, then `npx supabase db push` |
-| Seed data | `npm run seed` (local only, uses service-role key) |
-| Start the app | `npm run dev` |
-| URL | http://localhost:3000 |
-| Run tests | `npm test` |
-| Lint / build | `npm run lint` / `npm run build` |
-| Required env vars | `.env.local`: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (seed only, local), ALLOWED_EMAIL |
+| Start the app | `npm run dev` then open http://localhost:3000 |
+| Run tests | `npm test` (56 domain tests) |
+| Typecheck / lint / build | `npm run typecheck` / `npm run lint` / `npm run build` |
+| DB migrations, seed, env vars | none yet (arrive in Slice 2) |
 
 ## Slice handoffs (what the user does after each slice)
-<!-- One block per slice/revision, newest first. Format defined in the orchestrate skill. -->
+
+AFTER SLICE 1: what you do now
+1. Get the code:   git checkout slice/1-scaffold-dashboard   (local branch, no remote yet; merge to master after you approve)
+2. Install deps:   npm install   (already done in this folder)
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000
+6. Check these:    (a) dashboard shows greeting, big "Left to send" balance, Pip, 4 wallet cards, forecast, 13th month ring, cutoff bars, pending transfers; (b) "Mark all sent" fires confetti and Pip smiles, and tapping a pending transfer marks it sent and updates the balance; (c) Theme button flips dark/light and remembers it; (d) narrow the window under 760px: bottom tab bar appears; (e) corners: square cards, round buttons/pills/avatars
+7. Known limits:   sample data only (synthetic, not your sheet); no login; other nav items are disabled; not visually verified by me (no browser here), so expect small CSS fixes
+Reply: Approve / Request changes / Pause
+
 _None yet._
 
 ## Assumptions, risks & sources

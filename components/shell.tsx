@@ -28,7 +28,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </nav>
         <ThemeToggle />
       </aside>
-      <div>{children}</div>
+      <div className="content">{children}</div>
       <nav className="mnav" aria-label="Main">
         {TABS.map((label, i) =>
           i === 0 ? (

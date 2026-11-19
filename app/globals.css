@@ -86,7 +86,8 @@ h2 { font-size: 18px; margin: 0 0 12px; }
 .rail a:hover { background: var(--soft); color: var(--ink); }
 .rail a[aria-current="page"] { background: var(--tint); color: var(--accent-text); font-weight: 700; }
 .rail .off { opacity: 0.55; cursor: default; }
-.main { padding: 24px 28px 56px; max-width: 1180px; width: 100%; }
+.content { min-width: 0; }
+.main { padding: 24px 32px 56px; width: 100%; max-width: 1680px; margin: 0 auto; }
 .mnav { display: none; }
 
 /* primitives */
