@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 3 Pay
-- **Gate:** building
-- **Next action:** Build Slice 3 (Pay screen: annual base to per-cutoff net)
-- **User to-do now:** Slice 2 setup (Supabase) still needed before login/plans can be tried
+- **Gate:** Gate 2: Slice 3 awaiting approval
+- **Next action:** User applies pay_profiles migration and tries /pay; on approval merge and start Slice 4 (Budget split)
+- **User to-do now:** Run migration 20261121000000_pay_profiles.sql in Supabase SQL Editor; try /pay
 
 ## 3. Execution log
 
@@ -36,6 +36,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 21:16 | slice-1 | Gate 2 APPROVED by user. Slice 1 merged to master (local, no remote). | 1794447
 - 2026-11-19 21:20 | slice-2 | Slice 2 built: proxy.ts login gate, magic-link login (shouldCreateUser false, ALLOWED_EMAIL checked in action, callback and proxy), plans migration with RLS + activate_plan(), plans CRUD pages/actions, Past plans read-only. Disabled cacheComponents (not needed). Runner PASS 70 tests, typecheck, lint, build. Not tested against live Supabase. | 01e9ad8
 - 2026-11-19 21:29 | slice-2 | Gate 2 APPROVED by user. Slice 2 merged to master (local). | -
+- 2026-11-19 21:32 | slice-3 | Slice 3 built: lib/pay (TRAIN table, computePay on domain netCutoff, form parsing), pay_profiles migration with RLS, /pay screen with overrides, Pay nav enabled. Runner PASS 81 tests, typecheck, lint, build. Hand-worked synthetic test cases; unverified tax/PhilHealth rules flagged in UI. | e77050c
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -51,10 +52,11 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 278,582 | 1,273,903 | 69,218 | 316,584 | 27,427,386 | 205,225 |  |
+| **Cumulative** | 306,497 | 1,314,780 | 75,685 | 350,583 | 32,929,363 | 229,110 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
+| Slice 3 | 27,915 | 40,877 | 6,467 | 33,999 | 5,501,977 | 23,885 | estimate: cumulative now minus cumulative at Slice 2 gate (mark was missed) |
 
 <!-- END SUMMARY -->
 
@@ -100,6 +102,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 3: what you do now
+1. Get the code:   git checkout slice/3-pay   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase dashboard > SQL Editor: paste supabase/migrations/20261121000000_pay_profiles.sql and Run (adds table pay_profiles with row-level security; slice 2 migration must already be applied). Rollback: drop table public.pay_profiles;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  open http://localhost:3000/pay (needs an active plan from Plans)
+6. Check these:    (a) enter your annual base, allowance, SSS, Pag-IBIG, savings plan % and Save; (b) the table shows 1st cutoff / 2nd cutoff / Month with basic, allowance, mandatory, tax, net to budget, savings plan, lands in your account; (c) compare against a real payslip: if tax or PhilHealth differ, type the payslip value in the override field and it replaces the calculated one; (d) a plan that has ended shows pay read-only; (e) no active plan shows a "Go to Plans" prompt
+7. Known limits:   tax table (TRAIN 2023) and PhilHealth 5% are carried over from the old app and unverified (Q1/Q2, flagged on screen); not tested against live Supabase; the old sheet's totals (25,008.38 / 24,356.50) are not asserted yet because they need your real salary, which is not stored in the repo. Dashboard still sample data until Slice 9.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 2: what you do now
 1. Get the code:   git checkout slice/2-auth-db-plans   (local branch; merge to master after you approve)
