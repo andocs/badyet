@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 2 Build
-- **Active slice / milestone:** 9 Dashboard on real data
-- **Gate:** Gate 2: Slice 9 awaiting approval
-- **Next action:** User checks the dashboard on real data; on approval merge, then Phase 3 revisions
-- **User to-do now:** Try the dashboard with your real data
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** Gap analysis
+- **Gate:** Gate 3: revision list awaiting approval
+- **Next action:** Approve rev-1..rev-10 order, then build rev-1 (phone menu)
+- **User to-do now:** Approve the revision plan
 
 ## 3. Execution log
 
@@ -39,6 +39,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:21 | slice-8 | Gate 2 APPROVED by user. Slice 8 merged to master. | -
 - 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
 - 2026-11-19 22:25 | slice-9 | Gate 2 APPROVED by user. Slice 9 merged to master (local). All 9 planned slices approved: Phase 2 complete. | -
+- 2026-11-19 22:27 | phase3 | Gap analysis done. User selected all 10 items (rev-1 to rev-10), including the 3 nice-to-haves. Found: phone More menu dead (Pay, Bonuses, Installments, Subscriptions, Savings unreachable on phone); duplicate plan copies only name/dates; cutoff 1-15 assumption; unverified tax/PhilHealth/cap; no import/deploy/visual QA/e2e. | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -74,15 +75,17 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | # | Slice | Depends on | Run | Status | Branch |
 |---|---|---|---|---|---|
-| 1 | Scaffold + theme + **Dashboard on sample data**: Next.js app, design tokens (dark default + light, DESIGN.md radii: square cards, round controls), app shell (rail / bottom tabs), the full dashboard (greeting, hero balance, wallet cards, 13th month ring, forecast + cutoff charts, pending transfers, Pip), sample data from a local fixture, domain logic copied with tests passing. No login yet. **Needed** | none | sequential | planned | - |
-| 2 | Auth, DB and plans: Supabase schema + RLS, magic-link login limited to ALLOWED_EMAIL, plans CRUD (create/duplicate/activate/date range), gitignored sheet snapshot + seed script skeleton. **Needed** | 1 | sequential | planned | - |
-| 3 | Pay: per-plan salary screen; annual base -> per-cutoff earnings, deductions, tax, net; overrides. **Needed** | 2 | sequential | planned | - |
-| 4 | Budget split: Essentials/Wants/Savings lines per cutoff + monthly roll-up, budget-left vs net pay, seeded from sheet. **Needed** | 3 | sequential | planned | - |
-| 5 | To Transfer: wallets (Gcash, Maya, BPI, Vybe), wallet per line, per-cutoff checklist with done state. **Needed** | 4 | sequential | planned | - |
-| 6 | Installments & subscriptions trackers feeding Essentials. **Needed** | 4 | parallel with 7 | planned | - |
-| 7 | Bonuses: 13th month and CIP computation + allocation checklists. **Needed** | 3 | parallel with 6 | planned | - |
-| 8 | Savings forecast: funds with caps, priority rules, month-by-month projection. **Needed** | 4 | sequential | planned | - |
-| 9 | Wire dashboard to real data (replace sample fixture with plan data from slices 3-8). **Needed**. Pip confetti polish is **Nice-to-have** | 5, 7, 8 | sequential | planned | - |
+| 1-9 | Scaffold+dashboard, auth/plans, pay, budget, transfer, installments+subscriptions, bonuses, savings forecast, dashboard on real data | - | sequential | merged to master (local) | slice/1..9 |
+| rev-1 | Phone menu: working "More" so every destination is reachable on a phone. **Needed** | - | sequential | planned | - |
+| rev-2 | Duplicate plan copies pay, budget lines (with wallets), savings settings. **Needed** | - | sequential | planned | - |
+| rev-3 | Cutoff days setting so cutoffs match real paydays (dashboard, labels). **Needed** | - | sequential | planned | - |
+| rev-4 | Verify tax, PhilHealth and 90,000 bonus cap against current rules; update with tests. **Needed** (needs your payslip to confirm) | - | sequential | planned | - |
+| rev-5 | Import from your Bad(yet) Sheet (one-time, data not committed). **Needed** | rev-3 | sequential | planned | - |
+| rev-6 | Mark installment payments paid one by one. Nice-to-have | - | sequential | planned | - |
+| rev-7 | Export your data as CSV. Nice-to-have | - | sequential | planned | - |
+| rev-8 | Deploy online: Vercel + Supabase env, redirect URLs, runbook. **Needed** | rev-1 | sequential | planned | - |
+| rev-9 | Visual check with a real browser (Playwright Chromium): phone and desktop, light and dark, fix findings. **Needed** | rev-1..3 | sequential | planned | - |
+| rev-10 | Automated end-to-end smoke tests (login, plan, pay, tick a transfer). Nice-to-have | rev-9 | sequential | planned | - |
 
 ## Decisions & architecture
 - Stack: Next.js (App Router, TypeScript) on Vercel + Supabase (Postgres; Auth magic link restricted to one allowed email; RLS by user_id).
