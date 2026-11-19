@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-2 Duplicate copies everything
-- **Gate:** Gate 3: rev-2 awaiting approval
-- **Next action:** User applies duplicate_plan migration and tries Duplicate; on approval start rev-3 (cutoff days)
-- **User to-do now:** Run migration 20261128000000_duplicate_plan.sql; try Duplicate
+- **Active slice / milestone:** rev-3..rev-10 (one shot)
+- **Gate:** building (no intermediate gates)
+- **Next action:** Build rev-3, 4, 6, 7, 5, 8, 9, 10 then final gate
+- **User to-do now:** -
 
 ## 3. Execution log
 
@@ -29,6 +29,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:28 | rev-1 | rev-1 built: /more page (Pay, Bonuses, Savings, Installments, Subscriptions, Theme, Sign out), More tab links to it and stays active on those pages. Runner PASS 131 tests, typecheck, lint, build. | b117c9b
 - 2026-11-19 22:29 | rev-1 | Gate 3 APPROVED by user. Merged to master (local). User asked to do ALL remaining revisions on ONE branch: rev/phase3-revisions (per-revision gates stay). | -
 - 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
+- 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
