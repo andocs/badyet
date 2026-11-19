@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build
 - **Active slice / milestone:** 8 Savings forecast
-- **Gate:** building
-- **Next action:** Build Slice 8 (funds with caps, priority rules, projection)
-- **User to-do now:** Apply migration 20261126000000_windfalls.sql if not done; check why git push failed
+- **Gate:** Gate 2: Slice 8 awaiting approval
+- **Next action:** User applies savings migration and tries /savings; on approval merge and start Slice 9 (wire dashboard to real data)
+- **User to-do now:** Run migration 20261127000000_savings.sql; try /savings
 
 ## 3. Execution log
 
@@ -35,6 +35,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:11 | slice-6 | Gate 2 APPROVED by user. Slice 6 merged to master (local). | -
 - 2026-11-19 22:13 | slice-7 | Slice 7 built: windfall_events + windfall_allocations tables with RLS, lib/windfall (net via domain netCutoff, shared yearly 90k exemption, CIP via domain cipGross), /bonuses page with allocation checklists, buildItems exported from pay compute. Runner PASS 119 tests, typecheck, lint, build. | 3a5514f
 - 2026-11-19 22:19 | slice-7 | Gate 2 APPROVED by user. Slice 7 merged to master (local). Note: a git remote is now configured but the last push failed with a server-side write error; commits are safe locally. | -
+- 2026-11-19 22:21 | slice-8 | Slice 8 built: savings_settings + savings_overrides tables with RLS, lib/savings (settings parsing, forecast wiring over domain allocateForecast), SavingsChart, /savings page. Runner PASS 127 tests, typecheck, lint, build. | 83231c1
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -50,7 +51,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 356,734 | 1,649,493 | 85,497 | 487,638 | 58,960,345 | 335,716 |  |
+| **Cumulative** | 366,967 | 1,684,541 | 86,317 | 512,501 | 63,253,470 | 353,832 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -59,6 +60,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
+| Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
 
 <!-- END SUMMARY -->
 
@@ -104,6 +106,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE 8: what you do now
+1. Get the code:   git checkout slice/8-savings   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261127000000_savings.sql (adds tables savings_settings and savings_overrides; earlier migrations must be applied). Rollback: drop table public.savings_overrides; drop table public.savings_settings;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/savings (needs an active plan; Savings lines on the Budget page feed it)
+6. Check these:    (a) first visit: fill "Set up your funds" (start month, balances today, Emergency fund step e.g. 100,000, caps, priority order) and Save; (b) the chart and month-by-month table appear for 12 months: each fund shows its balance, what it received that month, and a status (Saving, Paused, Step reached); (c) the monthly amount comes from your Savings budget lines (both cutoffs); change a line on Budget and the forecast changes; (d) pick "Travel fund first" for one month in "Lead this month" and press Set: that month's money goes there first; (e) add a CIP on Bonuses: its estimated net is added to the month it is paid, marked CIP; (f) if every fund hits its cap you see a note about leftover savings
+7. Known limits:   rules (EF steps, Travel resets each January with first call until its cap, EF-first window around a CIP month) come straight from your old app's allocator; adding the CIP net to the savings pool is my reading of "the month whose pool includes the CIP"; fund names are fixed (Emergency, Travel, Wants); not tested against live Supabase
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 7: what you do now
 1. Get the code:   git checkout slice/7-bonuses   (local branch; merge to master after you approve)
