@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 1 Data foundation
+- **Active slice / milestone:** 2 Shell, theme and Now
 - **Gate:** none
-- **Next action:** Start a new session, run /orchestrate, then build slice 1 (data foundation: migrations with rollback, pure TS calculation code, tests). Slices 2 to 8 follow, one gate each.
-- **User to-do now:** Open a fresh session and type /orchestrate. Optionally commit the docs/ design files first.
+- **Next action:** Build slice 2 (shell, theme and Now). Apply the two slice 1 migrations in Supabase first.
+- **User to-do now:** Apply the two slice 1 migrations in the Supabase SQL Editor (schema file, then data migration) and check the tables.
 
 ## 3. Execution log
 
@@ -40,6 +40,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 20:59 | design-v13 | Round 13: the three raise-planning gaps added. Budget Future years marks months that include an expected raise and has a Compare without expected raises switch; raise wizard has a Where does the extra go step (top-ups tied to the raise, tagged on Budget lines); Forecast shows a with / without expected raises total. ia.md and model.md updated. No app code touched. | -
 - 2026-11-20 21:02 | design-v13 | Round 14: both limits fixed. Raise top-ups now live in the shared budget rules (v13-data.js), so Forecast and Budget agree and the with/without views drop top-ups tied to expected raises; the raise wizard's summary text follows the extra you place. No app code touched. | -
 - 2026-11-20 21:03 | design-v13 | Design approved by the user. Slice plan, decisions and handoff written to PROJECT_STATE.md. Ready to hand over to a fresh session for slice 1. | -
+- 2026-11-20 21:19 | slice-1 | Migrations (schema + data move, rollbacks), pure engine in lib/engine (months, salary timeline, payslip builder, bonuses, budget evaluator, office days/pools, fund allocator, with/without expected runner) and tests. Tests, typecheck, lint, build pass. SQL not executed against a database. | 7f02687
+- 2026-11-20 21:19 | slice-1 | Slice 1 approved by the user. | 7f02687
 
 ## 4. Open questions
 
@@ -56,9 +58,9 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 894,733 | 4,370,980 | 199,092 | 1,424,982 | 189,447,205 | 757,871 |  |
+| **Cumulative** | 1,238,411 | 5,117,724 | 228,813 | 2,492,306 | 294,561,029 | 1,409,721 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
-| Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
+| Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
 | Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
@@ -104,6 +106,13 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 1 (data foundation) is built. Nothing in the running app changed; the new tables and engine are not used by any page yet.
+1. Apply the two new migrations in the Supabase SQL Editor, in order: supabase/migrations/20261206000000_rehaul_schema.sql, then 20261206000100_rehaul_data_migration.sql. They only add tables and columns; the old tables are untouched. Each file ends with a rollback note.
+2. After step 1, check in the Table Editor: accounts and balance_anchors match your wallets, category_groups has Essentials/Wants/Savings, budget_lines_v2 matches your active plan's lines, funds has 3 rows, legacy_plan_snapshots has your non-active plans.
+3. Review three decisions below, then approve.
+Decisions to confirm: (a) the payroll savings plan stays in pay_settings, no percent budget line is created for it (the model said to create one, but that would be a percent of take-home rather than of basic pay); (b) Wants is migrated as a fund that resets every January, matching today's allocator, so confirm that is intended; (c) the new budget table is budget_lines_v2 until slice 7 drops the old one; (d) tax_table_versions is created empty and the engine uses the built-in tables.
+Not verified: the SQL has not been run against a database (no Postgres available here), so step 1 is its first real run.
 
 HANDOFF (design approved, build not started)
 - Design is approved after 14 review rounds. Nothing in app/, lib/, supabase/ or tests has been changed yet.

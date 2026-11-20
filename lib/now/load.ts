@@ -1,0 +1,194 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
+import { money, sum, type Money } from "@/lib/domain/money";
+import { balanceNow } from "@/lib/engine/balances";
+import { runProjection } from "@/lib/engine/projection";
+import {
+  allowanceOf,
+  assumptionsOf,
+  paySettingsOf,
+  raiseAllocationOf,
+  salaryEventOf,
+  type AllowanceRow,
+  type AssumptionsRow,
+  type PaySettingsRow,
+  type RaiseAllocationRow,
+  type SalaryEventRow,
+} from "@/lib/engine/rows";
+import { todayManila } from "@/lib/plans/validate";
+import { buildNowView, currentCutoff, type NowCategory, type NowLine, type NowTxn, type NowView } from "./summary";
+
+export interface AccountCard {
+  id: string;
+  name: string;
+  kind: string;
+  last4: string | null;
+  color: string | null;
+  balance: Money;
+  /** When the balance was last confirmed (the latest anchor). */
+  confirmedOn: string | null;
+}
+
+export type NowData =
+  | { kind: "setup"; reason: "no-salary" | "no-budget" }
+  | {
+      kind: "ready";
+      today: IsoDate;
+      view: NowView;
+      accounts: AccountCard[];
+      /** Sum of the accounts you own (cards you owe on are left out). */
+      total: Money;
+      /** The next payday's money: the payslip that lands then. */
+      nextPay: { date: IsoDate; amount: Money; cutoff: "first" | "second" };
+    };
+
+interface SettingsRow { first_payday_day: number; second_payday_day: number; office_days: number[]; rto_amount: number }
+interface CategoryRow { id: string; name: string; color: string | null; group_id: string }
+interface GroupRow { id: string; feeds_savings: boolean }
+interface LineRow {
+  id: string; category_id: string; name: string; rule: "fixed" | "pct" | "rest"; amount: number | null; pct_bp: number | null;
+  cutoff: "first" | "second" | "both"; account_id: string | null; starts_on: string | null; ends_on: string | null; is_draft: boolean;
+  counts_to_daily: boolean; kind: "normal" | "rto" | "rto_contingency";
+}
+interface AccountRow { id: string; name: string; kind: string; last4: string | null; color: string | null }
+interface AnchorRow { account_id: string; as_of: string; amount: number }
+interface TxnRow {
+  id: string; account_id: string; occurred_at: string; amount: number; merchant: string | null; category_id: string | null;
+  budget_line_id: string | null; kind: "expense" | "income" | "transfer"; status: "pending" | "confirmed" | "ignored";
+}
+
+const rows = <T,>(r: { data: unknown }): T[] => (r.data ?? []) as T[];
+const nextDay = (d: IsoDate): string => new Date(Date.parse(d) + 86_400_000).toISOString().slice(0, 10);
+
+export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
+  const today = isoDate(todayManila());
+  const { data: s } = await supabase.from("user_settings").select("first_payday_day, second_payday_day, office_days, rto_amount").maybeSingle();
+  const settings = (s as SettingsRow | null) ?? { first_payday_day: 10, second_payday_day: 25, office_days: [1, 2], rto_amount: 0 };
+  const paydays = { first: settings.first_payday_day, second: settings.second_payday_day };
+  const { period, budgetMonth } = currentCutoff(today, paydays);
+  const from = `${period.start}T00:00:00+08:00`;
+  const to = `${nextDay(period.end)}T00:00:00+08:00`;
+
+  const [events, allowances, assumptions, pay, groups, cats, lineRows, alloc, accts, anchors, periodTxns] = await Promise.all([
+    supabase.from("salary_events").select("id, effective_month, kind, pct_bp, new_base, allowance_id, one_off_amount, one_off_taxable, status"),
+    supabase.from("allowances").select("id, payslip_cutoff, name, amount, frequency, pay_month, taxable, starts_on, ends_on"),
+    supabase.from("plan_assumptions").select("cip_multiplier_num, assumed_raise_on, assumed_raise_bp, assumed_raise_month").maybeSingle(),
+    supabase.from("pay_settings").select("sss_override, philhealth_override, pagibig_override, tax_override_first, tax_override_second, other_deduction, savings_plan_bp").maybeSingle(),
+    supabase.from("category_groups").select("id, feeds_savings"),
+    supabase.from("categories").select("id, name, color, group_id").is("archived_at", null),
+    supabase.from("budget_lines_v2").select("id, category_id, name, rule, amount, pct_bp, cutoff, account_id, starts_on, ends_on, is_draft, counts_to_daily, kind").order("sort"),
+    supabase.from("raise_allocations").select("salary_event_id, budget_line_id, mode, amount, pct_bp"),
+    supabase.from("accounts").select("id, name, kind, last4, color").is("archived_at", null).order("sort"),
+    supabase.from("balance_anchors").select("account_id, as_of, amount"),
+    supabase.from("transactions").select("id, account_id, occurred_at, amount, merchant, category_id, budget_line_id, kind, status").gte("occurred_at", from).lt("occurred_at", to),
+  ]);
+
+  const salaryEvents = rows<SalaryEventRow>(events).map(salaryEventOf);
+  if (!salaryEvents.some((e) => e.kind === "start")) return { kind: "setup", reason: "no-salary" };
+  const lineData = rows<LineRow>(lineRows);
+  if (lineData.length === 0) return { kind: "setup", reason: "no-budget" };
+
+  const feeds = new Map(rows<GroupRow>(groups).map((g) => [g.id, g.feeds_savings]));
+  const categories: NowCategory[] = rows<CategoryRow>(cats).map((c) => ({ id: c.id, name: c.name, color: c.color, feedsSavings: feeds.get(c.group_id) ?? false }));
+  const catById = new Map(categories.map((c) => [c.id, c]));
+  const lines: NowLine[] = lineData.map((l) => ({
+    id: l.id,
+    name: l.name,
+    rule: l.rule,
+    amount: l.amount == null ? null : money(l.amount),
+    pctBp: l.pct_bp,
+    cutoff: l.cutoff,
+    startsOn: l.starts_on ? (l.starts_on.slice(0, 7) as YearMonth) : null,
+    endsOn: l.ends_on ? (l.ends_on.slice(0, 7) as YearMonth) : null,
+    isDraft: l.is_draft,
+    feedsSavings: catById.get(l.category_id)?.feedsSavings ?? false,
+    countsToDaily: l.counts_to_daily,
+    kind: l.kind,
+    categoryId: l.category_id,
+    accountId: l.account_id,
+  }));
+
+  // This cutoff's budget, and the next payday's payslip, from the same engine the forecast will use.
+  const run = runProjection(
+    {
+      start: budgetMonth,
+      months: 2,
+      events: salaryEvents,
+      allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
+      assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
+      settings: paySettingsOf((pay.data as PaySettingsRow | null) ?? null),
+      bonusRules: [],
+      bonusInstances: [],
+      lines,
+      allocations: rows<RaiseAllocationRow>(alloc).map(raiseAllocationOf),
+      funds: [],
+      fundStart: {},
+    },
+    { includeExpected: false },
+  );
+  const here = run[0]!;
+  const nextPayCutoff = period.which === 1 ? "second" : "first";
+  const nextPayMonth = period.which === 1 ? run[0]! : run[1]!;
+  const nextPayDate = isoDate(
+    period.which === 1
+      ? `${budgetMonth}-${String(paydays.second).padStart(2, "0")}`
+      : `${addMonths(budgetMonth, 1)}-${String(paydays.first).padStart(2, "0")}`,
+  );
+
+  const accountRows = rows<AccountRow>(accts);
+  const nameOf = new Map(accountRows.map((a) => [a.id, a.name]));
+  const txns: NowTxn[] = rows<TxnRow>(periodTxns).map((t) => ({
+    id: t.id,
+    occurredAt: t.occurred_at,
+    amount: money(t.amount),
+    merchant: t.merchant,
+    categoryId: t.category_id,
+    budgetLineId: t.budget_line_id,
+    accountName: nameOf.get(t.account_id) ?? "Account",
+    kind: t.kind,
+    status: t.status,
+  }));
+
+  const view = buildNowView({
+    today,
+    paydays,
+    officeDays: settings.office_days,
+    officeDayAmount: money(settings.rto_amount),
+    budget: here.budget,
+    lines,
+    categories,
+    txns,
+  });
+
+  // Balances: the latest anchor plus confirmed transactions since the earliest anchor (cheap and small for one user).
+  const anchorRows = rows<AnchorRow>(anchors);
+  const earliest = anchorRows.map((a) => a.as_of).sort()[0];
+  const sinceTxns = earliest
+    ? rows<TxnRow>(await supabase.from("transactions").select("id, account_id, occurred_at, amount, status, kind, merchant, category_id, budget_line_id").eq("status", "confirmed").gte("occurred_at", earliest))
+    : [];
+  const accounts: AccountCard[] = accountRows.map((a) => {
+    const mine = anchorRows.filter((x) => x.account_id === a.id);
+    const latest = [...mine].sort((x, y) => y.as_of.localeCompare(x.as_of))[0];
+    return {
+      id: a.id,
+      name: a.name,
+      kind: a.kind,
+      last4: a.last4,
+      color: a.color,
+      balance: balanceNow(
+        mine.map((x) => ({ asOf: x.as_of, amount: money(x.amount) })),
+        sinceTxns.filter((t) => t.account_id === a.id).map((t) => ({ occurredAt: t.occurred_at, amount: money(t.amount), status: t.status })),
+      ),
+      confirmedOn: latest ? latest.as_of.slice(0, 10) : null,
+    };
+  });
+
+  return {
+    kind: "ready",
+    today,
+    view,
+    accounts,
+    total: sum(accounts.filter((a) => a.kind !== "credit").map((a) => a.balance)),
+    nextPay: { date: nextPayDate, amount: nextPayMonth.pay[nextPayCutoff].takeHome, cutoff: nextPayCutoff },
+  };
+}

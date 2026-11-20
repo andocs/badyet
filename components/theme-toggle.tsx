@@ -2,7 +2,7 @@
 
 import { Icon } from "./icons";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = "tool" }: { className?: string } = {}) {
   function flip() {
     const root = document.documentElement;
     const next = root.dataset.theme === "light" ? "dark" : "light";
@@ -14,7 +14,7 @@ export function ThemeToggle() {
     }
   }
   return (
-    <button type="button" className="tool" onClick={flip} aria-label="Switch between dark and light theme">
+    <button type="button" className={className} onClick={flip} aria-label="Switch between dark and light theme">
       <Icon name="theme" />
       Theme
     </button>

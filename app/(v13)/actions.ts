@@ -1,0 +1,54 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { parsePesos } from "@/lib/domain/money";
+import { requireAuthed } from "@/lib/auth/require";
+
+export interface AddExpenseState {
+  ok?: boolean;
+  error?: string;
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_CENTAVOS = 100_000_000_000;
+
+/** Quick add: one confirmed expense, dated now. Checks the login itself; row-level security is the final guard. */
+export async function addExpense(_prev: AddExpenseState, formData: FormData): Promise<AddExpenseState> {
+  const supabase = await requireAuthed();
+
+  const amount = parsePesos(String(formData.get("amount") ?? ""));
+  if (amount === undefined || amount <= 0) return { error: "Enter an amount above zero, like 250 or 1,250.50." };
+  if (amount > MAX_CENTAVOS) return { error: "That amount is too large." };
+
+  const account = String(formData.get("account") ?? "");
+  if (!UUID.test(account)) return { error: "Pick an account." };
+  const categoryRaw = String(formData.get("category") ?? "");
+  const category = categoryRaw === "" ? null : categoryRaw;
+  if (category !== null && !UUID.test(category)) return { error: "Pick a category from the list." };
+  const merchant = String(formData.get("merchant") ?? "").trim().slice(0, 80) || null;
+
+  // The policies only check the account; confirm the category is the user's own too (RLS hides other people's rows).
+  const owned = await supabase.from("accounts").select("id").eq("id", account).is("archived_at", null).maybeSingle();
+  if (!owned.data) return { error: "That account was not found." };
+  if (category !== null) {
+    const cat = await supabase.from("categories").select("id").eq("id", category).maybeSingle();
+    if (!cat.data) return { error: "That category was not found." };
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("transactions").insert({
+    account_id: account,
+    occurred_at: now,
+    amount: -amount,
+    merchant,
+    kind: "expense",
+    category_id: category,
+    source: "manual",
+    status: "confirmed",
+    confirmed_at: now,
+  });
+  if (error) return { error: "Could not save that. Try again." };
+
+  revalidatePath("/");
+  return { ok: true };
+}
