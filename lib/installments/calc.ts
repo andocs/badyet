@@ -62,3 +62,14 @@ export function dueByCutoff(rows: readonly InstalmentRow[], month: string): Reco
   const total = (cutoff: Cutoff) => sum(rows.filter((r) => r.cutoff === cutoff).map((r) => dueInMonth(r, month)));
   return { first: total("first"), second: total("second") };
 }
+
+// An installments table row (as Supabase returns it) as the calculation input.
+export function rowFromDb(r: {
+  id: string; name: string; price: number; down_payment: number; term_count: number;
+  rate_bp: number | null; first_due_on: string; cutoff: Cutoff; wallet_id: string | null;
+}): InstalmentRow {
+  return {
+    id: r.id, name: r.name, price: money(r.price), downPayment: money(r.down_payment), termCount: r.term_count,
+    rateBp: r.rate_bp, firstDueOn: r.first_due_on, cutoff: r.cutoff, walletId: r.wallet_id,
+  };
+}

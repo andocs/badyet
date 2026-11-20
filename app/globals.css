@@ -272,3 +272,25 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .more-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .more-actions form { margin: 0; }
 .input::placeholder { color: var(--muted); opacity: 1; }
+
+/* Now: the payday ritual (one decision per screen) */
+.now .steps { display: flex; gap: 6px; }
+.now .steps i { flex: 1; height: 5px; border-radius: var(--radius-ctl); background: var(--soft); }
+.now .steps i.on { background: var(--accent); }
+.now .steps i.now { background: linear-gradient(90deg, var(--accent) 50%, var(--soft) 50%); }
+.now .stage { display: flex; flex-direction: column; gap: 14px; max-width: 640px; margin: 12px auto 0; padding-bottom: 96px; }
+.now .stage h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.1; }
+.now .stage.done { align-items: center; text-align: center; padding-top: 12px; }
+.now .stage.done .pip { width: 96px; height: 96px; }
+.ritual-actions { display: flex; gap: 10px; position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(transparent, var(--bg) 30%); width: 100%; }
+.ritual-actions .btn { flex: 1; min-height: 48px; }
+.wal { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
+.wal.open { border-color: var(--accent); }
+.wal-hd, .wal-ln { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; min-height: 56px; cursor: pointer; color: var(--ink); }
+.wal-ln { border-top: 1px solid var(--line); }
+.wal-ln.done b, .wal-ln.done .num { color: var(--muted); }
+.wal-hd:focus-visible, .wal-ln:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.wal-all { margin: 10px 14px 14px; }
+.chk { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; font-weight: 800; font-size: 14px; color: var(--on-accent); }
+.chk.on { background: var(--accent); border-color: var(--accent); }
+@media (max-width: 760px) { .ritual-actions { bottom: 52px; } .now .stage { padding-bottom: 130px; } }
