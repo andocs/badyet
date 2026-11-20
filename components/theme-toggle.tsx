@@ -1,5 +1,7 @@
 "use client";
 
+import { Icon } from "./icons";
+
 export function ThemeToggle() {
   function flip() {
     const root = document.documentElement;
@@ -12,7 +14,8 @@ export function ThemeToggle() {
     }
   }
   return (
-    <button type="button" className="btn ghost" onClick={flip} aria-label="Switch between dark and light theme">
+    <button type="button" className="tool" onClick={flip} aria-label="Switch between dark and light theme">
+      <Icon name="theme" />
       Theme
     </button>
   );

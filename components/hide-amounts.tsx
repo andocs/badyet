@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { Icon } from "./icons";
 
 const EVENT = "hide-amounts-change";
 const subscribe = (notify: () => void) => {
@@ -10,7 +11,7 @@ const subscribe = (notify: () => void) => {
 const read = () => document.documentElement.dataset.hide === "1";
 
 // Blurs every money figure so you can look at the app with people around. The choice is remembered on this device.
-export function HideAmounts({ className = "btn ghost" }: { className?: string }) {
+export function HideAmounts({ className = "btn ghost", withIcon = false }: { className?: string; withIcon?: boolean }) {
   const hidden = useSyncExternalStore(subscribe, read, () => false);
   function flip() {
     const next = !hidden;
@@ -25,6 +26,7 @@ export function HideAmounts({ className = "btn ghost" }: { className?: string })
   }
   return (
     <button type="button" className={className} onClick={flip} aria-pressed={hidden}>
+      {withIcon && <Icon name={hidden ? "eye" : "eyeOff"} />}
       {hidden ? "Show amounts" : "Hide amounts"}
     </button>
   );
