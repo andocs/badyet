@@ -19,8 +19,8 @@ export function V13Shell({ children, pending, accounts, categories }: { children
     { label: "Salary and tax", icon: "salary", href: "/pay" },
     { label: "Budget", icon: "budget", href: "/budget", also: ["/installments", "/subscriptions"] },
     { label: "Bonuses", icon: "gift", href: "/bonuses" },
-    { label: "Funds", icon: "fund", href: "/savings" },
-    { label: "Forecast", icon: "forecast" },
+    { label: "Funds", icon: "fund", href: "/funds" },
+    { label: "Forecast", icon: "forecast", href: "/forecast" },
   ];
   return (
     <div className="v13">
@@ -50,7 +50,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
           </nav>
           <div className="v-content">{children}</div>
         </div>
-        <PhoneTabs inbox={today[1]!} plan={{ label: "Plan", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/savings", "/installments", "/subscriptions"] }} />
+        <PhoneTabs inbox={today[1]!} plan={{ label: "Plan", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }} />
       </QuickAddProvider>
     </div>
   );

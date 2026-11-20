@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 5 Budget and Bonuses
+- **Active slice / milestone:** 6 Funds, Forecast, Override
 - **Gate:** none
-- **Next action:** Build slice 5 (Budget and Bonuses). Try Salary and tax in the app first.
-- **User to-do now:** Open /pay and try it, push slice/4-salary-and-tax.
+- **Next action:** Build slice 6 (Funds, Forecast, Override). Apply the pools migration and try Budget and Bonuses first.
+- **User to-do now:** Apply 20261206000400_pools_created_on.sql, try Budget and Bonuses, push slice/5-budget-bonuses.
 
 ## 3. Execution log
 
@@ -35,6 +35,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 21:44 | slice-4 | Salary and tax: timeline chart, events (confirm/remove), projected raises, allowances (cutoff, taxable), year table, payslip builder with saved layouts and tax working, five-step raise wizard with before/after payslip, five-year effect and where-the-extra-goes top-ups; row mappers for bonuses and templates; validators with tests. Local commit, not pushed, not run in a browser. | d8bccc8
 - 2026-11-20 21:53 | slice-4 | Slice 4 approved by the user. | d8bccc8
 - 2026-11-20 21:58 | slice-5 | In progress: migration + pools/rto pure libs written. | -
+- 2026-11-20 22:08 | slice-5 | Budget (lines editor, future years + compare, RTO, settle, pools, categories), Bonuses (cards with 90k cap waterfall, destinations, received history, rule editor), pools migration, pure libs and validators with tests, Now picks up pools and settle nudge. Local commit, not pushed, not run in a browser. | -
+- 2026-11-20 22:22 | slice-5 | Slice 5 approved by the user. | 96cc419
 
 ## 4. Open questions
 
@@ -51,13 +53,13 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,343,508 | 5,442,119 | 253,534 | 2,749,702 | 316,150,428 | 1,575,405 |  |
+| **Cumulative** | 1,366,654 | 5,521,763 | 255,585 | 2,880,851 | 335,564,140 | 1,675,133 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
 | Slice 3 | 31,692 | 69,931 | 7,732 | 61,392 | 4,284,984 | 40,417 |  |
 | Slice 4 | 17,541 | 64,878 | 3,723 | 89,056 | 7,339,876 | 58,555 |  |
-| Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
+| Slice 5 | 23,146 | 79,644 | 2,051 | 128,754 | 17,634,396 | 97,620 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
@@ -99,6 +101,14 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 5 (Budget and Bonuses) is built and committed locally on slice/5-budget-bonuses (not pushed; stacked on slices 2 to 4).
+1. Apply supabase/migrations/20261206000400_pools_created_on.sql in the SQL Editor (adds pools.created_on and a positive-amount check on pool entries).
+2. Budget (/budget): This month (groups, lines with rule, cutoff, raise top-up tags, spent so far; tap a line to edit; tickers for Daily spend, RTO days, RTO contingency; draft; start/end months), Future years (year pick, 12-month bars with tight/over flags and an expected-raise marker, month detail, Compare without expected raises), RTO card (usual weekdays, tap extra days), Settle office days, Pools (use, move to Wants, new pool), Categories (add, edit, archive).
+3. Bonuses (/bonuses): year picker, hero with where the money goes, one card per bonus (gross to net with the shared 90,000 cap, CIP Low/Base/High, destinations with done ticks, Edit amounts, Mark received), history for received bonuses, and Yearly rules / One-offs with one editor (the six-step bonus wizard is replaced by this editor).
+4. Now now includes pool money moved to Wants in the daily amount and shows a Settle nudge.
+Notes: the old Budget and Bonuses pages are removed (installments and subscriptions pages remain until slice 7; their lines are budget lines with end dates now, so check your migrated installment lines). Contingency pool balance = what its line adds each cutoff since the pool was created, plus entries.
+Not verified: not opened in a browser or run against your data. Tests, typecheck, lint and build pass.
 
 Slice 4 (Salary and tax) is built and committed locally on slice/4-salary-and-tax (not pushed; stacked on slices 2 and 3).
 No new migration. Open /pay in the app and check:
