@@ -30,6 +30,7 @@ export interface DashData {
   commitments: { name: string; amount: number; kind: string }[];
   next: { days: number; label: string; net: number | null };
   daysLeft: number; // days of this cutoff left to spend in (at least 1)
+  money: { cash: number; debt: number; net: number; utilizationPct: number | null; cardsDue: { name: string; owed: number; days: number }[] } | null;
 }
 
 const BUCKET_LABEL = { essentials: "Essentials", wants: "Wants", savings: "Savings" } as const;
@@ -298,6 +299,26 @@ export function Dashboard({ data }: { data: DashData }) {
                   <Pip happy={allDone} />
                 </div>
               </section>
+              {data.money && (
+                <section className="card" aria-labelledby="mn-h">
+                  <div className="head" style={{ margin: "0 0 8px" }}>
+                    <h2 id="mn-h" style={{ margin: 0 }}>Your money</h2>
+                    <Link href="/accounts" className="btn sm">Accounts</Link>
+                  </div>
+                  <div className="row"><span>In your accounts</span><b className="num">₱{peso(data.money.cash)}</b></div>
+                  <div className="row">
+                    <span>Owed on cards{data.money.utilizationPct !== null ? ` (${data.money.utilizationPct}% of limit)` : ""}</span>
+                    <b className="num" style={{ color: data.money.debt > 0 ? "var(--err)" : undefined }}>₱{peso(data.money.debt)}</b>
+                  </div>
+                  <div className="row"><span>Cash minus debt</span><b className="num">{data.money.net < 0 ? "-" : ""}₱{peso(Math.abs(data.money.net))}</b></div>
+                  {data.money.cardsDue.map((c) => (
+                    <div key={c.name} className="row">
+                      <span>{c.name} is due {c.days === 0 ? "today" : `in ${c.days} ${c.days === 1 ? "day" : "days"}`}</span>
+                      <span className="num">₱{peso(c.owed)}</span>
+                    </div>
+                  ))}
+                </section>
+              )}
               <section className="card" aria-labelledby="gl-h">
                 <h2 id="gl-h">Spend by cutoff</h2>
                 <CutoffBars rows={data.buckets} />

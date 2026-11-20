@@ -10,6 +10,8 @@ import { loadSavings } from "@/lib/savings/load";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
 import { computeEvents } from "@/lib/windfall/compute";
+import { isKind } from "@/lib/accounts/input";
+import { daysUntilDay, position } from "@/lib/accounts/summary";
 import { dueInMonth, rowFromDb } from "@/lib/installments/calc";
 import { summarize } from "@/lib/budget/summary";
 import { computePay } from "@/lib/pay/compute";
@@ -52,6 +54,23 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     supabase.from("installments").select("*"),
     supabase.from("subscriptions").select("name,amount,cutoff").eq("active", true),
   ]);
+
+  // Separate from the wallet list above: if the accounts migration is not applied yet, this just comes back empty and Now carries on.
+  const { data: acctRows } = await supabase.from("wallets").select("name,kind,balance,credit_limit,due_day");
+  const accts = (acctRows ?? []).map((a) => ({
+    name: a.name as string,
+    kind: isKind(a.kind) ? a.kind : ("ewallet" as const),
+    balance: money(a.balance),
+    creditLimit: a.credit_limit === null ? null : money(a.credit_limit),
+    dueDay: a.due_day as number | null,
+  }));
+  const hasMoney = accts.some((a) => a.balance > 0);
+  const pos = position(accts);
+  const cardsDue = accts
+    .filter((a) => a.kind === "credit" && a.balance > 0 && a.dueDay !== null)
+    .map((a) => ({ name: a.name, owed: Number(a.balance), days: daysUntilDay(today, a.dueDay as number) }))
+    .filter((c) => c.days <= 14)
+    .sort((x, y) => x.days - y.days);
 
   const all = lineRows ?? [];
   const mine = all.filter((l) => l.cutoff === cutoff);
@@ -162,6 +181,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
       net: sums ? Number(nextCutoff === "first" ? sums.first.net : sums.second.net) : null,
     },
     daysLeft: Math.max(1, daysLeft),
+    money: hasMoney ? { cash: Number(pos.cash), debt: Number(pos.debt), net: Number(pos.net), utilizationPct: pos.utilizationPct, cardsDue } : null,
   };
 
   // The key restarts the dashboard's local state whenever the saved ticks change on the server.
