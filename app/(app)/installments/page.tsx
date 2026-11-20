@@ -1,3 +1,4 @@
+import { ConfirmButton } from "@/components/confirm-button";
 import { WalletSelect } from "@/components/wallet-select";
 import { dueByCutoff, summarize, type InstalmentRow } from "@/lib/installments/calc";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
@@ -98,7 +99,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
                   )}
                   <form action={deleteInstalment}>
                     <input type="hidden" name="id" value={r.id} />
-                    <button type="submit" className="btn sm danger" aria-label={`Delete ${r.name}`}>Delete</button>
+                    <ConfirmButton message={`Delete ${r.name} and its paid marks? This cannot be undone.`} className="btn sm danger" aria-label={`Delete ${r.name}`}>Delete</ConfirmButton>
                   </form>
                 </div>
               </div>

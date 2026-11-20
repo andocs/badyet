@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v11-C · Plan compare</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v11-shared.css">
+<style>
+/* C: the plan is the spine. A plan switcher sits in every header; "Compare" puts two plans side by side with the difference between them. */
+.planbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.planbar .seg{max-width:100%;overflow:auto}
+.viewing{background:#3a2f12;color:var(--gold-text);border-radius:10px;padding:10px 14px;display:flex;gap:10px;align-items:center;font-weight:700;font-size:14px}
+:root[data-theme=light] .viewing{background:#FBEFD2}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]) .viewing{background:#FBEFD2}}
+.cmp{display:grid;grid-template-columns:1fr 150px 1fr;gap:0;align-items:stretch;margin-top:16px}
+.col{padding:16px;background:var(--surface);border:1px solid var(--line)}
+.col:first-child{border-radius:10px 0 0 10px}.col:last-child{border-radius:0 10px 10px 0;border-color:var(--accent)}
+.col h3{font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.kv{display:flex;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line);gap:8px}
+.kv:last-child{border:0}.kv span:first-child{color:var(--muted);font-size:14px}
+.kv .big{font-size:22px}
+.mid{padding:1px 0;display:flex;flex-direction:column;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);align-items:center}
+.mid .d{flex:1;display:grid;place-items:center;width:100%;border-bottom:1px solid var(--line);font-weight:800;font-family:"Plus Jakarta Sans"}
+.mid .d:last-child{border:0}
+.up{color:var(--accent-text)}.dn{color:var(--red)}
+.dhead{height:46px;display:grid;place-items:center;color:var(--muted);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--line);width:100%}
+.chart{width:100%;height:150px;display:block;margin-top:8px}
+.stack .card{margin-bottom:12px}
+.deltaChip{display:inline-flex;gap:6px;align-items:center;border-radius:999px;padding:3px 10px;font-weight:800;font-size:13px;background:var(--tint);color:var(--accent-text)}
+.deltaChip.neg{background:#3b1d1d;color:var(--red)}
+.sw{display:flex;gap:10px;overflow:auto;padding-bottom:4px}
+.sw .opt{flex:none;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface);min-width:150px}
+.sw .opt.on{border-color:var(--accent);background:var(--tint)}
+.sw .opt small{display:block;color:var(--muted);font-size:12px}
+</style></head><body>
+<div class="gallery">
+<header><h1>C · Plan compare</h1><p>Checking your budget with a raise, or seeing how it changes your savings, is the main move. A plan switcher lives in every header, other plans open read-only with a clear "viewing" banner, and Compare shows two plans side by side with the difference between them. Fake figures; Night Emerald; Pip and the voice stay.</p></header>
+<div class="frames">
+
+<div style="flex:1 1 100%"><p class="cap">Desktop · Compare "Current" with "After raise"</p>
+<div class="desk" style="height:790px">
+<nav class="rail" aria-label="Main"><b>Bad(yet)</b><a href="#">Now</a><a href="#" aria-current="page">Month</a><a href="#">Savings</a><a href="#">Setup</a><small>Active plan: Current</small></nav>
+<div class="scroll" style="padding:24px 28px">
+ <div class="row sp" style="align-items:flex-start;flex-wrap:wrap"><div><h1 style="font-size:26px">Compare plans</h1><p class="muted" style="margin:4px 0 0">Nothing here changes your active plan.</p></div>
+  <div class="planbar"><div class="seg" role="group" aria-label="View"><button aria-pressed="false">One plan</button><button aria-pressed="true">Compare</button></div></div></div>
+ <div class="sw" style="margin-top:14px"><div class="opt on"><b>Current</b><small>Active · Dec 2026</small></div><div class="opt on"><b>After raise</b><small>Draft · from Mar 2027</small></div><div class="opt"><b>With 13th month</b><small>Draft</small></div></div>
+ <div class="cmp">
+  <div class="col"><h2 style="font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">Current <span class="pill ok">Active</span></h2>
+   <div class="kv"><span>Net pay, 1st cutoff</span><b class="big num">₱25,008</b></div>
+   <div class="kv"><span>Net pay, 2nd cutoff</span><b class="big num">₱30,555</b></div>
+   <div class="kv"><span>Left to budget</span><b class="big num">₱1,463</b></div>
+   <div class="kv"><span>Savings per month</span><b class="big num">₱5,000</b></div></div>
+  <div class="mid"><div class="dhead">Difference</div><div class="d up">+₱2,950</div><div class="d up">+₱3,610</div><div class="d up">+₱6,560</div><div class="d up">+₱2,000</div></div>
+  <div class="col"><h2 style="font-size:15px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">After raise <span class="pill warn">Draft</span></h2>
+   <div class="kv"><span>Net pay, 1st cutoff</span><b class="big num">₱27,958</b></div>
+   <div class="kv"><span>Net pay, 2nd cutoff</span><b class="big num">₱34,165</b></div>
+   <div class="kv"><span>Left to budget</span><b class="big num">₱8,023</b></div>
+   <div class="kv"><span>Savings per month</span><b class="big num">₱7,000</b></div></div>
+ </div>
+ <div class="card" style="margin-top:16px"><div class="row sp"><b>Savings forecast, 12 months</b><span class="deltaChip">+₱24,000 by Dec 2027</span></div>
+  <svg class="chart" viewBox="0 0 600 150" role="img" aria-label="Savings forecast, After raise ends higher than Current">
+   <g stroke="var(--line)"><line x1="0" y1="30" x2="600" y2="30"/><line x1="0" y1="75" x2="600" y2="75"/><line x1="0" y1="120" x2="600" y2="120"/></g>
+   <polyline fill="none" stroke="var(--muted)" stroke-width="3" stroke-linecap="round" points="10,125 100,112 200,98 300,84 400,70 500,56 590,42"/>
+   <polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" points="10,125 100,108 200,88 300,66 400,48 500,32 590,16"/>
+  </svg>
+  <div class="row" style="gap:18px;font-size:13px"><span><span class="dot" style="background:var(--muted)"></span> Current</span><span><span class="dot dotE"></span> After raise</span></div></div>
+</div></div></div>
+
+<div><p class="cap">Phone · viewing a draft plan</p>
+<div class="phone">
+<div class="scroll stack">
+ <div class="row sp"><button class="pill" style="border:0;min-height:36px">Plan: After raise ▾</button><span class="pill">Compare</span></div>
+ <div class="viewing" style="margin-top:12px"><span>Viewing, not active.</span><button class="btn sm" style="margin-left:auto">Make active</button></div>
+ <div class="hero" style="margin-top:12px"><span style="color:#CFE3F5">2nd cutoff net pay</span><div class="big num" style="font-size:40px;margin-top:4px">₱34,165</div><span class="deltaChip" style="margin-top:8px">+₱3,610 vs Current</span></div>
+ <div class="card" style="margin-top:12px"><div class="row sp"><span class="muted">Left to budget</span><b class="num">₱8,023.00</b></div><div class="row sp" style="margin-top:8px"><span class="muted">Savings per month</span><b class="num">₱7,000.00</b></div></div>
+ <div class="card"><b>Savings forecast</b><svg class="chart" viewBox="0 0 300 110"><polyline fill="none" stroke="var(--muted)" stroke-width="3" stroke-linecap="round" points="6,95 80,84 150,72 220,58 294,44"/><polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" points="6,95 80,80 150,60 220,38 294,14"/></svg><span class="deltaChip">+₱24,000 by Dec 2027</span></div>
+</div>
+<nav class="tabs" aria-label="Main"><a href="#">Now</a><a href="#" aria-current="page">Month</a><a href="#">Savings</a><a href="#">Setup</a></nav>
+</div></div>
+
+<div><p class="cap">Phone · plan switcher sheet</p>
+<div class="phone">
+<div class="scroll"><div class="row sp"><button class="pill" style="border:0;min-height:36px">Plan: Current ▾</button><span class="pill ok">Active</span></div>
+ <div class="card" style="margin-top:14px;opacity:.5"><b>Dashboard behind the sheet</b></div></div>
+<div class="sheet" style="background:var(--surface);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:16px 18px 20px">
+ <div style="width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 12px"></div>
+ <b style="font-size:17px">Which plan?</b>
+ <div style="display:grid;gap:10px;margin-top:12px">
+  <div class="opt on" style="border:1px solid var(--accent);background:var(--tint);border-radius:10px;padding:12px 14px"><div class="row sp"><b>Current</b><span class="pill ok">Active</span></div><small class="muted">Dec 2026</small></div>
+  <div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px"><div class="row sp"><b>After raise</b><span class="pill warn">Draft</span></div><small class="muted">From Mar 2027 · +₱24,000 savings</small></div>
+  <div style="border:1px solid var(--line);border-radius:10px;padding:12px 14px"><b>With 13th month</b><br><small class="muted">Draft</small></div>
+ </div>
+ <div class="row" style="gap:10px;margin-top:14px"><button class="btn" style="flex:1">Compare two</button><button class="btn pri" style="flex:1">New from Current</button></div>
+</div></div></div>
+
+</div></div></body></html>

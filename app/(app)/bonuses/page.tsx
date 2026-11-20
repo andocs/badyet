@@ -1,3 +1,4 @@
+import { ConfirmButton } from "@/components/confirm-button";
 import Link from "next/link";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
 import type { PayProfile } from "@/lib/pay/compute";
@@ -111,7 +112,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
                   </div>
                   <form action={deleteEvent}>
                     <input type="hidden" name="id" value={row.id} />
-                    <button type="submit" className="btn sm danger" aria-label={`Delete ${row.name}`}>Delete</button>
+                    <ConfirmButton message={`Delete ${row.name}? This cannot be undone.`} className="btn sm danger" aria-label={`Delete ${row.name}`}>Delete</ConfirmButton>
                   </form>
                 </div>
                 <table className="paytable">
@@ -138,7 +139,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
                     <span className="num">{peso(money(a.amount))}</span>
                     <form action={deleteAllocation}>
                       <input type="hidden" name="id" value={a.id} />
-                      <button type="submit" className="btn sm danger" aria-label={`Remove ${a.name}`}>Remove</button>
+                      <ConfirmButton message={`Remove ${a.name}?`} className="btn sm danger" aria-label={`Remove ${a.name}`}>Remove</ConfirmButton>
                     </form>
                   </div>
                 ))}

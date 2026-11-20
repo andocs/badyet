@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { signOut } from "@/app/auth/actions";
 import { NavLinks, SIDE_ITEMS, TAB_ITEMS } from "./nav";
 import { ThemeToggle } from "./theme-toggle";
@@ -11,7 +12,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
           Bad(yet)
         </div>
         <nav aria-label="Main">
-          <NavLinks items={SIDE_ITEMS} />
+          <Suspense fallback={null}>
+            <NavLinks items={SIDE_ITEMS} />
+          </Suspense>
         </nav>
         <ThemeToggle />
         <form action={signOut} className="signout">
@@ -20,7 +23,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
       <div className="content">{children}</div>
       <nav className="mnav" aria-label="Main">
-        <NavLinks items={TAB_ITEMS} />
+        <Suspense fallback={null}>
+          <NavLinks items={TAB_ITEMS} />
+        </Suspense>
       </nav>
     </div>
   );

@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-3..rev-10 (one shot)
-- **Gate:** building (no intermediate gates)
-- **Next action:** Build rev-7 (CSV export), then 8, 9, 10, then final gate
-- **User to-do now:** Apply migration 20261130000000_installment_payments.sql to Supabase
+- **Active slice / milestone:** rev-11..17 redesign
+- **Gate:** building
+- **Next action:** Build rev-11, 12, 13, 14, 15, 16, 17 in order; one gate at the end (assumed one-shot like last round)
+- **User to-do now:** -
 
 ## 3. Execution log
 
@@ -35,6 +35,12 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:35 | rev-5 | rev-5 built: /import page + importSnapshot action (validated snapshot JSON, creates a NEW inactive plan, wallets, pay, lines, installments, subscriptions; undoes itself on failure; never changes existing data). Snapshot generated from the Sheet (Dec 10 onwards tab) into data/import/sheet-import.json (git-ignored, personal data). Sheet totals reproduce: 1st cutoff 25,008, 2nd 30,555. Not imported: savings fund balances, 13th month, CIP, HMO deduction, older plans. | 0d4d3f4
 - 2026-11-20 09:01 | rev-6 | Installment payments: Mark paid / Undo per installment, 'payments already made' on add, installment_payments table (RLS, rollback noted). Migration must be applied to Supabase. 141 tests, lint, typecheck, build PASS. | 91ec216
 - 2026-11-20 09:02 | phase3 | User: project is already deployed on Vercel. rev-8 becomes verify/document (runbook, env, redirect URLs), not first deploy. Run rev-7..10 in one shot, single gate after the last. | -
+- 2026-11-20 09:06 | rev-7..10 | rev-7 CSV export (/export/[name], Settings card, formula-safe), rev-8 docs/deploy.md runbook, rev-9/10 Playwright: phone/desktop x light/dark; signed-out tests run (24 pass), signed-in tests read-only and skipped without a saved session. Checks PASS. | 5834ce3
+- 2026-11-20 09:07 | phase3 | Final gate APPROVED by user: rev-6..rev-10. | -
+- 2026-11-20 09:15 | phase3 | Impeccable critique done (25/40). User chose core flow + payday mode + plan switching/compare; keep personality. Sliced rev-11..15, awaiting approval of the list. | -
+- 2026-11-20 09:15 | phase3 | Redesign slices: rev-11 shared cutoff + Transfer cutoff fix + delete confirms + login contrast; rev-12 plan switcher + compare plans (what-if on raise, savings forecast); rev-13 nav 11 to 4; rev-14 Home = payday checklist; rev-15 payday mode (nice-to-have). | -
+- 2026-11-20 09:27 | redesign | Mockups v11-a payday ritual, v11-b money sentence, v11-c plan compare in docs/mockups (impeccable surface roll, Night Emerald kept). Awaiting direction pick before building rev-11..15. | -
+- 2026-11-20 09:42 | redesign | User picked direction A (payday ritual), DESIGN.md regen not now, and added accounts: wizard to add e-wallet/debit/credit with balances and card debt, with security. Added rev-16 (accounts wizard) and rev-17 (net position). Security decision: store last 4 digits only, never full card/account numbers, CVV or PIN. | -
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -50,7 +56,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 387,423 | 1,876,270 | 91,794 | 561,344 | 76,508,963 | 390,864 |  |
+| **Cumulative** | 474,074 | 2,248,397 | 108,961 | 682,607 | 89,868,305 | 447,006 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -63,6 +69,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
 | Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
 | Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
+| rev-7..10 | 39,382 | 215,399 | 8,700 | 19,459 | 1,105,451 | 8,538 |  |
 
 <!-- END SUMMARY -->
 
@@ -73,16 +80,22 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | # | Slice | Depends on | Run | Status | Branch |
 |---|---|---|---|---|---|
 | 1-9 | Scaffold+dashboard, auth/plans, pay, budget, transfer, installments+subscriptions, bonuses, savings forecast, dashboard on real data | - | sequential | merged to master (local) | slice/1..9 |
-| rev-1 | Phone menu: working "More" so every destination is reachable on a phone. **Needed** | - | sequential | planned | - |
-| rev-2 | Duplicate plan copies pay, budget lines (with wallets), savings settings. **Needed** | - | sequential | planned | - |
-| rev-3 | Cutoff days setting so cutoffs match real paydays (dashboard, labels). **Needed** | - | sequential | planned | - |
-| rev-4 | Verify tax, PhilHealth and 90,000 bonus cap against current rules; update with tests. **Needed** (needs your payslip to confirm) | - | sequential | planned | - |
-| rev-5 | Import from your Bad(yet) Sheet (one-time, data not committed). **Needed** | rev-3 | sequential | planned | - |
-| rev-6 | Mark installment payments paid one by one. Nice-to-have | - | sequential | planned | - |
-| rev-7 | Export your data as CSV. Nice-to-have | - | sequential | planned | - |
-| rev-8 | Deploy online: Vercel + Supabase env, redirect URLs, runbook. **Needed** | rev-1 | sequential | planned | - |
-| rev-9 | Visual check with a real browser (Playwright Chromium): phone and desktop, light and dark, fix findings. **Needed** | rev-1..3 | sequential | planned | - |
-| rev-10 | Automated end-to-end smoke tests (login, plan, pay, tick a transfer). Nice-to-have | rev-9 | sequential | planned | - |
+| rev-1..5 | Phone menu, duplicate plan, cutoff setting, tax/PhilHealth check, sheet import | - | sequential | done, approved | rev/phase3-revisions |
+| rev-6 | Mark installment payments paid one by one (migration installment_payments must be applied) | - | sequential | done, approved (91ec216) | rev/6-installment-payments |
+| rev-7..10 | CSV export, deploy runbook (docs/deploy.md), Playwright checks (signed-in tests need a saved session, docs/e2e.md) | - | sequential | done, approved (5834ce3) | rev/10-export-deploy-e2e |
+
+### Redesign round (impeccable critique 2026-11-20, score 25/40)
+Decisions: direction A "payday ritual" (docs/mockups/v11-a-payday-ritual.html) for Now; plan switching and compare from v11-c; keep Pip, copy voice and Night Emerald; DESIGN.md regeneration deferred ("not now"). No data-model change for commitments (auto-flow deferred). Accounts: store NO full card or account numbers, CVV or PINs (last 4 digits only); see rev-16.
+
+| # | Slice | Depends on | Run | Status | Branch |
+|---|---|---|---|---|---|
+| rev-11 | Shared cutoff switcher (1st/2nd, defaults to the real current cutoff) in the header via URL, used by Home, Budget, Transfer; fix Transfer opening on the wrong cutoff; delete confirms; login placeholder contrast. **Needed** | - | sequential | approved, next | - |
+| rev-12 | Plan switcher in the header: view any plan on Home, Budget, Transfer, Savings without changing the active plan; "viewing, not active" banner; compare two plans (net pay, left to budget, savings per month, savings forecast difference). **Needed** | rev-11 | sequential | approved | - |
+| rev-13 | Nav 11 to 4 (Now, Month, Savings, Setup); installments, subscriptions, bonuses become Month sections; phone tab bar = the 4. **Needed** | rev-11 | sequential | approved | - |
+| rev-14 | Now = direction A: opens on the current payday step or "N days to the next cutoff" between paydays; wallet checklist tickable in place; charts move to Month. **Needed** | rev-11, rev-13 | sequential | approved | - |
+| rev-15 | Payday ritual steps: pay landed, spoken for (commitments), send by wallet, yours to spend with Pip. **Needed** (core of direction A) | rev-14 | sequential | approved | - |
+| rev-16 | Accounts wizard: add an e-wallet, debit or credit account step by step; extends wallets with kind, balance (as of date), credit limit, statement and due day; last 4 digits only, never full numbers/CVV/PIN. RLS, input validation, tests, security review. **Needed** | - | sequential | added 2026-11-20 | - |
+| rev-17 | Net position on Now/Month: money in accounts, card debt, utilization, due dates, "cash minus debt"; quick "update balance"; balances shown masked (last 4). **Needed** | rev-16, rev-13 | sequential | added 2026-11-20 | - |
 
 ## Decisions & architecture
 - Stack: Next.js (App Router, TypeScript) on Vercel + Supabase (Postgres; Auth magic link restricted to one allowed email; RLS by user_id).
@@ -110,6 +123,10 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+1. Apply supabase/migrations/20261130000000_installment_payments.sql to Supabase (rev-6).
+2. On Vercel, check env vars and Supabase redirect URLs against docs/deploy.md (rev-8).
+3. Optional: save a session (docs/e2e.md) then run `npm run e2e` for signed-in page checks (rev-9/10).
 
 AFTER REV-2 (duplicate copies everything): what you do now
 1. Get the code:   git checkout rev/phase3-revisions   (one branch for all Phase 3 revisions)

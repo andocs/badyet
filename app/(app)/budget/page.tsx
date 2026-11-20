@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { BUCKETS, isCutoff, type Cutoff } from "@/lib/budget/validate";
+import { ConfirmButton } from "@/components/confirm-button";
+import { BUCKETS, type Cutoff } from "@/lib/budget/validate";
+import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
 import { bucketTotal, summarize, type Line } from "@/lib/budget/summary";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { computePay } from "@/lib/pay/compute";
 import { formatRange } from "@/lib/plans/format";
-import { isPastPlan } from "@/lib/plans/validate";
+import { isPastPlan, todayManila } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
 import { WalletSelect } from "@/components/wallet-select";
 import { addLine, deleteLine, updateLine } from "./actions";
@@ -19,11 +21,12 @@ const peso = (m: Money) => formatPesos(m, { symbol: false });
 
 export default async function BudgetPage({ searchParams }: PageProps<"/budget">) {
   const params = await searchParams;
-  const cutoff: Cutoff = isCutoff(params.cutoff) ? params.cutoff : "first";
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
+  const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
+  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
   const { data: plan } = supabase
     ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
     : { data: null };
@@ -134,7 +137,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
                     {!past && (
                       <>
                         <button type="submit" className="btn sm ghost">Save</button>
-                        <button type="submit" formAction={deleteLine} className="btn sm danger" aria-label={`Delete ${l.name}`}>Delete</button>
+                        <ConfirmButton message={`Delete ${l.name}? This cannot be undone.`} formAction={deleteLine} className="btn sm danger" aria-label={`Delete ${l.name}`}>Delete</ConfirmButton>
                       </>
                     )}
                   </form>

@@ -271,3 +271,4 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .more-item:hover { color: var(--accent-text); }
 .more-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .more-actions form { margin: 0; }
+.input::placeholder { color: var(--muted); opacity: 1; }
