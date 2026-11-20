@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import { ConfirmButton } from "@/components/confirm-button";
 import { WalletSelect } from "@/components/wallet-select";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
@@ -27,6 +28,7 @@ export default async function SubscriptionsPage({ searchParams }: PageProps<"/su
 
   return (
     <main className="main">
+      <SubNav group="month" />
       <div className="head">
         <div>
           <h1>Subscriptions</h1>

@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import { ConfirmButton } from "@/components/confirm-button";
 import Link from "next/link";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
@@ -41,6 +42,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
   if (!plan || !pay) {
     return (
       <main className="main">
+      <SubNav group="month" />
         <div className="head"><div><h1>Bonuses</h1></div></div>
         <section className="card">
           <p className="sub" style={{ margin: 0 }}>{!plan ? "Bonuses belong to a plan, and no plan is active yet." : "Set up your pay first: bonus estimates are worked out from it."}</p>
@@ -75,6 +77,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
 
   return (
     <main className="main">
+      <SubNav group="month" />
       <div className="head">
         <div>
           <span className="lab">{plan.name} · {formatRange(plan.start_date, plan.end_date)}</span>

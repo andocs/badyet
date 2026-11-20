@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import { ConfirmButton } from "@/components/confirm-button";
 import Link from "next/link";
 import { formatRange } from "@/lib/plans/format";
@@ -24,6 +25,7 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
 
   return (
     <main className="main">
+      <SubNav group="setup" />
       <div className="head">
         <div>
           <h1>Plans</h1>

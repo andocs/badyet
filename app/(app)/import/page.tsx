@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import Link from "next/link";
 import { importSnapshot } from "./actions";
 
@@ -18,6 +19,7 @@ export default async function ImportPage({ searchParams }: PageProps<"/import">)
 
   return (
     <main className="main">
+      <SubNav group="setup" />
       <div className="head">
         <div>
           <h1>Import</h1>

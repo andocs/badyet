@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import Link from "next/link";
 import { PayBreakdown } from "@/components/pay-breakdown";
 import { PayWizard, type WizardInitial } from "@/components/pay-wizard";
@@ -30,6 +31,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
   if (!plan) {
     return (
       <main className="main">
+      <SubNav group="setup" />
         <div className="head">
           <div>
             <h1>Pay</h1>
@@ -72,6 +74,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
 
   return (
     <main className="main">
+      <SubNav group="setup" />
       <div className="head">
         <div>
           <span className="lab">{plan.name} · {formatRange(plan.start_date, plan.end_date)}</span>

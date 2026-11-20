@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import Link from "next/link";
 import { ConfirmButton } from "@/components/confirm-button";
 import { PlanBar } from "@/components/plan-bar";
@@ -40,6 +41,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   if (!plan || !pay) {
     return (
       <main className="main">
+      <SubNav group="month" />
         <div className="head"><div><h1>Budget</h1></div></div>
         <section className="card">
           <p className="sub" style={{ margin: 0 }}>
@@ -74,6 +76,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
 
   return (
     <main className="main">
+      <SubNav group="month" />
       <div className="head">
         <div>
           <span className="lab">{plan.name} · {formatRange(plan.start_date, plan.end_date)}</span>
