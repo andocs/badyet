@@ -1,6 +1,6 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { findBracket, type TaxRow } from "@/lib/domain/pay";
-import { divRound, fromRatio, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
+import { divRound, fromRatio, money, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
 import { philhealthMonthly } from "@/lib/pay/philhealth";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import type { BonusPayment } from "./bonus";
@@ -46,6 +46,9 @@ export interface MonthPay {
   pagibig: Money;
   /** Income tax for the month, before it is split across the two cutoffs. */
   tax: Money;
+  /** The taxable pay behind that tax: regular monthly taxable pay (after contributions) and one-time taxable amounts landing this month. */
+  regularTaxable: Money;
+  oneTimeTaxable: Money;
   first: Payslip;
   second: Payslip;
   takeHome: Money;
@@ -170,7 +173,7 @@ export function buildMonthPay(
 
   const first = build("first");
   const second = build("second");
-  return { month: salary.month, sss, philhealth, pagibig, tax, first, second, takeHome: (first.takeHome + second.takeHome) as Money };
+  return { month: salary.month, sss, philhealth, pagibig, tax, regularTaxable, oneTimeTaxable: oneTime, first, second, takeHome: (first.takeHome + second.takeHome) as Money };
 }
 
 /** The first cutoff gets its share rounded; when the two shares add to 100% the second gets the remainder, so the month's tax never leaks a centavo. */
@@ -180,4 +183,29 @@ function taxShare(tax: Money, cutoff: PayCutoff, templates: readonly PayslipTemp
   const firstTax = mulBp(tax, firstShare);
   if (cutoff === "first") return firstTax;
   return firstShare + secondShare === 10000 ? sub(tax, firstTax) : mulBp(tax, shareBp);
+}
+
+export interface BracketStep {
+  /** Annual taxable income at the bottom and top of the bracket (null = no top). */
+  lower: Money;
+  upper: Money | null;
+  rateBp: number;
+  /** The part of the taxable income that falls in this bracket (zero when it stops lower). */
+  amountIn: Money;
+  /** Tax on that part at the bracket's rate. The first bracket the income reaches also carries the fixed amount below it. */
+  tax: Money;
+  /** The bracket the income ends in. */
+  hit: boolean;
+}
+
+/** The tax working for a month, bracket by bracket: what falls in each bracket and its tax, and the annual total. */
+export function taxBreakdown(rows: readonly TaxRow[], annualTaxable: Money): { steps: BracketStep[]; annualTax: Money } {
+  const hitRow = findBracket(rows, annualTaxable);
+  const steps = rows.map((r) => {
+    const top = r.upper === null ? annualTaxable : Math.min(annualTaxable, r.upper);
+    const amountIn = money(Math.max(0, top - r.lower));
+    return { lower: r.lower, upper: r.upper, rateBp: r.rateBp, amountIn, tax: mulBp(amountIn, r.rateBp), hit: r === hitRow };
+  });
+  const annualTax = hitRow ? fromRatio(taxScaled(rows, annualTaxable), 10_000n) : ZERO;
+  return { steps, annualTax };
 }

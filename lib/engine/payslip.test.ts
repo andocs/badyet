@@ -88,3 +88,20 @@ describe("payslip builder", () => {
     expect(buildMonthPay(salaryFor([]), settings, [], [t]).second.deductions).toBe(p(999));
   });
 });
+
+describe("tax working", () => {
+  it("lays the annual tax out bracket by bracket and ends at the same total", async () => {
+    const { taxBreakdown } = await import("./payslip");
+    const { steps, annualTax } = taxBreakdown(TAX_ROWS, p(561_600));
+    expect(annualTax).toBe(p(54_820));
+    expect(steps.map((s) => s.hit)).toEqual([false, false, true, false, false, false]);
+    expect(steps[1]).toMatchObject({ amountIn: p(150_000), tax: p(22_500) }); // 250k-400k at 15%
+    expect(steps[2]).toMatchObject({ amountIn: p(161_600), tax: p(32_320) }); // 400k-561.6k at 20%
+    expect(steps[3]!.amountIn).toBe(0);
+    expect(steps.reduce((t, s) => t + s.tax, 0)).toBe(annualTax); // 22,500 + 32,320
+  });
+  it("is zero when nothing is taxable", async () => {
+    const { taxBreakdown } = await import("./payslip");
+    expect(taxBreakdown(TAX_ROWS, p(0)).annualTax).toBe(0);
+  });
+});

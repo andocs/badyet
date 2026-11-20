@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 3 Accounts and Inbox
+- **Active slice / milestone:** 4 Salary and tax
 - **Gate:** none
-- **Next action:** Build slice 3 (Accounts and Inbox). Apply the wants-fund rename migration and check Now in a browser first.
-- **User to-do now:** Apply 20261206000200_rename_wants_fund.sql, run the app and check Now on phone and desktop, push slice/2-shell-theme-now.
+- **Next action:** Build slice 4 (Salary and tax). Apply the storage migration and try Accounts and Inbox first.
+- **User to-do now:** Apply 20261206000300_accounts_storage.sql, try Accounts and Inbox, push slice/3-accounts-inbox.
 
 ## 3. Execution log
 
@@ -44,6 +44,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 21:19 | slice-1 | Slice 1 approved by the user. | 7f02687
 - 2026-11-20 21:30 | slice-2 | Shell (rail + 5 phone tabs), scoped Night Emerald styles, Now page from the new tables via the engine, quick add (dialog + server action, N shortcut), Inbox placeholder, balances and row mappers with tests. Old home page and dashboard removed. Committed locally, not pushed. Not opened in a browser. | 7d51077
 - 2026-11-20 21:30 | slice-2 | Slice 2 approved by the user. | 7d51077
+- 2026-11-20 21:35 | slice-3 | Accounts page (cards, calc, reconcile, add account, move money as paired transfers, private receive-QR upload with signed URL), Inbox (confirm, not mine, categories, always-rules, best guess, details sheet, desktop wide cards), storage + credit-sign migration, rules/guess/account-validation helpers with tests. Local commit, not pushed, not run in a browser. | 1ee65d5
+- 2026-11-20 21:37 | slice-3 | Slice 3 approved by the user. | 1ee65d5
 
 ## 4. Open questions
 
@@ -60,11 +62,11 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,294,275 | 5,307,310 | 242,079 | 2,596,107 | 302,306,787 | 1,473,224 |  |
+| **Cumulative** | 1,325,967 | 5,377,241 | 249,811 | 2,659,058 | 307,750,599 | 1,515,691 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
-| Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
+| Slice 3 | 31,692 | 69,931 | 7,732 | 61,392 | 4,284,984 | 40,417 |  |
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
@@ -108,6 +110,13 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 3 (Accounts and Inbox) is built and committed locally on slice/3-accounts-inbox (not pushed; it sits on top of slice 2's branch).
+1. Apply supabase/migrations/20261206000300_accounts_storage.sql in the SQL Editor. It creates the private account-qr bucket with per-user policies and flips migrated credit-card balances to negative (owed). Also apply 20261206000200_rename_wants_fund.sql if you have not.
+2. Run the app. Accounts: add an account, reconcile a balance, move money between two accounts, upload a receive-QR image (PNG/JPEG/WebP, up to 1 MB) and open "Show big". Inbox: spend you add with + appears in All activity.
+3. Pending rows only appear once the phone app exists (slice 8) or if you insert one by hand, so to test confirm/ignore/rules insert a transactions row with status 'pending' in the Table Editor.
+Notes: the old Accounts page and its wallets-based form are gone; the old Budget/Transfer pages still read the wallets table, so accounts you add now do not appear there until slice 7. Credit cards show "owed" and available credit.
+Not verified: nothing was opened in a browser or run against your database; the storage policies and the upload path are untested. Tests, typecheck, lint and build pass.
 
 Slice 2 (shell, theme and Now) is built and committed locally on slice/2-shell-theme-now (not pushed).
 1. Apply supabase/migrations/20261206000200_rename_wants_fund.sql in the SQL Editor (renames the savings fund to "Wants savings").
