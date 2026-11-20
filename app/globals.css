@@ -297,3 +297,16 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 
 /* Hide amounts: blur every money figure (set by components/hide-amounts.tsx) */
 html[data-hide="1"] .num, html[data-hide="1"] .balance, html[data-hide="1"] .amt { filter: blur(9px); user-select: none; }
+
+/* Budget lines: read at a glance, tap to edit (components/budget-line.tsx) */
+.line-view { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; color: var(--ink); }
+.line-view .line-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.line-view:hover .line-name { color: var(--accent-text); }
+.line-view:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+.line-edit { display: grid; grid-template-columns: minmax(0, 1fr) 9rem 8rem auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--accent); }
+.line-edit .input.num { text-align: right; }
+.line-status { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--accent-text); min-height: 1em; }
+.line-status.err { color: var(--err); }
+@media (max-width: 760px) { .line-edit { grid-template-columns: 1fr 1fr; } .line-edit input:first-child { grid-column: 1 / -1; } }
+.line-auto { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); }
+.line-auto .line-name { flex: 1; font-weight: 600; }

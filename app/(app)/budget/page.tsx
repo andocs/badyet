@@ -1,7 +1,7 @@
 import { SubNav } from "@/components/subnav";
 import Link from "next/link";
-import { ConfirmButton } from "@/components/confirm-button";
 import { AutoSync } from "@/components/auto-sync";
+import { BudgetLine } from "@/components/budget-line";
 import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { BUCKETS, type Cutoff } from "@/lib/budget/validate";
@@ -13,7 +13,7 @@ import { formatRange } from "@/lib/plans/format";
 import { isPastPlan, todayManila } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
 import { WalletSelect } from "@/components/wallet-select";
-import { addLine, deleteLine, updateLine } from "./actions";
+import { addLine, deleteLine } from "./actions";
 
 const ERRORS: Record<string, string> = {
   invalid: "Check the line: it needs a name and an amount like 1,234.50.",
@@ -36,7 +36,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
   const { data: rows } =
     plan && supabase
-      ? await supabase.from("budget_lines").select("id,cutoff,bucket,name,amount,wallet_id").eq("plan_id", plan.id).order("created_at")
+      ? await supabase.from("budget_lines").select("id,cutoff,bucket,name,amount,wallet_id,source").eq("plan_id", plan.id).order("created_at")
       : { data: null };
 
   if (!plan || !pay) {
@@ -71,6 +71,8 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   });
   const lines: Line[] = (rows ?? []).map((r) => ({ id: r.id, cutoff: r.cutoff, bucket: r.bucket, name: r.name, amount: money(r.amount) }));
   const rowWallet = new Map((rows ?? []).map((r) => [r.id, r.wallet_id as string | null]));
+  const rowSource = new Map((rows ?? []).map((r) => [r.id, r.source as string | null]));
+  const viewingPlan = plan.is_active ? null : plan.id;
   const s = summarize(lines, result.first.netBeforePlan, result.second.netBeforePlan);
   const cur = cutoff === "first" ? s.first : s.second;
   const state = cur.left === 0 ? "ok" : cur.left < 0 ? "over" : "free";
@@ -133,24 +135,26 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
                   <span className="num">₱{peso(bucketTotal(lines, cutoff, b.id))}</span>
                 </div>
                 {mine.length === 0 && <p className="sub" style={{ margin: "6px 0" }}>No lines yet.</p>}
-                {mine.map((l) => (
-                  <form key={l.id} action={updateLine} className="bline">
-                    <input type="hidden" name="id" value={l.id} />
-                    <input type="hidden" name="cutoff" value={cutoff} />
-                    <input className="input" name="name" defaultValue={l.name} maxLength={60} aria-label={`Name of ${l.name}`} disabled={past} />
-                    <input className="input num" name="amount" defaultValue={peso(l.amount)} inputMode="decimal" aria-label={`Amount for ${l.name}`} disabled={past} />
-                    <WalletSelect wallets={wallets} value={rowWallet.get(l.id) ?? ""} disabled={past} label={`Wallet for ${l.name}`} />
-                    {!past && (
-                      <>
-                        <button type="submit" className="btn sm ghost">Save</button>
-                        <ConfirmButton message={`Delete ${l.name}? This cannot be undone.`} formAction={deleteLine} className="btn sm danger" aria-label={`Delete ${l.name}`}>Delete</ConfirmButton>
-                      </>
-                    )}
-                  </form>
-                ))}
+                {mine.map((l) =>
+                  past ? (
+                    <div key={l.id} className="line-auto">
+                      <span className="line-name">{l.name}</span>
+                      <span className="num">{peso(l.amount)}</span>
+                    </div>
+                  ) : rowSource.get(l.id) ? (
+                    <div key={l.id} className="line-auto">
+                      <span className="line-name">{l.name}</span>
+                      <span className="pill quiet">Automatic</span>
+                      <span className="num">{peso(l.amount)}</span>
+                    </div>
+                  ) : (
+                    <BudgetLine key={l.id} id={l.id} cutoff={cutoff} plan={viewingPlan} name={l.name} amount={Number(l.amount)} walletId={rowWallet.get(l.id) ?? null} wallets={wallets} deleteAction={deleteLine} />
+                  ),
+                )}
                 {!past && (
                   <form action={addLine} className="bline add">
                     <input type="hidden" name="planId" value={plan.id} />
+                    {viewingPlan && <input type="hidden" name="plan" value={viewingPlan} />}
                     <input type="hidden" name="cutoff" value={cutoff} />
                     <input type="hidden" name="bucket" value={b.id} />
                     <input className="input" name="name" placeholder={`New ${b.label.toLowerCase()} line`} maxLength={60} aria-label={`New ${b.label} line name`} required />
