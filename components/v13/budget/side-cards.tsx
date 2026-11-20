@@ -119,14 +119,32 @@ export interface SettleView { date: string; weekday: number; spent: number; budg
 
 /** Office days that ended under or over their budget: choose where the difference goes, or undo. */
 export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: number }) {
-  const { error, busy, act } = useAct();
-  const open = rows.filter((r) => !r.settledTo).length;
-  if (rows.length === 0) return null;
+  // Choosing where a day's difference goes (or undoing it) shows at once; the server catches up behind it.
+  const [list, apply] = useOptimistic(rows, (cur, c: { date: string; settledTo: string | null }) => cur.map((r) => (r.date === c.date ? { ...r, settledTo: c.settledTo } : r)));
+  const [error, setError] = useState<string | null>(null);
+  const [, start] = useTransition();
+  const WHERE = { pool: "contingency pool", wants: "Wants", excess: "contingency excess" } as const;
+  const settle = (date: string, under: boolean, to: "pool" | "wants" | "excess", amount: number) =>
+    start(async () => {
+      setError(null);
+      apply({ date, settledTo: WHERE[to] });
+      const r = await settleDay({ date, under, to, amount });
+      if (r.error) setError(r.error);
+    });
+  const undo = (date: string) =>
+    start(async () => {
+      setError(null);
+      apply({ date, settledTo: null });
+      const r = await undoSettle(date);
+      if (r.error) setError(r.error);
+    });
+  const open = list.filter((r) => !r.settledTo).length;
+  if (list.length === 0) return null;
   return (
     <section className="v-card" aria-labelledby="sl">
       <div className="v-row v-sp v-wrap"><h2 id="sl">Settle office days</h2><span className={`v-pill ${open ? "v-warn" : "v-ok"}`}>{open ? `${open} to settle` : "All settled"}</span></div>
       <div className="v-lbl" style={{ margin: "2px 0 8px" }}>When an office day ends under or over its budget, choose where the difference goes.</div>
-      {rows.map((r) => {
+      {list.map((r) => {
         const under = r.diff > 0;
         const amt = Math.abs(r.diff);
         const label = dayText(r.date, r.weekday);
@@ -134,7 +152,7 @@ export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: numbe
           return (
             <div key={r.date} className="v-stl v-done">
               <div className="v-grow v-sm"><b>{label}</b> · {under ? <><Money value={money(amt)} /> left</> : <><Money value={money(amt)} /> over</>} → <b>{r.settledTo}</b></div>
-              <button type="button" className="v-btn v-sm v-ghost" disabled={busy} onClick={() => act(() => undoSettle(r.date))}>Undo</button>
+              <button type="button" className="v-btn v-sm v-ghost" onClick={() => undo(r.date)}>Undo</button>
             </div>
           );
         }
@@ -144,13 +162,13 @@ export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: numbe
             <div className="v-row v-wrap" style={{ gap: 8, marginTop: 8 }}>
               {under ? (
                 <>
-                  <button type="button" className="v-btn v-sm v-pri" disabled={busy} onClick={() => act(() => settleDay({ date: r.date, under: true, to: "pool", amount: amt }))}>Contingency pool</button>
-                  <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => act(() => settleDay({ date: r.date, under: true, to: "wants", amount: amt }))}>Wants</button>
+                  <button type="button" className="v-btn v-sm v-pri" onClick={() => settle(r.date, true, "pool", amt)}>Contingency pool</button>
+                  <button type="button" className="v-btn v-sm" onClick={() => settle(r.date, true, "wants", amt)}>Wants</button>
                 </>
               ) : (
                 <>
-                  <button type="button" className="v-btn v-sm v-pri" disabled={busy} onClick={() => act(() => settleDay({ date: r.date, under: false, to: "wants", amount: amt }))}>Wants</button>
-                  <button type="button" className="v-btn v-sm" disabled={busy || excess < amt} onClick={() => act(() => settleDay({ date: r.date, under: false, to: "excess", amount: amt }))}>Contingency excess (<Money value={money(excess)} />)</button>
+                  <button type="button" className="v-btn v-sm v-pri" onClick={() => settle(r.date, false, "wants", amt)}>Wants</button>
+                  <button type="button" className="v-btn v-sm" disabled={excess < amt} onClick={() => settle(r.date, false, "excess", amt)}>Contingency excess (<Money value={money(excess)} />)</button>
                 </>
               )}
             </div>
@@ -166,21 +184,41 @@ export interface PoolView { id: string; name: string; balance: number; excess: n
 
 /** Pools: money that builds across cutoffs. Use some for something unplanned, or move it to Wants. */
 export function PoolsCard({ pools, lines }: { pools: PoolView[]; lines: { id: string; name: string }[] }) {
-  const { error, busy, act } = useAct();
+  const { error: createError, busy, act } = useAct();
+  // Using money from a pool, or moving it to Wants, shows in the balance and the log at once.
+  const [list, apply] = useOptimistic(pools, (cur, c: { id: string; amount: number; what: string; when: string }) =>
+    cur.map((p) => {
+      if (p.id !== c.id) return p;
+      const balance = p.balance - c.amount;
+      return { ...p, balance, excess: p.keepUpTo !== null ? Math.max(0, balance - p.keepUpTo) : 0, log: [{ when: c.when, what: c.what, amount: -c.amount }, ...p.log].slice(0, 4) };
+    }),
+  );
+  const [takeErr, setTakeErr] = useState<string | null>(null);
+  const [, startTake] = useTransition();
+  const error = takeErr ?? createError;
   const [amounts, setAmounts] = useState<Record<string, string>>({});
   const dialog = useRef<HTMLDialogElement>(null);
   const [form, setForm] = useState({ name: "", lineId: "", keep: "" });
   const take = (p: PoolView, to: "use" | "to_wants") => {
     const v = parsePesos(amounts[p.id] ?? "");
     if (v === undefined || v <= 0) return;
-    act(() => takeFromPool({ poolId: p.id, amount: Math.min(v, Math.max(0, p.balance)), to }));
+    const amount = Math.min(v, Math.max(0, p.balance));
+    if (amount <= 0) return;
+    startTake(async () => {
+      const now = new Date(Date.now() + 8 * 3_600_000);
+      setTakeErr(null);
+      apply({ id: p.id, amount, what: to === "use" ? "Used for something unplanned" : "Moved to Wants", when: `${now.getUTCDate()} ${MON[now.getUTCMonth()]}` });
+      setAmounts((a) => ({ ...a, [p.id]: "" }));
+      const r = await takeFromPool({ poolId: p.id, amount, to });
+      if (r.error) setTakeErr(r.error);
+    });
   };
   return (
     <section className="v-card" aria-labelledby="pt">
       <div className="v-row v-sp"><h2 id="pt">Pools</h2><button type="button" className="v-btn v-sm" onClick={() => dialog.current?.showModal()}>+ New pool</button></div>
       <div className="v-lbl" style={{ margin: "2px 0 4px" }}>Money that builds up across cutoffs. Take from it when something unplanned comes up, or move the excess to Wants.</div>
-      {pools.length === 0 ? <p className="v-muted v-sm">No pools yet. Mark a line as the RTO contingency, or add a pool.</p> : null}
-      {pools.map((p) => {
+      {list.length === 0 ? <p className="v-muted v-sm">No pools yet. Mark a line as the RTO contingency, or add a pool.</p> : null}
+      {list.map((p) => {
         const max = Math.max(p.balance, p.keepUpTo ?? 0, 1) * 1.15;
         return (
           <div key={p.id} className="v-pool">
@@ -192,8 +230,8 @@ export function PoolsCard({ pools, lines }: { pools: PoolView[]; lines: { id: st
             <div className="v-row v-wrap" style={{ gap: 8, marginTop: 10 }}>
               <label className="v-sr" htmlFor={`pa-${p.id}`}>Amount from {p.name}</label>
               <input id={`pa-${p.id}`} className="v-amtin2" inputMode="decimal" placeholder="₱" value={amounts[p.id] ?? ""} onChange={(e) => setAmounts((a) => ({ ...a, [p.id]: e.target.value }))} />
-              <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => take(p, "use")}>Use it</button>
-              <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => take(p, "to_wants")}>Move to Wants</button>
+              <button type="button" className="v-btn v-sm" onClick={() => take(p, "use")}>Use it</button>
+              <button type="button" className="v-btn v-sm" onClick={() => take(p, "to_wants")}>Move to Wants</button>
               {p.excess > 0 ? <button type="button" className="v-btn v-sm v-ghost" onClick={() => setAmounts((a) => ({ ...a, [p.id]: (p.excess / 100).toFixed(2) }))}>Fill excess</button> : null}
             </div>
             {p.log.length ? <div className="v-plog">{p.log.map((l, i) => <div key={i}>{l.when} · {l.what} · <Money value={money(l.amount)} signed /></div>)}</div> : null}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 import { resetMonths } from "@/app/(v13)/funds/actions";
 import { money } from "@/lib/domain/money";
 import { savedThisMonth, totalBalance, yearEnds, type ForecastRow } from "@/lib/funds/forecast";
@@ -15,7 +15,14 @@ const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r);
 
 /** 60 months of fund balances: a chart, a year ladder with month cards, and a month sheet that tells the story. */
-export function ForecastView({ funds, rows, startTotal, withoutTotal, overrides }: { funds: FundMeta[]; rows: ForecastRow[]; startTotal: number; withoutTotal: number | null; overrides: { month: string; note: string; what: string }[] }) {
+export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, overrides: overridesIn }: { funds: FundMeta[]; rows: ForecastRow[]; startTotal: number; withoutTotal: number | null; overrides: { month: string; note: string; what: string }[] }) {
+  // Resetting a month to the default clears its marker and its entry in "Months that differ" at once.
+  const [opt, clearOverride] = useOptimistic({ rows: rowsIn, overrides: overridesIn }, (cur, month: string) => ({
+    rows: cur.rows.map((r) => (r.month === month ? { ...r, override: false } : r)),
+    overrides: cur.overrides.filter((o) => o.month !== month),
+  }));
+  const rows = opt.rows;
+  const overrides = opt.overrides;
   const [view, setView] = useState<"c" | "y">("c");
   const [style, setStyle] = useState<"s" | "l">("s");
   const [vis, setVis] = useState<Set<string>>(new Set(funds.map((f) => f.id)));
@@ -23,7 +30,7 @@ export function ForecastView({ funds, rows, startTotal, withoutTotal, overrides 
   const [sel, setSel] = useState<string | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [busy, start] = useTransition();
+  const [, start] = useTransition();
 
   const last = rows[rows.length - 1]!;
   const total = totalBalance(last);
@@ -176,7 +183,7 @@ export function ForecastView({ funds, rows, startTotal, withoutTotal, overrides 
             <div className="v-row v-wrap">
               <Link className="v-btn v-pri" href={`/forecast/override?m=${row.month}`}>Override this month</Link>
               <Link className="v-btn" href={`/forecast/override?bulk=1&y=${row.year}`}>Edit several months</Link>
-              {row.override ? <button type="button" className="v-btn" disabled={busy} onClick={() => start(async () => { const r = await resetMonths([row.month]); if (r.error) setError(r.error); else dialog.current?.close(); })}>Reset to default</button> : null}
+              {row.override ? <button type="button" className="v-btn" onClick={() => start(async () => { clearOverride(row.month); dialog.current?.close(); const r = await resetMonths([row.month]); if (r.error) setError(r.error); })}>Reset to default</button> : null}
             </div>
           </div>
         ) : null}

@@ -569,3 +569,33 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-skel{background:linear-gradient(90deg,var(--soft),var(--line),var(--soft));background-size:200% 100%;border-radius:10px;animation:v13shimmer 1.2s ease-in-out infinite}
 @keyframes v13shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
 @media(prefers-reduced-motion:reduce){.v13 .v-skel{animation:none}}
+
+/* Micro-interactions. Small and quick; all of it is off for people who ask for reduced motion. */
+@keyframes v13rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes v13sheet{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes v13fade{from{opacity:0}to{opacity:1}}
+@keyframes v13pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes v13glow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}to{box-shadow:0 0 0 10px transparent}}
+@media (prefers-reduced-motion:no-preference){
+  .v13 .v-btn,.v13 .v-iconbtn,.v13 .v-seg button,.v13 .v-seg .v-segl,.v13 .v-cats button,.v13 .v-pillrow button,.v13 .v-swatch,.v13 .v-wk button,.v13 .v-tabs a,.v13 .v-tabs button,.v13 .v-rail a,.v13 .v-railbtn{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,filter .15s ease}
+  .v13 .v-btn:active,.v13 .v-iconbtn:active,.v13 .v-seg button:active,.v13 .v-cats button:active,.v13 .v-pillrow button:active,.v13 .v-wk button:active,.v13 .v-dy:active,.v13 .v-tabs a:active,.v13 .v-tabs button:active,.v13 .v-railbtn:active{transform:scale(.96)}
+  .v13 .v-btn.v-pri:hover{filter:brightness(1.08)}
+  .v13 .v-acard,.v13 .v-fund,.v13 .v-mc,.v13 .v-yr,.v13 .v-itx,.v13 .v-bc,.v13 .v-card{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease}
+  .v13 .v-acard:hover,.v13 .v-fund:hover,.v13 .v-mc:hover,.v13 .v-yr:hover{transform:translateY(-2px)}
+  .v13 .v-main>.v-stack>*,.v13 .v-main>.v-narrow>*{animation:v13rise .24s cubic-bezier(.16,1,.3,1) both}
+  .v13 .v-main>.v-stack>*:nth-child(2){animation-delay:.03s}.v13 .v-main>.v-stack>*:nth-child(3){animation-delay:.06s}.v13 .v-main>.v-stack>*:nth-child(4){animation-delay:.09s}.v13 .v-main>.v-stack>*:nth-child(n+5){animation-delay:.12s}
+  .v13 .v-itx,.v13 .v-bc,.v13 .v-ev,.v13 .v-alw,.v13 .v-rule,.v13 .v-stl,.v13 .v-pool,.v13 .v-fr{animation:v13rise .22s cubic-bezier(.16,1,.3,1) both}
+  .v13 .v-qa{animation:v13sheet .26s cubic-bezier(.16,1,.3,1) both}
+  .v13 dialog::backdrop{animation:v13fade .2s ease both}
+  .v13 .v-dy,.v13 .v-mcol{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .12s ease}
+  .v13 .v-bar i,.v13 .v-pbar i,.v13 .v-stk i,.v13 .v-mini i{transition:width .35s cubic-bezier(.16,1,.3,1),background-color .2s ease}
+  .v13 .v-chk[aria-checked=true]{animation:v13pop .28s ease}
+  .v13 .v-sw::after{transition:transform .18s cubic-bezier(.34,1.4,.64,1),background-color .15s ease}
+  .v13 .v-flag[role=status],.v13 .v-flag[role=alert]{animation:v13rise .2s ease both}
+  .v13 .v-pill.v-ok{animation:v13fade .25s ease both}
+  .v13 .v-btn.v-pri:focus-visible{animation:v13glow .5s ease-out}
+  .v13 .v-big{transition:color .2s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  .v13 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

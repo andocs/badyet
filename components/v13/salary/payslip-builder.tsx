@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { resetTemplates, saveTemplates, setAllowance } from "@/app/(v13)/pay/actions";
 import type { YearMonth } from "@/lib/domain/dates";
 import { money, parsePesos, type Money as MoneyValue } from "@/lib/domain/money";
@@ -34,6 +34,17 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, start] = useTransition();
+  // Moving an allowance to the other cutoff or switching Taxable shows in the payslips at once; the server catches up behind it.
+  const [allowances, applyAllowance] = useOptimistic(input.allowances, (cur, c: { id: string; cutoff?: PayCutoff; taxable?: boolean }) =>
+    cur.map((a) => (a.id === c.id ? { ...a, ...(c.cutoff ? { payslipCutoff: c.cutoff } : {}), ...(c.taxable !== undefined ? { taxable: c.taxable } : {}) } : a)),
+  );
+  const eff = useMemo(() => ({ ...input, allowances }), [input, allowances]);
+  const [, startAllowance] = useTransition();
+  const changeAllowance = (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) =>
+    startAllowance(async () => {
+      applyAllowance({ id, ...change });
+      await setAllowance(id, change);
+    });
 
   const templates = useMemo<PayslipTemplate[]>(
     () => [
@@ -42,8 +53,8 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
     ],
     [drafts, month],
   );
-  const salary = useMemo(() => salaryAt(input, month), [input, month]);
-  const bonuses = useMemo(() => planBonuses(input.bonusRules, input.bonusInstances, (m) => salaryAt(input, m), input.settings, input.assumptions, [month]), [input, month]);
+  const salary = useMemo(() => salaryAt(eff, month), [eff, month]);
+  const bonuses = useMemo(() => planBonuses(eff.bonusRules, eff.bonusInstances, (m) => salaryAt(eff, m), eff.settings, eff.assumptions, [month]), [eff, month]);
   const pay = useMemo(() => buildMonthPay(salary, input.settings, bonuses, templates), [salary, input.settings, bonuses, templates]);
   const working = useMemo(() => taxBreakdown(TAX_ROWS, money((pay.regularTaxable * 12 + pay.oneTimeTaxable) as number)), [pay]);
 
@@ -128,7 +139,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
 
       <div className="v-pair2">
         {(["first", "second"] as const).map((c) => (
-          <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} busy={busy} />
+          <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} busy={busy} />
         ))}
       </div>
 
@@ -164,8 +175,8 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
 
 const fmt = (m: MoneyValue | number) => `₱${(Number(m) / 100).toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
 
-function Slip({ cutoff, slip, drafts, salary, onChange, onMove, onRemove, onAdd, busy }: {
-  cutoff: PayCutoff; slip: Payslip; drafts: Draft[]; salary: ReturnType<typeof salaryAt>;
+function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd, busy }: {
+  cutoff: PayCutoff; slip: Payslip; drafts: Draft[]; salary: ReturnType<typeof salaryAt>; onAllowance: (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) => void;
   onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void; busy: boolean;
 }) {
   const [name, setName] = useState("");
@@ -211,13 +222,13 @@ function Slip({ cutoff, slip, drafts, salary, onChange, onMove, onRemove, onAdd,
           <small>{allowance ? (allowance.frequency === "yearly" ? "once a year · from Recurring allowances" : "every month · from Recurring allowances") : line.source === "bonus" || line.source === "bonus_tax" ? "from Bonuses" : line.source === "savings_plan" ? "payroll savings plan" : "your payroll setting"}</small>
           {allowance ? (
             <span className="v-tx">
-              <button type="button" className="v-sw v-s" role="switch" aria-checked={allowance.taxable} aria-label={`${line.label} is taxable`} disabled={busy} onClick={() => setAllowance(allowance.id, { taxable: !allowance.taxable })} />
+              <button type="button" className="v-sw v-s" role="switch" aria-checked={allowance.taxable} aria-label={`${line.label} is taxable`} onClick={() => onAllowance(allowance.id, { taxable: !allowance.taxable })} />
               Taxable
             </span>
           ) : null}
         </td>
         <td><span className="v-fixedv">{sign}<Money value={line.amount} /></span></td>
-        <td><div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" disabled={busy} onClick={() => setAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{cutoff === "first" ? "To 2nd →" : "← To 1st"}</button> : null}</div></td>
+        <td><div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{cutoff === "first" ? "To 2nd →" : "← To 1st"}</button> : null}</div></td>
       </tr>
     );
   };

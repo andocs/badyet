@@ -5,7 +5,7 @@ import { loadSalary } from "@/lib/salary/load";
 import { eventRows, regularRange, yearRows, yearOf } from "@/lib/salary/view";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
-import { AllowanceControls, EventActions, ProjectedRaises } from "@/components/v13/salary/controls";
+import { AllowanceControls, EventActions, ExpectedPill, OptimisticItem, ProjectedRaises } from "@/components/v13/salary/controls";
 import { PayslipBuilder } from "@/components/v13/salary/payslip-builder";
 
 export const metadata = { title: "Salary and tax · Bad(yet)" };
@@ -86,11 +86,11 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             <div className="v-row v-sp"><h2 id="evh">Events</h2><Link className="v-btn v-sm" href="/pay/new">Add with the wizard</Link></div>
             <div>
               {events.map(({ event: e, delta }) => (
-                <div className="v-ev" key={e.id}>
+                <OptimisticItem key={e.id} className="v-ev" initial={{ gone: false, status: e.status, cutoff: "second", taxable: false }}>
                   <div className="v-when">{MON[Number(e.effectiveMonth.slice(5)) - 1]}<small>{e.effectiveMonth.slice(0, 4)}</small></div>
                   <div className="v-grow">
                     <b>{{ start: "Start", merit: "Merit raise", promotion: "Promotion", allowance: "Allowance change", adjustment: "One-off adjustment" }[e.kind]}</b>
-                    {e.status === "expected" ? <> <span className="v-pill v-est">expected</span></> : null}
+                    <ExpectedPill />
                     <div className="v-sm v-muted">
                       {e.kind === "merit" && e.pctBp != null ? `+${e.pctBp / 100}%` : null}
                       {e.newBase != null ? <>{e.kind === "merit" ? " → " : ""}base <Money value={e.newBase} /> a month</> : null}
@@ -98,7 +98,7 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
                       {e.kind === "adjustment" && e.oneOffAmount != null ? <><Money value={e.oneOffAmount} /> once{e.oneOffTaxable ? ", taxed" : ""}</> : null}
                       {e.kind === "allowance" ? "A new allowance (see Recurring allowances)" : null}
                     </div>
-                    <EventActions id={e.id} status={e.status} kind={e.kind} />
+                    <EventActions id={e.id} kind={e.kind} />
                   </div>
                   {delta !== null ? (
                     <div className={`v-delta v-num ${delta >= 0 ? "v-pos" : "v-neg"}`} style={{ textAlign: "right" }}>
@@ -106,7 +106,7 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
                       <div className="v-xs v-muted" style={{ font: "600 12px var(--font-body)" }}>take-home a month</div>
                     </div>
                   ) : <span className="v-pill">{e.kind === "start" ? "start" : "once"}</span>}
-                </div>
+                </OptimisticItem>
               ))}
             </div>
             <div className="v-note" style={{ marginTop: 12 }}><b>Hollow marker</b> = a raise you expect but have not confirmed yet. <b>Past the last event?</b> The projected raise below takes over.</div>
@@ -123,13 +123,13 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             <div>
               {input.allowances.length === 0 ? <p className="v-muted v-sm">No allowances yet.</p> : null}
               {input.allowances.map((al) => (
-                <div className="v-alw" key={al.id} style={{ alignItems: "flex-start" }}>
+                <OptimisticItem key={al.id} className="v-alw" style={{ alignItems: "flex-start" }} initial={{ gone: false, status: "confirmed", cutoff: al.payslipCutoff, taxable: al.taxable }}>
                   <div className="v-grow">
                     <b>{al.name}</b>
                     <div className="v-sm v-muted"><Money value={al.amount} /> · {al.frequency === "monthly" ? "every month" : `once a year, in ${MON[(al.payMonth ?? 1) - 1]}`} · from {label(al.startsOn)}{al.endsOn ? ` to ${label(al.endsOn)}` : ""}</div>
-                    <AllowanceControls id={al.id} name={al.name} cutoff={al.payslipCutoff} taxable={al.taxable} />
+                    <AllowanceControls id={al.id} name={al.name} />
                   </div>
-                </div>
+                </OptimisticItem>
               ))}
             </div>
             <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>Taxable ones add to your taxable pay. The cutoff you pick here is what the payslip builder uses. Bonuses are set on the Bonuses page.</p>

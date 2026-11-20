@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { createContext, useContext, useOptimistic, useState, useTransition } from "react";
 import { confirmEvent, deleteEvent, deleteAllowance, saveAssumptions, setAllowance } from "@/app/(v13)/pay/actions";
 import type { FormState } from "@/lib/form-state";
 
@@ -17,23 +17,55 @@ function useRun() {
   return { error, busy, run };
 }
 
+interface ItemState {
+  gone: boolean;
+  status: "confirmed" | "expected";
+  cutoff: "first" | "second";
+  taxable: boolean;
+}
+const ItemCtx = createContext<{ state: ItemState; apply: (c: Partial<ItemState>) => void } | null>(null);
+const useItem = () => {
+  const v = useContext(ItemCtx);
+  if (!v) throw new Error("Used outside an OptimisticItem");
+  return v;
+};
+
+/**
+ * A row you can change in place. A confirm, a cutoff move, a taxable switch or a removal shows at once; the server catches up in the
+ * background, and if it says no the row goes back to how it was and shows why.
+ */
+export function OptimisticItem({ initial, className, style, children }: { initial: ItemState; className?: string; style?: React.CSSProperties; children: React.ReactNode }) {
+  const [state, apply] = useOptimistic(initial, (cur, c: Partial<ItemState>) => ({ ...cur, ...c }));
+  return (
+    <ItemCtx.Provider value={{ state, apply }}>
+      <div className={className} style={style} hidden={state.gone}>{children}</div>
+    </ItemCtx.Provider>
+  );
+}
+
+/** The "expected" tag, which disappears the moment you confirm the event. */
+export function ExpectedPill() {
+  const { state } = useItem();
+  return state.status === "expected" ? <> <span className="v-pill v-est">expected</span></> : null;
+}
+
 /** Confirm (when expected) and remove, for one salary event. */
-export function EventActions({ id, status, kind }: { id: string; status: "confirmed" | "expected"; kind: string }) {
-  const { error, busy, run } = useRun();
+export function EventActions({ id, kind }: { id: string; kind: string }) {
+  const { state, apply } = useItem();
+  const [error, setError] = useState<string | null>(null);
+  const [, start] = useTransition();
+  const go = (change: Partial<ItemState>, fn: () => Promise<FormState>) =>
+    start(async () => {
+      setError(null);
+      apply(change);
+      const r = await fn();
+      if (r.error) setError(r.error);
+    });
   return (
     <div className="v-row v-wrap" style={{ gap: 8, marginTop: 8 }}>
-      {status === "expected" ? (
-        <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => run(() => confirmEvent(id))}>It happened: confirm</button>
-      ) : null}
+      {state.status === "expected" ? <button type="button" className="v-btn v-sm" onClick={() => go({ status: "confirmed" }, () => confirmEvent(id))}>It happened: confirm</button> : null}
       {kind !== "start" ? (
-        <button
-          type="button"
-          className="v-btn v-sm v-ghost"
-          disabled={busy}
-          onClick={() => {
-            if (window.confirm("Remove this event? Budget top-ups tied to it go too.")) run(() => deleteEvent(id));
-          }}
-        >
+        <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm("Remove this event? Budget top-ups tied to it go too.")) go({ gone: true }, () => deleteEvent(id)); }}>
           Remove
         </button>
       ) : null}
@@ -76,30 +108,30 @@ export function ProjectedRaises({ on, pctBp, month }: { on: boolean; pctBp: numb
 }
 
 /** Where an allowance lands, whether it is taxable, and removing it. */
-export function AllowanceControls({ id, name, cutoff, taxable }: { id: string; name: string; cutoff: "first" | "second"; taxable: boolean }) {
-  const { error, busy, run } = useRun();
+export function AllowanceControls({ id, name }: { id: string; name: string }) {
+  const { state, apply } = useItem();
+  const [error, setError] = useState<string | null>(null);
+  const [, start] = useTransition();
+  const go = (change: Partial<ItemState>, fn: () => Promise<FormState>) =>
+    start(async () => {
+      setError(null);
+      apply(change);
+      const r = await fn();
+      if (r.error) setError(r.error);
+    });
   return (
     <>
       <div className="v-xs v-muted" style={{ marginTop: 8 }}>Lands in the</div>
       <div className="v-seg v-fit" role="group" aria-label={`${name} lands in`}>
-        <button type="button" aria-pressed={cutoff === "first"} disabled={busy} onClick={() => run(() => setAllowance(id, { cutoff: "first" }))}>1st cutoff</button>
-        <button type="button" aria-pressed={cutoff === "second"} disabled={busy} onClick={() => run(() => setAllowance(id, { cutoff: "second" }))}>2nd cutoff</button>
+        <button type="button" aria-pressed={state.cutoff === "first"} onClick={() => go({ cutoff: "first" }, () => setAllowance(id, { cutoff: "first" }))}>1st cutoff</button>
+        <button type="button" aria-pressed={state.cutoff === "second"} onClick={() => go({ cutoff: "second" }, () => setAllowance(id, { cutoff: "second" }))}>2nd cutoff</button>
       </div>
       <div className="v-row v-wrap" style={{ gap: 12, marginTop: 8 }}>
         <label className="v-row" style={{ gap: 8 }}>
           <span className="v-xs v-muted">Taxable</span>
-          <button type="button" className="v-sw" role="switch" aria-checked={taxable} aria-label={`${name} is taxable`} disabled={busy} onClick={() => run(() => setAllowance(id, { taxable: !taxable }))} />
+          <button type="button" className="v-sw" role="switch" aria-checked={state.taxable} aria-label={`${name} is taxable`} onClick={() => go({ taxable: !state.taxable }, () => setAllowance(id, { taxable: !state.taxable }))} />
         </label>
-        <button
-          type="button"
-          className="v-btn v-sm v-ghost"
-          disabled={busy}
-          onClick={() => {
-            if (window.confirm(`Remove ${name}?`)) run(() => deleteAllowance(id));
-          }}
-        >
-          Remove
-        </button>
+        <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm(`Remove ${name}?`)) go({ gone: true }, () => deleteAllowance(id)); }}>Remove</button>
       </div>
       {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
     </>

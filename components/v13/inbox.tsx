@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import { confirmTransaction, ignoreTransaction } from "@/app/(v13)/inbox/actions";
 import type { IsoDate } from "@/lib/domain/dates";
 import { money } from "@/lib/domain/money";
@@ -37,7 +37,13 @@ const when = (iso: string, today: IsoDate) => `${relativeDay(manilaDate(iso), to
  * Inbox. Phones show one list at a time (All activity or To check); desktop shows To check as wide cards with All activity beside it.
  * Nothing moves a balance until it is confirmed, and "Not mine" ignores a row for good.
  */
-export function InboxView({ txns, categories, today }: { txns: InboxTxn[]; categories: Category[]; today: IsoDate }) {
+type Change = { type: "confirm"; id: string; categoryId: string | null; categoryName: string | null } | { type: "ignore"; id: string };
+
+export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[]; categories: Category[]; today: IsoDate }) {
+  // A confirmed row leaves To check and an ignored row disappears the moment you tap; the server catches up in the background.
+  const [txns, apply] = useOptimistic(txnsIn, (cur, c: Change) =>
+    c.type === "ignore" ? cur.filter((t) => t.id !== c.id) : cur.map((t) => (t.id === c.id ? { ...t, status: "confirmed" as const, categoryId: c.categoryId, categoryName: c.categoryName } : t)),
+  );
   const pending = txns.filter((t) => t.status === "pending");
   const [view, setView] = useState<"a" | "p">("a");
   const [openId, setOpenId] = useState<string | null>(null);
@@ -45,7 +51,7 @@ export function InboxView({ txns, categories, today }: { txns: InboxTxn[]; categ
   const [rules, setRules] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [busy, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null);
 
   const open = txns.find((t) => t.id === openId) ?? null;
@@ -64,17 +70,20 @@ export function InboxView({ txns, categories, today }: { txns: InboxTxn[]; categ
   function confirm(t: InboxTxn) {
     setError(null);
     startTransition(async () => {
-      const r = await confirmTransaction({ id: t.id, categoryId: pick(t), rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "" });
+      const categoryId = pick(t);
+      apply({ type: "confirm", id: t.id, categoryId, categoryName: categories.find((c) => c.id === categoryId)?.name ?? null });
+      closeDetail();
+      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "" });
       if (r.error) setError(r.error);
-      else closeDetail();
     });
   }
   function ignore(t: InboxTxn) {
     setError(null);
     startTransition(async () => {
+      apply({ type: "ignore", id: t.id });
+      closeDetail();
       const r = await ignoreTransaction(t.id);
       if (r.error) setError(r.error);
-      else closeDetail();
     });
   }
 
@@ -179,8 +188,8 @@ export function InboxView({ txns, categories, today }: { txns: InboxTxn[]; categ
                       </>
                     )}
                     <div className="v-ta">
-                      <button type="button" className="v-btn v-pri" disabled={!canConfirm(t) || busy} onClick={() => confirm(t)}>Confirm</button>
-                      <button type="button" className="v-btn" disabled={busy} onClick={() => ignore(t)} aria-label={`Ignore ${t.who}`}>Not mine</button>
+                      <button type="button" className="v-btn v-pri" disabled={!canConfirm(t)} onClick={() => confirm(t)}>Confirm</button>
+                      <button type="button" className="v-btn" onClick={() => ignore(t)} aria-label={`Ignore ${t.who}`}>Not mine</button>
                     </div>
                   </article>
                 ))}
@@ -260,8 +269,8 @@ export function InboxView({ txns, categories, today }: { txns: InboxTxn[]; categ
             <div className="v-row v-wrap" style={{ gap: 10 }}>
               {open.status === "pending" ? (
                 <>
-                  <button type="button" className="v-btn v-pri v-grow" disabled={!canConfirm(open) || busy} onClick={() => confirm(open)}>{open.kind === "transfer" ? "Confirm transfer" : "Confirm"}</button>
-                  <button type="button" className="v-btn" disabled={busy} onClick={() => ignore(open)}>Not mine</button>
+                  <button type="button" className="v-btn v-pri v-grow" disabled={!canConfirm(open)} onClick={() => confirm(open)}>{open.kind === "transfer" ? "Confirm transfer" : "Confirm"}</button>
+                  <button type="button" className="v-btn" onClick={() => ignore(open)}>Not mine</button>
                 </>
               ) : (
                 <button type="button" className="v-btn v-grow" onClick={closeDetail}>Done</button>

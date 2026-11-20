@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { deleteRule, saveOfficeAmount, savePaydays, setNotifCapture } from "@/app/(v13)/settings/actions";
 import type { FormState } from "@/lib/form-state";
 
@@ -42,10 +42,20 @@ export function PaydaysCard({ first, second, officeAmount }: { first: number; se
 }
 
 /** Phone notification capture and the merchant rules you have made. */
-export function NotificationsCard({ enabled, rules }: { enabled: boolean; rules: { id: string; pattern: string; category: string }[] }) {
+export function NotificationsCard({ enabled, rules: rulesIn }: { enabled: boolean; rules: { id: string; pattern: string; category: string }[] }) {
   const [on, setOn] = useState(enabled);
   const n = useAct();
-  const r = useAct();
+  // A deleted rule leaves the list at once; the server catches up behind it.
+  const [rules, drop] = useOptimistic(rulesIn, (cur, id: string) => cur.filter((x) => x.id !== id));
+  const [ruleMsg, setRuleMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [, startRule] = useTransition();
+  const removeRule = (id: string) =>
+    startRule(async () => {
+      setRuleMsg(null);
+      drop(id);
+      const res = await deleteRule(id);
+      if (res.error) setRuleMsg({ ok: false, text: res.error });
+    });
   return (
     <section className="v-card v-stack" aria-labelledby="nt">
       <h2 id="nt">Phone notifications</h2>
@@ -60,10 +70,10 @@ export function NotificationsCard({ enabled, rules }: { enabled: boolean; rules:
         {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No rules yet.</p> : rules.map((x) => (
           <div key={x.id} className="v-row v-sp" style={{ padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
             <span><b>{x.pattern}</b> → {x.category}</span>
-            <button type="button" className="v-btn v-sm v-ghost" disabled={r.busy} onClick={() => { if (window.confirm(`Delete the rule for ${x.pattern}?`)) r.act(() => deleteRule(x.id), "Rule deleted."); }}>Delete</button>
+            <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm(`Delete the rule for ${x.pattern}?`)) removeRule(x.id); }}>Delete</button>
           </div>
         ))}
-        <div style={{ marginTop: 8 }}><Msg msg={r.msg} /></div>
+        <div style={{ marginTop: 8 }}><Msg msg={ruleMsg} /></div>
       </div>
     </section>
   );
