@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { signOut } from "@/app/auth/actions";
 import { NavLinks, SIDE_ITEMS, TAB_ITEMS } from "./nav";
 import { ThemeToggle } from "./theme-toggle";
+import { HideAmounts } from "./hide-amounts";
 
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           </Suspense>
         </nav>
         <ThemeToggle />
+        <HideAmounts />
         <form action={signOut} className="signout">
           <button type="submit" className="btn ghost">Sign out</button>
         </form>

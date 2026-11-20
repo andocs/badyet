@@ -1,4 +1,6 @@
 import { SubNav } from "@/components/subnav";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan, planQuery } from "@/lib/plans/select";
 import Link from "next/link";
 import { PayBreakdown } from "@/components/pay-breakdown";
 import { PayWizard, type WizardInitial } from "@/components/pay-wizard";
@@ -22,9 +24,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
   const supabase = await createClient();
-  const { data: plan } = supabase
-    ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
-    : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
   const { data: row } =
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
 
@@ -59,6 +59,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
         philhealthOverride: row.philhealth_override === null ? null : money(row.philhealth_override),
         taxOverrideFirst: row.tax_override_first === null ? null : money(row.tax_override_first),
         taxOverrideSecond: row.tax_override_second === null ? null : money(row.tax_override_second),
+        otherDeduction: money(row.other_deduction ?? 0),
       }
     : null;
   const initial: WizardInitial = {
@@ -66,6 +67,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
     allowanceSecond: field(row?.allowance_second),
     sss: field(row?.sss),
     pagibig: field(row?.pagibig),
+    otherDeduction: field(row?.other_deduction),
     savingsPlanPercent: row ? String(row.savings_plan_bp / 100) : "",
     philhealthOverride: field(row?.philhealth_override),
     taxOverrideFirst: field(row?.tax_override_first),
@@ -81,7 +83,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
           <h1 style={{ marginTop: 6 }}>Pay</h1>
           <p className="sub">From your base salary to what lands in your account, cutoff by cutoff.</p>
         </div>
-        {!wizardOpen && !past && <Link href="/pay?edit=1" className="btn ghost">Edit pay</Link>}
+        {!wizardOpen && !past && <Link href={`/pay?edit=1${planQuery(plan)}`} className="btn ghost">Edit pay</Link>}
       </div>
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
@@ -89,6 +91,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
           {detail && <small style={{ display: "block", marginTop: 4, fontWeight: 500 }}>Technical detail: {detail}</small>}
         </p>
       )}
+      <PlanBar basePath="/pay" plan={plan} />
       {params.saved === "1" && <p className="notice ok" role="status" style={{ marginBottom: 18 }}>Saved.</p>}
 
       <section className="card" aria-labelledby="pay-h" style={{ maxWidth: wizardOpen ? 640 : undefined }}>

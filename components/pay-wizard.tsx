@@ -12,6 +12,7 @@ export interface WizardInitial {
   allowanceSecond: string;
   sss: string;
   pagibig: string;
+  otherDeduction: string;
   savingsPlanPercent: string;
   philhealthOverride: string;
   taxOverrideFirst: string;
@@ -75,7 +76,7 @@ export function PayWizard({
     >
       <input type="hidden" name="planId" value={planId} />
       <input type="hidden" name="annualBase" value={annualText} />
-      {(["allowanceSecond", "sss", "pagibig", "savingsPlanPercent", "philhealthOverride", "taxOverrideFirst", "taxOverrideSecond"] as const).map((k) => (
+      {(["allowanceSecond", "sss", "pagibig", "otherDeduction", "savingsPlanPercent", "philhealthOverride", "taxOverrideFirst", "taxOverrideSecond"] as const).map((k) => (
         <input key={k} type="hidden" name={k} value={f[k]} />
       ))}
 
@@ -116,6 +117,7 @@ export function PayWizard({
           <label className="field"><span className="lab">Allowance, 2nd cutoff (not taxed)</span><input className="input" inputMode="decimal" value={f.allowanceSecond} onChange={set("allowanceSecond")} placeholder="0.00" /></label>
           <label className="field"><span className="lab">SSS, 2nd cutoff</span><input className="input" inputMode="decimal" value={f.sss} onChange={set("sss")} placeholder="0.00" /></label>
           <label className="field"><span className="lab">Pag-IBIG, 2nd cutoff</span><input className="input" inputMode="decimal" value={f.pagibig} onChange={set("pagibig")} placeholder="0.00" /></label>
+          <label className="field"><span className="lab">HMO or other deduction, each cutoff (after tax)</span><input className="input" inputMode="decimal" value={f.otherDeduction} onChange={set("otherDeduction")} placeholder="0.00" /></label>
           {result && <p className="notice ok" role="status">PhilHealth is worked out for you: ₱{peso(result.philhealth)} (2.5% of monthly basic, within PhilHealth&apos;s 10,000 to 100,000 range).</p>}
         </>
       )}

@@ -7,41 +7,37 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-18..23
-- **Gate:** building
-- **Next action:** Build rev-18 Google login first, then rev-19..23; one gate at the end
-- **User to-do now:** Answer Q1 (paydays) and Q2 (payslip, CIP inputs) when ready
+- **Phase:** Done
+- **Active slice / milestone:** rev-18..25
+- **Gate:** none
+- **Next action:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; add paid counts, savings balances, 13th/CIP, HMO to the import file; Sept bonus de minimis default
+- **User to-do now:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; check payday days in Settings
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-19 to 2026-11-20) covering rev-5, rev-6, phase3, rev-7..10, redesign, rev-11, rev-12, rev-13, rev-14/15, rev-16, rev-17
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-19 22:35 | rev-5 | rev-5 built: /import page + importSnapshot action (validated snapshot JSON, creates a NEW inactive plan, wallets, pay, lines, installments, subscriptions; undoes itself on failure; never changes existing data). Snapshot generated from the Sheet (Dec 10 onwards tab) into data/import/sheet-import.json (git-ignored, personal data). Sheet totals reproduce: 1st cutoff 25,008, 2nd 30,555. Not imported: savings fund balances, 13th month, CIP, HMO deduction, older plans. | 0d4d3f4
-- 2026-11-20 09:01 | rev-6 | Installment payments: Mark paid / Undo per installment, 'payments already made' on add, installment_payments table (RLS, rollback noted). Migration must be applied to Supabase. 141 tests, lint, typecheck, build PASS. | 91ec216
-- 2026-11-20 09:02 | phase3 | User: project is already deployed on Vercel. rev-8 becomes verify/document (runbook, env, redirect URLs), not first deploy. Run rev-7..10 in one shot, single gate after the last. | -
-- 2026-11-20 09:06 | rev-7..10 | rev-7 CSV export (/export/[name], Settings card, formula-safe), rev-8 docs/deploy.md runbook, rev-9/10 Playwright: phone/desktop x light/dark; signed-out tests run (24 pass), signed-in tests read-only and skipped without a saved session. Checks PASS. | 5834ce3
-- 2026-11-20 09:07 | phase3 | Final gate APPROVED by user: rev-6..rev-10. | -
-- 2026-11-20 09:15 | phase3 | Impeccable critique done (25/40). User chose core flow + payday mode + plan switching/compare; keep personality. Sliced rev-11..15, awaiting approval of the list. | -
-- 2026-11-20 09:15 | phase3 | Redesign slices: rev-11 shared cutoff + Transfer cutoff fix + delete confirms + login contrast; rev-12 plan switcher + compare plans (what-if on raise, savings forecast); rev-13 nav 11 to 4; rev-14 Home = payday checklist; rev-15 payday mode (nice-to-have). | -
-- 2026-11-20 09:27 | redesign | Mockups v11-a payday ritual, v11-b money sentence, v11-c plan compare in docs/mockups (impeccable surface roll, Night Emerald kept). Awaiting direction pick before building rev-11..15. | -
-- 2026-11-20 09:42 | redesign | User picked direction A (payday ritual), DESIGN.md regen not now, and added accounts: wizard to add e-wallet/debit/credit with balances and card debt, with security. Added rev-16 (accounts wizard) and rev-17 (net position). Security decision: store last 4 digits only, never full card/account numbers, CVV or PIN. | -
-- 2026-11-20 09:44 | rev-11 | Shared cutoff (resolveCutoff, nav carries ?cutoff, Home switch), Transfer/Budget default to current cutoff, ConfirmButton on 7 deletes, placeholder contrast. 146 tests, lint, typecheck, build, e2e PASS. | b67f9bc
-- 2026-11-20 09:47 | rev-12 | Plan switcher (?plan=, PlanBar, viewing banner, nav carries plan), /plans/compare with diff table. Pay/Bonuses/Installments stay active-plan only. 148 tests, lint, typecheck, build PASS. | 6b8cd9a
-- 2026-11-20 09:48 | rev-13 | Nav cut to 4 (Now, Month, Savings, Setup); SubNav strips on Month and Setup pages; tab bar 4 columns. Tests, lint, typecheck, build, e2e PASS. | d68fd8f
-- 2026-11-20 09:50 | rev-14/15 | Now rebuilt as direction A: 4-step payday ritual (pay landed, spoken for, send by wallet, yours to spend) with in-place ticks and Pip; between paydays shows days to next cutoff, cutoff net, unplanned, charts. Not visually checked (needs signed-in session). Tests, lint, typecheck, build PASS. | 9b46391
-- 2026-11-20 09:53 | rev-16 | Accounts: migration 20261201000000_accounts.sql (kind, institution, last4 CHECK exactly 4 digits, balance, limit, statement/due day, rollback), parser + tests, /accounts page with 4-step wizard, update balance, delete confirm, position summary. Never stores full numbers/CVV/PIN. Migration must be applied. 4 test files added; checks PASS. | 1fe37bd
-- 2026-11-20 09:55 | rev-17 | Now shows Your money: cash in accounts, card debt, cash minus debt, % of limit, cards due within 14 days; loaded separately so Now works before the migration is applied. Fixed a duplicated-edit typecheck failure. 155 tests, lint, typecheck, build, 24 e2e PASS. | 9313901
 - 2026-11-20 09:59 | redesign | Final gate APPROVED by user: rev-11..rev-17. | -
 - 2026-11-20 10:18 | ops | User: migrations 20261130000000 and 20261201000000 applied; rev/11..17 merged; default branch moved to main (origin/main contains 9313901, verified). Open: signed-in click-through unconfirmed, Vercel env check unconfirmed, local branch cleanup. | -
 - 2026-11-20 10:29 | ops | Git cleanup done: on main (up to date with origin/main), 20 merged local branches deleted incl. stale master. User answers: Google login built before merge and configured by user (magic link removed in same change); balances auto-update on tick (add on tick, subtract on untick); import brings paid counts, savings balances, 13th/CIP, HMO deduction. Q1 (paydays) and Q2 (payslip/CIP inputs) still unanswered; pay-date model NOT started. Plan: rev-18 Google login, rev-19 small features (hide amounts, accounts CSV, auto-sync commitments, mark paid in ritual, balance on tick), rev-20 per-plan Pay/Bonuses, rev-21 tap-to-edit autosave, rev-22 import extras + HMO, rev-23 DESIGN.md regen. | -
+- 2026-11-20 10:31 | rev-18 | Google login: Continue with Google (signInWithOAuth), callback requires verified ALLOWED_EMAIL, magic link action and form removed, deploy.md Google setup guide, e2e login test updated. DO NOT MERGE until Google provider is configured in Supabase and tested (see docs/deploy.md). 155 tests, lint, typecheck, build, 24 e2e PASS. | 2202634
+- 2026-11-20 10:32 | redesign | Slices added from Q1/Q2 answers: rev-24 pay-date cutoffs (10th/25th, wrapping month), rev-25 windfall de minimis (CIP, September bonus; 13th none). Order: rev-19 batch, rev-24, rev-25, rev-20, rev-21, rev-22 (import + HMO), rev-23 (DESIGN.md). | -
+- 2026-11-20 10:34 | rev-19 | Auto-sync of Installments/Subscriptions budget lines (button removed, AutoSync once a day, sync on every change); ticking transfers moves destination balance via apply_transfer_marks (migration 20261202000000, falls back to plain ticks until applied; credit cards go down); Mark paid per installment in payday step 2; Hide amounts (blur, remembered); wallets in CSV export. Migration must be applied. 155 tests, lint, typecheck, build PASS. | c908009
+- 2026-11-20 10:37 | rev-24 | Pay-date cutoffs: first = 11-24, second = 25 to 10 next month, belongs to the month it starts in (Jan 5 is Dec second). helpers rebuilt on lib/domain/dates periodOf; Home, Budget, Transfer, Installments, auto-sync use it; Settings has two payday fields (2..27 and later up to 28); migration 20261203000000 adds first_cutoff_start_day and sets existing settings to 11/25. Installment due dates still use the calendar month of the due date. 158 tests, lint, typecheck, build PASS. Migration must be applied. | 6dd5cd4
+- 2026-11-20 10:38 | rev-25 | De minimis: per-event exemption on CIP and bonus (never taxed, outside the 90k cap); remainder joins the yearly pool checked against 90k with the 13th month; 13th month locked to 0 (app and DB). Migration 20261204000000. Sept bonus de minimis amount is entered per event (still unconfirmed which figure). 163 tests, lint, typecheck, build PASS. Migration must be applied. | 0b6fcea
+- 2026-11-20 10:40 | rev-20 | Pay and Bonuses open on any plan via ?plan= (PlanBar), saves/adds/deletes stay on that plan; addEvent uses the form planId instead of the active plan. 163 tests, lint, typecheck, build PASS. | 175474c
+- 2026-11-20 10:42 | rev-21 | Budget lines read at a glance, tap to edit, autosave on leaving a field (saveLineInline), Done/Enter/Escape, delete with confirm; Installments/Subscriptions lines show Automatic and are read-only; budget actions keep ?plan= when editing a non-active plan. 163 tests, typecheck, build, 24 e2e PASS (unused import removed after the run). | f0ee20e
+- 2026-11-20 10:44 | rev-22 | HMO/other deduction on Pay (after tax, each cutoff; lowers budget net and take-home, tax unchanged; migration 20261205000000 also updates duplicate_plan to copy it); import snapshot accepts paidCount (writes installment_payments), savings starting balances, windfalls with de minimis; import page counts updated. The snapshot file data/import/sheet-import.json does not yet contain these sections. 167 tests, lint, typecheck, build PASS. Migration must be applied. | 6c36411
+- 2026-11-20 10:45 | rev-23 | DESIGN.md merged and refreshed (kept the owner decisions, added token frontmatter, four-destination layout, payday ritual, plan bar, accounts wizard, budget line, Hide amounts, gold text rule). Doctor: dead path fixed; only the size advisory (compact proposal, needs consent) remains. No sidecar .impeccable/design.json written. | 9459625
+- 2026-11-20 10:50 | redesign | Final gate APPROVED by user: rev-18..rev-25. | -
 
 ## 4. Open questions
 
-- [ ] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates.
-- [ ] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app.
 - [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
+- [x] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates. -> User 2026-11-20: paydays are the 10th and 25th. Cutoffs are payday-to-payday (old spec: P1 = days 11-24, P2 = 25 to 10 next month), so the calendar split by one start day cannot model it. Building as rev-24 (assumption: first = paid 10th covering 11-24, second = paid 25th covering 25 to 10; a period belongs to the month it starts in).
+- [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
 
 ## 5. Token & usage ledger
 
@@ -50,7 +46,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 594,159 | 2,828,394 | 136,781 | 1,029,566 | 110,257,468 | 562,026 |  |
+| **Cumulative** | 786,543 | 3,902,329 | 179,291 | 1,228,304 | 150,457,898 | 662,260 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -65,6 +61,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
 | rev-7..10 | 39,382 | 215,399 | 8,700 | 19,459 | 1,105,451 | 8,538 |  |
 | rev-11..17 | 120,085 | 579,997 | 27,820 | 126,989 | 15,445,879 | 70,608 |  |
+| rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
 
 <!-- END SUMMARY -->
 
@@ -118,6 +115,12 @@ Decisions: direction A "payday ritual" (docs/mockups/v11-a-payday-ritual.html) f
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+1. Apply these migrations to Supabase, in order: 20261202000000_transfer_marks_balance.sql, 20261203000000_cutoff_paydays.sql (sets your saved settings to paydays 11/25), 20261204000000_windfall_de_minimis.sql, 20261205000000_hmo_deduction.sql.
+2. Google login (rev/18-google-login) is on its own branch: set up Google in Supabase first (docs/deploy.md, "Google sign-in"), test it, THEN merge it. Merging it before that locks you out.
+3. Merge rev/23-design-md into main (it carries rev-19, 24, 25, 20, 21, 22, 23). If rev-18 is merged too, PROJECT_STATE.md will conflict: keep the rev/23 version.
+4. Settings: check the two payday days (11 and 25). Bonuses: enter the de minimis on your CIP and September bonus.
+5. Tell me the September bonus de minimis figure if you want it as a default, and whether the sheet has paid counts, savings balances, 13th/CIP and HMO so I can add them to the import file.
 
 1. Apply supabase/migrations/20261130000000_installment_payments.sql and 20261201000000_accounts.sql to Supabase (accounts and Mark paid need them).
 2. Merge the rev branches in order (rev/11 ... rev/17) into main; they are stacked.

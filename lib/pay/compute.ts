@@ -1,4 +1,4 @@
-import { divRound, money, sub, type Money } from "@/lib/domain/money";
+import { divRound, money, sub, ZERO, type Money } from "@/lib/domain/money";
 import { CUTOFFS_PER_YEAR, netCutoff, percentOfBasic, type CutoffPay, type PayItem } from "@/lib/domain/pay";
 import { philhealthMonthly } from "./philhealth";
 import { TAX_ROWS } from "./tax-table";
@@ -17,6 +17,8 @@ export interface PayProfile {
   philhealthOverride: Money | null;
   taxOverrideFirst: Money | null;
   taxOverrideSecond: Money | null;
+  /** HMO or another deduction taken from every cutoff after tax (it never reaches you). Optional; none when absent. */
+  otherDeduction?: Money;
 }
 
 export interface PayResult {
@@ -50,8 +52,11 @@ export function buildItems(profile: PayProfile): { items: PayItem[]; basic: Mone
 
 export function computePay(profile: PayProfile): PayResult {
   const { items, basic, philhealth } = buildItems(profile);
-  const first = withTax(netCutoff(items, "first", TAX_ROWS), profile.taxOverrideFirst);
-  const second = withTax(netCutoff(items, "second", TAX_ROWS), profile.taxOverrideSecond);
+  const other = profile.otherDeduction ?? ZERO;
+  // After-tax deduction: lowers what you can budget and what lands, not the tax. (Windfalls use the plain pay items, where it cancels out.)
+  const afterOther = (p: CutoffPay): CutoffPay => (other === 0 ? p : { ...p, netBeforePlan: sub(p.netBeforePlan, other), takeHome: sub(p.takeHome, other) });
+  const first = afterOther(withTax(netCutoff(items, "first", TAX_ROWS), profile.taxOverrideFirst));
+  const second = afterOther(withTax(netCutoff(items, "second", TAX_ROWS), profile.taxOverrideSecond));
   const month: CutoffPay = {
     taxable: money(first.taxable + second.taxable),
     nontaxable: money(first.nontaxable + second.nontaxable),

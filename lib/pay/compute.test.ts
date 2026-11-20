@@ -55,3 +55,19 @@ describe("computePay", () => {
     expect(r.first.tax).toBe(p(0));
   });
 });
+
+describe("HMO or other deduction", () => {
+  it("lowers net to budget and take-home in both cutoffs without changing the tax", () => {
+    const without = computePay(base);
+    const withHmo = computePay({ ...base, otherDeduction: p(500) });
+    for (const cut of ["first", "second"] as const) {
+      expect(withHmo[cut].tax).toBe(without[cut].tax);
+      expect(withHmo[cut].netBeforePlan).toBe(without[cut].netBeforePlan - p(500));
+      expect(withHmo[cut].takeHome).toBe(without[cut].takeHome - p(500));
+    }
+    expect(withHmo.month.netBeforePlan).toBe(without.month.netBeforePlan - p(1_000));
+  });
+  it("is optional", () => {
+    expect(computePay({ ...base, otherDeduction: p(0) }).first.netBeforePlan).toBe(computePay(base).first.netBeforePlan);
+  });
+});

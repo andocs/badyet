@@ -70,6 +70,7 @@ export async function importSnapshot(formData: FormData) {
       philhealth_override: v.philhealthOverride,
       tax_override_first: v.taxOverrideFirst,
       tax_override_second: v.taxOverrideSecond,
+      ...(v.otherDeduction && v.otherDeduction > 0 ? { other_deduction: v.otherDeduction } : {}),
     });
     if (error) await rollback(error.message);
   }
@@ -88,12 +89,47 @@ export async function importSnapshot(formData: FormData) {
     if (error) await rollback(error.message);
   }
 
+  if (s.savings) {
+    const v = s.savings;
+    const { error } = await supabase.from("savings_settings").insert({
+      plan_id: plan.id,
+      start_month: v.startMonth,
+      start_ef: v.start.ef,
+      start_travel: v.start.travel,
+      start_wants: v.start.wants,
+      ef_tranche: v.settings.efTranche,
+      ef_hard_cap: v.settings.efHardCap,
+      travel_cap: v.settings.travelCap,
+      wants_cap: v.settings.wantsCap,
+      priority: v.priority,
+    });
+    if (error) await rollback(error.message);
+  }
+  if (s.windfalls.length > 0) {
+    const { error } = await supabase.from("windfall_events").insert(
+      s.windfalls.map((w) => ({
+        plan_id: plan.id,
+        kind: w.kind,
+        name: w.name,
+        cutoff: w.cutoff,
+        pay_date: w.payDate,
+        gross: w.gross,
+        cip_eligible: w.cipEligible,
+        cip_component_num: w.cipComponentNum,
+        cip_multiplier_num: w.cipMultiplierNum,
+        ...(w.deMinimis > 0 ? { de_minimis: w.deMinimis } : {}),
+      })),
+    );
+    if (error) await rollback(error.message);
+  }
+
   // Installments and subscriptions are not tied to a plan: skip any that already exist by name.
   const { data: haveInst } = await supabase.from("installments").select("name");
   const instNames = new Set((haveInst ?? []).map((r) => String(r.name).toLowerCase()));
   const newInst = s.installments.filter((i) => !instNames.has(i.value.name.toLowerCase()));
+  let paidMarked = 0;
   if (newInst.length > 0) {
-    const { error } = await supabase.from("installments").insert(
+    const { data: made, error } = await supabase.from("installments").insert(
       newInst.map((i) => ({
         name: i.value.name,
         price: i.value.price,
@@ -104,8 +140,18 @@ export async function importSnapshot(formData: FormData) {
         cutoff: i.value.cutoff,
         wallet_id: walletId(i.wallet),
       })),
-    );
+    ).select("id,name");
     if (error) await rollback(error.message);
+    // Payments you have already made, so each installment starts with the right "N paid".
+    const payments = (made ?? []).flatMap((row) => {
+      const n = newInst.find((i) => i.value.name.toLowerCase() === String(row.name).toLowerCase())?.value.paidCount ?? 0;
+      return Array.from({ length: n }, (_, k) => ({ installment_id: row.id as string, seq: k + 1 }));
+    });
+    if (payments.length > 0) {
+      const { error: payError } = await supabase.from("installment_payments").insert(payments);
+      if (payError) await rollback(payError.message);
+      paidMarked = payments.length;
+    }
   }
   const { data: haveSub } = await supabase.from("subscriptions").select("name");
   const subNames = new Set((haveSub ?? []).map((r) => String(r.name).toLowerCase()));
@@ -118,5 +164,7 @@ export async function importSnapshot(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect(`/import?done=1&lines=${s.lines.length}&installments=${newInst.length}&subscriptions=${newSub.length}`);
+  redirect(
+    `/import?done=1&lines=${s.lines.length}&installments=${newInst.length}&subscriptions=${newSub.length}&paid=${paidMarked}&bonuses=${s.windfalls.length}&savings=${s.savings ? 1 : 0}`,
+  );
 }

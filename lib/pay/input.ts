@@ -34,8 +34,9 @@ export function parsePayForm(raw: PayInput): PayParse {
   const taxOverrideFirst = peso(raw.taxOverrideFirst, "First cutoff tax override");
   const taxOverrideSecond = peso(raw.taxOverrideSecond, "Second cutoff tax override");
   const savingsPlanBp = percentBp(raw.savingsPlanPercent);
+  const otherDeduction = peso(raw.otherDeduction, "HMO or other deduction");
 
-  const checked = [annualBase, allowanceSecond, sss, pagibig, philhealthOverride, taxOverrideFirst, taxOverrideSecond, savingsPlanBp];
+  const checked = [annualBase, allowanceSecond, sss, pagibig, philhealthOverride, taxOverrideFirst, taxOverrideSecond, savingsPlanBp, otherDeduction];
   const bad = checked.find((c) => typeof c === "string");
   if (typeof bad === "string") return { ok: false, error: bad };
 
@@ -50,6 +51,7 @@ export function parsePayForm(raw: PayInput): PayParse {
       philhealthOverride: philhealthOverride as Money | null,
       taxOverrideFirst: taxOverrideFirst as Money | null,
       taxOverrideSecond: taxOverrideSecond as Money | null,
+      otherDeduction: (otherDeduction ?? 0) as Money,
     },
   };
 }

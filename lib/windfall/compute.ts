@@ -22,12 +22,16 @@ export interface WindfallEvent {
   cipEligible: Money | null;
   cipComponentNum: number | null;
   cipMultiplierNum: number | null;
+  /** This event's own de minimis exemption (CIP and bonus only; the 13th month has none). */
+  deMinimis?: Money;
 }
 
 export interface WindfallResult {
   id: string;
   gross: Money;
-  /** The part treated as tax-free under the yearly cap. */
+  /** The part that is tax-free on its own (de minimis), outside the yearly cap. */
+  deMinimis: Money;
+  /** The part treated as tax-free under the yearly cap (after de minimis). */
   exempt: Money;
   /** Estimated amount that reaches you: pay with the windfall minus regular pay, same cutoff. */
   net: Money;
@@ -47,7 +51,7 @@ export function grossOf(profile: PayProfile, e: WindfallEvent): Money {
 }
 
 // Net of each event, in the order given. The tax-free cap is shared by all events in the same
-// calendar year, used up in pay-date order. Tax overrides on regular pay are ignored here.
+// calendar year, used up in pay-date order, after each event's own de minimis. Tax overrides on regular pay are ignored here.
 export function computeEvents(profile: PayProfile, events: readonly WindfallEvent[]): WindfallResult[] {
   const { items: base } = buildItems(profile);
   const used = new Map<string, Money>();
@@ -57,17 +61,20 @@ export function computeEvents(profile: PayProfile, events: readonly WindfallEven
   for (const e of byDate) {
     const year = e.payDate.slice(0, 4);
     const gross = grossOf(profile, e);
+    // De minimis comes off first and is never taxed; the rest of the event joins the yearly pool checked against the cap.
+    const deMinimis = e.kind === "thirteenth" ? ZERO : min(e.deMinimis ?? ZERO, gross);
+    const pooled = sub(gross, deMinimis);
     const room = sub(EXEMPTION_CAP, used.get(year) ?? ZERO);
-    const exempt = min(gross, room > 0 ? room : ZERO);
+    const exempt = min(pooled, room > 0 ? room : ZERO);
     used.set(year, money((used.get(year) ?? ZERO) + exempt));
 
     const extra: PayItem[] = [
-      { name: "Windfall (tax-free part)", kind: "earning_nontaxable", amount: exempt, scope: e.cutoff },
-      { name: "Windfall (taxable part)", kind: "earning_taxable", amount: sub(gross, exempt), scope: e.cutoff },
+      { name: "Windfall (tax-free part)", kind: "earning_nontaxable", amount: money(deMinimis + exempt), scope: e.cutoff },
+      { name: "Windfall (taxable part)", kind: "earning_taxable", amount: sub(pooled, exempt), scope: e.cutoff },
     ];
     const regular = netCutoff(base, e.cutoff, TAX_ROWS).netBeforePlan;
     const withWindfall = netCutoff([...base, ...extra], e.cutoff, TAX_ROWS).netBeforePlan;
-    results.set(e.id, { id: e.id, gross, exempt, net: sub(withWindfall, regular) });
+    results.set(e.id, { id: e.id, gross, deMinimis, exempt, net: sub(withWindfall, regular) });
   }
   return events.map((e) => results.get(e.id)!);
 }
