@@ -39,7 +39,7 @@ export async function PlanBar({ basePath, plan, keep = "" }: { basePath: string;
         )}
       </div>
       {!plan.is_active && (
-        <p className="notice warn" role="status" style={{ margin: 0, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+        <div className="notice warn" role="status" style={{ margin: 0, display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           <span>
             Viewing <b>{plan.name}</b>, which is not your active plan. Nothing here changes the active plan.
           </span>
@@ -49,7 +49,7 @@ export async function PlanBar({ basePath, plan, keep = "" }: { basePath: string;
               <button type="submit" className="btn sm">Make active</button>
             </form>
           )}
-        </p>
+        </div>
       )}
     </div>
   );
