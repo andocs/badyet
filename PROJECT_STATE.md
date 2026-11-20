@@ -8,34 +8,20 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 4 Salary and tax
+- **Active slice / milestone:** 5 Budget and Bonuses
 - **Gate:** none
-- **Next action:** Build slice 4 (Salary and tax). Apply the storage migration and try Accounts and Inbox first.
-- **User to-do now:** Apply 20261206000300_accounts_storage.sql, try Accounts and Inbox, push slice/3-accounts-inbox.
+- **Next action:** Build slice 5 (Budget and Bonuses). Try Salary and tax in the app first.
+- **User to-do now:** Open /pay and try it, push slice/4-salary-and-tax.
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering ops, rev-27, rev-28, rev-29, rev-30, rev-31, rev-32, rev-33, rev-34, rev-35, rev-36
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering redesign, ops, rev-18, rev-19, rev-24, rev-25, rev-20, rev-21, rev-22, rev-23
 - earlier: 15 events (2026-11-19 to 2026-11-20) covering rev-5, rev-6, phase3, rev-7..10, redesign, rev-11, rev-12, rev-13, rev-14/15, rev-16, rev-17
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-20 16:28 | design-v13 | Rehaul design round: docs/rehaul/ia.md (IA, flows, 12 open questions), docs/rehaul/model.md (data model sketch, migration map), 16 mockups docs/mockups/v13-*.html + shared v13-shared.css/js and sample-data v13-data.js, gallery v13-gallery.html. 3 directions each for Now, Forecast, Month override; 2 scenario display options. No app code, migrations or tests changed. Mockups checked in screenshots (dark and light, 375 and 1280) for a subset, not every page. Waiting for the user's pick. | -
-- 2026-11-20 16:34 | design-v13 | Gallery opened in the user's browser (docs/mockups/v13-gallery.html). Gate still waiting for the user's direction picks and answers to the 12 open questions in docs/rehaul/ia.md. | -
-- 2026-11-20 17:51 | design-v13 | Round 2 from review notes: merged Now (A hero + C runway chart + B envelopes + account colour cards), Inbox opens on All activity with desktop wide cards and details panel, Accounts as colour cards with saved receive-QR, Salary and tax calculator (monthly/yearly allowances, payslip with bracket working), Budget group/line redesign, Bonuses (one-offs, past years, mini-budget hero, editable split), single Forecast (stacked or lines, year ladder), Override A single + B bulk, scenario pills removed, wizards for first run / raise / bonus. Removed now-a/b/c, forecast-a/b/c, override-c. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 17:57 | design-v13 | Round 1 mockups restored under docs/mockups/round1/ (gallery: round1/v13-gallery.html) for side-by-side comparison; linked from the round 2 gallery. | -
-- 2026-11-20 18:22 | design-v13 | Round 3 from review notes: full-width content; Now (full-width hero, scrolling account row, 70/30 planned vs recent); Inbox (2-4 cards per row, All activity at right); Salary and tax (chart top, Timeline/Payslip tabs, assumptions moved to wizard); raise wizard + first run get contribution overrides; Bonuses (year tabs fixed, custom flat/percent destinations); Forecast (no assumptions, isolate fund lines, Chart/Year by year switch). ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 18:39 | design-v13 | Round 4 notes applied: Now hero narrowed with Recent beside it, Inbox cards redesigned, Salary tabs moved under title and two-panel payslip, Bonuses explicit + Add destination with custom names. No app code touched. | -
-- 2026-11-20 19:00 | design-v13 | Round 5 notes applied: Now hero ~75% with narrower Recent, Hide amounts button (also wired in Settings), Bills and transfers as a right column beside planned vs spent; Inbox desktop cards reworked (icon+name header, notification line with time at right, bigger amount, pills row, no Details button, smaller standard Confirm/Not mine buttons). No app code touched. | -
-- 2026-11-20 19:10 | design-v13 | Round 6: Now planned vs spent fills the space (envelopes open, stretched); Hide amounts now turns pesos into asterisks (all pages, Settings switch synced); Inbox To check fixed at 2 cards per row. No app code touched. | -
-- 2026-11-20 19:12 | design-v13 | User approved the v13 design (docs/mockups/v13-gallery.html, docs/rehaul/ia.md, model.md). Gate passed. Next: build planning (slices + defaults for the 15 open questions). | -
-- 2026-11-20 19:23 | design-v13 | Open questions answered (ia.md now has a Decisions section). New requirements: counts-to-daily ticker per budget line, RTO budget (per office day amount, contingency line, In office today switch), per-cutoff payslip builder (1st: income tax; 2nd: contributions + allowances), inflation removed, virtual funds, web first then Android, no backup. | -
-- 2026-11-20 19:31 | design-v13 | Round 7 mockups of the new pieces: Budget Daily switch per line and Office days (RTO) card with RTO and contingency lines; Now In office today switch; Salary and tax payslip builder (one payslip per cutoff, move/override/add lines, base split, tax working) with two-cutoff chart and year table; inflation removed from mockups; wizards point to the builder. No app code touched. | -
-- 2026-11-20 19:49 | design-v13 | Round 8 mockups: Now drops the switch (office days from the calendar, only usual days count); Budget office-day card tidied and new Pools card (use, move to Wants, excess); Salary payslip builder reworked: tables with inline add row, income tax in both cutoffs, per-allowance taxable switches, 13th month and CIP lines on the payslip, bonuses column in the year table. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 20:04 | design-v13 | Round 9: Budget office-day card back to the day-grid layout with tidier spacing (usual days, auto-detected extra days tagged, tap to correct); extra days draw from the contingency pool automatically via the RTO days line; tickers (Daily, RTO days, RTO contingency) moved into the line editor and removed from the rows; Salary tax working table shows all brackets with the highlight; payslip notes say where bonuses and allowances come from. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 20:17 | design-v13 | Round 10: multiple RTO lines + one contingency (no per-day or spontaneous-day inputs, derived); extra days are manual; settle office days (under: pool or Wants, over: Wants or contingency excess) with Now nudge; allowance and bonus lands-in cutoff settings read by the payslip builder. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 20:34 | design-v13 | Round 11: Now envelopes always open and fill the height (no collapse); Budget settle-office-days moved to its own card at the top of the right column; Bonuses show the lands-in cutoff only when a rule is being edited. No app code touched. | -
 - 2026-11-20 20:46 | design-v13 | Round 12: Now envelopes collapsible again and not stretched; Budget settle card hidden when nothing to settle (Now card follows); bonus rule edit reopens the wizard; raise wizard simplified (no assumptions step, no assumptions-only option, adds expected vs confirmed); Salary and tax gets a Projected raises card and hollow markers for expected raises. ia.md and model.md updated. No app code touched. | -
 - 2026-11-20 20:59 | design-v13 | Round 13: the three raise-planning gaps added. Budget Future years marks months that include an expected raise and has a Compare without expected raises switch; raise wizard has a Where does the extra go step (top-ups tied to the raise, tagged on Budget lines); Forecast shows a with / without expected raises total. ia.md and model.md updated. No app code touched. | -
 - 2026-11-20 21:02 | design-v13 | Round 14: both limits fixed. Raise top-ups now live in the shared budget rules (v13-data.js), so Forecast and Budget agree and the with/without views drop top-ups tied to expected raises; the raise wizard's summary text follows the extra you place. No app code touched. | -
@@ -46,6 +32,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 21:30 | slice-2 | Slice 2 approved by the user. | 7d51077
 - 2026-11-20 21:35 | slice-3 | Accounts page (cards, calc, reconcile, add account, move money as paired transfers, private receive-QR upload with signed URL), Inbox (confirm, not mine, categories, always-rules, best guess, details sheet, desktop wide cards), storage + credit-sign migration, rules/guess/account-validation helpers with tests. Local commit, not pushed, not run in a browser. | 1ee65d5
 - 2026-11-20 21:37 | slice-3 | Slice 3 approved by the user. | 1ee65d5
+- 2026-11-20 21:44 | slice-4 | Salary and tax: timeline chart, events (confirm/remove), projected raises, allowances (cutoff, taxable), year table, payslip builder with saved layouts and tax working, five-step raise wizard with before/after payslip, five-year effect and where-the-extra-goes top-ups; row mappers for bonuses and templates; validators with tests. Local commit, not pushed, not run in a browser. | d8bccc8
+- 2026-11-20 21:53 | slice-4 | Slice 4 approved by the user. | d8bccc8
+- 2026-11-20 21:58 | slice-5 | In progress: migration + pools/rto pure libs written. | -
 
 ## 4. Open questions
 
@@ -62,12 +51,12 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,325,967 | 5,377,241 | 249,811 | 2,659,058 | 307,750,599 | 1,515,691 |  |
+| **Cumulative** | 1,343,508 | 5,442,119 | 253,534 | 2,749,702 | 316,150,428 | 1,575,405 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
 | Slice 3 | 31,692 | 69,931 | 7,732 | 61,392 | 4,284,984 | 40,417 |  |
-| Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
+| Slice 4 | 17,541 | 64,878 | 3,723 | 89,056 | 7,339,876 | 58,555 |  |
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
@@ -110,6 +99,14 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 4 (Salary and tax) is built and committed locally on slice/4-salary-and-tax (not pushed; stacked on slices 2 and 3).
+No new migration. Open /pay in the app and check:
+1. Timeline: the take-home chart (hollow markers = expected events, dashed = assumed raises), the events list with "It happened: confirm" and Remove, Projected raises (switch, percent, month), Recurring allowances (lands-in cutoff, Taxable, Remove), and the Year by year table (December payslip plus bonuses after tax; 13th month and CIP come from your migrated bonus rules).
+2. Payslip builder (tab): pick a month, change the base and tax split, move SSS/PhilHealth/Pag-IBIG between cutoffs, add your own lines, then "Save from this month on". "Standard layout" resets. The tax working shows bracket by bracket.
+3. + Add a raise or promotion: the five-step wizard with the payslip before and after, the five-year effect, and "where the extra goes" (tied top-ups on budget lines).
+Notes: the old Pay page and its wizard are gone. Contribution overrides (SSS, PhilHealth, Pag-IBIG) are edited by overriding a line in the builder, saved as a layout. Editing an existing event is by remove and re-add for now. An allowance can only be added through the wizard.
+Not verified: not opened in a browser or run against your data. Tests, typecheck, lint and build pass.
 
 Slice 3 (Accounts and Inbox) is built and committed locally on slice/3-accounts-inbox (not pushed; it sits on top of slice 2's branch).
 1. Apply supabase/migrations/20261206000300_accounts_storage.sql in the SQL Editor. It creates the private account-qr bucket with per-user policies and flips migrated credit-card balances to negative (owed). Also apply 20261206000200_rename_wants_fund.sql if you have not.
