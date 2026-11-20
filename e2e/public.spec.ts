@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("login page fits the screen and has the sign-in form", async ({ page }, info) => {
+test("login page fits the screen and has the Google sign-in button", async ({ page }, info) => {
   await page.goto("/login");
-  await expect(page.locator("input[type=email]")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Continue with Google" })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
   await page.screenshot({ path: `e2e/results/login-${info.project.name}.png`, fullPage: true });
