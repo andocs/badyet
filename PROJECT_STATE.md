@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** Done
 - **Active slice / milestone:** rev-18..25
 - **Gate:** none
-- **Next action:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; add paid counts, savings balances, 13th/CIP, HMO to the import file; Sept bonus de minimis default
-- **User to-do now:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; check payday days in Settings
+- **Next action:** User signs in with Google on bad-yet.vercel.app; then optionally turn off the Email provider and new sign-ups in Supabase; add import extras data; Sept bonus de minimis default
+- **User to-do now:** Sign in once with Google (docs1502@gmail.com)
 
 ## 3. Execution log
 
@@ -32,6 +32,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 10:44 | rev-22 | HMO/other deduction on Pay (after tax, each cutoff; lowers budget net and take-home, tax unchanged; migration 20261205000000 also updates duplicate_plan to copy it); import snapshot accepts paidCount (writes installment_payments), savings starting balances, windfalls with de minimis; import page counts updated. The snapshot file data/import/sheet-import.json does not yet contain these sections. 167 tests, lint, typecheck, build PASS. Migration must be applied. | 6c36411
 - 2026-11-20 10:45 | rev-23 | DESIGN.md merged and refreshed (kept the owner decisions, added token frontmatter, four-destination layout, payday ritual, plan bar, accounts wizard, budget line, Hide amounts, gold text rule). Doctor: dead path fixed; only the size advisory (compact proposal, needs consent) remains. No sidecar .impeccable/design.json written. | 9459625
 - 2026-11-20 10:50 | redesign | Final gate APPROVED by user: rev-18..rev-25. | -
+- 2026-11-20 10:59 | ops | Font switched to Gabarito (display) with Atkinson Hyperlegible Next (body), DESIGN.md updated. PR #9 (revs 19-26) merged into main (0b379b2) after the Vercel preview passed; merged branches deleted locally and on GitHub. PR #10 (rev-18 Google login) open as a DRAFT, do not merge until Google is configured in Supabase (docs/deploy.md). Migrations 20261202..20261205 still need applying to Supabase if not done. | 0b379b2
+- 2026-11-20 11:05 | ops | User confirmed the four migrations are applied. Vercel Production: ALLOWED_EMAIL added (was missing, so nobody could sign in) and the app redeployed (Ready); removed unused secrets (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_JWT_SECRET, POSTGRES_* x7). Prod URL https://bad-yet.vercel.app; Supabase project erzaxhyhaozlurhojnbm. Google provider setup (Google Cloud OAuth client + Supabase provider + URL config) must be done by the user in the dashboards; PR #10 stays a draft until then. Previews have no env vars, so test Google on production after merging; revert PR #10 if it fails (magic link returns). | -
+- 2026-11-20 11:09 | ops | PR #10 (Google login) merged into main (53a1ccb) and live on https://bad-yet.vercel.app: login page shows Continue with Google and the button reaches Google's sign-in with the correct Supabase redirect URI. Waiting on the user's first real sign-in. If it fails: revert PR #10 (magic link returns; Email provider is still on). | 53a1ccb
 
 ## 4. Open questions
 
