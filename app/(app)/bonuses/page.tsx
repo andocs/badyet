@@ -1,4 +1,6 @@
 import { SubNav } from "@/components/subnav";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan } from "@/lib/plans/select";
 import { ConfirmButton } from "@/components/confirm-button";
 import Link from "next/link";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
@@ -28,9 +30,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
-  const { data: plan } = supabase
-    ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
-    : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
   const { data: pay } =
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
   const { data: eventRows } =
@@ -73,6 +73,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
     cipMultiplierNum: e.cip_multiplier_num,
     deMinimis: money(e.de_minimis ?? 0),
   }));
+  const planField = plan.is_active ? null : <input type="hidden" name="plan" value={plan.id} />;
   const results = new Map(computeEvents(profile, events).map((r) => [r.id, r]));
   const allocs = allocRows ?? [];
 
@@ -92,6 +93,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
           {detail && <small style={{ display: "block", marginTop: 4, fontWeight: 500 }}>Technical detail: {detail}</small>}
         </p>
       )}
+      <PlanBar basePath="/bonuses" plan={plan} />
       <p className="notice warn" style={{ marginBottom: 18 }}>
         These are estimates. Each CIP or bonus first takes its own de minimis exemption, which is never taxed; what is left joins your 13th month in a yearly pool, and the first 90,000 of that pool is tax-free (per published 2026 guides). The way tax is worked out on a bonus (the cutoff
         is annualized, as your old app did) is an approximation, so compare with your payslip.
@@ -115,6 +117,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
                     <span className="lab">{dateLabel(row.pay_date)} · {row.cutoff === "first" ? "1st" : "2nd"} cutoff</span>
                   </div>
                   <form action={deleteEvent}>
+                    {planField}
                     <input type="hidden" name="id" value={row.id} />
                     <ConfirmButton message={`Delete ${row.name}? This cannot be undone.`} className="btn sm danger" aria-label={`Delete ${row.name}`}>Delete</ConfirmButton>
                   </form>
@@ -136,6 +139,7 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
                 {mine.map((a) => (
                   <div key={a.id} className={`trow${a.done ? " done" : ""}`} style={{ gridTemplateColumns: "44px minmax(0, 1fr) auto auto" }}>
                     <form action={toggleAllocation}>
+                      {planField}
                       <input type="hidden" name="id" value={a.id} />
                       <input type="hidden" name="done" value={a.done ? "1" : "0"} />
                       <button type="submit" className="check" aria-pressed={a.done} aria-label={`${a.name}, ${peso(money(a.amount))}. ${a.done ? "Moved. Tap to undo." : "Not moved yet. Tap to mark moved."}`} />
@@ -143,12 +147,14 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
                     <span className="tname">{a.name}</span>
                     <span className="num">{peso(money(a.amount))}</span>
                     <form action={deleteAllocation}>
+                      {planField}
                       <input type="hidden" name="id" value={a.id} />
                       <ConfirmButton message={`Remove ${a.name}?`} className="btn sm danger" aria-label={`Remove ${a.name}`}>Remove</ConfirmButton>
                     </form>
                   </div>
                 ))}
                 <form action={addAllocation} className="bline add" style={{ gridTemplateColumns: "minmax(0, 1fr) 9rem auto" }}>
+                  {planField}
                   <input type="hidden" name="eventId" value={row.id} />
                   <input className="input" name="name" placeholder="Where it goes" maxLength={60} aria-label="Allocation name" required />
                   <input className="input num" name="amount" placeholder="0.00" inputMode="decimal" aria-label="Allocation amount" required />
@@ -162,6 +168,8 @@ export default async function BonusesPage({ searchParams }: PageProps<"/bonuses"
         <section className="card" aria-labelledby="add-h">
           <h2 id="add-h">Add a bonus</h2>
           <form action={addEvent} className="form">
+            <input type="hidden" name="planId" value={plan.id} />
+            {planField}
             <label className="field">
               <span className="lab">Type</span>
               <select className="input" name="kind" defaultValue="thirteenth" aria-label="Type">

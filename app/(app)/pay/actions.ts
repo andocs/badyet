@@ -6,17 +6,22 @@ import { requireAuthed } from "@/lib/auth/require";
 import { parsePayForm } from "@/lib/pay/input";
 import { isPastPlan, isUuid } from "@/lib/plans/validate";
 
+// Stays on the plan being edited (a plan other than the active one can be edited too).
+function payUrl(query: string, planId: string): string {
+  return `/pay?${query}${isUuid(planId) ? `&plan=${planId}` : ""}`;
+}
+
 export async function savePay(formData: FormData) {
   const supabase = await requireAuthed();
 
   const planId = String(formData.get("planId") ?? "");
-  if (!isUuid(planId)) redirect("/pay?error=failed");
+  if (!isUuid(planId)) redirect(payUrl("error=failed", planId));
   const { data: plan } = await supabase.from("plans").select("end_date").eq("id", planId).single();
-  if (!plan) redirect("/pay?error=failed");
-  if (isPastPlan(plan.end_date)) redirect("/pay?error=past");
+  if (!plan) redirect(payUrl("error=failed", planId));
+  if (isPastPlan(plan.end_date)) redirect(payUrl("error=past", planId));
 
   const parsed = parsePayForm(Object.fromEntries(formData));
-  if (!parsed.ok) redirect("/pay?error=invalid");
+  if (!parsed.ok) redirect(payUrl("error=invalid", planId));
   const v = parsed.value;
 
   const { error } = await supabase.from("pay_profiles").upsert(
@@ -37,7 +42,7 @@ export async function savePay(formData: FormData) {
   revalidatePath("/pay");
   if (error) {
     console.error("[pay] database error:", error.message);
-    redirect(`/pay?error=failed&detail=${encodeURIComponent(error.message)}`);
+    redirect(payUrl(`error=failed&detail=${encodeURIComponent(error.message)}`, planId));
   }
-  redirect("/pay?saved=1");
+  redirect(payUrl("saved=1", planId));
 }
