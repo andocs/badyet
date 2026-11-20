@@ -1,4 +1,5 @@
 import { DEFAULT_SECOND_START } from "@/lib/dashboard/helpers";
+import { EXPORTS } from "@/lib/export/csv";
 import { createClient } from "@/lib/supabase/server";
 import { saveSettings } from "./actions";
 
@@ -43,6 +44,17 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
           </p>
           <button type="submit" className="btn">Save</button>
         </form>
+      </section>
+      <section className="card" aria-labelledby="x-h" style={{ maxWidth: 520, marginTop: 18 }}>
+        <h2 id="x-h">Export your data</h2>
+        <p className="sub" style={{ marginTop: 0 }}>One CSV file per table, with only your own rows.</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {EXPORTS.map((n) => (
+            <a key={n} className="btn sm" href={`/export/${n}`} download>
+              {n.replace(/_/g, " ")}
+            </a>
+          ))}
+        </div>
       </section>
     </main>
   );
