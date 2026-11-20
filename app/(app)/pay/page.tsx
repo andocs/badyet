@@ -59,6 +59,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
         philhealthOverride: row.philhealth_override === null ? null : money(row.philhealth_override),
         taxOverrideFirst: row.tax_override_first === null ? null : money(row.tax_override_first),
         taxOverrideSecond: row.tax_override_second === null ? null : money(row.tax_override_second),
+        otherDeduction: money(row.other_deduction ?? 0),
       }
     : null;
   const initial: WizardInitial = {
@@ -66,6 +67,7 @@ export default async function PayPage({ searchParams }: PageProps<"/pay">) {
     allowanceSecond: field(row?.allowance_second),
     sss: field(row?.sss),
     pagibig: field(row?.pagibig),
+    otherDeduction: field(row?.other_deduction),
     savingsPlanPercent: row ? String(row.savings_plan_bp / 100) : "",
     philhealthOverride: field(row?.philhealth_override),
     taxOverrideFirst: field(row?.tax_override_first),

@@ -39,6 +39,7 @@ export async function loadPlanMetrics(supabase: Db, planId: string): Promise<Pla
     philhealthOverride: pay.philhealth_override === null ? null : money(pay.philhealth_override),
     taxOverrideFirst: pay.tax_override_first === null ? null : money(pay.tax_override_first),
     taxOverrideSecond: pay.tax_override_second === null ? null : money(pay.tax_override_second),
+    otherDeduction: money(pay.other_deduction ?? 0),
   });
   const lines: Line[] = (rows ?? []).map((r) => ({ id: r.id, cutoff: r.cutoff, bucket: r.bucket, name: r.name, amount: money(r.amount) }));
   const s = summarize(lines, result.first.netBeforePlan, result.second.netBeforePlan);

@@ -1,4 +1,4 @@
-import { formatPesos, type Money } from "@/lib/domain/money";
+import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { computePay, type PayProfile } from "@/lib/pay/compute";
 
 const peso = (m: Money) => formatPesos(m, { symbol: false });
@@ -23,6 +23,7 @@ export function PayBreakdown({ profile }: { profile: PayProfile }) {
           <Row label="Allowance" a={r.first.nontaxable} b={r.second.nontaxable} c={r.month.nontaxable} />
           <Row label="SSS, PhilHealth, Pag-IBIG" a={r.first.mandatory} b={r.second.mandatory} c={r.month.mandatory} minus />
           <Row label={`Withholding tax${taxOverridden ? " (override)" : ""}`} a={r.first.tax} b={r.second.tax} c={r.month.tax} minus />
+          {(profile.otherDeduction ?? 0) > 0 && <Row label="HMO or other deduction" a={profile.otherDeduction as Money} b={profile.otherDeduction as Money} c={money(2 * (profile.otherDeduction as Money))} minus />}
           <Row label="Net to budget" a={r.first.netBeforePlan} b={r.second.netBeforePlan} c={r.month.netBeforePlan} strong />
           <Row label="Savings plan" a={r.first.plan} b={r.second.plan} c={r.month.plan} minus />
           <Row label="Lands in your account" a={r.first.takeHome} b={r.second.takeHome} c={r.month.takeHome} strong />

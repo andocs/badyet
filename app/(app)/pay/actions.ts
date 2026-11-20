@@ -35,6 +35,7 @@ export async function savePay(formData: FormData) {
       philhealth_override: v.philhealthOverride,
       tax_override_first: v.taxOverrideFirst,
       tax_override_second: v.taxOverrideSecond,
+      ...(v.otherDeduction && v.otherDeduction > 0 ? { other_deduction: v.otherDeduction } : {}),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "plan_id" },

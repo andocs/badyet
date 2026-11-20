@@ -87,6 +87,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
         philhealthOverride: pay.philhealth_override === null ? null : money(pay.philhealth_override),
         taxOverrideFirst: pay.tax_override_first === null ? null : money(pay.tax_override_first),
         taxOverrideSecond: pay.tax_override_second === null ? null : money(pay.tax_override_second),
+        otherDeduction: money(pay.other_deduction ?? 0),
       })
     : null;
   const sums = payResult
