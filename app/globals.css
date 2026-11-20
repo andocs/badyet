@@ -294,3 +294,6 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 .chk { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; font-weight: 800; font-size: 14px; color: var(--on-accent); }
 .chk.on { background: var(--accent); border-color: var(--accent); }
 @media (max-width: 760px) { .ritual-actions { bottom: 52px; } .now .stage { padding-bottom: 130px; } }
+
+/* Hide amounts: blur every money figure (set by components/hide-amounts.tsx) */
+html[data-hide="1"] .num, html[data-hide="1"] .balance, html[data-hide="1"] .amt { filter: blur(9px); user-select: none; }

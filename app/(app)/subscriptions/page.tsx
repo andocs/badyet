@@ -3,7 +3,6 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { WalletSelect } from "@/components/wallet-select";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
-import { syncBudget } from "../installments/actions";
 import { addSubscription, deleteSubscription, toggleSubscription } from "./actions";
 
 const ERRORS: Record<string, string> = {
@@ -34,10 +33,7 @@ export default async function SubscriptionsPage({ searchParams }: PageProps<"/su
           <h1>Subscriptions</h1>
           <p className="sub">Monthly charges. Active ones: 1st cutoff ₱{peso(monthly("first"))}, 2nd cutoff ₱{peso(monthly("second"))}.</p>
         </div>
-        <form action={syncBudget}>
-          <input type="hidden" name="page" value="subscriptions" />
-          <button type="submit" className="btn">Sync to budget</button>
-        </form>
+        <p className="lab" style={{ maxWidth: 260 }}>Your budget keeps itself in step with this list.</p>
       </div>
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>

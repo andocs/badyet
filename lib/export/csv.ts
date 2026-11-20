@@ -3,7 +3,7 @@ export const EXPORTS = [
   "plans",
   "pay_profiles",
   "budget_lines",
-  "wallets",
+  "wallets", // your accounts: kind, last 4 digits only, balances
   "transfer_marks",
   "installments",
   "installment_payments",

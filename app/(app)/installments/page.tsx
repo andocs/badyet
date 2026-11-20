@@ -5,7 +5,7 @@ import { dueByCutoff, summarize, type InstalmentRow } from "@/lib/installments/c
 import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonth, monthLabel } from "@/lib/transfer/month";
-import { addInstalment, deleteInstalment, setNextPayment, syncBudget } from "./actions";
+import { addInstalment, deleteInstalment, setNextPayment } from "./actions";
 
 const ERRORS: Record<string, string> = {
   invalid: "Check the form: price, number of payments and the first payment date are needed; down payment must be less than the price.",
@@ -49,10 +49,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
           <h1>Installments</h1>
           <p className="sub">Things you are paying off. Due this month ({monthLabel(month)}): 1st cutoff ₱{peso(due.first)}, 2nd cutoff ₱{peso(due.second)}.</p>
         </div>
-        <form action={syncBudget}>
-          <input type="hidden" name="page" value="installments" />
-          <button type="submit" className="btn">Sync to budget</button>
-        </form>
+        <p className="lab" style={{ maxWidth: 260 }}>Your budget keeps itself in step with this list.</p>
       </div>
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>

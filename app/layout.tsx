@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 // Sets the saved theme before first paint to avoid a flash. Dark is the default.
-const themeScript = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+const themeScript = `try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t;if(localStorage.getItem("hide")==="1")document.documentElement.dataset.hide="1"}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

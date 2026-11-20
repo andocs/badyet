@@ -1,6 +1,7 @@
 import { SubNav } from "@/components/subnav";
 import Link from "next/link";
 import { ConfirmButton } from "@/components/confirm-button";
+import { AutoSync } from "@/components/auto-sync";
 import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { BUCKETS, type Cutoff } from "@/lib/budget/validate";
@@ -88,6 +89,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
           <Link href={`/budget?cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
         </nav>
       </div>
+      <AutoSync />
       <PlanBar basePath="/budget" plan={plan} keep={`cutoff=${cutoff}`} />
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>

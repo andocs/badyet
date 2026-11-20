@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { markAllSent, setSent } from "@/app/(app)/dashboard-actions";
+import { markAllSent, setInstalmentPayment, setSent } from "@/app/(app)/dashboard-actions";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
 import { CountdownRing, CutoffBars, ForecastChart, type BucketRow } from "./charts";
+import { HideAmounts } from "./hide-amounts";
 import { Pip } from "./pip";
 
 export interface DashLine {
@@ -27,7 +28,7 @@ export interface DashData {
   thirteenth: { name: string; net: number; daysLeft: number; dateLabel: string; waiting: number } | null;
   cutoffNet: number | null; // centavos, null until Pay is set up
   unplanned: number | null; // centavos left after every budget line of this cutoff
-  commitments: { name: string; amount: number; kind: string }[];
+  commitments: { name: string; amount: number; kind: string; installmentId?: string; seq?: number; paid?: boolean }[];
   next: { days: number; label: string; net: number | null };
   daysLeft: number; // days of this cutoff left to spend in (at least 1)
   money: { cash: number; debt: number; net: number; utilizationPct: number | null; cardsDue: { name: string; owed: number; days: number }[] } | null;
@@ -64,6 +65,7 @@ export function Dashboard({ data }: { data: DashData }) {
   const [view, setView] = useState<View>("auto");
   const [step, setStep] = useState(data.sentIds.length > 0 ? 3 : 1);
   const [open, setOpen] = useState<string | null>(null);
+  const [paidNow, setPaidNow] = useState<Set<string>>(new Set(data.commitments.filter((c) => c.paid).map((c) => `${c.installmentId}:${c.seq}`)));
 
   useEffect(() => {
     if (!pieces.length) return;
@@ -97,13 +99,30 @@ export function Dashboard({ data }: { data: DashData }) {
   async function mark(ids: string[], value: boolean, origin?: DOMRect) {
     const before = sent;
     const next = new Set(sent);
-    for (const id of ids) (value ? next.add(id) : next.delete(id));
+    for (const id of ids) {
+      if (value) next.add(id);
+      else next.delete(id);
+    }
     setSentIds(next);
     setProblem("");
     if (origin && value && lines.every((l) => next.has(l.id))) burst(origin);
     const results = await Promise.all(ids.map((id) => setSent(id, data.month, value)));
     if (results.some((ok) => !ok)) {
       setSentIds(before);
+      setProblem("That did not save. Try again.");
+    }
+  }
+  async function togglePaid(installmentId: string, seq: number) {
+    const key = `${installmentId}:${seq}`;
+    const value = !paidNow.has(key);
+    const before = paidNow;
+    const next = new Set(paidNow);
+    if (value) next.add(key);
+    else next.delete(key);
+    setPaidNow(next);
+    setProblem("");
+    if (!(await setInstalmentPayment(installmentId, seq, value))) {
+      setPaidNow(before);
       setProblem("That did not save. Try again.");
     }
   }
@@ -129,6 +148,9 @@ export function Dashboard({ data }: { data: DashData }) {
 
   return (
     <main className="main now">
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+        <HideAmounts className="btn sm ghost" />
+      </div>
       {ritual ? (
         <section aria-label="Payday">
           <div className="steps" role="progressbar" aria-label="Payday steps" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step}>
@@ -162,12 +184,24 @@ export function Dashboard({ data }: { data: DashData }) {
                   <p className="sub" style={{ margin: 0 }}>No installments or subscriptions due this cutoff.</p>
                 ) : (
                   data.commitments.map((c, i) => (
-                    <div key={`${c.kind}-${c.name}-${i}`} className="tx" style={{ gridTemplateColumns: "1fr auto" }}>
+                    <div key={`${c.kind}-${c.name}-${i}`} className="tx" style={{ gridTemplateColumns: "1fr auto auto" }}>
                       <div>
                         <div className="name">{c.name}</div>
                         <span className="lab">{c.kind}</span>
                       </div>
                       <span className="num">₱{peso(c.amount)}</span>
+                      {c.installmentId && c.seq ? (
+                        <button
+                          type="button"
+                          className={`btn sm${paidNow.has(`${c.installmentId}:${c.seq}`) ? "" : " pri"}`}
+                          aria-pressed={paidNow.has(`${c.installmentId}:${c.seq}`)}
+                          onClick={() => togglePaid(c.installmentId as string, c.seq as number)}
+                        >
+                          {paidNow.has(`${c.installmentId}:${c.seq}`) ? "Paid ✓" : "Mark paid"}
+                        </button>
+                      ) : (
+                        <span />
+                      )}
                     </div>
                   ))
                 )}

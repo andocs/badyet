@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AutoSync } from "@/components/auto-sync";
 import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { Dashboard, type DashData } from "@/components/dashboard";
@@ -12,7 +13,7 @@ import { currentMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
 import { computeEvents } from "@/lib/windfall/compute";
 import { isKind } from "@/lib/accounts/input";
 import { daysUntilDay, position } from "@/lib/accounts/summary";
-import { dueInMonth, rowFromDb } from "@/lib/installments/calc";
+import { paymentForMonth, rowFromDb } from "@/lib/installments/calc";
 import { summarize } from "@/lib/budget/summary";
 import { computePay } from "@/lib/pay/compute";
 
@@ -44,7 +45,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   const secondStart: number = settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START;
   const cutoff = resolveCutoff(params.cutoff, today, secondStart);
 
-  const [{ data: walletRows }, { data: lineRows }, { data: markRows }, { data: pay }, { data: bonusRows }, savings, { data: instRows }, { data: subRows }] = await Promise.all([
+  const [{ data: walletRows }, { data: lineRows }, { data: markRows }, { data: pay }, { data: bonusRows }, savings, { data: instRows }, { data: subRows }, { data: payRows }] = await Promise.all([
     supabase.from("wallets").select("id,name").order("created_at"),
     supabase.from("budget_lines").select("id,name,bucket,cutoff,amount,wallet_id").eq("plan_id", plan.id).order("created_at"),
     supabase.from("transfer_marks").select("line_id").eq("month", month),
@@ -53,6 +54,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     loadSavings(supabase, plan.id),
     supabase.from("installments").select("*"),
     supabase.from("subscriptions").select("name,amount,cutoff").eq("active", true),
+    supabase.from("installment_payments").select("installment_id,seq"),
   ]);
 
   // Separate from the wallet list above: if the accounts migration is not applied yet, this just comes back empty and Now carries on.
@@ -92,11 +94,16 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     ? summarize(all.map((l) => ({ id: l.id, cutoff: l.cutoff, bucket: l.bucket, name: l.name, amount: money(l.amount) })), payResult.first.netBeforePlan, payResult.second.netBeforePlan)
     : null;
   const thisSum = sums ? (cutoff === "first" ? sums.first : sums.second) : null;
+  const paidPairs = new Set((payRows ?? []).map((p) => `${p.installment_id}:${p.seq}`));
   const commitments = [
     ...(instRows ?? [])
       .map((r) => rowFromDb(r))
-      .filter((r) => r.cutoff === cutoff && dueInMonth(r, month) > 0)
-      .map((r) => ({ name: r.name, amount: Number(dueInMonth(r, month)), kind: "Installment" })),
+      .flatMap((r) => {
+        const due = paymentForMonth(r, month);
+        return r.cutoff === cutoff && due && due.amount > 0
+          ? [{ name: r.name, amount: Number(due.amount), kind: "Installment", installmentId: r.id, seq: due.seq, paid: paidPairs.has(`${r.id}:${due.seq}`) }]
+          : [];
+      }),
     ...(subRows ?? []).filter((s) => s.cutoff === cutoff).map((s) => ({ name: s.name as string, amount: Number(s.amount), kind: "Subscription" })),
   ];
   // The next payday after today, and how many days of this cutoff are left to spend in.
@@ -187,6 +194,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   // The key restarts the dashboard's local state whenever the saved ticks change on the server.
   return (
     <>
+      <AutoSync />
       <div style={{ margin: "18px 22px 0" }}>
         <PlanBar basePath="/" plan={plan} keep={`cutoff=${cutoff}`} />
       </div>
