@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-30 sidenav spacing icons
-- **Gate:** none
-- **Next action:** Build rev-30
-- **User to-do now:** Try rev-29 locally and review
+- **Gate:** waiting
+- **Next action:** Approve rev-30; then merge rev-28, 29, 30 PRs in order
+- **User to-do now:** Try rev-30 locally and review
 
 ## 3. Execution log
 
@@ -38,6 +38,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 11:12 | rev-27 | Favicon from Pip: app/icon.svg (tab) and app/apple-icon.png (180px), default favicon.ico removed. Build serves both (200). PR open, not merged (waiting for the user). | 2187ad6
 - 2026-11-20 11:38 | rev-28 | Loading skeleton, parallel home queries, payday strip (H1) with Not yet remembered per cutoff, custom link style, floating plan menu. Tests, lint, build PASS. Proxy auth getUser per request left as is (security). | 5e8cba2
 - 2026-11-20 11:40 | rev-29 | Hide amounts now draws ***** over every figure (CSS overlay on .num/.balance/.amt), wrapped unmasked text amounts (unplanned pill, installments, budget, accounts, savings, pay) in .amt, money inputs masked. Tests, lint, build PASS. Real digits remain in page source. | 388eec3
+- 2026-11-20 11:55 | rev-30 | Sidenav rehaul: inline SVG icons (components/icons.tsx), Today/Manage groups, accent bar on current, tools footer, mobile tab icons, 24px spacing rhythm. Tests, lint, build PASS. | f34f200
+- 2026-11-20 11:59 | rev-30 | Fixed hydration error: PlanBar non-active-plan notice had a form inside a p; now a div. Tests, lint, build PASS. | -
+- 2026-11-20 12:02 | rev-30 | Approved by user. New issue: tab switching still slow; investigating as rev-31. | -
 
 ## 4. Open questions
 
@@ -52,7 +55,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 871,702 | 4,291,058 | 196,243 | 1,397,439 | 185,783,343 | 741,331 |  |
+| **Cumulative** | 883,807 | 4,318,217 | 197,348 | 1,409,796 | 187,025,033 | 750,130 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -70,6 +73,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
 | rev-28 | 53,039 | 245,443 | 10,384 | 57,044 | 1,966,748 | 27,118 |  |
 | rev-29 | 4,574 | 30,482 | 744 | 22,631 | 993,397 | 7,844 |  |
+| rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 
 <!-- END SUMMARY -->
 
@@ -99,6 +103,8 @@ UI mockups approved 2026-11-20: pay prompt = H1 (strip on top inside Left to spe
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+Review rev-30 on branch rev/30-sidenav-icons-spacing: run `npm run dev`. Check the sidenav (icons, Today/Manage groups, accent bar on current page, Theme / Hide amounts / Sign out footer), the phone tab bar icons (narrow the window under 760px), and spacing on Home, Budget and Savings. Branches rev-28, 29, 30 are stacked: merge in order.
 
 Review rev-29 on branch rev/29-hide-amounts-asterisks: run `npm run dev`, press Hide amounts, check Home (incl. the "unplanned" pill), Budget, Accounts, Installments, Savings: every figure should show ***** and money inputs show dots.
 

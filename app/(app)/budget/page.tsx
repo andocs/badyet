@@ -29,15 +29,17 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
-  const rule = await loadRule(supabase);
+  const [rule, plan] = await Promise.all([loadRule(supabase), pickPlan(supabase, params.plan)]);
   const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), rule);
-  const plan = await pickPlan(supabase, params.plan);
-  const { data: pay } =
-    plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
-  const { data: rows } =
+  // Independent lookups run together: each one is a round trip to the database.
+  const [{ data: pay }, { data: rows }, { data: walletRows }] =
     plan && supabase
-      ? await supabase.from("budget_lines").select("id,cutoff,bucket,name,amount,wallet_id,source").eq("plan_id", plan.id).order("created_at")
-      : { data: null };
+      ? await Promise.all([
+          supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle(),
+          supabase.from("budget_lines").select("id,cutoff,bucket,name,amount,wallet_id,source").eq("plan_id", plan.id).order("created_at"),
+          supabase.from("wallets").select("id,name").order("created_at"),
+        ])
+      : [{ data: null }, { data: null }, { data: null }];
 
   if (!plan || !pay) {
     return (
@@ -56,7 +58,6 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
     );
   }
 
-  const { data: walletRows } = supabase ? await supabase.from("wallets").select("id,name").order("created_at") : { data: null };
   const wallets = walletRows ?? [];
   const past = isPastPlan(plan.end_date);
   const result = computePay({

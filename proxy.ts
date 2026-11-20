@@ -27,8 +27,11 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getUser();
-  const allowed = !!data.user && isAllowedEmail(data.user.email, process.env.ALLOWED_EMAIL);
+  // getClaims checks the token's signature here instead of asking the Auth server on every page switch.
+  // Server Actions still call getUser (lib/auth/require.ts), and row-level security guards the data.
+  const { data } = await supabase.auth.getClaims();
+  const email = typeof data?.claims?.email === "string" ? data.claims.email : null;
+  const allowed = !!data?.claims && isAllowedEmail(email, process.env.ALLOWED_EMAIL);
 
   if (!allowed && !isPublic) return toLogin();
   if (allowed && path === "/login") return NextResponse.redirect(new URL("/", request.url));
