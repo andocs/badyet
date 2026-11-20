@@ -9,18 +9,19 @@ import { currentMonth, isMonth } from "@/lib/transfer/month";
 
 const DEFAULT_WALLETS = ["Gcash", "Maya", "BPI", "Vybe"];
 
-function where(formData: FormData): { month: string; cutoff: Cutoff } {
+function where(formData: FormData): { month: string; cutoff: Cutoff; plan: string | null } {
   const month = formData.get("month");
   const cutoff = formData.get("cutoff");
-  return { month: isMonth(month) ? month : currentMonth(), cutoff: isCutoff(cutoff) ? cutoff : "first" };
+  const plan = String(formData.get("plan") ?? "");
+  return { month: isMonth(month) ? month : currentMonth(), cutoff: isCutoff(cutoff) ? cutoff : "first", plan: isUuid(plan) ? plan : null };
 }
 
-function back(w: { month: string; cutoff: Cutoff }, code?: string, err?: { message: string } | null): never {
+function back(w: { month: string; cutoff: Cutoff; plan: string | null }, code?: string, err?: { message: string } | null): never {
   if (err) console.error("[transfer] database error:", err.message);
   revalidatePath("/transfer");
   revalidatePath("/budget");
   const detail = err ? `&detail=${encodeURIComponent(err.message)}` : "";
-  redirect(`/transfer?month=${w.month}&cutoff=${w.cutoff}${code ? `&error=${code}` : ""}${detail}`);
+  redirect(`/transfer?month=${w.month}&cutoff=${w.cutoff}${w.plan ? `&plan=${w.plan}` : ""}${code ? `&error=${code}` : ""}${detail}`);
 }
 
 export async function toggleSent(formData: FormData) {

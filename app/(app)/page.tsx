@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan, planQuery } from "@/lib/plans/select";
 import { Dashboard, type DashData } from "@/components/dashboard";
 import { money } from "@/lib/domain/money";
 import { DEFAULT_SECOND_START, cutoffLabel, daysBetween, resolveCutoff } from "@/lib/dashboard/helpers";
@@ -17,9 +19,7 @@ const dateLabel = (iso: string) => {
 export default async function Home({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const supabase = await createClient();
-  const { data: plan } = supabase
-    ? await supabase.from("plans").select("id,name").eq("is_active", true).maybeSingle()
-    : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
 
   if (!plan || !supabase) {
     return (
@@ -121,9 +121,12 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   // The key restarts the dashboard's local state whenever the saved ticks change on the server.
   return (
     <>
-      <nav className="segmented" aria-label="Cutoff" style={{ margin: "18px 22px 0", width: "fit-content" }}>
-        <Link href="/?cutoff=first" aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
-        <Link href="/?cutoff=second" aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
+      <div style={{ margin: "18px 22px 0" }}>
+        <PlanBar basePath="/" plan={plan} keep={`cutoff=${cutoff}`} />
+      </div>
+      <nav className="segmented" aria-label="Cutoff" style={{ margin: "0 22px", width: "fit-content" }}>
+        <Link href={`/?cutoff=first${planQuery(plan)}`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
+        <Link href={`/?cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
       </nav>
       <Dashboard key={`${month}-${cutoff}-${data.sentIds.join(",")}-${data.lines.length}`} data={data} />
     </>

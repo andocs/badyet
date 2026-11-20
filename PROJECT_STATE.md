@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 09:15 | phase3 | Redesign slices: rev-11 shared cutoff + Transfer cutoff fix + delete confirms + login contrast; rev-12 plan switcher + compare plans (what-if on raise, savings forecast); rev-13 nav 11 to 4; rev-14 Home = payday checklist; rev-15 payday mode (nice-to-have). | -
 - 2026-11-20 09:27 | redesign | Mockups v11-a payday ritual, v11-b money sentence, v11-c plan compare in docs/mockups (impeccable surface roll, Night Emerald kept). Awaiting direction pick before building rev-11..15. | -
 - 2026-11-20 09:42 | redesign | User picked direction A (payday ritual), DESIGN.md regen not now, and added accounts: wizard to add e-wallet/debit/credit with balances and card debt, with security. Added rev-16 (accounts wizard) and rev-17 (net position). Security decision: store last 4 digits only, never full card/account numbers, CVV or PIN. | -
+- 2026-11-20 09:44 | rev-11 | Shared cutoff (resolveCutoff, nav carries ?cutoff, Home switch), Transfer/Budget default to current cutoff, ConfirmButton on 7 deletes, placeholder contrast. 146 tests, lint, typecheck, build, e2e PASS. | b67f9bc
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

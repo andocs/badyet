@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { SavingsChart } from "@/components/savings-chart";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan } from "@/lib/plans/select";
 import type { GoalId } from "@/lib/domain/allocator";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { formatRange } from "@/lib/plans/format";
@@ -26,9 +28,7 @@ export default async function SavingsPage({ searchParams }: PageProps<"/savings"
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
-  const { data: plan } = supabase
-    ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
-    : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
 
   if (!plan || !supabase) {
     return (
@@ -57,6 +57,7 @@ export default async function SavingsPage({ searchParams }: PageProps<"/savings"
           </p>
         </div>
       </div>
+      <PlanBar basePath="/savings" plan={plan} />
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
           {error}

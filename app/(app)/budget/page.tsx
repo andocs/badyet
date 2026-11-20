@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ConfirmButton } from "@/components/confirm-button";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan, planQuery } from "@/lib/plans/select";
 import { BUCKETS, type Cutoff } from "@/lib/budget/validate";
 import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
 import { bucketTotal, summarize, type Line } from "@/lib/budget/summary";
@@ -27,9 +29,7 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   const supabase = await createClient();
   const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
   const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
-  const { data: plan } = supabase
-    ? await supabase.from("plans").select("id,name,start_date,end_date").eq("is_active", true).maybeSingle()
-    : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
   const { data: pay } =
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
   const { data: rows } =
@@ -81,10 +81,11 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
           <p className="sub">Give every peso of your net pay a job.</p>
         </div>
         <nav className="segmented" aria-label="Cutoff">
-          <Link href="/budget?cutoff=first" aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
-          <Link href="/budget?cutoff=second" aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
+          <Link href={`/budget?cutoff=first${planQuery(plan)}`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
+          <Link href={`/budget?cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
         </nav>
       </div>
+      <PlanBar basePath="/budget" plan={plan} keep={`cutoff=${cutoff}`} />
       {error && (
         <p className="notice err" role="alert" style={{ marginBottom: 18 }}>
           {error}
