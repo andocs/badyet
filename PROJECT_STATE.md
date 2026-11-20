@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 7 First run wizard, Settings, retire old pages
+- **Active slice / milestone:** Next: 8 Android (Expo) phone app, separate effort
 - **Gate:** none
-- **Next action:** Build slice 7 (First run wizard, Settings, retire plans and old pages). Try Funds, Forecast and Override first.
-- **User to-do now:** Try Funds, Forecast and Override in the app, push slice/6-funds-forecast-override.
+- **Next action:** Web rehaul (slices 1 to 7) is done. Plan the Android app as its own effort when you are ready.
+- **User to-do now:** Open the app and try each page, push the slice branches (2 to 7), apply any pending migrations, decide when to run docs/rehaul/retire-old-tables.sql.
 
 ## 3. Execution log
 
@@ -39,6 +39,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 22:22 | slice-5 | Slice 5 approved by the user. | 96cc419
 - 2026-11-20 22:33 | slice-6 | Funds editor, Forecast (chart, ladder, month sheet, with/without expected raises), Override single and bulk with live effect, validators, forecast rows and loaders with tests. Local commit, not pushed, not run in a browser. | -
 - 2026-11-20 22:36 | slice-6 | Slice 6 approved by the user. | a8b8ad5
+- 2026-11-20 22:57 | slice-7 | Setup wizard (5 steps, live payslip), Settings, old shell/pages/libs and tests removed, exports and e2e routes updated, optional retire-old-tables.sql. Local commit, not pushed, not run in a browser. | -
+- 2026-11-20 22:58 | slice-7 | Slice 7 approved by the user. Web rehaul complete. | 94281f7
 
 ## 4. Open questions
 
@@ -55,7 +57,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,382,399 | 5,591,251 | 259,166 | 2,964,322 | 347,895,922 | 1,730,733 |  |
+| **Cumulative** | 1,396,718 | 5,624,276 | 260,303 | 3,014,617 | 361,622,787 | 1,766,749 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -63,7 +65,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 4 | 17,541 | 64,878 | 3,723 | 89,056 | 7,339,876 | 58,555 |  |
 | Slice 5 | 23,146 | 79,644 | 2,051 | 128,754 | 17,634,396 | 97,620 |  |
 | Slice 6 | 15,745 | 69,488 | 3,581 | 80,760 | 10,601,471 | 54,339 |  |
-| Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
+| Slice 7 | 14,319 | 33,025 | 1,137 | 48,061 | 11,744,614 | 34,596 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
 | Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
 | Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
@@ -103,6 +105,13 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 7 (First run wizard, Settings, retire old pages) is built and committed locally on slice/7-first-run-settings-retire (not pushed; stacked on slices 2 to 6). No new migration.
+1. Setup wizard (/setup): five skippable steps (accounts with opening balances, salary with optional SSS and Pag-IBIG, paydays, starter budget lines, starter funds) with a live "setup so far" payslip. Re-running it from Settings adds to what you have. Now and Salary and tax point to it when there is no salary.
+2. Settings (/settings): paydays (also keeps the old cutoff columns in step), office-day amount, notification switch and merchant rules (delete), theme and hide amounts, run the wizard again, CSV export of the new tables, sign out.
+3. Retired: Plans, Transfer, More, Installments, Subscriptions and Import pages, the old shell and nav, and the old libraries only they used. The e2e routes now point at the new pages.
+Old database tables are untouched. When you are happy with the rehaul, docs/rehaul/retire-old-tables.sql is an optional script that drops them (not a migration; it asks you to check and export first). budget_lines_v2 keeps that name.
+Not verified: not opened in a browser or run against your data. Tests, typecheck, lint and build pass.
 
 Slice 6 (Funds, Forecast, Override) is built and committed locally on slice/6-funds-forecast-override (not pushed; stacked on slices 2 to 5). No new migration.
 1. Funds (/funds): default priority with up/down, balance bars, editor (name, colour, linked account with optional share or typed balance, fill rule steps/cap/reset/fixed, target, monthly limit, tranches, reset month), archive.
