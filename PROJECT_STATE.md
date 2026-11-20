@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** Done
 - **Active slice / milestone:** rev-28..31
-- **Gate:** none
-- **Next action:** Merge PRs rev-27..31 in order; user picks the next rehaul area
-- **User to-do now:** Merge PRs rev-27..31 in order
+- **Gate:** waiting
+- **Next action:** User reviews rev-32; merge PRs rev-27..32 in order
+- **User to-do now:** Check hide amounts on Now: button in hero, pill shrinks
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 12:02 | rev-30 | Approved by user. New issue: tab switching still slow; investigating as rev-31. | -
 - 2026-11-20 12:03 | rev-31 | Tab switching: proxy now uses getClaims (local token check, no Auth-server round trip per page); Budget page lookups run in parallel (was 6 sequential). Tests, lint, build PASS. rev-30 approved by user. Not measured in browser. | a7d1ae0
 - 2026-11-20 12:06 | rev-31 | Approved by user. | -
+- 2026-11-20 12:10 | rev-32 | Hide amounts button moved into the Now hero (stays top-right during payday steps for phones); hidden figures get a fixed 6ch width so the unplanned pill shrinks. Tests, lint, build PASS. Not viewed in browser. | 5acfcd3
 
 ## 4. Open questions
 

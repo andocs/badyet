@@ -330,6 +330,11 @@ export function Dashboard({ data }: { data: DashData }) {
           <div className="split">
             <div className="stack">
               <section className="hero" aria-label="Next payday">
+                {!showStrip && (
+                  <div className="herotop">
+                    <HideAmounts className="btn sm ghost" />
+                  </div>
+                )}
                 {showStrip && (
                   <div className="paystrip" role="group" aria-label="Payday">
                     <span className="dotg" aria-hidden="true" />
@@ -345,6 +350,7 @@ export function Dashboard({ data }: { data: DashData }) {
                         </>
                       )}
                     </span>
+                    <span className="paystrip-hide"><HideAmounts className="btn sm ghost" /></span>
                   </div>
                 )}
                 <div className="hero-inner">
@@ -353,7 +359,6 @@ export function Dashboard({ data }: { data: DashData }) {
                     <div className="balance rise"><small>₱</small>{data.cutoffNet === null ? "Set up Pay" : peso(data.cutoffNet)}</div>
                     <div className="hero-actions">
                       {data.unplanned !== null && <span className="pill"><span className="amt">₱{peso(Math.abs(data.unplanned))}</span>&nbsp;{data.unplanned >= 0 ? "unplanned" : "over"}</span>}
-                      <HideAmounts className="btn sm ghost" />
                       {lines.length === 0 ? (
                         <Link href="/budget" className="btn">Go to Budget</Link>
                       ) : (

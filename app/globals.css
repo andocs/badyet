@@ -236,6 +236,9 @@ a { color: var(--accent-text); text-decoration: none; }
 .paystrip .dotg { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.3); }
 .paystrip .btn { min-height: 34px; padding: 6px 14px; font-size: 13px; }
 .paystrip-actions { display: flex; gap: 8px; }
+.paystrip-hide { margin-left: auto; }
+.hero .herotop { position: absolute; top: 16px; right: 20px; z-index: 1; }
+.hero .herotop .btn, .hero .paystrip-hide .btn { background: rgba(255, 255, 255, 0.16); color: #fff; }
 @media (max-width: 760px) { .paystrip { margin: -20px -20px 16px; padding: 10px 20px; } }
 @media (max-width: 760px) { .form-row { grid-template-columns: 1fr; } }
 
@@ -329,9 +332,9 @@ a { color: var(--accent-text); text-decoration: none; }
 
 /* Set by components/hide-amounts.tsx. */
 /* Hide amounts: the figure is replaced by asterisks (the real text is made invisible, then ***** drawn over it). */
-html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; display: inline-block; width: 6ch; max-width: 100%; overflow: hidden; white-space: nowrap; vertical-align: bottom; -webkit-text-fill-color: transparent; user-select: none; }
+html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; display: inline-block; width: 3em; max-width: 100%; overflow: hidden; white-space: nowrap; vertical-align: bottom; -webkit-text-fill-color: transparent; user-select: none; }
 html[data-hide="1"] :is(td, th).num { display: table-cell; width: auto; overflow: visible; }
-html[data-hide="1"] :is(.num, .balance, .amt)::after { content: "*****"; position: absolute; inset: 0; text-align: inherit; white-space: nowrap; -webkit-text-fill-color: currentColor; letter-spacing: 0.08em; }
+html[data-hide="1"] :is(.num, .balance, .amt)::after { content: "*****"; position: absolute; inset: 0; text-align: inherit; white-space: nowrap; -webkit-text-fill-color: currentColor; font-family: ui-monospace, monospace; font-weight: 700; letter-spacing: 0; }
 html[data-hide="1"] input[inputmode="decimal"] { -webkit-text-security: disc; }
 html[data-hide="1"] input[inputmode="decimal"]::placeholder { color: transparent; }
 
