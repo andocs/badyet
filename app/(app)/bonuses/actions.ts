@@ -32,6 +32,7 @@ export async function addEvent(formData: FormData) {
     cip_eligible: v.cipEligible,
     cip_component_num: v.cipComponentNum,
     cip_multiplier_num: v.cipMultiplierNum,
+    ...(v.deMinimis > 0 ? { de_minimis: v.deMinimis } : {}),
   });
   back(error ? "failed" : undefined, error);
 }

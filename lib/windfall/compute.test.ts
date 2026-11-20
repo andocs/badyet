@@ -70,3 +70,26 @@ describe("grossOf", () => {
     expect(grossOf(profile, ev({ kind: "cip", gross: null }))).toBe(0);
   });
 });
+
+describe("de minimis", () => {
+  it("takes de minimis off first, untaxed and outside the cap: 120k with 12k nets 12k more than a 108k bonus", () => {
+    const withDm = computeEvents(profile, [ev({ id: "a", gross: p(120_000), deMinimis: p(12_000), payDate: "2027-03-31" })])[0];
+    const plain = computeEvents(profile, [ev({ id: "b", gross: p(108_000), payDate: "2027-03-31" })])[0];
+    expect(withDm.deMinimis).toBe(p(12_000));
+    expect(withDm.exempt).toBe(p(90_000));
+    expect(withDm.net).toBe(plain.net + p(12_000));
+  });
+  it("shares one 90k pool across the September bonus (after its de minimis) and the 13th month (no de minimis)", () => {
+    const [thirteenth, sept] = computeEvents(profile, [
+      ev({ id: "t", kind: "thirteenth", gross: p(50_000), deMinimis: p(12_000), payDate: "2027-12-15" }), // any de minimis on a 13th is ignored
+      ev({ id: "s", gross: p(60_000), deMinimis: p(12_000), payDate: "2027-09-30" }),
+    ]);
+    expect(sept.deMinimis).toBe(p(12_000));
+    expect(sept.exempt).toBe(p(48_000)); // pool: 60k - 12k = 48k, all inside the cap
+    expect(thirteenth.deMinimis).toBe(0);
+    expect(thirteenth.exempt).toBe(p(42_000)); // only 42k of cap room is left, so 8k of the 13th month is taxed
+  });
+  it("never lets de minimis exceed the event", () => {
+    expect(computeEvents(profile, [ev({ id: "x", gross: p(5_000), deMinimis: p(12_000) })])[0].deMinimis).toBe(p(5_000));
+  });
+});
