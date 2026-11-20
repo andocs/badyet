@@ -43,6 +43,9 @@ export interface NowInput {
   categories: readonly NowCategory[];
   /** Transactions dated inside the cutoff, any status. */
   txns: readonly NowTxn[];
+  /** Pool money moved to Wants this cutoff, and Wants money taken for overspent office days. */
+  movedToWants?: Money;
+  takenFromWants?: Money;
 }
 
 export interface Envelope {
@@ -132,7 +135,7 @@ export function buildNowView(input: NowInput): NowView {
 
   const pool = budget.dailyPool[cutoff];
   const spent = sum(dailySpend.map((t) => (-t.amount) as Money));
-  const perDay = dailySafeToSpend({ dailyPool: pool, confirmedSpend: spent, daysLeft });
+  const perDay = dailySafeToSpend({ dailyPool: pool, confirmedSpend: spent, daysLeft, movedToWants: input.movedToWants, takenFromWants: input.takenFromWants });
   const isUsualOfficeDay = input.officeDays.includes(isoWeekday(today));
   const nextOfficeDate = days.find((d) => d > today && input.officeDays.includes(isoWeekday(d)));
   const paceMoney = Number((BigInt(pool) * BigInt(dayNumber)) / BigInt(daysTotal)) as Money;

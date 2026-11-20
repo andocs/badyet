@@ -1,7 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
 import { money, sum, type Money } from "@/lib/domain/money";
+import { cutoffOfficeDays, settleRows } from "@/lib/budget/rto";
 import { balanceNow } from "@/lib/engine/balances";
+import { movedToWants, rtoDayBudget, takenFromWants, type PoolEntrySpec } from "@/lib/engine/budget";
+import { usualOfficeDays } from "@/lib/engine/months";
 import { runProjection } from "@/lib/engine/projection";
 import {
   allowanceOf,
@@ -16,7 +19,7 @@ import {
   type SalaryEventRow,
 } from "@/lib/engine/rows";
 import { todayManila } from "@/lib/plans/validate";
-import { buildNowView, currentCutoff, type NowCategory, type NowLine, type NowTxn, type NowView } from "./summary";
+import { buildNowView, currentCutoff, manilaDate, type NowCategory, type NowLine, type NowTxn, type NowView } from "./summary";
 
 export interface AccountCard {
   id: string;
@@ -38,6 +41,8 @@ export type NowData =
       accounts: AccountCard[];
       /** Sum of the accounts you own (cards you owe on are left out). */
       total: Money;
+      /** Office days that ended over or under budget and are not settled yet. */
+      settleOpen: number;
       /** The next payday's money: the payslip that lands then. */
       nextPay: { date: IsoDate; amount: Money; cutoff: "first" | "second" };
     };
@@ -69,7 +74,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   const from = `${period.start}T00:00:00+08:00`;
   const to = `${nextDay(period.end)}T00:00:00+08:00`;
 
-  const [events, allowances, assumptions, pay, groups, cats, lineRows, alloc, accts, anchors, periodTxns] = await Promise.all([
+  const [events, allowances, assumptions, pay, groups, cats, lineRows, alloc, accts, anchors, periodTxns, poolEntryRes, overrideRes] = await Promise.all([
     supabase.from("salary_events").select("id, effective_month, kind, pct_bp, new_base, allowance_id, one_off_amount, one_off_taxable, status"),
     supabase.from("allowances").select("id, payslip_cutoff, name, amount, frequency, pay_month, taxable, starts_on, ends_on"),
     supabase.from("plan_assumptions").select("cip_multiplier_num, assumed_raise_on, assumed_raise_bp, assumed_raise_month").maybeSingle(),
@@ -81,6 +86,8 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     supabase.from("accounts").select("id, name, kind, last4, color").is("archived_at", null).order("sort"),
     supabase.from("balance_anchors").select("account_id, as_of, amount"),
     supabase.from("transactions").select("id, account_id, occurred_at, amount, merchant, category_id, budget_line_id, kind, status").gte("occurred_at", from).lt("occurred_at", to),
+    supabase.from("pool_entries").select("kind, amount, occurred_on").gte("occurred_on", period.start).lte("occurred_on", period.end),
+    supabase.from("office_day_overrides").select("day, in_office").gte("day", period.start).lte("day", period.end),
   ]);
 
   const salaryEvents = rows<SalaryEventRow>(events).map(salaryEventOf);
@@ -149,6 +156,8 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     status: t.status,
   }));
 
+  const poolEntries = rows<{ kind: PoolEntrySpec["kind"]; amount: number; occurred_on: string }>(poolEntryRes);
+  const specs: PoolEntrySpec[] = poolEntries.map((e) => ({ kind: e.kind, amount: money(e.amount) }));
   const view = buildNowView({
     today,
     paydays,
@@ -158,7 +167,26 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     lines,
     categories,
     txns,
+    movedToWants: movedToWants(specs),
+    takenFromWants: takenFromWants(specs),
   });
+
+  // Office days that ended over or under budget and have not been settled yet (the nudge on Now).
+  const rtoCategories = new Set(lines.filter((l) => l.kind === "rto").map((l) => l.categoryId));
+  const spendByDay = new Map<string, Money>();
+  for (const t of txns) {
+    if (t.kind !== "expense" || t.status !== "confirmed" || !t.categoryId || !rtoCategories.has(t.categoryId)) continue;
+    const day = manilaDate(t.occurredAt);
+    spendByDay.set(day, money((spendByDay.get(day) ?? 0) - t.amount));
+  }
+  const days = cutoffOfficeDays(period, settings.office_days, new Map(rows<{ day: string; in_office: boolean }>(overrideRes).map((o) => [o.day, o.in_office])));
+  const settleOpen = settleRows({
+    days,
+    spendByDay,
+    dayBudget: rtoDayBudget(here.budget.rtoTotal[period.which === 1 ? "first" : "second"], usualOfficeDays(period, settings.office_days)),
+    settledDays: new Set(poolEntries.filter((e) => ["settle_to_pool", "settle_to_wants", "over_from_wants", "over_from_excess"].includes(e.kind)).map((e) => e.occurred_on)),
+    today,
+  }).filter((r) => !r.settled).length;
 
   // Balances: the latest anchor plus confirmed transactions since the earliest anchor (cheap and small for one user).
   const anchorRows = rows<AnchorRow>(anchors);
@@ -189,6 +217,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     view,
     accounts,
     total: sum(accounts.filter((a) => a.kind !== "credit").map((a) => a.balance)),
+    settleOpen,
     nextPay: { date: nextPayDate, amount: nextPayMonth.pay[nextPayCutoff].takeHome, cutoff: nextPayCutoff },
   };
 }
