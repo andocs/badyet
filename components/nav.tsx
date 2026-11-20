@@ -15,7 +15,7 @@ interface Item {
 const NOW: Item = { label: "Now", href: "/", also: ["/transfer"] };
 const MONTH: Item = { label: "Month", href: "/budget", also: ["/installments", "/subscriptions", "/bonuses"] };
 const SAVINGS: Item = { label: "Savings", href: "/savings" };
-const SETUP: Item = { label: "Setup", href: "/plans", also: ["/pay", "/settings", "/import", "/more"] };
+const SETUP: Item = { label: "Setup", href: "/plans", also: ["/pay", "/accounts", "/settings", "/import", "/more"] };
 export const SIDE_ITEMS: Item[] = [NOW, MONTH, SAVINGS, SETUP];
 export const TAB_ITEMS: Item[] = [NOW, MONTH, SAVINGS, SETUP];
 

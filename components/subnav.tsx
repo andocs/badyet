@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const GROUPS = {
   month: { label: "Month sections", items: [["Budget", "/budget"], ["Installments", "/installments"], ["Subscriptions", "/subscriptions"], ["Bonuses", "/bonuses"]] },
-  setup: { label: "Setup sections", items: [["Plans", "/plans"], ["Pay", "/pay"], ["Settings", "/settings"], ["Import", "/import"]] },
+  setup: { label: "Setup sections", items: [["Plans", "/plans"], ["Accounts", "/accounts"], ["Pay", "/pay"], ["Settings", "/settings"], ["Import", "/import"]] },
 } as const;
 
 // The four main destinations hold several pages each; this strip moves between the pages of one destination.
