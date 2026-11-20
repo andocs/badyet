@@ -314,7 +314,7 @@ export function Dashboard({ data, planBar, cutoffNav }: { data: DashData; planBa
         </section>
       ) : (
         <>
-          <div className="head">
+          <div className="head" style={{ alignItems: "center" }}>
             <div>
               <span className="lab">{data.planName}</span>
               <h1 style={{ marginTop: 6 }}>

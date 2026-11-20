@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** Done
 - **Active slice / milestone:** rev-28..31
 - **Gate:** waiting
-- **Next action:** User reviews rev-33; merge PRs rev-27..33 in order
-- **User to-do now:** Check Now hero: button top-right, pill hugs asterisks
+- **Next action:** User reviews rev-34; merge PRs rev-27..34 in order
+- **User to-do now:** Check Now: eye button, Pip, no shift when hidden, cutoff pill at header right
 
 ## 3. Execution log
 
@@ -31,6 +31,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 12:06 | rev-31 | Approved by user. | -
 - 2026-11-20 12:10 | rev-32 | Hide amounts button moved into the Now hero (stays top-right during payday steps for phones); hidden figures get a fixed 6ch width so the unplanned pill shrinks. Tests, lint, build PASS. Not viewed in browser. | 5acfcd3
 - 2026-11-20 12:14 | rev-33 | Hide amounts button top-right of Now hero (end of payday strip when shown); hidden figures sized to 3em with monospace asterisks so pills hug them; dropped Consolas to satisfy design-system font rule. Tests, lint, build PASS (CSS font tweak landed after the Runner started). Not viewed in browser. | a973428
+- 2026-11-20 12:17 | rev-34 | Eye icon (icon-only) hide button in Now hero; Pip bottom-right; hidden figures clip with overflow:clip and block balance to stop layout shift; PlanBar and cutoff pill moved into Dashboard, pill at right of header. Tests, lint, build PASS. Not viewed in browser. | 9b14fcc
 
 ## 4. Open questions
 
