@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** Done
-- **Active slice / milestone:** rev-18..25
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-28..30
 - **Gate:** none
-- **Next action:** User signs in with Google on bad-yet.vercel.app; then optionally turn off the Email provider and new sign-ups in Supabase; add import extras data; Sept bonus de minimis default
-- **User to-do now:** Sign in once with Google (docs1502@gmail.com)
+- **Next action:** Build rev-28 (perf, pay prompt H1, links, plan dropdown)
+- **User to-do now:** Review mockups
 
 ## 3. Execution log
 
@@ -35,6 +35,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 10:59 | ops | Font switched to Gabarito (display) with Atkinson Hyperlegible Next (body), DESIGN.md updated. PR #9 (revs 19-26) merged into main (0b379b2) after the Vercel preview passed; merged branches deleted locally and on GitHub. PR #10 (rev-18 Google login) open as a DRAFT, do not merge until Google is configured in Supabase (docs/deploy.md). Migrations 20261202..20261205 still need applying to Supabase if not done. | 0b379b2
 - 2026-11-20 11:05 | ops | User confirmed the four migrations are applied. Vercel Production: ALLOWED_EMAIL added (was missing, so nobody could sign in) and the app redeployed (Ready); removed unused secrets (SUPABASE_SERVICE_ROLE_KEY, SUPABASE_SECRET_KEY, SUPABASE_JWT_SECRET, POSTGRES_* x7). Prod URL https://bad-yet.vercel.app; Supabase project erzaxhyhaozlurhojnbm. Google provider setup (Google Cloud OAuth client + Supabase provider + URL config) must be done by the user in the dashboards; PR #10 stays a draft until then. Previews have no env vars, so test Google on production after merging; revert PR #10 if it fails (magic link returns). | -
 - 2026-11-20 11:09 | ops | PR #10 (Google login) merged into main (53a1ccb) and live on https://bad-yet.vercel.app: login page shows Continue with Google and the button reaches Google's sign-in with the correct Supabase redirect URI. Waiting on the user's first real sign-in. If it fails: revert PR #10 (magic link returns; Email provider is still on). | 53a1ccb
+- 2026-11-20 11:12 | rev-27 | Favicon from Pip: app/icon.svg (tab) and app/apple-icon.png (180px), default favicon.ico removed. Build serves both (200). PR open, not merged (waiting for the user). | 2187ad6
 
 ## 4. Open questions
 
@@ -72,38 +73,14 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-| # | Slice | Depends on | Run | Status | Branch |
-|---|---|---|---|---|---|
-| 1-9 | Scaffold+dashboard, auth/plans, pay, budget, transfer, installments+subscriptions, bonuses, savings forecast, dashboard on real data | - | sequential | merged to master (local) | slice/1..9 |
-| rev-1..5 | Phone menu, duplicate plan, cutoff setting, tax/PhilHealth check, sheet import | - | sequential | done, approved | rev/phase3-revisions |
-| rev-6 | Mark installment payments paid one by one (migration installment_payments must be applied) | - | sequential | done, approved (91ec216) | rev/6-installment-payments |
-| rev-7..10 | CSV export, deploy runbook (docs/deploy.md), Playwright checks (signed-in tests need a saved session, docs/e2e.md) | - | sequential | done, approved (5834ce3) | rev/10-export-deploy-e2e |
-
-### Redesign round (impeccable critique 2026-11-20, score 25/40)
-Decisions: direction A "payday ritual" (docs/mockups/v11-a-payday-ritual.html) for Now; plan switching and compare from v11-c; keep Pip, copy voice and Night Emerald; DESIGN.md regeneration deferred ("not now"). No data-model change for commitments (auto-flow deferred). Accounts: store NO full card or account numbers, CVV or PINs (last 4 digits only); see rev-16.
-
-| # | Slice | Depends on | Run | Status | Branch |
-|---|---|---|---|---|---|
-| rev-11 | Shared cutoff switcher (1st/2nd, defaults to the real current cutoff) in the header via URL, used by Home, Budget, Transfer; fix Transfer opening on the wrong cutoff; delete confirms; login placeholder contrast. **Needed** | - | sequential | approved, next | - |
-| rev-12 | Plan switcher in the header: view any plan on Home, Budget, Transfer, Savings without changing the active plan; "viewing, not active" banner; compare two plans (net pay, left to budget, savings per month, savings forecast difference). **Needed** | rev-11 | sequential | approved | - |
-| rev-13 | Nav 11 to 4 (Now, Month, Savings, Setup); installments, subscriptions, bonuses become Month sections; phone tab bar = the 4. **Needed** | rev-11 | sequential | approved | - |
-| rev-14 | Now = direction A: opens on the current payday step or "N days to the next cutoff" between paydays; wallet checklist tickable in place; charts move to Month. **Needed** | rev-11, rev-13 | sequential | approved | - |
-| rev-15 | Payday ritual steps: pay landed, spoken for (commitments), send by wallet, yours to spend with Pip. **Needed** (core of direction A) | rev-14 | sequential | approved | - |
-| rev-16 | Accounts wizard: add an e-wallet, debit or credit account step by step; extends wallets with kind, balance (as of date), credit limit, statement and due day; last 4 digits only, never full numbers/CVV/PIN. RLS, input validation, tests, security review. **Needed** | - | sequential | added 2026-11-20 | - |
-| rev-17 | Net position on Now/Month: money in accounts, card debt, utilization, due dates, "cash minus debt"; quick "update balance"; balances shown masked (last 4). **Needed** | rev-16, rev-13 | sequential | added 2026-11-20 | - |
+Revision batch (approved 2026-11-20). Decisions: inline SVG icons (no dependency); "Not yet" pay answer remembered per cutoff in localStorage; UI changes get a mockup approved before build.
+- rev-28 perf + bugs: loading.tsx skeletons, parallelise page/PlanBar queries, pay prompt remembers "Not yet", global link color token, plan dropdown no longer moves Compare plans button.
+- rev-29 hide amounts: mask as asterisks everywhere (incl. unplanned pill and text amounts), not CSS-only.
+- rev-30 sidenav, spacing, icons: sidenav rehaul, spacing pass, inline SVG icons.
 
 ## Decisions & architecture
-- Stack: Next.js (App Router, TypeScript) on Vercel + Supabase (Postgres; Auth magic link restricted to one allowed email; RLS by user_id).
-- Chosen design direction: none yet (Gate 1 paused 2026-11-19; the 3 existing mockups were rejected; new ones to be made with /impeccable).
-- Key decisions (2026-11-19, all answered by user):
-  - D1 Data: app owns data; one-time import from the sheet; sheet retired.
-  - D2 Hosting: single user, hosted with login. Stack as above.
-  - D3 MVP scope: core budget flow (salary/tax -> budget split -> essentials/wants/savings -> to-transfer by wallet with checkboxes), bonuses (13th month, CIP), installments & subscriptions, savings forecast.
-  - D4 AI Advisor / Scenario Planner: dropped.
-  - D5 Versions: named plans with date ranges; one active; duplicate to create estimates; past plans read-only.
-  - D6 Salary: auto-calculate from annual base (SSS, PhilHealth, Pag-IBIG, PH income tax table, allowances) with per-line overrides.
-  - D7 Location: new app in D:\projects\badyet. The old Expo/Android app at D:\badyet stays untouched as reference. Reuse its pure logic (src/domain: money in centavos, pay.ts, budget.ts, allocator.ts, windfall.ts and their Vitest tests, docs/financial-logic-spec.md) by copying into lib/domain. Later the user plans to port back to an Expo Android app.
-  - D8 Money stored as integer centavos; dates in Asia/Manila.
+
+UI mockups approved 2026-11-20: pay prompt = H1 (strip on top inside Left to spend panel: "Payday ₱amount [Not yet] [✓ Landed]" grouped left, no prompt sentence). Links = custom look (accent green, bold, no underline, growing underline on hover, small arrow), never default violet. Plan dropdown = floating menu so Compare plans never moves. Sidenav = grouped sections (Today: Now/Month/Savings; Manage: Setup), inline SVG icons, accent bar on current, tools footer (theme, hide, sign out). Hide amounts = asterisks everywhere. Mockups in scratchpad (mockup-rev28-30.html, mockup-pay-hybrids.html).
 
 ## Run & verify guide (detected by Scout, kept current)
 

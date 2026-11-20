@@ -55,6 +55,20 @@ const peso = (centavos: number) => pesos(money(centavos));
 
 type View = "auto" | "ritual" | "glance";
 
+// "Not yet" on the payday strip is remembered for this cutoff on this device, so Now stops asking.
+const SNOOZE_EVENT = "pay-snooze-change";
+const subscribeSnooze = (notify: () => void) => {
+  window.addEventListener(SNOOZE_EVENT, notify);
+  return () => window.removeEventListener(SNOOZE_EVENT, notify);
+};
+function readSnoozed(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
 // Now: on payday it walks you through four steps (pay landed, spoken for, send by wallet, yours to spend).
 // Between paydays it shows when the next one is and how the month looks.
 export function Dashboard({ data }: { data: DashData }) {
@@ -63,7 +77,17 @@ export function Dashboard({ data }: { data: DashData }) {
   const [pieces, setPieces] = useState<Piece[]>([]);
   const [problem, setProblem] = useState("");
   const [view, setView] = useState<View>("auto");
-  const [step, setStep] = useState(data.sentIds.length > 0 ? 3 : 1);
+  const [step, setStep] = useState(data.sentIds.length > 0 ? 3 : 2);
+  const snoozeKey = `pay-not-yet:${data.month}:${data.cutoff}`;
+  const snoozed = useSyncExternalStore(subscribeSnooze, () => readSnoozed(snoozeKey), () => false);
+  function notYet() {
+    try {
+      localStorage.setItem(snoozeKey, "1");
+    } catch {
+      // storage can be blocked; the strip just comes back next visit
+    }
+    window.dispatchEvent(new Event(SNOOZE_EVENT));
+  }
   const [open, setOpen] = useState<string | null>(null);
   const [paidNow, setPaidNow] = useState<Set<string>>(new Set(data.commitments.filter((c) => c.paid).map((c) => `${c.installmentId}:${c.seq}`)));
 
@@ -80,7 +104,9 @@ export function Dashboard({ data }: { data: DashData }) {
   const sentTotal = money(total - left);
   const pct = total > 0 ? Math.round((sentTotal / total) * 100) : 0;
   const allDone = lines.length > 0 && pending.length === 0;
-  const ritual = view === "ritual" || (view === "auto" && pending.length > 0);
+  const ritual = view === "ritual";
+  const payLanded = data.sentIds.length > 0;
+  const showStrip = lines.length > 0 && !allDone && !snoozed;
 
   function burst(origin: DOMRect) {
     setPieces(
@@ -160,21 +186,6 @@ export function Dashboard({ data }: { data: DashData }) {
           </div>
           <p className="lab" style={{ margin: "14px 0 0" }}>{data.cutoffLabel} · {data.planName}</p>
 
-          {step === 1 && (
-            <div className="stage">
-              <h1>Did your pay land?</h1>
-              <div className="hero" style={{ marginBottom: 0 }}>
-                <span className="lab">Expected this cutoff</span>
-                <div className="balance rise"><small>₱</small>{data.cutoffNet === null ? "Set up Pay" : peso(data.cutoffNet)}</div>
-                <p className="sub" style={{ margin: 0 }}>Check your bank or payroll app. If it is there, we go on.</p>
-              </div>
-              <div className="ritual-actions">
-                <button type="button" className="btn" onClick={() => setView("glance")}>Not yet</button>
-                <button type="button" className="btn pri" onClick={() => setStep(2)}>Yes, it landed</button>
-              </div>
-            </div>
-          )}
-
           {step === 2 && (
             <div className="stage">
               <h1>Already spoken for.</h1>
@@ -211,7 +222,7 @@ export function Dashboard({ data }: { data: DashData }) {
                 <p style={{ margin: "10px 0 0" }}><Link href="/installments">Manage installments and subscriptions</Link></p>
               </section>
               <div className="ritual-actions">
-                <button type="button" className="btn" onClick={() => setStep(1)}>Back</button>
+                <button type="button" className="btn" onClick={() => setView("glance")}>Back</button>
                 <button type="button" className="btn pri" onClick={() => setStep(3)}>Looks right</button>
               </div>
             </div>
@@ -317,6 +328,23 @@ export function Dashboard({ data }: { data: DashData }) {
           <div className="split">
             <div className="stack">
               <section className="hero" aria-label="Next payday">
+                {showStrip && (
+                  <div className="paystrip" role="group" aria-label="Payday">
+                    <span className="dotg" aria-hidden="true" />
+                    <b>Payday</b>
+                    <span className="num">{payLanded ? `₱${peso(left)} to send` : data.cutoffNet === null ? "Set up Pay" : `₱${peso(data.cutoffNet)}`}</span>
+                    <span className="paystrip-actions">
+                      {payLanded ? (
+                        <button type="button" className="btn" onClick={() => { setStep(3); setView("ritual"); }}>Continue</button>
+                      ) : (
+                        <>
+                          <button type="button" className="btn ghost" onClick={notYet}>Not yet</button>
+                          <button type="button" className="btn" onClick={() => { setStep(2); setView("ritual"); }}>✓ Landed</button>
+                        </>
+                      )}
+                    </span>
+                  </div>
+                )}
                 <div className="hero-inner">
                   <div style={{ flex: 1, minWidth: 240 }}>
                     <span className="lab">{data.cutoffLabel}</span>
@@ -326,7 +354,7 @@ export function Dashboard({ data }: { data: DashData }) {
                       {lines.length === 0 ? (
                         <Link href="/budget" className="btn">Go to Budget</Link>
                       ) : (
-                        <button type="button" className="btn" onClick={() => { setStep(allDone ? 3 : 1); setView("ritual"); }}>Review this cutoff</button>
+                        <button type="button" className="btn" onClick={() => { setStep(allDone || payLanded ? 3 : 2); setView("ritual"); }}>Review this cutoff</button>
                       )}
                     </div>
                   </div>

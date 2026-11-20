@@ -25,7 +25,7 @@ const dateLabel = (iso: string) => {
 export default async function Home({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
   const supabase = await createClient();
-  const plan = await pickPlan(supabase, params.plan);
+  const [plan, rule] = await Promise.all([pickPlan(supabase, params.plan), loadRule(supabase)]);
 
   if (!plan || !supabase) {
     return (
@@ -40,7 +40,6 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   }
 
   const today = todayManila();
-  const rule = await loadRule(supabase);
   const month = currentPeriod(today, rule).month;
   const cutoff = resolveCutoff(params.cutoff, today, rule);
 
