@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import { archiveCategory, createPool, saveCategory, setOfficeDay, setUsualOfficeDays, settleDay, undoSettle, takeFromPool } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
 import { ACCOUNT_COLORS } from "@/lib/accounts/v13";
@@ -33,7 +33,24 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
   rtoLines: { name: string; amount: number }[]; contingencyName: string | null; range: string; planned: number; skipped: number;
 }) {
   const { error, busy, act } = useAct();
-  const extra = days.filter((d) => d.extra).length;
+  // A tapped day changes on screen at once; the server catches up in the background and the screen settles on its answer.
+  const [shown, tap] = useOptimistic(days, (cur, change: { date: string; office: boolean }) => cur.map((d) => (d.date === change.date ? { ...d, office: change.office, extra: change.office && !d.usual } : d)));
+  const [tapErr, setTapErr] = useState<string | null>(null);
+  const [, startTap] = useTransition();
+  const toggleDay = (d: DayView) =>
+    startTap(async () => {
+      setTapErr(null);
+      tap({ date: d.date, office: !d.office });
+      const r = await setOfficeDay({ date: d.date, office: !d.office, usual: d.usual, dayBudget });
+      if (r.error) setTapErr(r.error);
+    });
+  const extra = shown.filter((d) => d.extra).length;
+  const plannedNow = shown.filter((d) => d.office && d.usual).length;
+  const skippedNow = shown.filter((d) => d.usual && !d.office).length;
+  const extraSpent = extra * dayBudget;
+  void planned;
+  void skipped;
+  void extraUsed;
   return (
     <section className="v-card" aria-labelledby="rt">
       <h2 id="rt">Office days (RTO)</h2>
@@ -48,19 +65,19 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
         </div>
         <div className="v-lbl" style={{ margin: "16px 0 8px" }}>This cutoff, {range}. Tap a day you went in outside your usual days.</div>
         <div className="v-dgrid">
-          {days.map((d) => (
-            <button key={d.date} type="button" disabled={busy} className={`v-dy ${d.office ? "v-on" : ""} ${d.extra ? "v-x" : ""} ${d.date === today ? "v-today" : ""}`} aria-pressed={d.office}
+          {shown.map((d) => (
+            <button key={d.date} type="button" className={`v-dy ${d.office ? "v-on" : ""} ${d.extra ? "v-x" : ""} ${d.date === today ? "v-today" : ""}`} aria-pressed={d.office}
               aria-label={`${dayText(d.date, d.weekday)}, ${d.office ? (d.extra ? "extra office day" : "office day") : "not an office day"}${d.date === today ? ", today" : ""}`}
-              onClick={() => act(() => setOfficeDay({ date: d.date, office: !d.office, usual: d.usual, dayBudget }))}>
+              onClick={() => toggleDay(d)}>
               <span>{WD[d.weekday - 1]}</span><b>{Number(d.date.slice(8))}</b><span className="v-tag">{d.extra ? "extra" : " "}</span>
             </button>
           ))}
         </div>
         <div className="v-legend2"><span><i className="v-k1" />Usual day</span><span><i className="v-k2" />Extra day (from the contingency)</span></div>
         <div className="v-rtosum">
-          <div className="v-row v-sp v-sm"><span><b>{planned} planned</b>{skipped ? ` · ${skipped} skipped` : ""}</span><b className="v-num"><Money value={money(planned * dayBudget)} /></b></div>
-          <div className="v-row v-sp v-sm"><span><b>{extra} extra day{extra === 1 ? "" : "s"}</b></span><b className="v-num"><Money value={money(extraUsed)} /> of <Money value={money(contingency)} /></b></div>
-          <div className={`v-bar ${extraUsed > contingency ? "v-bad" : ""}`} role="img" aria-label="Contingency used"><i style={{ width: `${contingency ? Math.min(100, (extraUsed / contingency) * 100) : 0}%` }} /></div>
+          <div className="v-row v-sp v-sm"><span><b>{plannedNow} planned</b>{skippedNow ? ` · ${skippedNow} skipped` : ""}</span><b className="v-num"><Money value={money(plannedNow * dayBudget)} /></b></div>
+          <div className="v-row v-sp v-sm"><span><b>{extra} extra day{extra === 1 ? "" : "s"}</b></span><b className="v-num"><Money value={money(extraSpent)} /> of <Money value={money(contingency)} /></b></div>
+          <div className={`v-bar ${extraSpent > contingency ? "v-bad" : ""}`} role="img" aria-label="Contingency used"><i style={{ width: `${contingency ? Math.min(100, (extraSpent / contingency) * 100) : 0}%` }} /></div>
         </div>
         <div className="v-lbl" style={{ margin: "16px 0 6px" }}>RTO lines</div>
         <div className="v-row v-wrap" style={{ gap: 6 }}>
@@ -68,7 +85,7 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
           <span className="v-pill v-warn">{contingencyName ?? "No contingency line"}</span>
         </div>
         <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>The app works out a day&apos;s budget (<Money value={money(dayBudget)} /> now) from your RTO lines and the usual days. Change which lines count in a line&apos;s editor.</p>
-        <Err error={error} />
+        <Err error={tapErr ?? error} />
       </div>
     </section>
   );

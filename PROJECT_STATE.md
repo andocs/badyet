@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 22:36 | slice-6 | Slice 6 approved by the user. | a8b8ad5
 - 2026-11-20 22:57 | slice-7 | Setup wizard (5 steps, live payslip), Settings, old shell/pages/libs and tests removed, exports and e2e routes updated, optional retire-old-tables.sql. Local commit, not pushed, not run in a browser. | -
 - 2026-11-20 22:58 | slice-7 | Slice 7 approved by the user. Web rehaul complete. | 94281f7
+- 2026-11-20 23:14 | perf | Merged slices 1 to 7 into main (local, fast-forward). Perf: loading skeleton for every page, 30s client cache (staleTimes), budget loader queries in parallel. Not pushed. | -
 
 ## 4. Open questions
 

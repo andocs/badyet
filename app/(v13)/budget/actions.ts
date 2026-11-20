@@ -120,20 +120,21 @@ export async function setOfficeDay(input: { date: string; office: boolean; usual
   if (!Number.isInteger(input.dayBudget) || input.dayBudget < 0 || input.dayBudget > 100_000_000) return { error: "Check the day budget." };
   const wantsOverride = input.office !== input.usual;
 
-  const pool = await supabase.from("pools").select("id, budget_line_id").not("budget_line_id", "is", null);
-  const contingency = await supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").maybeSingle();
+  // Three round trips instead of seven: look things up and clear the old tap together, then write.
+  const [pool, contingency] = await Promise.all([
+    supabase.from("pools").select("id, budget_line_id").not("budget_line_id", "is", null),
+    supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").maybeSingle(),
+    supabase.from("office_day_overrides").delete().eq("day", input.date),
+  ]);
   const poolId = (pool.data ?? []).find((p) => p.budget_line_id === contingency.data?.id)?.id as string | undefined;
 
-  // Remove the previous tap and its pool draw, then write the new state.
-  await supabase.from("office_day_overrides").delete().eq("day", input.date);
-  if (poolId) await supabase.from("pool_entries").delete().eq("pool_id", poolId).eq("occurred_on", input.date).eq("kind", "use").eq("note", "Extra office day");
-  if (!wantsOverride) {
-    refresh();
-    return { ok: true };
-  }
-  const ins = await supabase.from("office_day_overrides").insert({ day: input.date, in_office: input.office });
-  if (ins.error) return { error: "Could not save that day. Try again." };
-  if (input.office && !input.usual && poolId && input.dayBudget > 0) {
+  // Remove the previous pool draw for this day while saving the new tap.
+  const [, ins] = await Promise.all([
+    poolId ? supabase.from("pool_entries").delete().eq("pool_id", poolId).eq("occurred_on", input.date).eq("kind", "use").eq("note", "Extra office day") : Promise.resolve(null),
+    wantsOverride ? supabase.from("office_day_overrides").insert({ day: input.date, in_office: input.office }) : Promise.resolve(null),
+  ]);
+  if (ins?.error) return { error: "Could not save that day. Try again." };
+  if (wantsOverride && input.office && !input.usual && poolId && input.dayBudget > 0) {
     await supabase.from("pool_entries").insert({ pool_id: poolId, occurred_on: input.date, kind: "use", amount: input.dayBudget, note: "Extra office day" });
   }
   refresh();
