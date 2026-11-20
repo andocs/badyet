@@ -32,6 +32,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
 - 2026-11-19 22:32 | rev-3 | rev-3 built: user_settings table (second_cutoff_start_day, default 16), /settings page, dashboard currentCutoff/cutoffLabel use it, linked from More and rail. Checks pending in batch run. | c76967b
 - 2026-11-19 22:33 | rev-4 | rev-4 done: TRAIN 2023+ table and 90,000 bonus exemption match published 2026 guides (third-party, not BIR circulars). PhilHealth fixed: employee share 2.5% of monthly basic with 10,000 floor and 100,000 ceiling (250 to 2,500 a month), was 5% of semi-monthly basic with no limits. UI notices updated. Runner PASS 135 tests. | b4e344a
+- 2026-11-19 22:35 | rev-5 | rev-5 built: /import page + importSnapshot action (validated snapshot JSON, creates a NEW inactive plan, wallets, pay, lines, installments, subscriptions; undoes itself on failure; never changes existing data). Snapshot generated from the Sheet (Dec 10 onwards tab) into data/import/sheet-import.json (git-ignored, personal data). Sheet totals reproduce: 1st cutoff 25,008, 2nd 30,555. Not imported: savings fund balances, 13th month, CIP, HMO deduction, older plans. | 0d4d3f4
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

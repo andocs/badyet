@@ -31,10 +31,12 @@ export interface InstalmentSummary {
   total: Money;
   interest: Money;
   remaining: number;
+  paidCount: number;
   lastDueOn: string;
 }
 
-export function summarize(r: InstalmentRow, today: string): InstalmentSummary {
+// `paid` holds the payment numbers (1, 2, 3 ...) you have marked as paid.
+export function summarize(r: InstalmentRow, paid: ReadonlySet<number> = new Set()): InstalmentSummary {
   const pays = paymentsOf(r);
   const total = sum(pays.map((p) => p.amount));
   const financed = financedAmount(planOf(r));
@@ -43,7 +45,9 @@ export function summarize(r: InstalmentRow, today: string): InstalmentSummary {
     perPayment: pays[0].amount,
     total,
     interest: money(total - financed),
-    remaining: remainingPayments(pays, isoDate(today)).length,
+    // Counts everything not marked paid: nothing is assumed paid just because its date has passed.
+    remaining: remainingPayments(pays, isoDate("0001-01-01"), paid).length,
+    paidCount: pays.filter((p) => paid.has(p.seq)).length,
     lastDueOn: pays[pays.length - 1].dueOn,
   };
 }

@@ -23,6 +23,14 @@ describe("parseInstalmentForm", () => {
     const r = parseInstalmentForm({ ...good, apr: "" });
     expect(r.ok && r.value.rateBp).toBeNull();
   });
+  it("reads payments already made (blank means none, never more than the term)", () => {
+    expect(parseInstalmentForm(good).ok && (parseInstalmentForm(good) as { value: { paidCount: number } }).value.paidCount).toBe(0);
+    const r = parseInstalmentForm({ ...good, paidCount: "5" });
+    expect(r.ok && r.value.paidCount).toBe(5);
+    expect(parseInstalmentForm({ ...good, paidCount: "13" }).ok).toBe(false);
+    expect(parseInstalmentForm({ ...good, paidCount: "-1" }).ok).toBe(false);
+    expect(parseInstalmentForm({ ...good, paidCount: "1.5" }).ok).toBe(false);
+  });
   it("rejects bad input", () => {
     expect(parseInstalmentForm({ ...good, name: "" }).ok).toBe(false);
     expect(parseInstalmentForm({ ...good, price: "0" }).ok).toBe(false);

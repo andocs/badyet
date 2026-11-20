@@ -11,6 +11,8 @@ export interface InstalmentInput {
   firstDueOn: string;
   cutoff: Cutoff;
   walletId: string | null;
+  /** Payments already made when you add it (the first N are marked paid). */
+  paidCount: number;
 }
 export type InstalmentParse = { ok: true; value: InstalmentInput } | { ok: false; error: string };
 
@@ -31,6 +33,11 @@ export function parseInstalmentForm(raw: Record<string, unknown>): InstalmentPar
   if (!Number.isInteger(term) || term < 1 || term > 600) {
     return { ok: false, error: "Number of payments must be a whole number from 1 to 600." };
   }
+  const paidText = text(raw.paidCount);
+  const paidCount = paidText === "" ? 0 : Number(paidText);
+  if (!Number.isInteger(paidCount) || paidCount < 0 || paidCount > term) {
+    return { ok: false, error: "Payments already made must be a whole number from 0 up to the number of payments." };
+  }
   const aprText = text(raw.apr);
   let rateBp: number | null = null;
   if (aprText !== "") {
@@ -46,6 +53,6 @@ export function parseInstalmentForm(raw: Record<string, unknown>): InstalmentPar
   if (wallet !== "" && !isUuid(wallet)) return { ok: false, error: "Pick a wallet from the list." };
   return {
     ok: true,
-    value: { name, price, downPayment, termCount: term, rateBp, firstDueOn, cutoff: raw.cutoff, walletId: wallet === "" ? null : wallet },
+    value: { name, price, downPayment, termCount: term, rateBp, firstDueOn, cutoff: raw.cutoff, walletId: wallet === "" ? null : wallet, paidCount },
   };
 }

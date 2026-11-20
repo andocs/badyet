@@ -1,10 +1,9 @@
 import { WalletSelect } from "@/components/wallet-select";
 import { dueByCutoff, summarize, type InstalmentRow } from "@/lib/installments/calc";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
-import { todayManila } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
 import { currentMonth, monthLabel } from "@/lib/transfer/month";
-import { addInstalment, deleteInstalment, syncBudget } from "./actions";
+import { addInstalment, deleteInstalment, setNextPayment, syncBudget } from "./actions";
 
 const ERRORS: Record<string, string> = {
   invalid: "Check the form: price, number of payments and the first payment date are needed; down payment must be less than the price.",
@@ -21,6 +20,9 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
   const supabase = await createClient();
   const { data: rows } = supabase ? await supabase.from("installments").select("*").order("created_at") : { data: null };
   const { data: walletRows } = supabase ? await supabase.from("wallets").select("id,name").order("created_at") : { data: null };
+  const { data: payRows } = supabase ? await supabase.from("installment_payments").select("installment_id,seq") : { data: null };
+  const paidBy = new Map<string, Set<number>>();
+  for (const p of payRows ?? []) paidBy.set(p.installment_id, (paidBy.get(p.installment_id) ?? new Set<number>()).add(p.seq));
   const wallets = walletRows ?? [];
   const items: InstalmentRow[] = (rows ?? []).map((r) => ({
     id: r.id,
@@ -33,7 +35,6 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
     cutoff: r.cutoff,
     walletId: r.wallet_id,
   }));
-  const today = todayManila();
   const month = currentMonth();
   const due = dueByCutoff(items, month);
   const walletName = (id: string | null) => wallets.find((w) => w.id === id)?.name;
@@ -67,7 +68,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
           <h2 id="list-h">Your installments</h2>
           {items.length === 0 && <p className="sub">None yet. Add one on the right.</p>}
           {items.map((r) => {
-            const s = summarize(r, today);
+            const s = summarize(r, paidBy.get(r.id));
             return (
               <div key={r.id} className="plan">
                 <div>
@@ -77,14 +78,29 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
                     {walletName(r.walletId) && <span className="pill quiet">{walletName(r.walletId)}</span>}
                   </div>
                   <span className="lab">
-                    ₱{peso(s.perPayment)} × {r.termCount} · {s.remaining} left · ends {monthLabel(s.lastDueOn.slice(0, 7))}
+                    ₱{peso(s.perPayment)} × {r.termCount} · {s.paidCount} paid · {s.remaining} left · ends {monthLabel(s.lastDueOn.slice(0, 7))}
                     {s.interest > 0 && <> · interest ₱{peso(s.interest)}</>}
                   </span>
                 </div>
-                <form action={deleteInstalment}>
-                  <input type="hidden" name="id" value={r.id} />
-                  <button type="submit" className="btn sm danger" aria-label={`Delete ${r.name}`}>Delete</button>
-                </form>
+                <div style={{ display: "flex", gap: 6 }}>
+                  {s.remaining > 0 && (
+                    <form action={setNextPayment}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button type="submit" className="btn sm" aria-label={`Mark next payment of ${r.name} paid`}>Mark paid</button>
+                    </form>
+                  )}
+                  {s.paidCount > 0 && (
+                    <form action={setNextPayment}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <input type="hidden" name="undo" value="1" />
+                      <button type="submit" className="btn sm" aria-label={`Undo last paid payment of ${r.name}`}>Undo</button>
+                    </form>
+                  )}
+                  <form action={deleteInstalment}>
+                    <input type="hidden" name="id" value={r.id} />
+                    <button type="submit" className="btn sm danger" aria-label={`Delete ${r.name}`}>Delete</button>
+                  </form>
+                </div>
               </div>
             );
           })}
@@ -107,6 +123,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
                   <option value="second">2nd cutoff</option>
                 </select>
               </label>
+              <label className="field"><span className="lab">Payments already made (optional)</span><input className="input" name="paidCount" inputMode="numeric" placeholder="0" /></label>
             </div>
             <label className="field"><span className="lab">Wallet</span><WalletSelect wallets={wallets} label="Wallet" /></label>
             <button type="submit" className="btn">Add installment</button>
