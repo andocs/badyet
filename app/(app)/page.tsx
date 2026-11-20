@@ -191,14 +191,17 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   return (
     <>
       <AutoSync />
-      <div style={{ margin: "18px 22px 0" }}>
-        <PlanBar basePath="/" plan={plan} keep={`cutoff=${cutoff}`} />
-      </div>
-      <nav className="segmented" aria-label="Cutoff" style={{ margin: "0 22px", width: "fit-content" }}>
-        <Link href={`/?cutoff=first${planQuery(plan)}`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
-        <Link href={`/?cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
-      </nav>
-      <Dashboard key={`${month}-${cutoff}-${data.sentIds.join(",")}-${data.lines.length}`} data={data} />
+      <Dashboard
+        key={`${month}-${cutoff}-${data.sentIds.join(",")}-${data.lines.length}`}
+        data={data}
+        planBar={<PlanBar basePath="/" plan={plan} keep={`cutoff=${cutoff}`} />}
+        cutoffNav={
+          <nav className="segmented" aria-label="Cutoff">
+            <Link href={`/?cutoff=first${planQuery(plan)}`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
+            <Link href={`/?cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
+          </nav>
+        }
+      />
     </>
   );
 }

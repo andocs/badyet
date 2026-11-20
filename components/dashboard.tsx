@@ -71,7 +71,7 @@ function readSnoozed(key: string): boolean {
 
 // Now: on payday it walks you through four steps (pay landed, spoken for, send by wallet, yours to spend).
 // Between paydays it shows when the next one is and how the month looks.
-export function Dashboard({ data }: { data: DashData }) {
+export function Dashboard({ data, planBar, cutoffNav }: { data: DashData; planBar?: React.ReactNode; cutoffNav?: React.ReactNode }) {
   const hello = useGreeting();
   const [sent, setSentIds] = useState<Set<string>>(new Set(data.sentIds));
   const [pieces, setPieces] = useState<Piece[]>([]);
@@ -174,8 +174,10 @@ export function Dashboard({ data }: { data: DashData }) {
 
   return (
     <main className="main now">
+      {planBar}
       {ritual && (
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 10, marginBottom: 6 }}>
+          {cutoffNav}
           <HideAmounts className="btn sm ghost" />
         </div>
       )}
@@ -326,13 +328,14 @@ export function Dashboard({ data }: { data: DashData }) {
                     : "Nothing to do until then. Here is how the month looks."}
               </p>
             </div>
+            {cutoffNav}
           </div>
           <div className="split">
             <div className="stack">
               <section className="hero" aria-label="Next payday">
                 {!showStrip && (
                   <div className="herotop">
-                    <HideAmounts className="btn sm ghost" />
+                    <HideAmounts className="iconbtn" iconOnly />
                   </div>
                 )}
                 {showStrip && (
@@ -350,7 +353,7 @@ export function Dashboard({ data }: { data: DashData }) {
                         </>
                       )}
                     </span>
-                    <span className="paystrip-hide"><HideAmounts className="btn sm ghost" /></span>
+                    <span className="paystrip-hide"><HideAmounts className="iconbtn" iconOnly /></span>
                   </div>
                 )}
                 <div className="hero-inner">
