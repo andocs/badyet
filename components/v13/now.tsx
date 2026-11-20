@@ -324,8 +324,8 @@ export function NowSetup({ reason }: { reason: "no-salary" | "no-budget" }) {
         <div className="v-card v-stack">
           {reason === "no-salary" ? (
             <>
-              <p style={{ margin: 0 }}>Now needs your salary to work out what you can spend. Add it under Salary and tax.</p>
-              <Link className="v-btn v-pri" href="/pay">Open Salary and tax</Link>
+              <p style={{ margin: 0 }}>Now needs your salary to work out what you can spend. The setup wizard takes a few minutes and every step can be skipped.</p>
+              <Link className="v-btn v-pri" href="/setup">Run the setup wizard</Link>
             </>
           ) : (
             <>

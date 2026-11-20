@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 6 Funds, Forecast, Override
+- **Active slice / milestone:** 7 First run wizard, Settings, retire old pages
 - **Gate:** none
-- **Next action:** Build slice 6 (Funds, Forecast, Override). Apply the pools migration and try Budget and Bonuses first.
-- **User to-do now:** Apply 20261206000400_pools_created_on.sql, try Budget and Bonuses, push slice/5-budget-bonuses.
+- **Next action:** Build slice 7 (First run wizard, Settings, retire plans and old pages). Try Funds, Forecast and Override first.
+- **User to-do now:** Try Funds, Forecast and Override in the app, push slice/6-funds-forecast-override.
 
 ## 3. Execution log
 
@@ -37,6 +37,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 21:58 | slice-5 | In progress: migration + pools/rto pure libs written. | -
 - 2026-11-20 22:08 | slice-5 | Budget (lines editor, future years + compare, RTO, settle, pools, categories), Bonuses (cards with 90k cap waterfall, destinations, received history, rule editor), pools migration, pure libs and validators with tests, Now picks up pools and settle nudge. Local commit, not pushed, not run in a browser. | -
 - 2026-11-20 22:22 | slice-5 | Slice 5 approved by the user. | 96cc419
+- 2026-11-20 22:33 | slice-6 | Funds editor, Forecast (chart, ladder, month sheet, with/without expected raises), Override single and bulk with live effect, validators, forecast rows and loaders with tests. Local commit, not pushed, not run in a browser. | -
+- 2026-11-20 22:36 | slice-6 | Slice 6 approved by the user. | a8b8ad5
 
 ## 4. Open questions
 
@@ -53,14 +55,14 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,366,654 | 5,521,763 | 255,585 | 2,880,851 | 335,564,140 | 1,675,133 |  |
+| **Cumulative** | 1,382,399 | 5,591,251 | 259,166 | 2,964,322 | 347,895,922 | 1,730,733 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
 | Slice 3 | 31,692 | 69,931 | 7,732 | 61,392 | 4,284,984 | 40,417 |  |
 | Slice 4 | 17,541 | 64,878 | 3,723 | 89,056 | 7,339,876 | 58,555 |  |
 | Slice 5 | 23,146 | 79,644 | 2,051 | 128,754 | 17,634,396 | 97,620 |  |
-| Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
+| Slice 6 | 15,745 | 69,488 | 3,581 | 80,760 | 10,601,471 | 54,339 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
 | Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
 | Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
@@ -101,6 +103,13 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 6 (Funds, Forecast, Override) is built and committed locally on slice/6-funds-forecast-override (not pushed; stacked on slices 2 to 5). No new migration.
+1. Funds (/funds): default priority with up/down, balance bars, editor (name, colour, linked account with optional share or typed balance, fill rule steps/cap/reset/fixed, target, monthly limit, tranches, reset month), archive.
+2. Forecast (/forecast): 60 months from this month with your salary, bonuses, budget lines and funds. Hero total with "without expected raises", fund pills, stacked or lines chart, tap or Jump-to a month for the sheet (pool, where it went, why), Year by year ladder with month cards, Months that differ.
+3. Override a month (/forecast/override?m=2027-03): reorder, pin, skip with live "what it does" and "five years later", save, reset, apply the order to a range. Bulk (?bulk=1): tick months, then put a fund first, pin, skip or reset; click a cell to pin or skip one fund.
+Notes: the old Savings page is gone. If you have no funds or no salary, Forecast shows a prompt instead. Fund balances start from the linked account balance or the typed balance.
+Not verified: not opened in a browser or run against your data. Tests, typecheck, lint and build pass.
 
 Slice 5 (Budget and Bonuses) is built and committed locally on slice/5-budget-bonuses (not pushed; stacked on slices 2 to 4).
 1. Apply supabase/migrations/20261206000400_pools_created_on.sql in the SQL Editor (adds pools.created_on and a positive-amount check on pool entries).

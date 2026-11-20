@@ -8,7 +8,7 @@ test("login page fits the screen and has the Google sign-in button", async ({ pa
   await page.screenshot({ path: `e2e/results/login-${info.project.name}.png`, fullPage: true });
 });
 
-for (const path of ["/", "/budget", "/installments", "/settings", "/export/plans"]) {
+for (const path of ["/", "/budget", "/forecast", "/settings", "/export/accounts"]) {
   test(`signed out: ${path} goes to login`, async ({ page }) => {
     await page.goto(path);
     await expect(page).toHaveURL(/\/login/);

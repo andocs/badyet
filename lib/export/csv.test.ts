@@ -13,7 +13,7 @@ describe("toCsv", () => {
     expect(toCsv([{ n: "=1+1", m: -5, k: "@x" }])).toBe("n,m,k\r\n'=1+1,-5,'@x\r\n");
   });
   it("only allows known table names", () => {
-    expect(isExportName("budget_lines")).toBe(true);
+    expect(isExportName("budget_lines_v2")).toBe(true);
     expect(isExportName("users")).toBe(false);
     expect(isExportName("../x")).toBe(false);
   });

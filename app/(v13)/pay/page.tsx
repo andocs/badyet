@@ -39,7 +39,7 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
         </div>
 
         {!hasStart ? (
-          <div className="v-note"><b>No salary on file yet.</b> The first-run wizard (a later part of the rehaul) sets your starting pay. Your old plan&apos;s base pay is carried over by the data migration, so if you expected to see it here, check that the migration ran.</div>
+          <div className="v-note"><b>No salary on file yet.</b> The <Link href="/setup">setup wizard</Link> sets your starting pay.</div>
         ) : (
           <>
             <div className="v-tabs2" role="tablist" aria-label="Salary views" style={{ marginTop: -4 }}>

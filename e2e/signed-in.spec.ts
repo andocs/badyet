@@ -5,7 +5,7 @@ test.skip(!hasAuth, "No saved session (e2e/.auth/state.json). See docs/e2e.md.")
 test.use({ storageState: hasAuth ? AUTH_FILE : undefined });
 
 // Read-only on purpose: these run against your real data.
-for (const path of ["/", "/budget", "/transfer", "/installments", "/subscriptions", "/settings", "/more"]) {
+for (const path of ["/", "/inbox", "/accounts", "/pay", "/budget", "/bonuses", "/funds", "/forecast", "/settings", "/setup"]) {
   test(`${path} loads, fits the screen, no error page`, async ({ page }, info) => {
     const res = await page.goto(path);
     expect(res?.status()).toBeLessThan(400);
@@ -18,6 +18,6 @@ for (const path of ["/", "/budget", "/transfer", "/installments", "/subscription
 
 test("settings: a CSV export downloads", async ({ page }) => {
   await page.goto("/settings");
-  const [download] = await Promise.all([page.waitForEvent("download"), page.locator('a[href="/export/plans"]').click()]);
-  expect(download.suggestedFilename()).toBe("badyet-plans.csv");
+  const [download] = await Promise.all([page.waitForEvent("download"), page.locator('a[href="/export/accounts"]').click()]);
+  expect(download.suggestedFilename()).toBe("badyet-accounts.csv");
 });

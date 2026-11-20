@@ -1,13 +1,20 @@
 // Tables you can download, and the name each file gets.
 export const EXPORTS = [
-  "plans",
-  "pay_profiles",
-  "budget_lines",
-  "wallets", // your accounts: kind, last 4 digits only, balances
-  "transfer_marks",
-  "installments",
-  "installment_payments",
-  "subscriptions",
+  "accounts", // kind, last 4 digits only
+  "balance_anchors",
+  "transactions", // amount, merchant, time; never raw notification text
+  "category_groups",
+  "categories",
+  "budget_lines_v2",
+  "salary_events",
+  "allowances",
+  "bonus_rules",
+  "bonus_instances",
+  "bonus_instance_splits",
+  "funds",
+  "month_overrides",
+  "pools",
+  "pool_entries",
 ] as const;
 export type ExportName = (typeof EXPORTS)[number];
 

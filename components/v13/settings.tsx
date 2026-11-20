@@ -1,0 +1,70 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { deleteRule, saveOfficeAmount, savePaydays, setNotifCapture } from "@/app/(v13)/settings/actions";
+import type { FormState } from "@/lib/form-state";
+
+function useAct() {
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [busy, start] = useTransition();
+  const act = (fn: () => Promise<FormState>, ok: string) => start(async () => { const r = await fn(); setMsg(r.error ? { ok: false, text: r.error } : { ok: true, text: ok }); });
+  return { msg, busy, act };
+}
+const Msg = ({ msg }: { msg: { ok: boolean; text: string } | null }) =>
+  msg ? <p className={`v-flag ${msg.ok ? "" : "v-bad"}`} role="status" style={msg.ok ? { background: "var(--tint)", color: "var(--accent-text)", margin: 0 } : { margin: 0 }}>{msg.text}</p> : null;
+
+const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
+
+/** Paydays and the office-day amount. */
+export function PaydaysCard({ first, second, officeAmount }: { first: number; second: number; officeAmount: string }) {
+  const [a, setA] = useState(first);
+  const [b, setB] = useState(second);
+  const [amt, setAmt] = useState(officeAmount);
+  const p = useAct();
+  const o = useAct();
+  return (
+    <section className="v-card v-stack" aria-labelledby="pd">
+      <h2 id="pd">Paydays</h2>
+      <div className="v-grid2">
+        <label className="v-field">First payday<select value={a} onChange={(e) => setA(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
+        <label className="v-field">Second payday<select value={b} onChange={(e) => setB(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 2).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
+      </div>
+      <p className="v-xs v-muted" style={{ margin: 0 }}>Cutoffs run payday to payday: paid the {ord(a)} covers the {ord(a + 1)}–{ord(b - 1)}; paid the {ord(b)} covers the {ord(b)}–{ord(a)} of next month.</p>
+      <div className="v-row v-wrap"><button type="button" className="v-btn v-sm v-pri" disabled={p.busy} onClick={() => p.act(() => savePaydays({ first: a, second: b }), "Saved.")}>Save paydays</button></div>
+      <Msg msg={p.msg} />
+      <hr className="v-hr" />
+      <label className="v-field">Added to your daily amount on a usual office day (₱)<input value={amt} inputMode="decimal" onChange={(e) => setAmt(e.target.value)} placeholder="0" /></label>
+      <p className="v-xs v-muted" style={{ margin: 0 }}>Commute and lunch for an office day. Which weekdays are office days is set on Budget.</p>
+      <div className="v-row v-wrap"><button type="button" className="v-btn v-sm" disabled={o.busy} onClick={() => o.act(() => saveOfficeAmount(amt), "Saved.")}>Save amount</button></div>
+      <Msg msg={o.msg} />
+    </section>
+  );
+}
+
+/** Phone notification capture and the merchant rules you have made. */
+export function NotificationsCard({ enabled, rules }: { enabled: boolean; rules: { id: string; pattern: string; category: string }[] }) {
+  const [on, setOn] = useState(enabled);
+  const n = useAct();
+  const r = useAct();
+  return (
+    <section className="v-card v-stack" aria-labelledby="nt">
+      <h2 id="nt">Phone notifications</h2>
+      <div className="v-row v-sp">
+        <div><b>Read bank and wallet notifications</b><div className="v-xs v-muted">GCash, Maya, BPI. Only amount, merchant and time leave the phone. The phone app is a later part of the rehaul; this switch is saved for when it arrives.</div></div>
+        <button type="button" className="v-sw" role="switch" aria-checked={on} aria-label="Read notifications" disabled={n.busy} onClick={() => { const next = !on; setOn(next); n.act(() => setNotifCapture(next), "Saved."); }} />
+      </div>
+      <Msg msg={n.msg} />
+      <div>
+        <b>Rules</b>
+        <div className="v-xs v-muted" style={{ marginBottom: 6 }}>Made from the Inbox with &quot;Always put this here&quot;.</div>
+        {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No rules yet.</p> : rules.map((x) => (
+          <div key={x.id} className="v-row v-sp" style={{ padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
+            <span><b>{x.pattern}</b> → {x.category}</span>
+            <button type="button" className="v-btn v-sm v-ghost" disabled={r.busy} onClick={() => { if (window.confirm(`Delete the rule for ${x.pattern}?`)) r.act(() => deleteRule(x.id), "Rule deleted."); }}>Delete</button>
+          </div>
+        ))}
+        <div style={{ marginTop: 8 }}><Msg msg={r.msg} /></div>
+      </div>
+    </section>
+  );
+}
