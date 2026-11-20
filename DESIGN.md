@@ -28,29 +28,29 @@ colors:
   daylight-error: "#C23A3A"
 typography:
   display:
-    fontFamily: "Plus Jakarta Sans, system-ui, sans-serif"
+    fontFamily: "Gabarito, system-ui, sans-serif"
     fontSize: "52px"
     fontWeight: 800
     lineHeight: 1.05
     letterSpacing: "-0.03em"
   headline:
-    fontFamily: "Plus Jakarta Sans, system-ui, sans-serif"
+    fontFamily: "Gabarito, system-ui, sans-serif"
     fontSize: "30px"
     fontWeight: 800
     lineHeight: 1.12
     letterSpacing: "-0.025em"
   title:
-    fontFamily: "Plus Jakarta Sans, system-ui, sans-serif"
+    fontFamily: "Gabarito, system-ui, sans-serif"
     fontSize: "18px"
     fontWeight: 800
     letterSpacing: "-0.025em"
   body:
-    fontFamily: "Manrope, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "15px"
     fontWeight: 500
     lineHeight: 1.45
   label:
-    fontFamily: "Manrope, system-ui, sans-serif"
+    fontFamily: "Atkinson Hyperlegible Next, system-ui, sans-serif"
     fontSize: "13px"
     fontWeight: 600
 rounded:
@@ -120,11 +120,11 @@ One emerald accent over tinted midnight neutrals (dark) or cool daylight neutral
 
 ## Typography
 
-**Display Font:** Plus Jakarta Sans 800, tracking -0.025em, for headings and big numbers.
-**Body Font:** Manrope 500/600/700, with `font-variant-numeric: tabular-nums` on every money value.
+**Display Font:** Gabarito 700/800, tracking -0.025em, for headings and big numbers. Playful geometric forms with tabular figures: it carries the notebook voice and Pip.
+**Body Font:** Atkinson Hyperlegible Next 500/600/700 (a calm, highly legible humanist sans, chosen as the contrast to Gabarito: every digit and look-alike letter is distinct), with `font-variant-numeric: tabular-nums` on every money value.
 Both load through the Next.js font loader in `app/layout.tsx` (self-hosted at build, no runtime request).
 
-**Character:** friendly and confident; large rounded figures over calm small text.
+**Character:** friendly and confident; large playful figures over calm, very legible small text. Both faces keep digits the same width (tabular), so amounts line up.
 
 ### Hierarchy
 - **Display** (800, 52px, 1.05): the "left to send" and "yours to spend" figures. 40px on phone.

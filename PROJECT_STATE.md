@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-18..23
-- **Gate:** building
-- **Next action:** Build rev-18 Google login first, then rev-19..23; one gate at the end
-- **User to-do now:** Answer Q1 (paydays) and Q2 (payslip, CIP inputs) when ready
+- **Phase:** Done
+- **Active slice / milestone:** rev-18..25
+- **Gate:** none
+- **Next action:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; add paid counts, savings balances, 13th/CIP, HMO to the import file; Sept bonus de minimis default
+- **User to-do now:** Apply 4 migrations; configure Google in Supabase then merge rev-18; merge rev/23; check payday days in Settings
 
 ## 3. Execution log
 
@@ -30,6 +30,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 10:40 | rev-20 | Pay and Bonuses open on any plan via ?plan= (PlanBar), saves/adds/deletes stay on that plan; addEvent uses the form planId instead of the active plan. 163 tests, lint, typecheck, build PASS. | 175474c
 - 2026-11-20 10:42 | rev-21 | Budget lines read at a glance, tap to edit, autosave on leaving a field (saveLineInline), Done/Enter/Escape, delete with confirm; Installments/Subscriptions lines show Automatic and are read-only; budget actions keep ?plan= when editing a non-active plan. 163 tests, typecheck, build, 24 e2e PASS (unused import removed after the run). | f0ee20e
 - 2026-11-20 10:44 | rev-22 | HMO/other deduction on Pay (after tax, each cutoff; lowers budget net and take-home, tax unchanged; migration 20261205000000 also updates duplicate_plan to copy it); import snapshot accepts paidCount (writes installment_payments), savings starting balances, windfalls with de minimis; import page counts updated. The snapshot file data/import/sheet-import.json does not yet contain these sections. 167 tests, lint, typecheck, build PASS. Migration must be applied. | 6c36411
+- 2026-11-20 10:45 | rev-23 | DESIGN.md merged and refreshed (kept the owner decisions, added token frontmatter, four-destination layout, payday ritual, plan bar, accounts wizard, budget line, Hide amounts, gold text rule). Doctor: dead path fixed; only the size advisory (compact proposal, needs consent) remains. No sidecar .impeccable/design.json written. | 9459625
+- 2026-11-20 10:50 | redesign | Final gate APPROVED by user: rev-18..rev-25. | -
 
 ## 4. Open questions
 
@@ -44,7 +46,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 594,159 | 2,828,394 | 136,781 | 1,029,566 | 110,257,468 | 562,026 |  |
+| **Cumulative** | 786,543 | 3,902,329 | 179,291 | 1,228,304 | 150,457,898 | 662,260 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -59,6 +61,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
 | rev-7..10 | 39,382 | 215,399 | 8,700 | 19,459 | 1,105,451 | 8,538 |  |
 | rev-11..17 | 120,085 | 579,997 | 27,820 | 126,989 | 15,445,879 | 70,608 |  |
+| rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
 
 <!-- END SUMMARY -->
 
@@ -112,6 +115,12 @@ Decisions: direction A "payday ritual" (docs/mockups/v11-a-payday-ritual.html) f
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+1. Apply these migrations to Supabase, in order: 20261202000000_transfer_marks_balance.sql, 20261203000000_cutoff_paydays.sql (sets your saved settings to paydays 11/25), 20261204000000_windfall_de_minimis.sql, 20261205000000_hmo_deduction.sql.
+2. Google login (rev/18-google-login) is on its own branch: set up Google in Supabase first (docs/deploy.md, "Google sign-in"), test it, THEN merge it. Merging it before that locks you out.
+3. Merge rev/23-design-md into main (it carries rev-19, 24, 25, 20, 21, 22, 23). If rev-18 is merged too, PROJECT_STATE.md will conflict: keep the rev/23 version.
+4. Settings: check the two payday days (11 and 25). Bonuses: enter the de minimis on your CIP and September bonus.
+5. Tell me the September bonus de minimis figure if you want it as a default, and whether the sheet has paid counts, savings balances, 13th/CIP and HMO so I can add them to the import file.
 
 1. Apply supabase/migrations/20261130000000_installment_payments.sql and 20261201000000_accounts.sql to Supabase (accounts and Mark paid need them).
 2. Merge the rev branches in order (rev/11 ... rev/17) into main; they are stacked.

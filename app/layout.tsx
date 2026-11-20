@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
+import { Atkinson_Hyperlegible_Next, Gabarito } from "next/font/google";
 import "./globals.css";
 
-const display = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display" });
-const body = Manrope({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-body" });
+const display = Gabarito({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display" });
+const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-body" });
 
 export const metadata: Metadata = {
   title: "Bad(yet)",
