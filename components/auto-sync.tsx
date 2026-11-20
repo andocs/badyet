@@ -12,14 +12,17 @@ export function AutoSync() {
     } catch {
       // storage blocked: just sync once for this visit
     }
-    void autoSyncCommitments().then((ok) => {
-      if (!ok) return;
-      try {
-        sessionStorage.setItem(key, "1");
-      } catch {
-        // fine
-      }
-    });
+    // A background tidy-up must never throw into the page: if the request fails it just tries again next visit.
+    autoSyncCommitments()
+      .then((ok) => {
+        if (!ok) return;
+        try {
+          sessionStorage.setItem(key, "1");
+        } catch {
+          // fine
+        }
+      })
+      .catch(() => {});
   }, []);
   return null;
 }
