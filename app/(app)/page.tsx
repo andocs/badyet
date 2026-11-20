@@ -4,12 +4,12 @@ import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { Dashboard, type DashData } from "@/components/dashboard";
 import { money } from "@/lib/domain/money";
-import { DEFAULT_SECOND_START, currentCutoff, cutoffLabel, daysBetween, daysInMonthOf, resolveCutoff } from "@/lib/dashboard/helpers";
+import { cutoffLabel, cutoffRange, currentPeriod, daysBetween, loadRule, nextPayday, resolveCutoff } from "@/lib/dashboard/helpers";
 import type { PayProfile } from "@/lib/pay/compute";
 import { todayManila } from "@/lib/plans/validate";
 import { loadSavings } from "@/lib/savings/load";
 import { createClient } from "@/lib/supabase/server";
-import { currentMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
+
 import { computeEvents } from "@/lib/windfall/compute";
 import { isKind } from "@/lib/accounts/input";
 import { daysUntilDay, position } from "@/lib/accounts/summary";
@@ -40,10 +40,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
   }
 
   const today = todayManila();
-  const month = currentMonth();
-  const { data: settingsRow } = await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle();
-  const secondStart: number = settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START;
-  const cutoff = resolveCutoff(params.cutoff, today, secondStart);
+  const rule = await loadRule(supabase);
+  const month = currentPeriod(today, rule).month;
+  const cutoff = resolveCutoff(params.cutoff, today, rule);
 
   const [{ data: walletRows }, { data: lineRows }, { data: markRows }, { data: pay }, { data: bonusRows }, savings, { data: instRows }, { data: subRows }, { data: payRows }] = await Promise.all([
     supabase.from("wallets").select("id,name").order("created_at"),
@@ -107,12 +106,9 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     ...(subRows ?? []).filter((s) => s.cutoff === cutoff).map((s) => ({ name: s.name as string, amount: Number(s.amount), kind: "Subscription" })),
   ];
   // The next payday after today, and how many days of this cutoff are left to spend in.
-  const nowCutoff = currentCutoff(today, secondStart);
-  const nextStart = nowCutoff === "first" ? `${month}-${String(secondStart).padStart(2, "0")}` : `${shiftMonth(month, 1)}-01`;
-  const nextMonthKey = nowCutoff === "first" ? month : shiftMonth(month, 1);
-  const nextCutoff = nowCutoff === "first" ? "second" : "first";
-  const todayDay = Number(today.slice(8, 10));
-  const daysLeft = cutoff === "first" ? secondStart - todayDay : daysInMonthOf(month) - todayDay + 1;
+  const nextUp = nextPayday(today, rule);
+  const nextCutoff = nextUp.cutoff;
+  const daysLeft = daysBetween(today, cutoffRange(month, cutoff, rule).end) + 1;
   const bucketRow = (c: "first" | "second", label: string) => {
     const sumOf = (b: string) => all.filter((l) => l.cutoff === c && l.bucket === b).reduce((a, l) => a + Number(l.amount) / 100, 0);
     return { label, essentials: sumOf("essentials"), wants: sumOf("wants"), savings: sumOf("savings") };
@@ -172,7 +168,7 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     planName: plan.name,
     month,
     cutoff,
-    cutoffLabel: cutoffLabel(month, cutoff, secondStart),
+    cutoffLabel: cutoffLabel(month, cutoff, rule),
     wallets: walletRows ?? [],
     lines: mine.map((l) => ({ id: l.id, name: l.name, bucket: l.bucket, walletId: l.wallet_id, amount: Number(l.amount) })),
     sentIds: (markRows ?? []).map((r) => r.line_id as string),
@@ -183,8 +179,8 @@ export default async function Home({ searchParams }: PageProps<"/">) {
     unplanned: thisSum ? Number(thisSum.left) : null,
     commitments,
     next: {
-      days: Math.max(0, daysBetween(today, nextStart)),
-      label: cutoffLabel(nextMonthKey, nextCutoff, secondStart).split(" · ")[0].toLowerCase() + " (" + monthLabel(nextMonthKey).split(" ")[0] + " " + Number(nextStart.slice(8, 10)) + ")",
+      days: Math.max(0, daysBetween(today, nextUp.start)),
+      label: `${nextCutoff} cutoff (${cutoffLabel(nextUp.month, nextCutoff, rule).split(" · ")[1].split(" to ")[0]})`,
       net: sums ? Number(nextCutoff === "first" ? sums.first.net : sums.second.net) : null,
     },
     daysLeft: Math.max(1, daysLeft),

@@ -1,8 +1,8 @@
 import { isCutoff, type Cutoff } from "@/lib/budget/validate";
 import { money, sum } from "@/lib/domain/money";
-import { isPastPlan } from "@/lib/plans/validate";
+import { isPastPlan, todayManila } from "@/lib/plans/validate";
 import type { createClient } from "@/lib/supabase/server";
-import { currentMonth } from "@/lib/transfer/month";
+import { currentPeriod, loadRule } from "@/lib/dashboard/helpers";
 import { dueByCutoff, rowFromDb } from "./calc";
 
 type Db = NonNullable<Awaited<ReturnType<typeof createClient>>>;
@@ -15,7 +15,7 @@ export async function syncCommitments(supabase: Db): Promise<SyncResult> {
   if (!plan) return "noplan";
   if (isPastPlan(plan.end_date)) return "past";
 
-  const month = currentMonth();
+  const month = currentPeriod(todayManila(), await loadRule(supabase)).month;
   const { data: instRows } = await supabase.from("installments").select("*");
   const { data: subRows } = await supabase.from("subscriptions").select("cutoff,amount").eq("active", true);
   const inst = dueByCutoff((instRows ?? []).map((r) => rowFromDb(r)), month);

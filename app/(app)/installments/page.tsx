@@ -4,7 +4,9 @@ import { WalletSelect } from "@/components/wallet-select";
 import { dueByCutoff, summarize, type InstalmentRow } from "@/lib/installments/calc";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
-import { currentMonth, monthLabel } from "@/lib/transfer/month";
+import { currentPeriod, loadRule } from "@/lib/dashboard/helpers";
+import { todayManila } from "@/lib/plans/validate";
+import { monthLabel } from "@/lib/transfer/month";
 import { addInstalment, deleteInstalment, setNextPayment } from "./actions";
 
 const ERRORS: Record<string, string> = {
@@ -37,7 +39,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
     cutoff: r.cutoff,
     walletId: r.wallet_id,
   }));
-  const month = currentMonth();
+  const month = currentPeriod(todayManila(), await loadRule(supabase)).month;
   const due = dueByCutoff(items, month);
   const walletName = (id: string | null) => wallets.find((w) => w.id === id)?.name;
 

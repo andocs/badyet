@@ -5,7 +5,7 @@ import { AutoSync } from "@/components/auto-sync";
 import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { BUCKETS, type Cutoff } from "@/lib/budget/validate";
-import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
+import { loadRule, resolveCutoff } from "@/lib/dashboard/helpers";
 import { bucketTotal, summarize, type Line } from "@/lib/budget/summary";
 import { formatPesos, money, type Money } from "@/lib/domain/money";
 import { computePay } from "@/lib/pay/compute";
@@ -29,8 +29,8 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
-  const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
-  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
+  const rule = await loadRule(supabase);
+  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), rule);
   const plan = await pickPlan(supabase, params.plan);
   const { data: pay } =
     plan && supabase ? await supabase.from("pay_profiles").select("*").eq("plan_id", plan.id).maybeSingle() : { data: null };
