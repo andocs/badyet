@@ -31,6 +31,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 09:47 | rev-12 | Plan switcher (?plan=, PlanBar, viewing banner, nav carries plan), /plans/compare with diff table. Pay/Bonuses/Installments stay active-plan only. 148 tests, lint, typecheck, build PASS. | 6b8cd9a
 - 2026-11-20 09:48 | rev-13 | Nav cut to 4 (Now, Month, Savings, Setup); SubNav strips on Month and Setup pages; tab bar 4 columns. Tests, lint, typecheck, build, e2e PASS. | d68fd8f
 - 2026-11-20 09:50 | rev-14/15 | Now rebuilt as direction A: 4-step payday ritual (pay landed, spoken for, send by wallet, yours to spend) with in-place ticks and Pip; between paydays shows days to next cutoff, cutoff net, unplanned, charts. Not visually checked (needs signed-in session). Tests, lint, typecheck, build PASS. | 9b46391
+- 2026-11-20 09:53 | rev-16 | Accounts: migration 20261201000000_accounts.sql (kind, institution, last4 CHECK exactly 4 digits, balance, limit, statement/due day, rollback), parser + tests, /accounts page with 4-step wizard, update balance, delete confirm, position summary. Never stores full numbers/CVV/PIN. Migration must be applied. 4 test files added; checks PASS. | 1fe37bd
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
