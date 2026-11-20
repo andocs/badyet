@@ -24,6 +24,57 @@
         ],
         "createdAt": "2026-11-20T01:27:53.191Z",
         "reason": "Difference strip must align row-for-row with the two plan columns beside it; an inset would misalign the deltas"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "jakarta sans",
+        "createdAt": "2026-11-20T02:50:33.054Z",
+        "reason": "Plus Jakarta Sans is the display font declared in DESIGN.md typography (Night Emerald, chosen by the user at Gate 1); the hook only matched the short name in a mockup"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/mockups/v12-font-options.html"
+        ],
+        "createdAt": "2026-11-20T02:52:04.679Z",
+        "reason": "Font specimen: these 20 candidate display fonts are the point of the file and are meant to differ from DESIGN.md"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/mockups/v11-shared.css"
+        ],
+        "createdAt": "2026-11-20T02:55:46.003Z",
+        "reason": "Historical v11 mockup drawn in the previous font pair (Plus Jakarta Sans and Manrope) before the switch to Gabarito and Atkinson Hyperlegible Next; kept as a design reference, not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/mockups/v11-a-payday-ritual.html"
+        ],
+        "createdAt": "2026-11-20T02:55:46.101Z",
+        "reason": "Historical v11 mockup drawn in the previous font pair (Plus Jakarta Sans and Manrope) before the switch to Gabarito and Atkinson Hyperlegible Next; kept as a design reference, not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/mockups/v11-b-money-sentence.html"
+        ],
+        "createdAt": "2026-11-20T02:55:46.205Z",
+        "reason": "Historical v11 mockup drawn in the previous font pair (Plus Jakarta Sans and Manrope) before the switch to Gabarito and Atkinson Hyperlegible Next; kept as a design reference, not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          "docs/mockups/v11-c-plan-compare.html"
+        ],
+        "createdAt": "2026-11-20T02:55:46.308Z",
+        "reason": "Historical v11 mockup drawn in the previous font pair (Plus Jakarta Sans and Manrope) before the switch to Gabarito and Atkinson Hyperlegible Next; kept as a design reference, not shipped UI"
       }
     ]
   }

@@ -3,10 +3,10 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { PlanBar } from "@/components/plan-bar";
 import { pickPlan, planQuery } from "@/lib/plans/select";
 import { type Cutoff } from "@/lib/budget/validate";
-import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
+import { currentPeriod, loadRule, resolveCutoff } from "@/lib/dashboard/helpers";
 import { todayManila } from "@/lib/plans/validate";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
-import { currentMonth, isMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
+import { isMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
 import { groupByWallet, leftToSend, type TransferLine } from "@/lib/transfer/summary";
 import { createClient } from "@/lib/supabase/server";
 import { addDefaultWallets, addWallet, deleteWallet, toggleSent } from "./actions";
@@ -19,13 +19,13 @@ const peso = (m: Money) => formatPesos(m, { symbol: false });
 
 export default async function TransferPage({ searchParams }: PageProps<"/transfer">) {
   const params = await searchParams;
-  const month = isMonth(params.month) ? params.month : currentMonth();
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
-  const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
-  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
+  const rule = await loadRule(supabase);
+  const month = isMonth(params.month) ? params.month : currentPeriod(todayManila(), rule).month;
+  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), rule);
   const plan = await pickPlan(supabase, params.plan);
   const { data: lineRows } =
     plan && supabase

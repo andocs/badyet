@@ -28,3 +28,19 @@ describe("parseEventForm", () => {
     expect(parseEventForm({ ...base, kind: "other" }).ok).toBe(false);
   });
 });
+
+describe("de minimis input", () => {
+  const base = { kind: "bonus", name: "September bonus", cutoff: "first", payDate: "2027-09-30", gross: "60,000" };
+  it("reads an optional de minimis for a bonus and defaults to none", () => {
+    const r = parseEventForm({ ...base, deMinimis: "12,000" });
+    expect(r.ok && r.value.deMinimis).toBe(1_200_000);
+    const none = parseEventForm(base);
+    expect(none.ok && none.value.deMinimis).toBe(0);
+  });
+  it("refuses a de minimis on the 13th month, bigger than the bonus, or malformed", () => {
+    expect(parseEventForm({ ...base, kind: "thirteenth", gross: "", deMinimis: "1,000" }).ok).toBe(false);
+    expect(parseEventForm({ ...base, deMinimis: "70,000" }).ok).toBe(false);
+    expect(parseEventForm({ ...base, deMinimis: "abc" }).ok).toBe(false);
+    expect(parseEventForm({ ...base, deMinimis: "-5" }).ok).toBe(false);
+  });
+});

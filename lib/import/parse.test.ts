@@ -56,3 +56,30 @@ describe("parseSnapshot", () => {
     expect(parseSnapshot(dup).ok).toBe(false);
   });
 });
+
+describe("parseSnapshot extras", () => {
+  it("reads paid counts, HMO, savings balances and bonus events when present, and none when absent", () => {
+    const plain = parseSnapshot(good);
+    expect(plain.ok && plain.value.savings).toBeNull();
+    expect(plain.ok && plain.value.windfalls).toEqual([]);
+
+    const r = parseSnapshot({
+      ...good,
+      pay: { ...good.pay, otherDeduction: "450.00" },
+      installments: [{ ...good.installments[0], paidCount: "5" }],
+      savings: { startMonth: "2026-12", startEf: "50,000", startTravel: "10,000", startWants: "0", efTranche: "100,000", efHardCap: "0", travelCap: "0", wantsCap: "0", priority: "EF,TRAVEL,WANTS" },
+      windfalls: [{ kind: "cip", name: "CIP 2027", cutoff: "second", payDate: "2027-03-25", cipEligible: "600,000", cipComponentPct: "13.5", cipMultiplier: "1.25", deMinimis: "12,000" }],
+    });
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.pay?.otherDeduction).toBe(45_000);
+    expect(r.value.installments[0].value.paidCount).toBe(5);
+    expect(r.value.savings?.start.ef).toBe(5_000_000);
+    expect(r.value.windfalls[0].deMinimis).toBe(1_200_000);
+  });
+  it("names the section when an extra is invalid", () => {
+    const bad = parseSnapshot({ ...good, windfalls: [{ kind: "thirteenth", name: "13th", cutoff: "first", payDate: "2026-12-15", deMinimis: "1,000" }] });
+    expect(bad.ok).toBe(false);
+    if (!bad.ok) expect(bad.error).toMatch(/Bonus 1/);
+  });
+});

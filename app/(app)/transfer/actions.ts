@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireAuthed } from "@/lib/auth/require";
 import { isCutoff, type Cutoff } from "@/lib/budget/validate";
 import { isUuid } from "@/lib/plans/validate";
+import { applyMarks } from "@/lib/transfer/marks";
 import { currentMonth, isMonth } from "@/lib/transfer/month";
 
 const DEFAULT_WALLETS = ["Gcash", "Maya", "BPI", "Vybe"];
@@ -30,9 +31,7 @@ export async function toggleSent(formData: FormData) {
   const lineId = String(formData.get("lineId") ?? "");
   if (!isUuid(lineId)) back(w, "failed");
   const wasSent = formData.get("sent") === "1";
-  const { error } = wasSent
-    ? await supabase.from("transfer_marks").delete().eq("line_id", lineId).eq("month", w.month)
-    : await supabase.from("transfer_marks").upsert({ line_id: lineId, month: w.month }, { onConflict: "line_id,month", ignoreDuplicates: true });
+  const error = await applyMarks(supabase, [lineId], w.month, !wasSent);
   back(w, error ? "failed" : undefined, error);
 }
 

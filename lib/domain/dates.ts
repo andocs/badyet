@@ -114,15 +114,15 @@ export function periodOf(date: IsoDate, settings: CutoffSettings = DEFAULT_CUTOF
   const { day } = parts(date);
   const month = monthOf(date);
   if (day >= settings.secondStartDay) {
-    return period(month, 2, settings);
+    return periodFor(month, 2, settings);
   }
   if (day >= settings.firstStartDay) {
-    return period(month, 1, settings);
+    return periodFor(month, 1, settings);
   }
-  return period(addMonths(month, -1), 2, settings);
+  return periodFor(addMonths(month, -1), 2, settings);
 }
 
-function period(month: YearMonth, which: 1 | 2, settings: CutoffSettings): Period {
+export function periodFor(month: YearMonth, which: 1 | 2, settings: CutoffSettings): Period {
   if (which === 1) {
     return {
       id: `${month}-1`,

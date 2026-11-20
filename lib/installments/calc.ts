@@ -23,6 +23,11 @@ const planOf = (r: InstalmentRow): InstalmentPlan => ({
   firstDueOn: isoDate(r.firstDueOn),
 });
 
+// The payment of this installment that falls due in a month (YYYY-MM), if any.
+export function paymentForMonth(r: InstalmentRow, month: string): ScheduledPayment | undefined {
+  return paymentsOf(r).find((p) => p.dueOn.slice(0, 7) === month);
+}
+
 export const paymentsOf = (r: InstalmentRow): ScheduledPayment[] => schedule(planOf(r));
 
 export interface InstalmentSummary {

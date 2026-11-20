@@ -64,6 +64,7 @@ export async function loadSavings(supabase: Db, planId: string): Promise<LoadedS
       cipEligible: e.cip_eligible === null ? null : money(e.cip_eligible),
       cipComponentNum: e.cip_component_num as number | null,
       cipMultiplierNum: e.cip_multiplier_num as number | null,
+      deMinimis: money(e.de_minimis ?? 0),
     }));
     computeEvents(profile, events).forEach((r, i) => {
       const m = events[i].payDate.slice(0, 7);

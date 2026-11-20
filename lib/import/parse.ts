@@ -1,6 +1,8 @@
 import { isBucket, isCutoff, validateLine, type Bucket, type Cutoff } from "@/lib/budget/validate";
 import { parseInstalmentForm, type InstalmentInput } from "@/lib/installments/input";
 import { parsePayForm } from "@/lib/pay/input";
+import { parseSavingsForm, type SavingsInput } from "@/lib/savings/input";
+import { parseEventForm, type EventInput } from "@/lib/windfall/input";
 import type { PayProfile } from "@/lib/pay/compute";
 import { validatePlan } from "@/lib/plans/validate";
 import type { Money } from "@/lib/domain/money";
@@ -32,6 +34,10 @@ export interface Snapshot {
   lines: ImportLine[];
   installments: ImportInstalment[];
   subscriptions: ImportSubscription[];
+  /** Optional: starting fund balances and caps for the savings forecast. */
+  savings: SavingsInput | null;
+  /** Optional: 13th month, CIP and bonus events (with their own de minimis). */
+  windfalls: EventInput[];
 }
 export type SnapshotParse = { ok: true; value: Snapshot } | { ok: false; error: string };
 
@@ -104,5 +110,20 @@ export function parseSnapshot(raw: unknown): SnapshotParse {
     subscriptions.push({ name: parsed.value.name, amount: parsed.value.amount, cutoff: s.cutoff, wallet });
   }
 
-  return { ok: true, value: { plan: plan.value, pay, wallets, lines, installments, subscriptions } };
+  let savings: SavingsInput | null = null;
+  if (raw.savings !== undefined && raw.savings !== null) {
+    const sv = parseSavingsForm(isObj(raw.savings) ? raw.savings : {});
+    if (!sv.ok) return { ok: false, error: `Savings: ${sv.error}` };
+    savings = sv.value;
+  }
+
+  const windfalls: EventInput[] = [];
+  for (const [i, w] of arr(raw.windfalls).entries()) {
+    if (!isObj(w)) return { ok: false, error: `Bonus ${i + 1} is not an object.` };
+    const parsed = parseEventForm(w);
+    if (!parsed.ok) return { ok: false, error: `Bonus ${i + 1}: ${parsed.error}` };
+    windfalls.push(parsed.value);
+  }
+
+  return { ok: true, value: { plan: plan.value, pay, wallets, lines, installments, subscriptions, savings, windfalls } };
 }

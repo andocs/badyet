@@ -34,8 +34,8 @@ export default async function ImportPage({ searchParams }: PageProps<"/import">)
       )}
       {done && (
         <p className="notice ok" role="status" style={{ marginBottom: 18 }}>
-          Imported: {String(params.lines ?? 0)} budget lines, {String(params.installments ?? 0)} installments and{" "}
-          {String(params.subscriptions ?? 0)} subscriptions. The new plan is not active yet.{" "}
+          Imported: {String(params.lines ?? 0)} budget lines, {String(params.installments ?? 0)} installments{params.paid && params.paid !== "0" ? ` (${String(params.paid)} payments marked paid)` : ""} and{" "}
+          {String(params.subscriptions ?? 0)} subscriptions{params.bonuses && params.bonuses !== "0" ? `, ${String(params.bonuses)} bonus events` : ""}{params.savings === "1" ? ", and your savings starting balances" : ""}. The new plan is not active yet.{" "}
           <Link href="/plans">Open Plans to activate it</Link>.
         </p>
       )}
@@ -53,7 +53,7 @@ export default async function ImportPage({ searchParams }: PageProps<"/import">)
           <button type="submit" className="btn">Import</button>
         </form>
         <p className="sub">
-          This creates a new, inactive plan with your pay, budget lines, wallets, installments and subscriptions. It never changes or deletes what you
+          This creates a new, inactive plan with your pay (including an HMO deduction), budget lines, wallets, installments (with payments already made), subscriptions, and optionally your savings starting balances and 13th month, CIP and bonus events. It never changes or deletes what you
           already have, and if anything fails it undoes itself. Installments and subscriptions with the same name as existing ones are skipped. The
           file stays on your computer; it is not saved in the project.
         </p>

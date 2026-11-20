@@ -1,5 +1,5 @@
 import { isCutoff, type Cutoff } from "@/lib/budget/validate";
-import { parsePesos, type Money } from "@/lib/domain/money";
+import { parsePesos, ZERO, type Money } from "@/lib/domain/money";
 import { isValidIsoDate } from "@/lib/plans/validate";
 import type { WindfallKind } from "./compute";
 
@@ -12,6 +12,7 @@ export interface EventInput {
   cipEligible: Money | null;
   cipComponentNum: number | null;
   cipMultiplierNum: number | null;
+  deMinimis: Money;
 }
 export type EventParse = { ok: true; value: EventInput } | { ok: false; error: string };
 
@@ -30,7 +31,14 @@ export function parseEventForm(raw: Record<string, unknown>): EventParse {
   if (!isCutoff(raw.cutoff)) return { ok: false, error: "Pick the cutoff it is paid in." };
   const payDate = text(raw.payDate);
   if (!isValidIsoDate(payDate)) return { ok: false, error: "Pick the pay date." };
-  const base: EventInput = { kind, name, cutoff: raw.cutoff, payDate, gross: null, cipEligible: null, cipComponentNum: null, cipMultiplierNum: null };
+  const base: EventInput = { kind, name, cutoff: raw.cutoff, payDate, gross: null, cipEligible: null, cipComponentNum: null, cipMultiplierNum: null, deMinimis: ZERO };
+
+  // Own de minimis exemption: CIP and bonus only, blank means none.
+  const dmText = text(raw.deMinimis);
+  const dm = dmText === "" ? ZERO : parsePesos(dmText);
+  if (dm === undefined || dm < 0 || dm > MAX) return { ok: false, error: "Enter the de minimis exemption like 12,000, or leave it blank." };
+  if (kind === "thirteenth" && dm > 0) return { ok: false, error: "The 13th month has no de minimis exemption." };
+  base.deMinimis = dm;
 
   if (kind === "cip") {
     const eligible = amount(text(raw.cipEligible));
@@ -51,5 +59,6 @@ export function parseEventForm(raw: Record<string, unknown>): EventParse {
   }
   const gross = amount(grossText);
   if (gross === undefined) return { ok: false, error: "Enter the gross amount like 50,000." };
+  if (dm > gross) return { ok: false, error: "The de minimis exemption cannot be more than the bonus." };
   return { ok: true, value: { ...base, gross } };
 }

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v12 · 20 display fonts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Sora:wght@700;800&family=Lexend:wght@700;800&family=Figtree:wght@700;800&family=Onest:wght@700;800&family=Bricolage+Grotesque:wght@700;800&family=Familjen+Grotesk:wght@700&family=Schibsted+Grotesk:wght@700;800&family=Hanken+Grotesk:wght@700;800&family=Red+Hat+Display:wght@700;800&family=Urbanist:wght@700;800&family=Albert+Sans:wght@700;800&family=Be+Vietnam+Pro:wght@700;800&family=Epilogue:wght@700;800&family=Rethink+Sans:wght@700;800&family=Geologica:wght@700;800&family=Unbounded:wght@600;700&family=Archivo:wght@700;800&family=Gabarito:wght@700;800&family=Baloo+2:wght@700;800&family=Young+Serif&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A1320;--surface:#101C2E;--soft:#17263B;--ink:#E8EEF7;--muted:#93A5BD;--line:#223349;--accent:#34D399;--on-accent:#04281C;--accent-text:#5EE6B4;--tint:#0F3A33;--blue:#7FA8FF;--gold:#F6C453}
+@media (prefers-color-scheme:light){:root:not([data-theme=dark]){--bg:#F2F5F9;--surface:#fff;--soft:#E8EEF5;--ink:#0E1B2E;--muted:#556579;--line:#E1E8F0;--accent:#087A5A;--on-accent:#fff;--accent-text:#087A5A;--tint:#DDF5EC;--blue:#2F5BD7;--gold:#8A5A00}}
+:root[data-theme=light]{--bg:#F2F5F9;--surface:#fff;--soft:#E8EEF5;--ink:#0E1B2E;--muted:#556579;--line:#E1E8F0;--accent:#087A5A;--on-accent:#fff;--accent-text:#087A5A;--tint:#DDF5EC;--blue:#2F5BD7;--gold:#8A5A00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.45 Manrope,system-ui,sans-serif}
+header{max-width:900px;padding:28px 20px 6px;margin:0 auto}
+header h1{font:800 28px/1.1 system-ui,sans-serif;margin:0;letter-spacing:-.02em}
+header p{color:var(--muted);margin:8px 0 0}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.tools button{font:700 14px Manrope,sans-serif;min-height:44px;border-radius:999px;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:8px 18px;cursor:pointer}
+.tools button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px;padding:20px;max-width:1500px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:12px;align-content:start}
+.meta{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:700}
+.tag{border-radius:999px;background:var(--soft);padding:3px 10px;font-size:12px}
+.f{font-family:var(--f),system-ui,sans-serif;font-weight:var(--w,800)}
+.hero{border-radius:14px;padding:16px;background:linear-gradient(135deg,#10294A,#0B5A4E);color:#E8EEF7}
+.hero small{color:#CFE3F5;font-weight:600}
+.fig{font-size:42px;line-height:1.05;letter-spacing:-.02em;margin:4px 0 10px;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:999px;background:rgba(255,255,255,.2);overflow:hidden}.bar i{display:block;height:100%;width:38%;background:#34D399}
+h2{font-size:24px;line-height:1.12;margin:0;letter-spacing:-.02em}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:10px}
+.row small{display:block;color:var(--muted);font-weight:600;font-size:13px;font-family:Manrope,sans-serif}
+.num{font-variant-numeric:tabular-nums;font-weight:700}
+.nums{display:grid;justify-items:end;gap:2px;font-size:18px;font-variant-numeric:tabular-nums}
+.btn{font-family:var(--f),system-ui,sans-serif;font-weight:var(--w,800);font-size:14px;min-height:44px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);padding:8px 20px;cursor:pointer}
+.pill{border-radius:999px;background:var(--tint);color:var(--accent-text);padding:4px 11px;font-size:12px;font-family:var(--f),sans-serif;font-weight:var(--w,800)}
+.actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.glyphs{font-size:13px;color:var(--muted);font-family:var(--f),sans-serif;font-weight:var(--w,800);letter-spacing:.02em;overflow-wrap:break-word}
+</style></head><body>
+<header>
+<h1>Display font options</h1>
+<p>20 alternatives to Plus Jakarta Sans for headings and big figures. Body text stays Manrope in every card so only the display face changes. Each card shows the hero figure, a step title, a pill, a button and two stacked amounts to check that digits line up.</p>
+<div class="tools"><button id="theme" type="button" aria-pressed="false">Light theme</button><button id="big" type="button" aria-pressed="false">Show 1,234,567.89 hero</button></div>
+</header>
+<main class="grid" id="grid"></main>
+<script>
+// [name, category, weight]. Familjen Grotesk tops out at 700; Young Serif and Unbounded have fewer weights.
+const FONTS = [
+  ["Sora","Geometric, techy",800],["Lexend","Wide, easy to read",800],["Figtree","Friendly geometric",800],["Onest","Neutral grotesque",800],
+  ["Bricolage Grotesque","Characterful grotesque",800],["Familjen Grotesk","Quirky grotesque",700],["Schibsted Grotesk","Editorial grotesque",800],["Hanken Grotesk","Clean grotesque",800],
+  ["Red Hat Display","Geometric humanist",800],["Urbanist","Soft geometric",800],["Albert Sans","Swiss-leaning",800],["Be Vietnam Pro","Open, rounded edges",800],
+  ["Epilogue","Sharp grotesque",800],["Rethink Sans","Warm sans",800],["Geologica","Rounded modern",800],["Unbounded","Wide display",700],
+  ["Archivo","Sturdy grotesque",800],["Gabarito","Playful geometric",800],["Baloo 2","Rounded, playful",800],["Young Serif","Warm serif display",400]
+];
+const grid = document.getElementById("grid");
+let big = false;
+function render(){
+  grid.innerHTML = FONTS.map(([name, cat, w], i) => `
+  <article class="card" style="--f:'${name}';--w:${w}" aria-label="${name}">
+    <div class="meta"><b>${String(i+1).padStart(2,"0")} · ${name}</b><span class="tag">${cat}</span></div>
+    <div class="hero"><small>Left to send</small><div class="fig f">₱${big ? "1,234,567.89" : "14,820.00"}</div><div class="bar"><i></i></div></div>
+    <h2 class="f">Send it where it belongs.</h2>
+    <div class="row"><div><span class="f" style="font-size:16px">Rent share</span><small>GCash · Essentials</small></div><span class="pill">3 of 7 sent</span></div>
+    <div class="actions"><button class="btn" type="button">Mark all sent</button><div class="nums f"><span>₱11,111.11</span><span>₱88,888.88</span></div></div>
+    <div class="glyphs">Aa Bb Gg Rr 0123456789 ₱ ✓ → Yours to spend: go touch grass.</div>
+  </article>`).join("");
+}
+render();
+document.getElementById("big").addEventListener("click", (e) => { big = !big; e.currentTarget.setAttribute("aria-pressed", String(big)); render(); });
+document.getElementById("theme").addEventListener("click", (e) => {
+  const root = document.documentElement;
+  const light = root.dataset.theme !== "light";
+  root.dataset.theme = light ? "light" : "dark";
+  e.currentTarget.setAttribute("aria-pressed", String(light));
+  e.currentTarget.textContent = light ? "Dark theme" : "Light theme";
+});
+</script>
+</body></html>

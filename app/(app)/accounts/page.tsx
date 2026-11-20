@@ -43,7 +43,7 @@ export default async function AccountsPage({ searchParams }: PageProps<"/account
       <div className="head">
         <div>
           <h1>Accounts</h1>
-          <p className="sub">Where your money sits and what you owe. You keep the balances up to date; nothing connects to your bank.</p>
+          <p className="sub">Where your money sits and what you owe. Nothing connects to your bank. Ticking a transfer as sent adds it to the account it went to (a card goes down by what you paid), and un-ticking undoes it. Correct a balance by hand any time.</p>
         </div>
       </div>
       {error && (
