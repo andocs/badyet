@@ -43,3 +43,7 @@ next-env.d.ts
 /.impeccable/config.local.json
 !.env.example
 /data/
+
+# e2e
+e2e/.auth/
+e2e/results/
