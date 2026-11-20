@@ -564,3 +564,8 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 }
 
 @keyframes v13grow{from{width:0}}
+
+/* Loading skeleton */
+.v13 .v-skel{background:linear-gradient(90deg,var(--soft),var(--line),var(--soft));background-size:200% 100%;border-radius:10px;animation:v13shimmer 1.2s ease-in-out infinite}
+@keyframes v13shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.v13 .v-skel{animation:none}}
