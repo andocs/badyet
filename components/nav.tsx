@@ -34,11 +34,20 @@ export const TAB_ITEMS: Item[] = [
 
 // Pages that follow the chosen cutoff. Their links carry it along, so picking "2nd" once sticks as you move around.
 const CUTOFF_PAGES = ["/", "/budget", "/transfer"];
+// Pages that can show a plan other than the active one.
+const PLAN_PAGES = ["/", "/budget", "/transfer", "/savings"];
 
 export function NavLinks({ items }: { items: Item[] }) {
   const path = usePathname();
-  const cutoff = useSearchParams().get("cutoff");
-  const keep = cutoff === "first" || cutoff === "second" ? cutoff : null;
+  const sp = useSearchParams();
+  const cutoff = sp.get("cutoff");
+  const plan = sp.get("plan");
+  const keepCutoff = cutoff === "first" || cutoff === "second" ? `cutoff=${cutoff}` : "";
+  const keepPlan = plan && /^[0-9a-f-]{36}$/i.test(plan) ? `plan=${plan}` : "";
+  const withKept = (href: string) => {
+    const qs = [CUTOFF_PAGES.includes(href) ? keepCutoff : "", PLAN_PAGES.includes(href) ? keepPlan : ""].filter(Boolean).join("&");
+    return qs ? `${href}?${qs}` : href;
+  };
   return (
     <>
       {items.map((item) => {
@@ -53,7 +62,7 @@ export function NavLinks({ items }: { items: Item[] }) {
         const at = (p: string) => (p === "/" ? path === "/" : path === p || path.startsWith(`${p}/`));
         const current = at(href) || (also ?? []).some(at);
         return (
-          <Link key={label} href={keep && CUTOFF_PAGES.includes(href) ? `${href}?cutoff=${keep}` : href} aria-current={current ? "page" : undefined}>
+          <Link key={label} href={withKept(href)} aria-current={current ? "page" : undefined}>
             {label}
           </Link>
         );

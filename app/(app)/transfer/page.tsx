@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ConfirmButton } from "@/components/confirm-button";
+import { PlanBar } from "@/components/plan-bar";
+import { pickPlan, planQuery } from "@/lib/plans/select";
 import { type Cutoff } from "@/lib/budget/validate";
 import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
 import { todayManila } from "@/lib/plans/validate";
@@ -24,7 +26,7 @@ export default async function TransferPage({ searchParams }: PageProps<"/transfe
   const supabase = await createClient();
   const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
   const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
-  const { data: plan } = supabase ? await supabase.from("plans").select("id,name").eq("is_active", true).maybeSingle() : { data: null };
+  const plan = await pickPlan(supabase, params.plan);
   const { data: lineRows } =
     plan && supabase
       ? await supabase.from("budget_lines").select("id,name,amount,wallet_id").eq("plan_id", plan.id).eq("cutoff", cutoff).order("created_at")
@@ -45,6 +47,7 @@ export default async function TransferPage({ searchParams }: PageProps<"/transfe
     <>
       <input type="hidden" name="month" value={month} />
       <input type="hidden" name="cutoff" value={cutoff} />
+      {plan && !plan.is_active && <input type="hidden" name="plan" value={plan.id} />}
     </>
   );
 
@@ -58,13 +61,13 @@ export default async function TransferPage({ searchParams }: PageProps<"/transfe
         </div>
         <div className="head-tools">
           <nav className="segmented" aria-label="Month">
-            <Link href={`/transfer?month=${shiftMonth(month, -1)}&cutoff=${cutoff}`} aria-label="Previous month">←</Link>
+            <Link href={`/transfer?month=${shiftMonth(month, -1)}&cutoff=${cutoff}${planQuery(plan)}`} aria-label="Previous month">←</Link>
             <span className="seg-label">{monthLabel(month)}</span>
-            <Link href={`/transfer?month=${shiftMonth(month, 1)}&cutoff=${cutoff}`} aria-label="Next month">→</Link>
+            <Link href={`/transfer?month=${shiftMonth(month, 1)}&cutoff=${cutoff}${planQuery(plan)}`} aria-label="Next month">→</Link>
           </nav>
           <nav className="segmented" aria-label="Cutoff">
-            <Link href={`/transfer?month=${month}&cutoff=first`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
-            <Link href={`/transfer?month=${month}&cutoff=second`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
+            <Link href={`/transfer?month=${month}&cutoff=first${planQuery(plan)}`} aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
+            <Link href={`/transfer?month=${month}&cutoff=second${planQuery(plan)}`} aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
           </nav>
         </div>
       </div>
@@ -75,6 +78,7 @@ export default async function TransferPage({ searchParams }: PageProps<"/transfe
         </p>
       )}
 
+      {plan && <PlanBar basePath="/transfer" plan={plan} keep={`month=${month}&cutoff=${cutoff}`} />}
       {!plan ? (
         <section className="card">
           <p className="sub" style={{ margin: 0 }}>Transfers come from your budget, which belongs to a plan. No plan is active yet.</p>
