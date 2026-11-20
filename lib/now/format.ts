@@ -33,3 +33,10 @@ export function relativeDay(d: IsoDate, today: IsoDate): string {
 }
 
 export const ordinalCutoff = (cutoff: "first" | "second"): string => (cutoff === "first" ? "1st" : "2nd");
+
+/** "6:42 pm", in Asia/Manila. */
+export function timeLabel(iso: string): string {
+  const d = new Date(Date.parse(iso) + 8 * 3_600_000);
+  const h = d.getUTCHours();
+  return `${h % 12 === 0 ? 12 : h % 12}:${String(d.getUTCMinutes()).padStart(2, "0")} ${h < 12 ? "am" : "pm"}`;
+}

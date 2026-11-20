@@ -197,7 +197,7 @@ function AccountsRow({ accounts, total }: { accounts: AccountCard[]; total: Mone
       ) : (
         <div className="v-hscroll" tabIndex={0} role="region" aria-label="Accounts, scroll sideways">
           {accounts.map((a, i) => (
-            <Link key={a.id} href="/accounts" className="v-acard" style={{ "--c": a.color ?? CARD_COLORS[i % CARD_COLORS.length] } as React.CSSProperties}>
+            <Link key={a.id} href={`/accounts?a=${a.id}`} className="v-acard" style={{ "--c": a.color ?? CARD_COLORS[i % CARD_COLORS.length] } as React.CSSProperties}>
               <span className="v-an"><span>{a.name}</span></span>
               <span className="v-ak">{a.kind}{a.last4 ? ` ·· ${a.last4}` : ""}</span>
               <span className="v-ab"><Money value={a.balance} /></span>

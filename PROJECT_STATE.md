@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build
-- **Active slice / milestone:** 2 Shell, theme and Now
+- **Active slice / milestone:** 3 Accounts and Inbox
 - **Gate:** none
-- **Next action:** Build slice 2 (shell, theme and Now). Apply the two slice 1 migrations in Supabase first.
-- **User to-do now:** Apply the two slice 1 migrations in the Supabase SQL Editor (schema file, then data migration) and check the tables.
+- **Next action:** Build slice 3 (Accounts and Inbox). Apply the wants-fund rename migration and check Now in a browser first.
+- **User to-do now:** Apply 20261206000200_rename_wants_fund.sql, run the app and check Now on phone and desktop, push slice/2-shell-theme-now.
 
 ## 3. Execution log
 
@@ -42,6 +42,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 21:03 | design-v13 | Design approved by the user. Slice plan, decisions and handoff written to PROJECT_STATE.md. Ready to hand over to a fresh session for slice 1. | -
 - 2026-11-20 21:19 | slice-1 | Migrations (schema + data move, rollbacks), pure engine in lib/engine (months, salary timeline, payslip builder, bonuses, budget evaluator, office days/pools, fund allocator, with/without expected runner) and tests. Tests, typecheck, lint, build pass. SQL not executed against a database. | 7f02687
 - 2026-11-20 21:19 | slice-1 | Slice 1 approved by the user. | 7f02687
+- 2026-11-20 21:30 | slice-2 | Shell (rail + 5 phone tabs), scoped Night Emerald styles, Now page from the new tables via the engine, quick add (dialog + server action, N shortcut), Inbox placeholder, balances and row mappers with tests. Old home page and dashboard removed. Committed locally, not pushed. Not opened in a browser. | 7d51077
+- 2026-11-20 21:30 | slice-2 | Slice 2 approved by the user. | 7d51077
 
 ## 4. Open questions
 
@@ -58,10 +60,10 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,238,411 | 5,117,724 | 228,813 | 2,492,306 | 294,561,029 | 1,409,721 |  |
+| **Cumulative** | 1,294,275 | 5,307,310 | 242,079 | 2,596,107 | 302,306,787 | 1,473,224 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
-| Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
+| Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
 | Slice 3 | 45,025 | 161,686 | 9,312 | 68,100 | 13,630,474 | 50,316 | estimate: cumulative minus cumulative at Slice 2 gate (mark was missed); includes 2 revision rounds and bug fixes |
 | Slice 4 | 4,852 | 38,354 | 851 | 19,740 | 3,443,967 | 16,439 |  |
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
@@ -106,6 +108,14 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Slice 2 (shell, theme and Now) is built and committed locally on slice/2-shell-theme-now (not pushed).
+1. Apply supabase/migrations/20261206000200_rename_wants_fund.sql in the SQL Editor (renames the savings fund to "Wants savings").
+2. Run the app (npm run dev), sign in and open Now. Check: phone width shows 5 tabs with a + in the middle; desktop shows the left rail; press N on desktop or tap + to add an expense; the eye button hides amounts; Theme flips dark/light.
+3. Push when happy: git push -u origin slice/2-shell-theme-now.
+What changed: the new shell and Now live in app/(v13) with their own styles (app/v13.css, every class prefixed v-). Old pages (Budget, Pay, Savings, Bonuses, Accounts, Settings) still use the old shell until their slices; the rail links to them. Forecast shows as unavailable. The Inbox page is a placeholder.
+Deferred on purpose: ticking bills as sent (needs transfer pairs from Inbox, slice 3); the settle-office-days card (office-day data arrives with Budget, slice 5); the Now page's runway and envelopes stay empty until transactions exist.
+Not verified: pages were not opened in a browser or signed in here, so the layout and the data load are unchecked against your real data. Tests, typecheck, lint and build pass.
 
 Slice 1 (data foundation) is built. Nothing in the running app changed; the new tables and engine are not used by any page yet.
 1. Apply the two new migrations in the Supabase SQL Editor, in order: supabase/migrations/20261206000000_rehaul_schema.sql, then 20261206000100_rehaul_data_migration.sql. They only add tables and columns; the old tables are untouched. Each file ends with a rollback note.
