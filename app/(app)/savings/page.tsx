@@ -53,7 +53,7 @@ export default async function SavingsPage({ searchParams }: PageProps<"/savings"
           <span className="lab">{plan.name} · {formatRange(plan.start_date, plan.end_date)}</span>
           <h1 style={{ marginTop: 6 }}>Savings forecast</h1>
           <p className="sub">
-            Your Savings budget lines add up to ₱{peso(monthlyPool)} a month. This shows how that fills your funds, in your priority order.
+            Your Savings budget lines add up to <span className="amt">₱{peso(monthlyPool)}</span> a month. This shows how that fills your funds, in your priority order.
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default async function SavingsPage({ searchParams }: PageProps<"/savings"
                       return (
                         <td key={g}>
                           <div className="num">{peso(bal)}</div>
-                          <small className="lab">{got > 0 ? `+${peso(got)} · ` : ""}{STATUS_LABEL[r.status[g]]}</small>
+                          <small className="lab">{got > 0 && <><span className="amt">+{peso(got)}</span> · </>}{STATUS_LABEL[r.status[g]]}</small>
                         </td>
                       );
                     })}

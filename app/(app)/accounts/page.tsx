@@ -84,9 +84,9 @@ export default async function AccountsPage({ searchParams }: PageProps<"/account
                   </div>
                   <div style={{ textAlign: "right" }}>
                     <div className="num" style={{ fontWeight: 800, fontSize: 18, color: r.kind === "credit" && r.balance > 0 ? "var(--err)" : undefined }}>
-                      {r.kind === "credit" ? "owes " : ""}₱{peso(r.balance)}
+                      {r.kind === "credit" ? "owes " : ""}<span className="amt">₱{peso(r.balance)}</span>
                     </div>
-                    {r.kind === "credit" && r.limit !== null && <span className="lab">of ₱{peso(r.limit)}{used !== null ? ` · ${used}% used` : ""}</span>}
+                    {r.kind === "credit" && r.limit !== null && <span className="lab">of <span className="amt">₱{peso(r.limit)}</span>{used !== null ? ` · ${used}% used` : ""}</span>}
                     {r.asOf && <span className="lab" style={{ display: "block" }}>as of {r.asOf}</span>}
                   </div>
                 </div>

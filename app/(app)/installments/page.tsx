@@ -49,7 +49,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
       <div className="head">
         <div>
           <h1>Installments</h1>
-          <p className="sub">Things you are paying off. Due this month ({monthLabel(month)}): 1st cutoff ₱{peso(due.first)}, 2nd cutoff ₱{peso(due.second)}.</p>
+          <p className="sub">Things you are paying off. Due this month ({monthLabel(month)}): 1st cutoff <span className="amt">₱{peso(due.first)}</span>, 2nd cutoff <span className="amt">₱{peso(due.second)}</span>.</p>
         </div>
         <p className="lab" style={{ maxWidth: 260 }}>Your budget keeps itself in step with this list.</p>
       </div>
@@ -80,8 +80,8 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
                     {walletName(r.walletId) && <span className="pill quiet">{walletName(r.walletId)}</span>}
                   </div>
                   <span className="lab">
-                    ₱{peso(s.perPayment)} × {r.termCount} · {s.paidCount} paid · {s.remaining} left · ends {monthLabel(s.lastDueOn.slice(0, 7))}
-                    {s.interest > 0 && <> · interest ₱{peso(s.interest)}</>}
+                    <span className="amt">₱{peso(s.perPayment)}</span> × {r.termCount} · {s.paidCount} paid · {s.remaining} left · ends {monthLabel(s.lastDueOn.slice(0, 7))}
+                    {s.interest > 0 && <> · interest <span className="amt">₱{peso(s.interest)}</span></>}
                   </span>
                 </div>
                 <div style={{ display: "flex", gap: 6 }}>

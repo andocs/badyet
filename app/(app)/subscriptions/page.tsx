@@ -31,7 +31,7 @@ export default async function SubscriptionsPage({ searchParams }: PageProps<"/su
       <div className="head">
         <div>
           <h1>Subscriptions</h1>
-          <p className="sub">Monthly charges. Active ones: 1st cutoff ₱{peso(monthly("first"))}, 2nd cutoff ₱{peso(monthly("second"))}.</p>
+          <p className="sub">Monthly charges. Active ones: 1st cutoff <span className="amt">₱{peso(monthly("first"))}</span>, 2nd cutoff <span className="amt">₱{peso(monthly("second"))}</span>.</p>
         </div>
         <p className="lab" style={{ maxWidth: 260 }}>Your budget keeps itself in step with this list.</p>
       </div>

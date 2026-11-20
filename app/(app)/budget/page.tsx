@@ -105,8 +105,8 @@ export default async function BudgetPage({ searchParams }: PageProps<"/budget">)
         <div className={`budget-state ${state}`} role="status">
           <span>
             {state === "ok" && "Every peso has a job."}
-            {state === "over" && `Over by ₱${peso(money(-cur.left))}. Trim a line below.`}
-            {state === "free" && `₱${peso(cur.left)} has no job yet.`}
+            {state === "over" && <>Over by <span className="amt">₱{peso(money(-cur.left))}</span>. Trim a line below.</>}
+            {state === "free" && <><span className="amt">₱{peso(cur.left)}</span> has no job yet.</>}
           </span>
           <span className="num">Left to budget: {cur.left < 0 ? "−" : ""}₱{peso(money(Math.abs(cur.left)))}</span>
         </div>

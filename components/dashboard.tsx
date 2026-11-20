@@ -296,7 +296,7 @@ export function Dashboard({ data }: { data: DashData }) {
                 <>
                   <p className="sub" style={{ margin: 0 }}>Yours to spend this cutoff</p>
                   <div className="balance"><small>₱</small>{peso(data.unplanned)}</div>
-                  <p className="sub" style={{ margin: 0 }}>About ₱{peso(spendPerDay)} a day for {data.daysLeft} days. Go touch grass.</p>
+                  <p className="sub" style={{ margin: 0 }}>About <span className="amt">₱{peso(spendPerDay)}</span> a day for {data.daysLeft} days. Go touch grass.</p>
                 </>
               ) : (
                 <p className="sub" style={{ margin: 0 }}>Every peso has a job. Go touch grass.</p>
@@ -350,7 +350,7 @@ export function Dashboard({ data }: { data: DashData }) {
                     <span className="lab">{data.cutoffLabel}</span>
                     <div className="balance rise"><small>₱</small>{data.cutoffNet === null ? "Set up Pay" : peso(data.cutoffNet)}</div>
                     <div className="hero-actions">
-                      {data.unplanned !== null && <span className="pill">{data.unplanned >= 0 ? `₱${peso(data.unplanned)} unplanned` : `₱${peso(-data.unplanned)} over`}</span>}
+                      {data.unplanned !== null && <span className="pill"><span className="amt">₱{peso(Math.abs(data.unplanned))}</span>&nbsp;{data.unplanned >= 0 ? "unplanned" : "over"}</span>}
                       {lines.length === 0 ? (
                         <Link href="/budget" className="btn">Go to Budget</Link>
                       ) : (
@@ -405,7 +405,7 @@ export function Dashboard({ data }: { data: DashData }) {
                     <div className="ring-wrap">
                       <CountdownRing daysLeft={data.thirteenth.daysLeft} />
                       <div>
-                        <div className="disp" style={{ fontSize: 22 }}>+₱{pesos(money(data.thirteenth.net))}</div>
+                        <div className="disp amt" style={{ fontSize: 22 }}>+₱{pesos(money(data.thirteenth.net))}</div>
                         <p className="sub">Estimate · lands {data.thirteenth.dateLabel}</p>
                       </div>
                     </div>

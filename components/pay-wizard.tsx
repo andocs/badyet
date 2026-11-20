@@ -103,7 +103,7 @@ export function PayWizard({
           </label>
           {annual !== undefined && annual > 0 && (
             <p className="notice ok" role="status">
-              That is ₱{peso(annual)} a year, ₱{peso(divRound(annual, 12))} a month and ₱{peso(divRound(annual, 24))} basic each cutoff.
+              That is <span className="amt">₱{peso(annual)}</span> a year, <span className="amt">₱{peso(divRound(annual, 12))}</span> a month and <span className="amt">₱{peso(divRound(annual, 24))}</span> basic each cutoff.
               I will work out the rest from this.
             </p>
           )}
@@ -118,7 +118,7 @@ export function PayWizard({
           <label className="field"><span className="lab">SSS, 2nd cutoff</span><input className="input" inputMode="decimal" value={f.sss} onChange={set("sss")} placeholder="0.00" /></label>
           <label className="field"><span className="lab">Pag-IBIG, 2nd cutoff</span><input className="input" inputMode="decimal" value={f.pagibig} onChange={set("pagibig")} placeholder="0.00" /></label>
           <label className="field"><span className="lab">HMO or other deduction, each cutoff (after tax)</span><input className="input" inputMode="decimal" value={f.otherDeduction} onChange={set("otherDeduction")} placeholder="0.00" /></label>
-          {result && <p className="notice ok" role="status">PhilHealth is worked out for you: ₱{peso(result.philhealth)} (2.5% of monthly basic, within PhilHealth&apos;s 10,000 to 100,000 range).</p>}
+          {result && <p className="notice ok" role="status">PhilHealth is worked out for you: <span className="amt">₱{peso(result.philhealth)}</span> (2.5% of monthly basic, within PhilHealth&apos;s 10,000 to 100,000 range).</p>}
         </>
       )}
 

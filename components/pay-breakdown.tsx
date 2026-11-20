@@ -30,8 +30,8 @@ export function PayBreakdown({ profile }: { profile: PayProfile }) {
         </tbody>
       </table>
       <p className="sub">
-        PhilHealth {peso(r.philhealth)}
-        {profile.philhealthOverride !== null ? " (override)" : " (2.5% of monthly basic)"}. Basic per cutoff {peso(r.basicPerCutoff)}.
+        PhilHealth <span className="amt">{peso(r.philhealth)}</span>
+        {profile.philhealthOverride !== null ? " (override)" : " (2.5% of monthly basic)"}. Basic per cutoff <span className="amt">{peso(r.basicPerCutoff)}</span>.
       </p>
       <p className="notice warn">
         Tax uses the TRAIN table in force since 2023, and PhilHealth is 2.5% of monthly basic (10,000 to 100,000 range). Both were checked

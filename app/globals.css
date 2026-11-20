@@ -320,8 +320,12 @@ a { color: var(--accent-text); text-decoration: none; }
 .chk.on { background: var(--accent); border-color: var(--accent); }
 @media (max-width: 760px) { .ritual-actions { bottom: 52px; } .now .stage { padding-bottom: 130px; } }
 
-/* Hide amounts: blur every money figure (set by components/hide-amounts.tsx) */
-html[data-hide="1"] .num, html[data-hide="1"] .balance, html[data-hide="1"] .amt { filter: blur(9px); user-select: none; }
+/* Set by components/hide-amounts.tsx. */
+/* Hide amounts: the figure is replaced by asterisks (the real text is made invisible, then ***** drawn over it). */
+html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; -webkit-text-fill-color: transparent; user-select: none; }
+html[data-hide="1"] :is(.num, .balance, .amt)::after { content: "*****"; position: absolute; inset: 0; text-align: inherit; white-space: nowrap; -webkit-text-fill-color: currentColor; letter-spacing: 0.08em; }
+html[data-hide="1"] input[inputmode="decimal"] { -webkit-text-security: disc; }
+html[data-hide="1"] input[inputmode="decimal"]::placeholder { color: transparent; }
 
 /* Budget lines: read at a glance, tap to edit (components/budget-line.tsx) */
 .line-view { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; color: var(--ink); }
