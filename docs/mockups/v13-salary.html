@@ -1,0 +1,184 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Salary path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.cols{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start}}
+.ev{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .when{width:62px;flex:none;font:800 15px Gabarito}
+.ev .when small{display:block;font:600 12px "Atkinson Hyperlegible Next";color:var(--muted)}
+.ev .delta{font:800 18px Gabarito;letter-spacing:-.02em}
+tr.est td{color:var(--muted)}
+tr.est td:first-child::after{content:" (assumed)";font-size:12px}
+.alw{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.alw:last-child{border-bottom:0}
+table.br td,table.br th{padding:6px 8px;font-size:13px}
+table.br tr.hit td{background:var(--soft)}
+/* payslip builder */
+.pair2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.pair2{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+table.pt{table-layout:auto}
+table.pt th{padding:8px 14px}
+table.pt td{padding:8px 14px;vertical-align:middle}
+table.pt td:first-child{text-align:left;width:100%}
+table.pt tr.grp td{font:700 12px "Atkinson Hyperlegible Next";letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:14px;border-bottom:0}
+.pt .nm small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.pt .tx{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);font-weight:600}
+.sw.s{width:36px;height:22px}.sw.s::after{width:16px;height:16px;top:2px;left:2px}.sw.s[aria-checked=true]::after{transform:translateX(14px)}
+.pt input.v{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:112px;min-height:40px;text-align:right;font-variant-numeric:tabular-nums}
+.pt .fixedv{font-weight:700;font-variant-numeric:tabular-nums;padding-right:9px}
+.pt .mv{min-height:34px;padding:2px 10px;font-size:12px;white-space:nowrap}
+.pt .acts{display:flex;gap:6px;justify-content:flex-end;align-items:center}
+.pt tr.addr td{padding:12px 14px;background:var(--soft)}
+.addl2{display:grid;grid-template-columns:minmax(0,1fr) 100px 120px auto;gap:8px;align-items:center}
+.addl2 input,.addl2 select{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:40px;width:100%}
+@media(max-width:759px){.addl2{grid-template-columns:1fr 1fr}}
+</style></head><body data-nav="salary">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Salary and tax</h1><div class="lbl">Your pay timeline, your allowances and bonuses, and a payslip builder for each cutoff. The budget and forecast read from here.</div></div>
+  <div class="row wrap"><a class="btn pri" href="v13-wizard-raise.html">+ Add a raise or promotion</a></div></div>
+
+ <div class="tabs2" role="tablist" aria-label="Salary views" style="margin-top:-4px"><button role="tab" id="t1" aria-selected="true" aria-controls="p1">Timeline</button><button role="tab" id="t2" aria-selected="false" aria-controls="p2" tabindex="-1">Payslip builder</button></div>
+
+ <div id="p1" role="tabpanel" aria-labelledby="t1" class="stack l">
+  <section class="card" aria-labelledby="ch"><div class="row sp wrap"><h2 id="ch">Regular take-home per cutoff</h2><div class="legend"><span><i class="dot" style="background:var(--accent)"></i>1st cutoff (paid 10th)</span><span><i class="dot" style="background:var(--blue)"></i>2nd cutoff (paid 25th)</span><span style="color:var(--muted)"><i class="sw-dash"></i>Assumed raises</span></div></div>
+   <svg class="chart" id="chart" viewBox="0 0 960 240" role="img" aria-label="Regular take-home for each cutoff over five years, without bonuses" style="margin-top:8px"></svg></section>
+  <div class="cols">
+   <div class="stack">
+    <section class="card" aria-labelledby="evh"><div class="row sp"><h2 id="evh">Events</h2><a class="btn sm" href="v13-wizard-raise.html">Add with the wizard</a></div>
+     <div id="evs"></div>
+     <div class="note" style="margin-top:12px"><b>Hollow marker</b> = a raise you expect but have not confirmed yet. <b>Past the last event?</b> The projected raise below takes over.</div></section>
+    <section class="card" aria-labelledby="prj"><h2 id="prj">Projected raises</h2><div class="lbl" style="margin:2px 0 8px">Used only after your last dated event, and drawn dashed everywhere.</div>
+     <label class="row" style="gap:12px;min-height:48px"><button class="sw" role="switch" id="pon" aria-checked="true" aria-label="Assume a yearly raise"></button><span class="grow"><b>Assume a raise every year</b></span></label>
+     <div class="grid2" style="margin-top:8px;gap:10px"><label class="field">Raise (%)<input id="ppct" inputmode="decimal"></label><label class="field">In the month of<select id="pmon"></select></label></div></section>
+    <section class="card" aria-labelledby="alh"><div class="row sp"><h2 id="alh">Recurring allowances</h2><button class="btn sm">+ Add</button></div>
+     <div id="alws"></div>
+     <p class="xs muted" style="margin:10px 0 0">Taxable ones add to your taxable pay. The cutoff you pick here is what the payslip builder uses. Bonuses are set on the <a href="v13-bonus.html">Bonuses page</a>.</p></section>
+   </div>
+   <section class="card" aria-labelledby="yh"><h2 id="yh">Year by year</h2>
+    <div class="scrollx"><table><thead><tr><th>Year</th><th>Base / mo</th><th>Allowances / mo</th><th>Contributions / mo</th><th>Income tax / mo</th><th>1st cutoff</th><th>2nd cutoff</th><th>Bonuses (net)</th></tr></thead><tbody id="years"></tbody></table></div>
+    <p class="xs muted" style="margin:10px 0 0">Regular pay is December of each year, from your payslip builder. Bonuses are the 13th month, CIP and any one-offs paid that year, after tax. 2026 shows only what is still to come.</p></section>
+  </div>
+ </div>
+
+ <div id="p2" role="tabpanel" aria-labelledby="t2" hidden><div class="stack">
+  <div class="row sp wrap"><div><h2>Payslip builder</h2><div class="lbl">Build each cutoff's payslip once. Regular lines repeat every month; bonuses appear in the month they land.</div></div>
+   <div class="row wrap" style="gap:10px"><label class="row" style="gap:8px"><span class="lbl">Month</span><select id="mon" style="font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:44px"></select></label><span class="pill ok" id="mtot"></span></div></div>
+  <div class="row wrap" style="gap:16px"><label class="row" style="gap:8px"><span class="sm muted">Base pay in 1st cutoff</span><input class="lbl-in" id="share" inputmode="decimal" style="width:76px;min-height:40px;text-align:right" aria-label="Percent of base paid in the 1st cutoff"><span class="sm muted">%</span></label><label class="row" style="gap:8px"><span class="sm muted">Income tax in 1st cutoff</span><input class="lbl-in" id="tsplit" inputmode="decimal" style="width:76px;min-height:40px;text-align:right" aria-label="Percent of income tax withheld in the 1st cutoff"><span class="sm muted">%</span></label><button class="btn sm" id="reset">Standard layout</button></div>
+  <div class="pair2" id="pair"></div>
+  <details class="card"><summary style="cursor:pointer;font-weight:800;font-family:Gabarito;font-size:18px;min-height:32px">Income tax working</summary><div id="taxw" style="margin-top:10px"></div></details>
+ </div></div>
+</div></main>
+<script>
+const P=BY.peso,s0=BY.SCENARIOS.base,SIM=BY.simulate('base',BY.OVERRIDES);
+let sel='2028-12';
+const TAXABLE={transport:false,clothing:false};
+const CLOTHING=6000;
+const STD={sss:'second',ph:'second',pi:'second',allow:'second',yearly:'second',b13th:'first',bcip:'second',bsep:'second'};
+const PL_STD={b13th:'first',bcip:'second',bsep:'second',allow:'second',yearly:'second'};
+function loadPlace(){try{return {...PL_STD,...JSON.parse(localStorage.getItem('v13place')||'{}')}}catch(e){return {...PL_STD}}}
+function savePlace(p){try{localStorage.setItem('v13place',JSON.stringify(p))}catch(e){}}
+let PLACE={...STD,...loadPlace()},OVR={},SHARE=50,TSPLIT=50,CUSTOM=[],cid=0;
+function slip(ym){
+ const y=+ym.slice(0,4),mo=+ym.slice(5),s=BY.salaryAt(ym,s0),c=BY.contrib(s.base);
+ const allowTx=TAXABLE.transport?s.allow:0,yearly=(mo===6&&y>=2027)?CLOTHING:0;
+ const annual=12*(s.base-c.total+allowTx)+(TAXABLE.clothing&&y>=2027?CLOTHING:0),tax=BY.annualTax(annual)/12;
+ return {ym,y,mo,base:s.base,allow:s.allow,assumed:s.assumed,c,annual,tax,yearly,take:s.base+s.allow-c.total-tax};
+}
+/* items are signed (deductions negative) and sit on a cutoff. noBonus = regular pay only. */
+function build(ym,noBonus){
+ const sl=slip(ym),r=noBonus?null:SIM.find(x=>x.ym===ym),bn=r&&r.bonus;
+ const items=[];
+ const push=(o)=>{const ov=OVR[o.id]!==undefined;items.push({...o,calc:o.amt,amt:ov?(o.amt<0?-OVR[o.id]:OVR[o.id]):o.amt,ov})};
+ push({id:'tax1',label:'Income tax',note:`${TSPLIT}% of the month's tax`,amt:-sl.tax*TSPLIT/100,cut:'first',fixed:1});
+ push({id:'tax2',label:'Income tax',note:`${100-TSPLIT}% of the month's tax`,amt:-sl.tax*(100-TSPLIT)/100,cut:'second',fixed:1});
+ push({id:'sss',label:'SSS',note:`5% of ${P(Math.min(sl.base,35000))}`,amt:-sl.c.sss,cut:PLACE.sss,pk:'sss'});
+ push({id:'ph',label:'PhilHealth',note:`2.5% of ${P(Math.min(sl.base,100000))}`,amt:-sl.c.ph,cut:PLACE.ph,pk:'ph'});
+ push({id:'pi',label:'Pag-IBIG',note:'flat',amt:-sl.c.pi,cut:PLACE.pi,pk:'pi'});
+ if(sl.allow)push({id:'allow',label:'Transport allowance',note:'every month · from Recurring allowances',amt:sl.allow,cut:PLACE.allow,pk:'allow',taxkey:'transport'});
+ if(sl.yearly&&!noBonus)push({id:'yearly',label:'Clothing allowance',note:'once a year, June · from Recurring allowances',amt:sl.yearly,cut:PLACE.yearly,pk:'yearly',taxkey:'clothing'});
+ if(bn){const pk='b'+bn.kind;push({id:'bonus',label:bn.name+', gross',note:'from Bonuses · '+(bn.dm?`de minimis ${P(bn.dm)}, then the shared ₱90,000 cap`:'no de minimis, counts toward the ₱90,000 cap'),amt:bn.gross,cut:PLACE[pk],pk,bonus:1});
+  if(bn.tax>0)push({id:'btax',label:'Tax on the part over the cap',note:`${P(bn.over)} goes past the cap`,amt:-bn.tax,cut:PLACE[pk],pk,bonus:1,follow:1})}
+ CUSTOM.forEach(x=>items.push({id:x.id,label:x.label,note:'your line',calc:x.amt,amt:x.amt,cut:x.cut,ov:false,custom:1}));
+ const b1=sl.base*SHARE/100,b2=sl.base-b1;
+ const tot=k=>(k==='first'?b1:b2)+items.filter(i=>i.cut===k).reduce((a,i)=>a+i.amt,0);
+ return {sl,items,bn,b1,b2,first:tot('first'),second:tot('second')};
+}
+const monthTake=ym=>{const b=build(ym,true);return b.first+b.second};
+function prevYm(ym){let y=+ym.slice(0,4),m=+ym.slice(5)-1;if(!m){m=12;y--}return y+'-'+String(m).padStart(2,'0')}
+function ev(){return BY.EVENTS.slice().sort((a,b)=>a.ym.localeCompare(b.ym))}
+function pslip(k,b){
+ const mine=b.items.filter(i=>i.cut===k),name=k==='first'?'1st cutoff':'2nd cutoff',paid=k==='first'?'Paid on the 10th':'Paid on the 25th',base=k==='first'?b.b1:b.b2,net=k==='first'?b.first:b.second;
+ const row=i=>{const sign=i.amt<0?'−':'';return `<tr><td class="nm"><b>${i.label}</b><small>${i.ov?'your value':i.note}</small>${i.taxkey?`<span class="tx"><button class="sw s" role="switch" aria-checked="${TAXABLE[i.taxkey]}" data-tx="${i.taxkey}" aria-label="${i.label} is taxable"></button>Taxable</span>`:''}</td>
+  <td>${i.fixed||i.follow?`<span class="fixedv">${sign}${P(Math.abs(i.amt)).replace('−','')}</span>`:`<input class="v" data-ov="${i.id}" value="${Math.abs(i.amt).toFixed(2)}" inputmode="decimal" aria-label="${i.label} amount, ${name}">`}</td>
+  <td><div class="acts">${i.ov?`<button class="btn sm ghost mv" data-undo="${i.id}">Reset</button>`:''}${i.custom?`<button class="iconbtn s" data-del="${i.id}" aria-label="Remove ${i.label}">${icon('x')}</button>`:''}${i.fixed||i.follow?'':`<button class="btn sm mv" data-mv="${i.id}" aria-label="Move ${i.label} to the ${k==='first'?'2nd':'1st'} cutoff">${k==='first'?'To 2nd →':'← To 1st'}</button>`}</div></td></tr>`};
+ const earn=mine.filter(i=>i.amt>0),ded=mine.filter(i=>i.amt<=0);
+ return `<div class="slip"><div class="hd"><div><div class="lbl">${paid}</div><div class="disp" style="font-size:22px">${name}</div></div><div style="text-align:right"><div class="lbl">Take-home</div><div class="num" style="font:800 22px Gabarito;color:var(--accent-text)">${P(net)}</div></div></div>
+  <div class="scrollx"><table class="pt"><thead><tr><th style="text-align:left">Item</th><th>Amount</th><th></th></tr></thead><tbody>
+  <tr class="grp"><td colspan="3">Earnings</td></tr>
+  <tr><td class="nm"><b>Base pay</b><small>${k==='first'?SHARE:100-SHARE}% of ${P(b.sl.base)}</small></td><td><span class="fixedv">${P(base)}</span></td><td></td></tr>${earn.map(row).join('')}
+  <tr class="grp"><td colspan="3">Deductions</td></tr>${ded.map(row).join('')}
+  <tr class="addr"><td colspan="3"><div class="addl2"><input data-cn="${k}" placeholder="+ Add a line, e.g. Salary loan" aria-label="New line name, ${name}"><input data-ca="${k}" inputmode="decimal" placeholder="₱ amount" aria-label="New line amount, ${name}"><select data-ck="${k}" aria-label="Type"><option value="ded">Deduction</option><option value="earn">Earning</option></select><button class="btn sm pri" data-cadd="${k}">Add</button></div></td></tr>
+  </tbody></table></div>
+  <div class="net"><div><div class="lbl" style="color:var(--accent-text)">Net for the ${name}</div><div class="xs muted">${mine.length+1} lines</div></div><b class="n num">${P(net)}</b></div></div>`;
+}
+function render(){
+ const b=build(sel),sl=b.sl;
+ $('#evs').innerHTML=ev().map(e=>{
+  const a=monthTake(e.ym),p=monthTake(prevYm(e.ym)),d=e.kind==='start'?null:a-p,x=slip(e.ym);
+  const detail=e.kind==='start'?`Base ${P(e.base)} · ${e.title}`:e.kind==='merit'?`+${e.pct}% → base ${P(x.base)}`:e.kind==='promo'?`${e.title} → base ${P(e.base)}`:`+${P(e.allowDelta)} a month`;
+  return `<div class="ev"><div class="when">${BY.MON[+e.ym.slice(5)-1]}<small>${e.ym.slice(0,4)}</small></div><div class="grow"><b>${e.label}</b>${e.expected?' <span class="pill est">expected</span>':''}<div class="sm muted">${detail}</div></div>${d!==null?`<div class="delta num ${d>=0?'pos':'neg'}" style="text-align:right">${P(d,{sign:1})}<div class="xs muted" style="font:600 12px 'Atkinson Hyperlegible Next'">take-home a month</div></div>`:'<span class="pill">start</span>'}</div>`}).join('');
+ $('#alws').innerHTML=[['transport','Transport allowance','₱1,500.00','every month','from Jan 2028','allow'],['clothing','Clothing allowance','₱6,000.00','once a year, in June','from 2027','yearly']].map(([k,n,a,f,fr,pk])=>`<div class="alw"><div class="grow"><b>${n}</b><div class="sm muted">${a} · ${f} · ${fr}</div><div class="xs muted" style="margin-top:8px">Lands in the</div><div class="seg fit" role="group" aria-label="${n} lands in" data-pl="${pk}"><button data-v="first" aria-pressed="${PLACE[pk]==='first'}">1st cutoff (10th)</button><button data-v="second" aria-pressed="${PLACE[pk]==='second'}">2nd cutoff (25th)</button></div></div><label class="row" style="gap:8px"><span class="xs muted">Taxable</span><button class="sw" role="switch" aria-checked="${TAXABLE[k]}" data-tx="${k}" aria-label="${n} is taxable"></button></label></div>`).join('');
+ $('#mon').innerHTML=BY.months.map(m=>{const r=SIM.find(x=>x.ym===m);return `<option value="${m}" ${m===sel?'selected':''}>${BY.ymLabel(m)}${r&&r.bonus?' · '+r.bonus.name.replace(' (one-off)',''):''}</option>`}).join('');
+ $('#share').value=SHARE;$('#tsplit').value=TSPLIT;
+ $('#mtot').textContent='Month total '+P(b.first+b.second);
+ $('#pair').innerHTML=pslip('first',b)+pslip('second',b);
+ const rows=BY.BRACKETS.map(([lo,hi,r])=>{const inb=Math.max(0,Math.min(sl.annual,hi)-lo),hit=sl.annual>lo&&sl.annual<=hi,above=sl.annual<=lo;return `<tr class="${hit?'hit':''}" style="${above?'color:var(--muted)':''}"><td>${lo?P(lo+0.01).replace('.01','.00'):'₱0.00'} to ${P(hi).replace(/\.00$/,'')}</td><td class="num">${above?'—':P(inb)}</td><td class="num">${r*100}%</td><td class="num">${above?'—':P(inb*r)}</td></tr>`}).join('');
+ $('#taxw').innerHTML=`<div class="row sp sm" style="padding:4px 0"><span>Taxable pay per year <span class="xs muted">(base ${P(sl.base)} − contributions ${P(sl.c.total)}${TAXABLE.transport&&sl.allow?' + taxable allowance '+P(sl.allow):''}) × 12${TAXABLE.clothing&&sl.y>=2027?' + clothing '+P(CLOTHING):''}</span></span><b class="num">${P(sl.annual)}</b></div><div class="scrollx"><table class="br"><thead><tr><th>Bracket</th><th>Amount in it</th><th>Rate</th><th>Tax</th></tr></thead><tbody>${rows}</tbody></table></div><div class="row sp sm" style="padding:6px 0"><span>Tax for the year</span><b class="num">${P(BY.annualTax(sl.annual))}</b></div><div class="row sp sm"><span>Withheld per month (tax ÷ 12), split across both cutoffs</span><b class="num">−${P(sl.tax)}</b></div>${b.bn?'<p class="xs muted" style="margin:10px 0 0">The bonus is taxed on its own: only the part over the shared ₱90,000 yearly cap, after its de minimis.</p>':''}`;
+ chart();years();
+}
+function years(){const BYY=BY.byYear(SIM);
+ $('#years').innerHTML=[2026,2027,2028,2029,2030,2031].map(y=>{const b=build(y+'-12',true),a=b.sl,bo=BYY.find(r=>r.y===y);
+  return `<tr class="${a.assumed?'est':''}"><td><b>${y}</b></td><td class="num">${P(a.base)}</td><td class="num">${a.allow?P(a.allow):'—'}</td><td class="num">−${P(a.c.total)}</td><td class="num">−${P(a.tax)}</td><td class="num"><b>${P(b.first)}</b></td><td class="num"><b>${P(b.second)}</b></td><td class="num pos">${bo&&bo.bonusNet?P(bo.bonusNet,{sign:1}):'—'}</td></tr>`}).join('')}
+function chart(){
+ const mo=BY.months,W=960,H=240,L=54,R=10,T=14,B=28,all=mo.map(m=>build(m,true)),v1=all.map(a=>a.first),v2=all.map(a=>a.second);
+ const lo=Math.floor(Math.min(...v1,...v2)/2000)*2000-2000,hi=Math.ceil(Math.max(...v1,...v2)/2000)*2000+2000,st=Math.ceil((hi-lo)/4/1000)*1000;
+ const x=i=>L+(W-L-R)*i/59,y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+ let o='';for(let v=lo;v<=hi;v+=st)o+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">₱${Math.round(v/1000)}k</text>`;
+ ['2027','2028','2029','2030','2031'].forEach(yr=>{const i=mo.indexOf(yr+'-01');o+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${yr}</text>`});
+ const line=(vals,col)=>{const seg1=[],seg2=[];mo.forEach((m,i)=>{(all[i].sl.assumed?seg2:seg1).push([i,vals[i]])});if(seg2.length){const k=seg2[0][0]-1;seg2.unshift([k,vals[k]])}
+  const path=(a,dash)=>{if(!a.length)return '';let d='';a.forEach(([i,v],k)=>{d+=(k?'H'+x(i)+'V'+y(v):'M'+x(i)+' '+y(v))});return `<path d="${d}" fill="none" style="stroke:${col}" stroke-width="3" ${dash?'stroke-dasharray="6 5" stroke-opacity=".7"':''}/>`};
+  return path(seg1)+path(seg2,1)};
+ o+=line(v1,'var(--accent)')+line(v2,'var(--blue)');
+ ev().filter(e=>e.kind!=='start').forEach(e=>{const i=mo.indexOf(e.ym);if(i<0)return;o+=e.expected?`<circle cx="${x(i)}" cy="${y(v2[i])}" r="5" style="fill:var(--bg);stroke:var(--blue)" stroke-width="2.5"/><circle cx="${x(i)}" cy="${y(v1[i])}" r="5" style="fill:var(--bg);stroke:var(--accent)" stroke-width="2.5"/>`:`<circle cx="${x(i)}" cy="${y(v2[i])}" r="4.5" style="fill:var(--blue)" stroke="var(--bg)" stroke-width="2"/><circle cx="${x(i)}" cy="${y(v1[i])}" r="4.5" style="fill:var(--accent)" stroke="var(--bg)" stroke-width="2"/>`});
+ $('#chart').innerHTML=o;
+}
+function tab(n){[1,2].forEach(k=>{$('#t'+k).setAttribute('aria-selected',k===n);$('#t'+k).tabIndex=k===n?0:-1;$('#p'+k).hidden=k!==n})}
+$('#t1').onclick=()=>tab(1);$('#t2').onclick=()=>tab(2);
+$('.tabs2').addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){const n=$('#t1').getAttribute('aria-selected')==='true'?2:1;tab(n);$('#t'+n).focus()}});
+$('#mon').onchange=e=>{sel=e.target.value;render();$('#mon').focus()};
+document.addEventListener('click',e=>{const pl=e.target.closest('[data-pl] button');if(pl){const k=pl.closest('[data-pl]').dataset.pl;PLACE[k]=pl.dataset.v;savePlace(PLACE);render();return}const t=e.target.closest('[data-tx]');if(t){const k=t.dataset.tx;TAXABLE[k]=!TAXABLE[k];render();const n=$('[data-tx="'+k+'"]');if(n)n.focus()}});
+$('#pair').addEventListener('click',e=>{
+ const mv=e.target.closest('[data-mv]');if(mv){const id=mv.dataset.mv,it=build(sel).items.find(x=>x.id===id),c=CUSTOM.find(x=>x.id===id);if(c)c.cut=c.cut==='first'?'second':'first';else{const k=it.pk;PLACE[k]=PLACE[k]==='first'?'second':'first';savePlace(PLACE)}render();const n=$('[data-mv="'+id+'"]');if(n)n.focus();return}
+ const un=e.target.closest('[data-undo]');if(un){delete OVR[un.dataset.undo];render();return}
+ const dl=e.target.closest('[data-del]');if(dl){CUSTOM=CUSTOM.filter(x=>x.id!==dl.dataset.del);render();return}
+ const ad=e.target.closest('[data-cadd]');if(ad){addLine(ad.dataset.cadd)}});
+function addLine(k){const nm=$('[data-cn="'+k+'"]'),am=$('[data-ca="'+k+'"]'),n=nm.value.trim(),a=parseFloat(am.value.replace(/,/g,''));if(!n){nm.focus();return}if(isNaN(a)){am.focus();return}
+ CUSTOM.push({id:'c'+(++cid),label:n,amt:$('[data-ck="'+k+'"]').value==='ded'?-Math.abs(a):Math.abs(a),cut:k});render();const f=$('[data-cn="'+k+'"]');if(f)f.focus()}
+$('#pair').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-cn],[data-ca]'))addLine(e.target.dataset.cn||e.target.dataset.ca)});
+$('#pair').addEventListener('change',e=>{const i=e.target.closest('[data-ov]');if(!i)return;const id=i.dataset.ov,v=Math.abs(parseFloat(i.value.replace(/,/g,'')));const c=CUSTOM.find(x=>x.id===id);
+ if(isNaN(v)){render();return}if(c)c.amt=(c.amt<0?-1:1)*v;else OVR[id]=v;render();const n=$('[data-ov="'+id+'"]');if(n)n.focus()});
+$('#share').onchange=e=>{const v=parseFloat(e.target.value);SHARE=isNaN(v)?50:Math.min(100,Math.max(0,v));render()};
+$('#tsplit').onchange=e=>{const v=parseFloat(e.target.value);TSPLIT=isNaN(v)?50:Math.min(100,Math.max(0,v));render()};
+$('#reset').onclick=()=>{PLACE={...STD};savePlace(PLACE);OVR={};SHARE=50;TSPLIT=50;CUSTOM=[];render()};
+$('#pmon').innerHTML=BY.MON.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join('');
+function syncProj(){$('#pon').setAttribute('aria-checked',s0.assumedOn!==false);$('#ppct').value=Math.round(s0.assumed*1000)/10;$('#pmon').value=s0.amonth||3;$('#ppct').disabled=$('#pmon').disabled=s0.assumedOn===false}
+$('#pon').onclick=()=>{s0.assumedOn=s0.assumedOn===false;syncProj();render()};
+$('#ppct').onchange=e=>{const v=parseFloat(e.target.value);s0.assumed=isNaN(v)?0.04:Math.max(0,v)/100;render()};
+$('#pmon').onchange=e=>{s0.amonth=+e.target.value;render()};
+syncProj();
+if(location.hash==='#payslip')tab(2);
+render();
+</script></body></html>

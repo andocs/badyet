@@ -1,0 +1,98 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Salary path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.cols{grid-template-columns:minmax(0,420px) minmax(0,1fr);align-items:start}}
+.ev{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ev:last-child{border-bottom:0}
+.ev .when{width:68px;flex:none;font:800 15px Gabarito}
+.ev .when small{display:block;font:600 12px "Atkinson Hyperlegible Next";color:var(--muted)}
+.ev .delta{font:800 18px Gabarito;letter-spacing:-.02em}
+.est td{color:var(--muted)}
+.est td:first-child::after{content:" (assumed)";font-size:12px}
+tr.est td{font-style:normal}
+.add{background:var(--soft);border-radius:10px;padding:14px;margin-top:10px}
+.prev{margin-top:12px;padding:12px 14px;background:var(--tint);border-radius:8px;color:var(--accent-text);font-weight:700}
+</style></head><body data-nav="salary">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Salary path</h1><div class="lbl">Dated events from today's pay onward. Each one changes your base from its month.</div></div>
+  <div class="seg" id="scn" aria-label="Scenario"></div></div>
+
+ <div class="cols">
+  <div class="stack">
+   <section class="card" aria-labelledby="evh"><div class="row sp"><h2 id="evh">Events</h2><button class="btn sm pri" id="addbtn" aria-expanded="false" aria-controls="addform">+ Add event</button></div>
+    <form class="add" id="addform" hidden onsubmit="return false">
+     <div class="grid2"><label class="field">What happened<select id="k"><option value="merit">Merit raise</option><option value="promo">Promotion</option><option value="allow">Allowance change</option><option value="adj">One-off adjustment</option></select></label>
+      <label class="field">Effective<input id="e" type="month" value="2028-09"></label></div>
+     <div class="grid2" style="margin-top:10px"><label class="field" id="vf">Raise %<input id="v" inputmode="decimal" value="3.5"></label><label class="field">Title or grade (optional)<input placeholder="Lead Analyst, G8"></label></div>
+     <div class="prev" id="prev" aria-live="polite"></div>
+     <div class="row" style="margin-top:12px"><button class="btn pri">Save event</button><button class="btn ghost" type="button" id="cancel">Cancel</button></div></form>
+    <div id="evs"></div>
+    <div class="note" style="margin-top:12px"><b>Past the last event?</b> Then the assumption below takes over. It shows dashed everywhere.</div>
+   </section>
+   <section class="card" aria-labelledby="ash"><h2 id="ash">Assumptions</h2>
+    <div class="row sp" style="margin-top:10px"><div><b>Assumed raise after Mar 2028</b><div class="xs muted">Every March, until you enter a real event</div></div><label class="field" style="width:96px"><span class="sr">Assumed raise percent</span><input id="assumed" value="4.0" inputmode="decimal"></label></div>
+    <hr class="hr" style="margin:12px 0">
+    <div class="row sp top"><div><b>Tax and contributions hold</b><div class="xs muted">2026 income tax table, SSS 5% up to ₱35,000, PhilHealth 2.5% up to ₱100,000, Pag-IBIG ₱200. 13th month and bonus rules unchanged.</div></div><button class="btn sm">Edit tables</button></div>
+   </section>
+  </div>
+
+  <div class="stack">
+   <section class="card" aria-labelledby="ch"><h2 id="ch">Take-home per cutoff</h2><div class="legend" style="margin:8px 0"><span><i class="dot" style="background:var(--accent)"></i>From your events</span><span style="color:var(--muted)"><i class="sw-dash"></i>Assumed</span></div>
+    <svg class="chart" id="chart" viewBox="0 0 640 240" role="img" aria-label="Take-home per cutoff over five years, stepping up at each salary event"></svg></section>
+   <section class="card" aria-labelledby="yh"><h2 id="yh">Year by year</h2>
+    <div class="scrollx"><table><thead><tr><th>Year</th><th>Base / mo</th><th>Take-home / mo</th><th>Per cutoff</th><th>Change</th></tr></thead><tbody id="years"></tbody></table></div>
+    <p class="xs muted" style="margin:10px 0 0">Year-end base and the take-home at that base. Bonuses are on the Bonuses page.</p></section>
+  </div>
+ </div>
+</div></main>
+<script>
+const P=BY.peso;let sid='base';
+function ev(){const s=BY.SCENARIOS[sid];return BY.EVENTS.map(e=>e.kind==='promo'?{...e,ym:s.promo}:e).sort((a,b)=>a.ym.localeCompare(b.ym))}
+function prevYm(ym){let y=+ym.slice(0,4),m=+ym.slice(5)-1;if(!m){m=12;y--}return y+'-'+String(m).padStart(2,'0')}
+function cut(ym){const s=BY.salaryAt(ym,BY.SCENARIOS[sid]);return BY.takeHome(s.base,s.allow).cutoff}
+function render(){
+ const s=BY.SCENARIOS[sid];
+ $('#scn').innerHTML=Object.values(BY.SCENARIOS).map(x=>`<button data-v="${x.id}" aria-pressed="${x.id===sid}">${x.name}</button>`).join('');
+ $('#evs').innerHTML=ev().map(e=>{
+  const s0=BY.salaryAt(e.ym,s),before=BY.salaryAt(prevYm(e.ym),s);let d=null;
+  if(e.kind!=='start')d=cut(e.ym)-cut(prevYm(e.ym));
+  const detail=e.kind==='start'?`Base ${P(e.base)} · ${e.title}`:e.kind==='merit'?`+${e.pct}% → base ${P(s0.base)}`:e.kind==='promo'?`${e.title} → base ${P(e.base)}`:`+${P(e.allowDelta)} a month, not taxed`;
+  const [y,m]=[e.ym.slice(0,4),+e.ym.slice(5)];
+  return `<div class="ev"><div class="when">${BY.MON[m-1]}<small>${y}</small></div><div class="grow"><b>${e.label}</b><div class="sm muted">${detail}</div></div>${d!==null?`<div class="delta num ${d>=0?'pos':'neg'}" style="text-align:right">${P(d,{sign:1})}<div class="xs muted" style="font:600 12px 'Atkinson Hyperlegible Next'">per cutoff</div></div>`:'<span class="pill">start</span>'}</div>`}).join('');
+ /* years */
+ const yrs=[2026,2027,2028,2029,2030,2031];let prev=null;
+ $('#years').innerHTML=yrs.map(y=>{const ym=y+'-12',sa=BY.salaryAt(ym,s),th=BY.takeHome(sa.base,sa.allow),d=prev===null?null:th.cutoff-prev;prev=th.cutoff;
+  return `<tr class="${sa.assumed?'est':''}"><td><b>${y}</b></td><td class="num">${P(sa.base)}</td><td class="num">${P(th.take)}</td><td class="num"><b>${P(th.cutoff)}</b></td><td class="num ${d>0?'pos':''}">${d===null?'now':P(d,{sign:1})}</td></tr>`}).join('');
+ /* chart */
+ const mo=BY.months,W=640,H=240,L=54,R=10,T=14,B=28;const vals=mo.map(m=>cut(m)),lo=22000,hi=Math.ceil(Math.max(...vals)/5000)*5000+1000;
+ const x=i=>L+(W-L-R)*i/59,y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+ let o='';for(let v=lo;v<=hi;v+=5000)o+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">₱${v/1000}k</text>`;
+ ['2027','2028','2029','2030','2031'].forEach(yr=>{const i=mo.indexOf(yr+'-01');o+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${yr}</text>`});
+ let seg1=[],seg2=[];mo.forEach((m,i)=>{const a=BY.salaryAt(m,s).assumed;(a?seg2:seg1).push([i,vals[i]])});
+ const path=(a,st)=>{if(!a.length)return '';let d='';a.forEach(([i,v],k)=>{d+=(k?'H'+x(i)+'V'+y(v):'M'+x(i)+' '+y(v))});return `<path d="${d}" fill="none" stroke="${st}" stroke-width="3" ${st.includes('muted')?'stroke-dasharray="6 5"':''}/>`};
+ if(seg2.length){const k=seg2[0][0]-1;seg2.unshift([k,vals[k]])}
+ o+=path(seg1,'var(--accent)')+path(seg2,'var(--muted)');
+ ev().filter(e=>e.kind!=='start').forEach(e=>{const i=mo.indexOf(e.ym);if(i<0)return;o+=`<circle cx="${x(i)}" cy="${y(vals[i])}" r="5" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>`});
+ const li=mo.indexOf(BY.salaryAt('2031-11',s).assumed?'2029-03':'2028-03');
+ $('#chart').innerHTML=o;
+ pv();
+}
+function pv(){
+ const k=$('#k').value,v=parseFloat($('#v').value)||0,s=BY.SCENARIOS[sid];
+ $('#vf').firstChild.textContent=k==='merit'?'Raise %':k==='promo'?'New base per month':k==='allow'?'Allowance change per month':'Amount (one time)';
+ const cur=BY.salaryAt('2028-08',s);let d=0;
+ if(k==='merit')d=BY.takeHome(Math.round(cur.base*(1+v/100)),cur.allow).cutoff-BY.takeHome(cur.base,cur.allow).cutoff;
+ if(k==='promo')d=BY.takeHome(v,cur.allow).cutoff-BY.takeHome(cur.base,cur.allow).cutoff;
+ if(k==='allow')d=v/2;
+ const m=$('#e').value?BY.ymLabel($('#e').value):'';
+ $('#prev').textContent=k==='adj'?`One time ${P(v)} in ${m}. No change to later cutoffs.`:`${P(d,{sign:1})} per cutoff from ${m}. Every later year and bonus follows.`;
+}
+seg($('#scn'),v=>{sid=v;render()});
+$('#addbtn').onclick=()=>{const f=$('#addform');f.hidden=!f.hidden;$('#addbtn').setAttribute('aria-expanded',!f.hidden);pv()};
+$('#cancel').onclick=()=>{$('#addform').hidden=true;$('#addbtn').setAttribute('aria-expanded',false)};
+['k','e','v'].forEach(i=>$('#'+i).addEventListener('input',()=>{if(i==='k'){$('#v').value={merit:'3.5',promo:'80000',allow:'1000',adj:'5000'}[$('#k').value]}pv()}));
+render();
+</script></body></html>

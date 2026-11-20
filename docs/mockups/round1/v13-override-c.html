@@ -1,0 +1,70 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Month override · C Quick actions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.f{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.f:last-child{border-bottom:0}
+.f .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.f .acts .btn{min-height:40px;padding:4px 14px;font-size:13px}
+.diff{display:flex;flex-wrap:wrap;gap:8px}
+.scopes{display:flex;flex-wrap:wrap;gap:8px}
+.scopes button{border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:8px 16px;min-height:44px;font-weight:700;cursor:pointer}
+.scopes button[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:92px;z-index:70;display:none;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 8px 8px 18px;box-shadow:0 8px 24px rgba(0,0,0,.35);font-weight:700;white-space:nowrap}
+</style></head><body data-nav="forecast">
+<main><div class="narrow stack">
+ <div class="row sp"><button class="iconbtn" id="prev" aria-label="Previous month"></button><div style="text-align:center"><h1 id="mname">Mar 2027</h1><div class="lbl" id="mstat"></div></div><button class="iconbtn" id="next" aria-label="Next month"></button></div>
+
+ <section class="hero"><div class="lbl">Savings pool this month</div><div class="big num" id="pool" style="font-size:40px">₱0.00</div><div class="muted sm" id="psub"></div></section>
+
+ <section class="card" aria-labelledby="fh"><div class="row sp"><h2 id="fh">Who gets it</h2><span class="pill" id="scopepill"></span></div><div id="fl"></div></section>
+
+ <section class="card" id="diffc" aria-labelledby="dh"><div class="row sp"><h2 id="dh">Changed from default</h2><button class="btn sm" id="reset">Reset month</button></div><div class="diff" id="diff" style="margin-top:10px"></div></section>
+
+ <section class="card" aria-labelledby="sch"><h2 id="sch">Do the same for</h2><div class="scopes" id="rng" style="margin-top:10px"></div><div class="row wrap" style="margin-top:12px"><label class="field" style="min-width:200px">In scenarios<select id="scope"></select></label></div>
+  <p class="xs muted" style="margin:10px 0 0" id="rngnote"></p></section>
+</div>
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button class="btn sm" id="undo">Undo</button></div>
+</main>
+<script>
+const P=BY.peso,F=BY.FUNDS,def=F.map(f=>f.id);let ym=location.hash.slice(1)||'2027-03',rng=1,scope='all',snap=null,pinFor=null;
+const RNG=[[1,'Just this month'],[3,'Next 3 months'],[12,'Rest of the year']];
+const sid=()=>scope==='all'?'base':scope;
+function months(){const i=BY.months.indexOf(ym);const end=rng===12?BY.months.findLastIndex(m=>m.slice(0,4)===ym.slice(0,4)):i+rng-1;return BY.months.slice(i,Math.min(end,59)+1)}
+function save(){snap=JSON.stringify(FC.ov)}
+function undo(){if(snap){FC.ov=JSON.parse(snap);$('#toast').style.display='none';render()}}
+function toast(m){$('#tmsg').textContent=m;$('#toast').style.display='flex';clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').style.display='none',5000)}
+function mut(fn,msg){save();months().forEach(m=>{const o=FC.ov[m]||{scope,note:'Quick change'};o.scope=scope;fn(o);const empty=!o.order&&!(o.pin&&Object.keys(o.pin).length)&&!(o.skip&&o.skip.length);empty?delete FC.ov[m]:FC.ov[m]=o});toast(msg+(rng>1?' for '+months().length+' months':''));render()}
+function render(){
+ const rows=FC.run(sid()),r=rows.find(x=>x.ym===ym),o=FC.ov[ym];
+ const saved=FC.ov[ym];delete FC.ov[ym];const d0=BY.simulate(sid(),FC.ov).find(x=>x.ym===ym);if(saved)FC.ov[ym]=saved;
+ $('#mname').textContent=BY.ymLabel(ym);$('#mstat').innerHTML=o?'<span class="pill ok">Overridden</span>':'<span class="pill">Following the default order</span>';
+ $('#pool').textContent=P(r.pool);$('#psub').textContent=r.bonus?`+ ${P(r.bonus.net)} ${r.bonus.name}, already split by its plan`:`From the stash line and whatever is left`;
+ $('#scopepill').textContent=scope==='all'?'All scenarios':'Only '+BY.SCENARIOS[scope].name;
+ $('#fl').innerHTML=r.order.map((id,i)=>{const f=FC.fund(id),a=r.alloc[id],pinned=a.why==='pinned',sk=a.why==='skipped';
+  return `<div class="f"><div class="grow"><div class="row sp"><b class="row" style="gap:8px"><i class="dot" style="background:${f.color}"></i>${i+1}. ${f.name}</b><b class="num ${sk?'muted':''}" style="${sk?'text-decoration:line-through':''}">${P(a.amt)}</b></div><div class="xs muted">${FC.why(r,id)}</div>
+   <div class="acts"><button class="btn" data-top="${id}" ${i===0?'disabled style="opacity:.45"':''}>${icon('up')} First</button><button class="btn" data-pin="${id}" aria-pressed="${pinned||pinFor===id}">${icon('pin')} Pin amount</button><button class="btn" data-skip="${id}" aria-pressed="${sk}">${icon('skip')} ${sk?'Skipped':'Skip'}</button></div>
+   ${pinFor===id?`<div class="row" style="margin-top:10px"><label class="field grow">Pin ${f.name} at (₱)<input id="pv" inputmode="decimal" value="${Math.round(a.amt)||2000}"></label><button class="btn pri" data-ok="${id}" style="align-self:flex-end">Pin</button></div>`:''}</div></div>`}).join('');
+ /* diff */
+ const rows2=F.map(f=>({f,df:r.alloc[f.id].amt-d0.alloc[f.id].amt}));
+ $('#diffc').hidden=!o;
+ $('#diff').innerHTML=rows2.filter(x=>Math.abs(x.df)>.5).map(x=>`<span class="pill ${x.df>0?'ok':'warn'}" style="font-size:13px;padding:5px 12px"><i class="dot" style="background:${x.f.color}"></i>${x.f.name} ${P(x.df,{sign:1})}</span>`).join('')||'<span class="muted">Same amounts, different story.</span>';
+ $('#rng').innerHTML=RNG.map(([n,l])=>`<button data-r="${n}" aria-pressed="${rng===n}">${l}</button>`).join('');
+ $('#scope').innerHTML='<option value="all">All scenarios</option>'+Object.values(BY.SCENARIOS).map(s=>`<option value="${s.id}">Only ${s.name}</option>`).join('');$('#scope').value=scope;
+ const ms=months();$('#rngnote').textContent=`Changes land on ${ms.length>1?BY.ymLabel(ms[0])+' to '+BY.ymLabel(ms[ms.length-1]):BY.ymLabel(ms[0])}. Each month keeps its own default pool.`;
+}
+$('#fl').addEventListener('click',e=>{const g=k=>e.target.closest(`[data-${k}]`)?.dataset[k];let id;
+ if(id=g('top'))mut(o=>{o.order=[id,...def.filter(x=>x!==id)]},FC.fund(id).name+' goes first');
+ else if(id=g('skip')){const sk=(FC.ov[ym]?.skip||[]).includes(id);mut(o=>{o.skip=sk?(o.skip||[]).filter(x=>x!==id):[...new Set([...(o.skip||[]),id])];if(o.pin)delete o.pin[id]},FC.fund(id).name+(sk?' back in':' skipped'))}
+ else if(id=g('pin')){pinFor=pinFor===id?null:id;render();$('#pv')?.focus()}
+ else if(id=g('ok')){const v=parseFloat($('#pv').value)||0;pinFor=null;mut(o=>{o.pin={...(o.pin||{}),[id]:v};o.skip=(o.skip||[]).filter(x=>x!==id)},FC.fund(id).name+' pinned at '+P(v))}});
+$('#rng').addEventListener('click',e=>{const b=e.target.closest('[data-r]');if(b){rng=+b.dataset.r;render()}});
+$('#scope').onchange=e=>{scope=e.target.value;render()};
+$('#reset').onclick=()=>{save();months().forEach(m=>delete FC.ov[m]);toast('Back to default');render()};
+$('#undo').onclick=undo;
+function go(d){const i=BY.months.indexOf(ym)+d;if(i<0||i>59)return;ym=BY.months[i];pinFor=null;render()}
+$('#prev').innerHTML=icon('chev').replace('m9 6 6 6-6 6','m15 6-6 6 6 6');$('#next').innerHTML=icon('chev');$('#prev').onclick=()=>go(-1);$('#next').onclick=()=>go(1);
+addEventListener('hashchange',()=>{if(/^\d{4}-\d\d$/.test(location.hash.slice(1))){ym=location.hash.slice(1);render()}});
+render();
+</script></body></html>

@@ -1,0 +1,75 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forecast · A One scenario at a time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.cols{grid-template-columns:minmax(0,1fr) 320px;align-items:start}}
+.fx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+@media(max-width:759px){.fx{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fx div{background:rgba(255,255,255,.1);border-radius:10px;padding:10px 12px}
+.fx b{display:block;font:800 18px Gabarito;font-variant-numeric:tabular-nums}
+.ovl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.ovl:last-child{border-bottom:0}.ovl.off{opacity:.55}
+.ovl button{all:unset;cursor:pointer;flex:1;min-width:0}.ovl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--ink);margin-top:5px;flex:none}
+</style></head><body data-nav="forecast">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Where I'll be</h1><div class="lbl">60 months from Dec 2026. Tap a month for the story.</div></div>
+  <div class="row wrap"><div class="seg" id="scn" aria-label="Scenario"></div><div class="seg" id="zoom" aria-label="Zoom"><button data-v="m" aria-pressed="true">60 months</button><button data-v="y" aria-pressed="false">By year</button></div></div></div>
+
+ <section class="hero" aria-labelledby="hh"><div class="row sp wrap"><div><div class="lbl" id="hh">Nov 2031, scenario <b id="sn">Steady</b></div><div class="big xl num" id="total">₱0.00</div><div class="muted" id="gain"></div></div><span class="pip" aria-hidden="true"></span></div>
+  <div class="fx" id="fx"></div></section>
+
+ <div class="cols">
+  <div class="stack">
+   <section class="card"><div class="row sp wrap"><h2>Fund balances</h2><div class="legend" id="leg"></div></div>
+    <div id="chart" style="margin-top:10px"></div>
+    <div class="row sp wrap sm muted" style="margin-top:6px"><span><span class="tri" style="display:inline-block;margin-right:6px"></span>= a month with an override</span><label class="row" style="gap:8px">Jump to <select id="jump" style="font:inherit;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-height:36px"></select></label></div></section>
+  </div>
+  <aside class="stack">
+   <section class="card"><h2 id="sh">This scenario</h2><div id="sc" style="margin-top:8px"></div><button class="btn sm" style="margin-top:10px">Edit assumptions</button></section>
+   <section class="card"><h2>Months that differ</h2><div class="lbl" style="margin:2px 0 6px">Overrides apply to every scenario unless scoped.</div><div id="ovs"></div></section>
+  </aside>
+ </div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="mo" role="dialog" aria-modal="true" aria-labelledby="mot"><div class="grab"></div>
+ <div class="row sp"><div><h2 id="mot">Mar 2027</h2><div class="xs muted" id="mosub"></div></div><button class="iconbtn s" id="mx" aria-label="Close"></button></div>
+ <div id="mob" style="margin-top:12px"></div>
+ <div class="row wrap" style="margin-top:14px"><a class="btn pri" id="mlink" href="v13-override-a.html">Override this month</a><span id="mrst"></span></div></section>
+
+<script>
+const P=BY.peso,F=BY.FUNDS;let zoom='m',sel=null;
+function render(){
+ const rows=FC.run(),S=BY.SCENARIOS[FC.scn],last=rows[59];
+ $('#scn').innerHTML=Object.values(BY.SCENARIOS).map(s=>`<button data-v="${s.id}" aria-pressed="${s.id===FC.scn}">${s.name}</button>`).join('');
+ $('#sn').textContent=S.name;
+ const tot=F.reduce((s,f)=>s+last.bal[f.id],0),start=F.reduce((s,f)=>s+f.start,0);
+ $('#total').textContent=P(tot);$('#gain').textContent=`up ${P(tot-start)} from ${P(start)} today`;
+ $('#fx').innerHTML=F.map(f=>`<div><span class="xs" style="color:#B9C9DD">${f.name}</span><b>${P(last.bal[f.id])}</b></div>`).join('');
+ $('#leg').innerHTML=F.map(f=>`<span><i class="dot" style="background:${f.color}"></i>${f.name}</span>`).join('');
+ $('#chart').innerHTML=zoom==='m'?FC.area(rows,{sel}):FC.years(rows);
+ $('#jump').innerHTML='<option value="">Pick a month…</option>'+rows.map(r=>`<option value="${r.ym}">${BY.ymLabel(r.ym)}${r.over?' (override)':''}</option>`).join('');
+ const sal=BY.byYear(rows);
+ $('#sc').innerHTML=`<div class="sm"><b>${S.blurb}</b></div><dl style="margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px"><dt class="muted">Promotion</dt><dd style="margin:0;text-align:right">${BY.ymLabel(S.promo)}</dd><dt class="muted">CIP multiplier</dt><dd style="margin:0;text-align:right">×${S.cip}</dd><dt class="muted">Inflation</dt><dd style="margin:0;text-align:right">${(S.infl*100).toFixed(1)}%</dd><dt class="muted">Assumed raise</dt><dd style="margin:0;text-align:right">${(S.assumed*100).toFixed(0)}% from Mar 2029</dd></dl>`;
+ $('#ovs').innerHTML=Object.entries(FC.ov).map(([ym,o])=>{const on=o.scope==='all'||o.scope===FC.scn;const what=[o.order?'New order':'',o.pin?'Pinned '+Object.keys(o.pin).map(id=>FC.fund(id).name+' '+P(o.pin[id])).join(', '):'',o.skip?'Skipped '+o.skip.map(id=>FC.fund(id).name).join(', '):''].filter(Boolean).join(' · ');
+  return `<div class="ovl ${on?'':'off'}"><span class="tri"></span><button data-ym="${ym}"><b>${BY.ymLabel(ym)}</b> <span class="muted">· ${o.note}</span><div class="sm muted">${what}</div><span class="pill ${o.scope==='all'?'':'warn'}" style="margin-top:4px">${o.scope==='all'?'All scenarios':'Only '+BY.SCENARIOS[o.scope].name}${on?'':' · not applied here'}</span></button></div>`}).join('');
+}
+function openMonth(ym){
+ sel=ym;const rows=FC.run(),r=rows.find(x=>x.ym===ym);
+ $('#mot').textContent=BY.ymLabel(ym);$('#mosub').textContent=BY.SCENARIOS[FC.scn].name+(r.over?' · overridden month':'');
+ $('#mob').innerHTML=FC.detail(r);$('#mlink').href='v13-override-a.html#'+ym;
+ $('#mrst').innerHTML=r.over?'<button class="btn" id="rst">Reset to default</button>':'';
+ if($('#rst'))$('#rst').onclick=()=>{delete FC.ov[ym];closeMonth();render()};
+ $('#mo').classList.add('on');$('#scrim').classList.add('on');$('#mx').focus();render();
+}
+function closeMonth(){$('#mo').classList.remove('on');$('#scrim').classList.remove('on');sel=null;render()}
+$('#mx').innerHTML=icon('x');$('#mx').onclick=$('#scrim').onclick=closeMonth;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMonth()});
+seg($('#scn'),v=>{FC.scn=v;render()});seg($('#zoom'),v=>{zoom=v;render()});
+$('#jump').onchange=e=>e.target.value&&openMonth(e.target.value);
+FC.bindHits($('#chart'),openMonth);
+$('#ovs').addEventListener('click',e=>{const b=e.target.closest('[data-ym]');if(b)openMonth(b.dataset.ym)});
+render();
+</script></body></html>

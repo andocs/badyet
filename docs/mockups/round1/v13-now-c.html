@@ -1,0 +1,43 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Now · C Runway</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:960px){.cols{grid-template-columns:minmax(0,1fr) 360px;align-items:start}}
+.day{font-size:12px;font-weight:700;color:var(--muted);padding:12px 0 2px;text-transform:none}
+.pend{background:var(--gold-tint);border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;color:var(--gold-text)}
+</style></head><body data-nav="now">
+<main><div class="cols">
+ <div class="stack">
+  <div class="row sp wrap"><div><h1>Runway to 25 Nov</h1><div class="lbl">1st cutoff · day 10 of 14</div></div><a class="btn" href="v13-inbox.html">Inbox <span class="pill ok">4</span></a></div>
+  <section class="card" aria-labelledby="rw">
+   <div class="row sp wrap"><div><div class="lbl" id="rw">Safe to spend per day</div><div class="big xl num">₱271.07</div></div>
+    <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>Spent</span><span style="color:var(--muted)"><i class="sw-dash"></i>Plan pace</span><span style="color:var(--accent-text)"><i class="sw-dash"></i>If you keep to ₱271</span></div></div>
+   <svg class="chart" id="runway" viewBox="0 0 640 260" role="img" aria-label="Cumulative spending against plan pace over the 14 day cutoff. Spent ₱4,461.25 by day 10, plan allows ₱5,816.60."></svg>
+   <div class="row sp sm"><span class="muted">₱306.50 over pace today</span><b class="num">₱1,355.35 left</b></div>
+  </section>
+  <section class="card"><h2>Recent</h2><div id="tx"></div></section>
+ </div>
+ <aside class="stack">
+  <section class="card"><h2>Planned vs spent</h2><div class="stack" style="margin-top:10px" id="cats"></div></section>
+  <section class="card"><div class="lbl">What I have right now</div><div class="big num" style="font-size:32px;margin:4px 0">₱187,378.63</div><a class="sm" href="v13-accounts.html">All accounts →</a></section>
+ </aside>
+</div></main>
+<script>
+const N=BY.NOW,P=BY.peso,plan=5816.60;
+/* cumulative spend by day (sample) */
+const cum=[0,210,560,560,1180,1520,2140,2790,3320,3990,4461.25];
+const W=640,H=260,L=44,R=10,T=14,B=30,x=d=>L+(W-L-R)*d/14,y=v=>T+(H-T-B)*(1-v/6500);
+let s='';
+[0,2000,4000,6000].forEach(v=>s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">₱${v/1000}k</text>`);
+[1,5,10,14].forEach(d=>s+=`<text x="${x(d)}" y="${H-8}" text-anchor="middle">${d===14?'24 Nov':'Day '+d}</text>`);
+s+=`<line x1="${x(0)}" y1="${y(0)}" x2="${x(14)}" y2="${y(plan)}" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 5"/>`;
+s+=`<line x1="${x(10)}" y1="${y(cum[10])}" x2="${x(14)}" y2="${y(cum[10]+271.07*4+271.07)}" stroke="var(--accent-text)" stroke-width="2" stroke-dasharray="2 4"/>`;
+s+=`<path d="M${cum.map((v,i)=>x(i)+' '+y(v)).join(' L')}" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round"/>`;
+s+=`<circle cx="${x(10)}" cy="${y(cum[10])}" r="6" fill="var(--accent)" stroke="var(--bg)" stroke-width="3"/>`;
+s+=`<line x1="${x(10)}" x2="${x(10)}" y1="${T}" y2="${H-B}" stroke="var(--ink)" stroke-opacity=".25"/><text x="${x(10)+6}" y="${T+10}">Today</text>`;
+$('#runway').innerHTML=s;
+$('#cats').innerHTML=N.cats.map(c=>{const p=c.spent/c.plan*100;return `<div><div class="row sp"><span class="row" style="gap:8px"><i class="dot" style="background:${c.c}"></i><b>${c.name}</b></span><b class="num">${P(c.plan-c.spent)}</b></div><div class="bar" role="img" aria-label="${Math.round(p)} percent"><i style="width:${p}%;background:${c.c}"></i></div></div>`}).join('');
+let last='';$('#tx').innerHTML=N.txns.map(t=>{const d=t.when.split(' ')[0];const h=d!==last?`<div class="day">${d==='Today'?'Today':d==='Thu'?'Yesterday':'Wed 18 Nov'}</div>`:'';last=d;return h+`<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line);min-height:56px"><div class="grow"><b>${t.who}</b><div class="xs muted">${t.cat} · ${t.acct}</div></div>${t.st==='pending'?'<span class="pend">pending</span>':''}<b class="num">${P(t.amt)}</b></div>`}).join('');
+</script></body></html>

@@ -1,0 +1,85 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Now</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.top2{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.top2{grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:stretch}}
+.row2{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.row2{grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:start}}
+.row2>section{display:flex;flex-direction:column}.row2>section .envgrid{flex:1}
+.bl-i{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.bl-i:last-child{border-bottom:0}
+.bl-i .chk{width:22px;height:22px;cursor:default}.bl-i .chk .i{width:13px;height:13px}
+.hero .big{margin:6px 0 2px}
+.hero .top3{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.envgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));align-items:start}
+.envc{border:1px solid var(--line);border-radius:10px;background:var(--surface);display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.envh{padding:14px 16px;border-bottom:1px solid var(--line)}
+.envc .tx{padding:2px 16px 6px;flex:1}
+.recent{display:flex;flex-direction:column}
+</style></head><body data-nav="now">
+<main><div class="stack l">
+  <div class="row sp wrap"><div><h1>Fri 20 Nov</h1><div class="lbl">1st cutoff · 11–24 Nov · payday 25 Nov</div></div>
+   <div class="row wrap"><button class="btn" data-hide aria-pressed="false"></button><a class="btn" href="v13-inbox.html">Inbox <span class="pill ok">4 to check</span></a></div></div>
+
+  <div class="top2">
+   <section class="hero" aria-labelledby="safe">
+    <div class="top3">
+     <div><div class="lbl" id="safe">Safe to spend today</div>
+      <div class="big xl num">₱271.07</div>
+      <div class="muted">per day for 5 days. ₱1,355.35 left of ₱5,816.60.</div>
+      <div class="sm" style="margin-top:12px"><b>Friday, not a usual office day.</b> <span class="muted">Mon and Tue add ₱250.00. Next: Mon 23 Nov, ₱521.07.</span></div></div>
+     <div class="row wrap" style="gap:10px"><button class="btn pri" style="white-space:nowrap" onclick="location.href='v13-inbox.html#add'">+ Expense</button></div>
+    </div>
+    <svg class="chart" id="runway" viewBox="0 0 800 190" role="img" aria-label="Cumulative spending against plan pace over the 14 day cutoff. Spent ₱4,461.25 by day 10; the plan allows ₱5,816.60 by day 14." style="margin-top:12px"></svg>
+    <div class="row wrap sm" style="gap:6px 16px"><span class="row" style="gap:6px"><i class="dot" style="background:#5EE6B4"></i>Spent</span><span class="row" style="gap:6px"><i class="sw-dash" style="color:#B9C9DD"></i>Plan pace</span><span class="row" style="gap:6px"><i class="sw-dash" style="color:#5EE6B4;border-top-style:dotted"></i>If you keep to ₱271</span></div>
+    <div class="row sp wrap sm" style="margin-top:12px;gap:8px"><span>Spent ₱4,461.25 · pace says ₱4,155 by today</span><b>₱306 over pace. A quiet weekend fixes it.</b></div>
+   </section>
+   <section class="card recent" aria-labelledby="rc"><div class="row sp"><h2 id="rc">Recent</h2><a class="sm" href="v13-inbox.html#all">All activity →</a></div><div id="tx"></div></section>
+  </div>
+
+  <section aria-labelledby="wh">
+   <div class="row sp wrap" style="margin-bottom:8px"><div class="row wrap" style="gap:14px"><h2 id="wh">What I have right now</h2><b class="num" style="font:800 24px Gabarito">₱187,378.63</b></div><a class="sm" href="v13-accounts.html">All accounts →</a></div>
+   <div class="hscroll" id="accts" tabindex="0" role="region" aria-label="Accounts, scroll sideways"></div>
+  </section>
+
+  <div class="row2">
+   <section aria-labelledby="pv"><div class="row sp wrap" style="margin-bottom:8px"><h2 id="pv">Planned vs spent</h2><span class="lbl">this cutoff</span></div>
+    <div class="envgrid"><div id="envs" style="display:contents"></div></div></section>
+   <aside class="stack">
+    <section class="card" aria-labelledby="bt"><div class="row sp"><h2 id="bt">Bills and transfers</h2><span class="pill ok">5 of 5 sent</span></div>
+     <div id="bills" style="margin-top:6px"></div><div class="row sp" style="padding-top:10px;border-top:1px solid var(--line);margin-top:2px"><b>Sent this cutoff</b><b class="num">₱12,449.00</b></div></section>
+    <section class="card" id="nsettle" aria-labelledby="st"><h2 id="st">Settle office days</h2><div class="sm muted" style="margin:2px 0 8px">Two days ended under or over their budget.</div><div class="row sp sm" style="padding:6px 0"><span>Mon 16 · left over</span><b class="num pos">₱70.00</b></div><div class="row sp sm" style="padding:6px 0"><span>Tue 17 · overspent</span><b class="num neg">−₱60.00</b></div><a class="btn sm pri" href="v13-budget.html" style="margin-top:8px">Settle in Budget</a></section>
+    <div class="note"><b>Next payday, 25 Nov:</b> ₱22,535.83 lands (your 2nd cutoff: half the income tax and the contributions out, allowances in). Rent and power go out first, then the stash splits into funds.</div>
+   </aside>
+  </div>
+</div></main>
+<script>
+const N=BY.NOW,P=BY.peso,ratio=N.cutoff.day/N.cutoff.days;
+/* runway chart on the hero */
+const plan=5816.6,cum=[0,210,560,560,1180,1520,2140,2790,3320,3990,4461.25];
+const W=800,H=190,L=44,R=10,T=12,B=28,x=d=>L+(W-L-R)*d/14,y=v=>T+(H-T-B)*(1-v/6500);
+let s='';
+[0,2000,4000,6000].forEach(v=>s+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">₱${v/1000}k</text>`);
+[1,5,10,14].forEach(d=>s+=`<text x="${x(d)}" y="${H-8}" text-anchor="middle">${d===14?'24 Nov':'Day '+d}</text>`);
+s+=`<line x1="${x(0)}" y1="${y(0)}" x2="${x(14)}" y2="${y(plan)}" stroke="#B9C9DD" stroke-width="2" stroke-dasharray="5 5"/>`;
+s+=`<line x1="${x(10)}" y1="${y(cum[10])}" x2="${x(14)}" y2="${y(cum[10]+271.07*5)}" stroke="#5EE6B4" stroke-width="2" stroke-dasharray="2 4"/>`;
+s+=`<path d="M${cum.map((v,i)=>x(i)+' '+y(v)).join(' L')}" fill="none" stroke="#5EE6B4" stroke-width="3" stroke-linejoin="round"/>`;
+s+=`<circle cx="${x(10)}" cy="${y(cum[10])}" r="6" fill="#5EE6B4" stroke="#0B5A4E" stroke-width="3"/>`;
+s+=`<line x1="${x(10)}" x2="${x(10)}" y1="${T}" y2="${H-B}" stroke="#fff" stroke-opacity=".3"/><text x="${x(10)+6}" y="${T+10}">Today</text>`;
+$('#runway').innerHTML=s;
+/* envelopes: planned vs spent with a pace marker */
+$('#envs').innerHTML=N.cats.map((c,i)=>{const left=c.plan-c.spent,pace=c.plan*ratio,diff=c.spent-pace,p=c.spent/c.plan*100;
+ const st=diff>25?`<span class="pill warn">${P(diff)} over pace</span>`:diff<-25?`<span class="pill ok">${P(-diff)} under pace</span>`:`<span class="pill ok">on pace</span>`;
+ const tx=N.txns.filter(t=>t.cat===c.name);
+ return `<details class="env" ${i===0?'open':''}><summary><div class="row sp"><span class="row wrap" style="gap:8px"><i class="dot" style="background:${c.c}"></i><b>${c.name}</b> ${st}</span><span class="row"><span class="envleft">${P(left)}</span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></span></div>
+ <div class="pace" style="margin-top:12px"><div class="bar t" role="img" aria-label="${c.name}: ${Math.round(p)} percent used, pace marker at ${Math.round(ratio*100)} percent"><i style="width:${p}%;background:${c.c}"></i></div><u style="left:${ratio*100}%"></u></div>
+ <div class="row sp xs muted" style="margin-top:6px"><span class="num">${P(c.spent)} spent</span><span class="num">of ${P(c.plan)} · marker = pace</span></div></summary>
+ <ul class="list tx">${tx.map(t=>`<li><div class="grow"><b>${t.who}</b><div class="xs muted">${t.when} · ${t.acct}${t.st==='pending'?' · <span class="warnt">pending</span>':''}</div></div><b class="num">${P(t.amt)}</b></li>`).join('')||'<li class="muted">Nothing yet. Pip is proud.</li>'}</ul></details>`}).join('');
+/* account cards */
+$('#accts').innerHTML=N.accounts.map(a=>`<a class="acard" href="v13-accounts.html#${a.n.replace(/ /g,'-')}" style="--c:${a.c}"><span class="an"><span>${a.n}</span>${a.fund?'<span class="tagx">Fund</span>':''}</span><span class="ak">${a.kind} ·· ${a.last4}</span><span class="ab">${P(a.bal)}</span><span class="as">${a.sub}</span></a>`).join('');
+/* recent */
+let last='';$('#tx').innerHTML=N.txns.map(t=>{const d=t.when.split(' ')[0];const h=d!==last?`<div class="day">${d==='Today'?'Today':d==='Thu'?'Yesterday':'Wed 18 Nov'}</div>`:'';last=d;return h+`<div class="row" style="padding:10px 0;border-bottom:1px solid var(--line);min-height:56px"><div class="grow"><b>${t.who}</b><div class="xs muted">${t.cat} · ${t.acct}${t.st==='pending'?' · <span class="warnt">pending</span>':''}</div></div><b class="num">${P(t.amt)}</b></div>`}).join('');
+try{if(localStorage.getItem('v13settle')==='0')$('#nsettle').hidden=true}catch(e){}
+$('#bills').innerHTML=[['Rent · BPI Checking',7000],['Laptop installment',2650],['Subscriptions',1100],['Stash to BPI Savings',900],['Phone plan',799]].map(([l,v])=>`<div class="bl-i"><span class="chk" aria-checked="true" role="img" aria-label="sent">${CHECK}</span><span class="grow">${l}</span><b class="num">${P(v)}</b></div>`).join('');
+</script></body></html>

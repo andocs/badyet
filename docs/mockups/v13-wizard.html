@@ -1,0 +1,55 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wizard · First run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script><script src="v13-wiz.js"></script>
+<style>
+.rowf{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 84px minmax(0,1fr) 44px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
+@media(max-width:759px){.rowf{grid-template-columns:1fr 1fr}.rowf .rm{justify-self:end}}
+.ln2{display:grid;grid-template-columns:auto minmax(0,1fr) 110px 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+@media(max-width:759px){.ln2{grid-template-columns:auto 1fr}.ln2>:nth-child(n+3){grid-column:2}}
+.ln2 select,.ln2 input{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:44px;width:100%}
+.cb{width:22px;height:22px;accent-color:var(--accent)}
+.gh3{font:800 13px "Atkinson Hyperlegible Next";letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 2px}
+</style></head><body data-nav="settings" data-shell="none">
+<main id="app"></main>
+<script>
+const P=BY.peso;
+const S={accts:[{n:'GCash',k:'e-wallet',l:'8841',b:3842.15},{n:'BPI Checking',k:'debit',l:'4471',b:21430.88},{n:'BPI Savings',k:'savings',l:'9032',b:96400}],
+ base:58000,start:'2026-01',title:'Analyst',grade:'Grade 6',p1:10,p2:25,
+ lines:[{on:1,n:'Rent',r:'fixed',v:14000,g:'Essentials'},{on:1,n:'Groceries',r:'pct',v:13,g:'Essentials'},{on:1,n:'Commute',r:'pct',v:5,g:'Essentials'},{on:1,n:'Eating out',r:'pct',v:6,g:'Wants'},{on:1,n:'Stash',r:'pct',v:12,g:'Savings'}],
+ funds:{emg:1,trv:1,gdg:0,home:0},ovr:{sss:'',ph:'',pi:''}};
+const cc=()=>{const c0=BY.contrib(S.base),O=(k,v)=>S.ovr[k]!==''&&!isNaN(+S.ovr[k])?+S.ovr[k]:v,c={sss:O('sss',c0.sss),ph:O('ph',c0.ph),pi:O('pi',c0.pi)};c.total=c.sss+c.ph+c.pi;return c};
+const th=()=>{const c=cc(),tax=BY.annualTax((S.base-c.total)*12)/12,take=S.base-c.total-tax;return {tax,take,cutoff:take/2}};
+function slip(S,i){const t=th(),c=cc(),bal=S.accts.reduce((a,x)=>a+(+x.b||0),0);
+ const lines=S.lines.filter(l=>l.on),pct=lines.filter(l=>l.r==='pct').reduce((a,l)=>a+l.v,0),fix=lines.filter(l=>l.r==='fixed').reduce((a,l)=>a+l.v,0),left=t.take-fix-t.take*pct/100;
+ const nf=Object.values(S.funds).filter(Boolean).length;
+ return `<div class="slip"><div class="hd"><div><div class="lbl">Your setup so far</div><div class="disp" style="font-size:22px">${i>=1?P(t.cutoff)+' a cutoff':'Just getting started'}</div></div></div>
+ <div class="sec"><h3>Accounts</h3><div class="ln"><span>${S.accts.length} account${S.accts.length===1?'':'s'}</span><span class="num">${P(bal)}</span></div></div>
+ ${i>=1?`<div class="sec"><h3>Salary</h3><div class="ln"><span>Base per month</span><span class="num">${P(S.base)}</span></div><div class="ln"><span>SSS, PhilHealth, Pag-IBIG${Object.values(S.ovr).some(v=>v!=='')?'<span class="m">includes your values</span>':''}</span><span class="num">−${P(c.total)}</span></div><div class="ln"><span>Income tax</span><span class="num">−${P(t.tax)}</span></div><div class="ln t"><span>Take-home a month</span><span class="num">${P(t.take)}</span></div></div>`:''}
+ ${i>=2?`<div class="sec"><h3>Paydays</h3><div class="ln"><span>The ${S.p1}th and the ${S.p2}th</span><span class="num">${P(t.cutoff)} each</span></div></div>`:''}
+ ${i>=3?`<div class="sec"><h3>Budget</h3><div class="ln"><span>${lines.length} lines</span><span class="num">${P(fix+t.take*pct/100)}</span></div><div class="ln t"><span class="${left<0?'neg':'pos'}">Whatever is left</span><span class="num ${left<0?'neg':'pos'}">${P(left)}</span></div></div>`:''}
+ ${i>=4?`<div class="sec"><h3>Funds</h3><div class="ln"><span>${nf} fund${nf===1?'':'s'} to fill</span></div></div>`:''}
+ <div class="net"><div><div class="lbl" style="color:var(--accent-text)">Skip anything</div><div class="xs muted">Settings can re-run any step.</div></div><span class="pip" style="width:40px;height:40px" aria-hidden="true"></span></div></div>`}
+const mopts=()=>BY.months.slice(0,0).concat(['2026-01','2026-06','2026-11','2026-12']).map(m=>`<option value="${m}" ${m===S.start?'selected':''}>${BY.ymLabel(m)}</option>`).join('');
+const steps=[
+ {label:'Accounts',title:'Where does your money live?',sub:'Add the accounts you use. Each balance becomes the first anchor, as of today. Last four digits only, never a full number.',skip:1,
+  body:S=>`<div>${S.accts.map((a,i)=>`<div class="rowf"><label class="field">Name<input data-a="${i}.n" value="${a.n}"></label><label class="field">Type<select data-a="${i}.k">${['e-wallet','debit','savings','credit','cash'].map(k=>`<option ${a.k===k?'selected':''}>${k}</option>`).join('')}</select></label><label class="field">Last 4<input data-a="${i}.l" value="${a.l}" maxlength="4" inputmode="numeric"></label><label class="field">Balance today (₱)<input data-a="${i}.b" value="${a.b}" inputmode="decimal"></label><button class="iconbtn s rm" data-rm="${i}" aria-label="Remove ${a.n}">${icon('x')}</button></div>`).join('')}</div><button class="btn sm" id="addacct" style="margin-top:12px">+ Add an account</button>`,
+  bind:(r,S,api)=>{r.querySelectorAll('[data-a]').forEach(e=>e.addEventListener('input',()=>{const [i,k]=e.dataset.a.split('.');S.accts[i][k]=e.value;api.slip()}));r.querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{S.accts.splice(+b.dataset.rm,1);api.redo()});r.querySelector('#addacct').onclick=()=>{S.accts.push({n:'',k:'e-wallet',l:'',b:0});api.redo()}}},
+ {label:'Salary',title:'What do you earn?',sub:'Base pay per month before deductions. This creates your starting salary event.',ok:S=>S.base>0,onchange:(S,t)=>{if(t.dataset.k&&t.dataset.k.startsWith('ovr_'))S.ovr[t.dataset.k.slice(4)]=t.value.trim()},
+  body:S=>`<div class="frm"><div class="two"><label class="field">Base per month (₱)<input data-k="base" data-n inputmode="decimal" value="${S.base}"></label><label class="field">Starting from<select data-k="start">${mopts()}</select></label></div><div class="two"><label class="field">Job title (optional)<input data-k="title" value="${S.title}"></label><label class="field">Grade (optional)<input data-k="grade" value="${S.grade}"></label></div>
+   <div class="note"><b>Your payslips differ between the 10th and the 25th?</b> You will place income tax, contributions and allowances on each cutoff in the payslip builder after setup.</div>
+   <div class="note"><b>Any raise already decided?</b> Add it now with the <a href="v13-wizard-raise.html">raise wizard</a>, or later from Salary and tax. Bonuses work the same way: <a href="v13-wizard-bonus.html">plan a bonus</a>.</div></div>`},
+ {label:'Paydays',title:'When do you get paid?',sub:'Cutoffs run payday to payday. The usual twice-a-month pattern is filled in.',
+  body:S=>{const a=S.p1,b=S.p2;return `<div class="frm"><div class="two"><label class="field">First payday<select data-k="p1" data-n>${[5,10,15].map(d=>`<option ${d===a?'selected':''} value="${d}">${d}th</option>`).join('')}</select></label><label class="field">Second payday<select data-k="p2" data-n>${[20,25,30].map(d=>`<option ${d===b?'selected':''} value="${d}">${d}th</option>`).join('')}</select></label></div>
+   <div class="pre" aria-live="polite">Paid the ${a}th covers the ${a+1}th to the ${b-1}th. Paid the ${b}th covers the ${b}th to the ${a}th of next month.</div></div>`}},
+ {label:'Budget',title:'Start your budget',sub:'A few lines to begin. “% of take-home” is the default so the budget grows when your pay does. Rename or remove anything.',skip:1,
+  body:S=>`<div>${['Essentials','Wants','Savings'].map(g=>`<div class="gh3">${g}</div>${S.lines.map((l,i)=>l.g===g?`<div class="ln2"><input type="checkbox" class="cb" data-l="${i}.on" ${l.on?'checked':''} aria-label="Include ${l.n}"><input data-l="${i}.n" value="${l.n}" aria-label="Line name"><select data-l="${i}.r" aria-label="Rule"><option value="pct" ${l.r==='pct'?'selected':''}>% of take-home</option><option value="fixed" ${l.r==='fixed'?'selected':''}>Fixed ₱</option></select><input data-l="${i}.v" value="${l.v}" inputmode="decimal" aria-label="Value"></div>`:'').join('')}`).join('')}</div>`,
+  bind:(r,S,api)=>{r.querySelectorAll('[data-l]').forEach(e=>{const h=()=>{const [i,k]=e.dataset.l.split('.');S.lines[i][k]=k==='on'?e.checked:k==='v'?(parseFloat(e.value)||0):e.value;api.slip()};e.addEventListener('input',h);e.addEventListener('change',h)})}},
+ {label:'Funds',title:'Where should savings go?',sub:'Pick a starter set. You can add your own, set caps and link each to an account later.',skip:1,
+  body:S=>`<div class="choice" role="group" aria-label="Starter funds">${BY.FUNDS.map(f=>`<label><input type="checkbox" data-k="f_${f.id}" ${S.funds[f.id]?'checked':''}><span class="row" style="gap:8px"><i class="dot" style="background:${f.color}"></i>${f.name}</span><small>${f.rt}</small></label>`).join('')}</div>`,
+  onchange:(S,t)=>{if(t.dataset.k.startsWith('f_'))S.funds[t.dataset.k.slice(2)]=t.checked?1:0},next:'Finish'},
+ {label:'Done',title:'All set. Pip has nothing to count yet.',sub:'Add an expense, or connect notifications on your phone, and this page fills up.',final:1,
+  body:S=>`<div class="stack"><div class="card flat row" style="padding:0;gap:16px"><span class="pip" aria-hidden="true"></span><div><b>Your setup</b><div class="sm muted">${S.accts.length} accounts · take-home ${P(th().cutoff)} a cutoff · ${S.lines.filter(l=>l.on).length} budget lines · ${Object.values(S.funds).filter(Boolean).length} funds</div></div></div><div class="row wrap" style="gap:10px"><a class="btn pri" href="v13-now.html">Go to Now</a><a class="btn" href="v13-wizard-raise.html">Add a raise</a><a class="btn" href="v13-wizard-bonus.html">Plan a bonus</a></div></div>`},
+];
+Wiz({root:$('#app'),title:'Welcome to Bad(yet)',steps,S,slip,close:'v13-now.html'});
+</script></body></html>

@@ -1,0 +1,118 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Budget rules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1040px){.cols{grid-template-columns:minmax(0,1fr) 330px;align-items:start}}
+.grp h2{display:flex;align-items:center;gap:8px}
+.line{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line);align-items:center;background:none;border-left:0;border-right:0;border-top:0;width:100%;text-align:left;cursor:pointer;color:inherit;min-height:60px}
+.line:hover{background:var(--soft)}
+.line:last-child{border-bottom:0}
+.line .nm{font-weight:700}.line .amt{font:800 16px Gabarito;text-align:right}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.line.off{opacity:.55}
+.months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.mcol{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:150px;justify-content:flex-end;color:var(--muted);font-size:11px;font-weight:700;position:relative}
+.mcol[aria-pressed=true]{border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.mcol .stk{background:var(--soft);border-radius:3px;width:70%;display:flex;flex-direction:column-reverse;gap:1px;height:96px;justify-content:flex-start}
+.mcol .stk i{display:block;width:100%}
+.mcol .fl{position:absolute;top:4px;font-size:12px}
+@media(max-width:759px){.months{grid-template-columns:repeat(6,1fr)}}
+.cat{display:flex;align-items:center;gap:8px;padding:6px 0}
+.sw-c{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line)}
+.rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.rulegrid label{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;font-weight:700;font-size:14px}
+.rulegrid input{position:absolute;opacity:0}
+.rulegrid label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.rulegrid label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.rulegrid small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+</style></head><body data-nav="budget">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Budget</h1><div class="lbl" id="sub"></div></div>
+  <div class="row wrap"><div class="seg" id="view"><button data-v="now" aria-pressed="true">This month</button><button data-v="fut" aria-pressed="false">Future years</button></div></div></div>
+
+ <div class="cols">
+  <div class="stack" id="left"></div>
+  <aside class="stack">
+   <section class="card" aria-labelledby="ch"><div class="row sp"><h2 id="ch">Categories</h2><button class="btn sm">+ Category</button></div>
+    <div id="catlist" style="margin-top:8px"></div>
+    <hr class="hr" style="margin:12px 0"><div class="row sp"><span class="sm muted">Groups: Essentials, Wants, Savings</span><button class="btn sm ghost">Edit groups</button></div></section>
+   <div class="note"><b>Lines are rules.</b> Change take-home on the Salary page and every future month here moves with it.</div>
+  </aside>
+ </div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="ed" role="dialog" aria-modal="true" aria-labelledby="edt"><div class="grab"></div>
+ <div class="row sp"><h2 id="edt">Edit line</h2><button class="iconbtn s" id="x" aria-label="Close"></button></div>
+ <div class="stack" style="margin-top:12px">
+  <div class="grid2"><label class="field">Name<input id="f-name" value="Groceries"></label><label class="field">Category<select><option>Food at home</option><option>Rent</option><option>Bills</option><option>Fun</option></select></label></div>
+  <fieldset style="border:0;padding:0;margin:0"><legend class="lbl">Rule</legend>
+   <div class="rulegrid" id="rules">
+    <label><input type="radio" name="r" value="fixed">Fixed<small>Same peso amount</small></label>
+    <label><input type="radio" name="r" value="pct" checked>% of take-home<small>Grows with raises</small></label>
+    <label><input type="radio" name="r" value="infl">Fixed + inflation<small>Steps up each January</small></label>
+    <label><input type="radio" name="r" value="rest">Whatever is left<small>Takes the remainder</small></label></div></fieldset>
+  <div class="grid2"><label class="field" id="vf">Percent<input id="v" value="13" inputmode="decimal"></label>
+   <div class="field">Cutoff<div class="seg" id="cut" style="width:100%"><button style="flex:1" aria-pressed="false" data-v="1">1st</button><button style="flex:1" aria-pressed="false" data-v="2">2nd</button><button style="flex:1" aria-pressed="true" data-v="b">Both</button></div></div></div>
+  <div class="grid2"><label class="field">Goes to (optional)<select><option>GCash</option><option>Maya</option><option>BPI Checking</option><option>Nowhere, just a limit</option></select></label>
+   <div class="grid2" style="gap:8px"><label class="field">Starts<input type="month" placeholder="any"></label><label class="field">Ends<input type="month"></label></div></div>
+  <div class="prev note" id="prev" aria-live="polite"></div>
+  <div class="row"><button class="btn pri grow" id="save">Save line</button><button class="btn">Archive</button></div>
+ </div></section>
+
+<script>
+const P=BY.peso,G=BY.GROUPS;let view='now',ym='2027-06',scn='base';
+const CUT={'1st':'1st','2nd':'2nd',both:'Both'};
+const spentSoFar={groc:[2410.5,'spent'],eat:[1182.75,'spent'],trans:[868,'spent'],rent1:[7000,'sent'],phone:[799,'sent'],lap:[2650,'sent'],subs:[1100,'sent'],stash:[2908.3,'sent'],util:[0,'sent'],hob:[0,'spent']};
+function ruleTxt(l){return l.rule==='pct'?l.pct+'% of take-home':l.rule==='infl'?'Fixed + inflation':l.rule==='rest'?'Whatever is left':'Fixed'}
+function cutTxt(l){return l.cut==='1st'?'1st cutoff':l.cut==='2nd'?'2nd cutoff':'Both cutoffs'}
+function dates(l){return (l.start?`<span class="pill warn">starts ${BY.ymLabel(l.start)}</span>`:'')+(l.end?`<span class="pill warn">ends ${BY.ymLabel(l.end)}</span>`:'')+(l.draft?'<span class="pill est">draft</span>':'')}
+function group(g,m,now){
+ const ls=m.lines.filter(l=>l.g===g.id&&(l.on||(l.start&&l.start>m.ym)&&false)).filter(l=>l.on);
+ const tot=ls.reduce((s,l)=>s+l.amt,0);
+ return `<section class="card grp" aria-label="${g.name}"><div class="row sp"><h2><i class="dot" style="background:${g.color}"></i>${g.name}</h2><b class="num">${P(tot)}</b></div><div style="margin-top:6px">${ls.map(l=>{
+  const sp=now&&spentSoFar[l.id];
+  return `<button class="line" data-edit="${l.id}"><span><span class="nm">${l.name}</span><span class="meta"><span class="pill">${l.cat}</span><span class="pill">${ruleTxt(l)}</span><span class="pill">${cutTxt(l)}</span><span class="pill">→ ${l.to}</span>${dates(l)}</span></span><span class="amt num">${P(l.amt)}${sp?`<span class="xs muted" style="display:block;font-family:'Atkinson Hyperlegible Next';font-weight:600">${P(sp[0])} ${sp[1]}</span>`:''}</span></button>`}).join('')}</div>
+  <button class="btn sm ghost" style="margin-top:6px">+ Line in ${g.name}</button></section>`}
+function summary(m,extra){const fixed=m.lines.filter(l=>l.on&&(l.rule==='fixed'||l.rule==='infl')).reduce((s,l)=>s+l.amt,0);
+ const flag=m.rest<0?`<div class="flag bad"><b>!</b><span>Fixed and percent lines are ${P(-m.rest)} over take-home in ${BY.ymLabel(m.ym)}. Trim a line or move a start date.</span></div>`:m.rest<2500?`<div class="flag"><b>!</b><span>Tight month: only ${P(m.rest)} left after every line.</span></div>`:'';
+ return `<section class="hero"><div class="row sp wrap"><div><div class="lbl">Take-home ${BY.ymLabel(m.ym)}${m.assumed?' (assumed raise)':''}</div><div class="big num" style="font-size:38px">${P(m.take)}</div></div><div style="text-align:right"><div class="lbl">Whatever is left</div><div class="big num" style="font-size:38px">${P(Math.max(0,m.rest))}</div></div></div><div class="row wrap" style="margin-top:10px;gap:8px"><span class="pill">Fixed lines ${P(fixed)} · ${Math.round(fixed/m.take*100)}% of take-home</span>${extra||''}</div></section>${flag}`}
+function renderNow(){
+ const m=BY.monthLines('2026-11');$('#sub').textContent='Nov 2026 · what the rules say, and what has gone out so far';
+ $('#left').innerHTML=summary(m,'<span class="pill">Cutoffs: 11–24 Nov and 25 Nov–10 Dec</span>')+G.map(g=>group(g,m,true)).join('');
+}
+function renderFut(){
+ const m=BY.monthLines(ym,scn);const S=BY.SCENARIOS[scn];
+ $('#sub').textContent='Rules re-run against each month\'s projected take-home';
+ const yr=ym.slice(0,4);const ms=[...Array(12)].map((_,i)=>yr+'-'+String(i+1).padStart(2,'0')).filter(x=>BY.months.includes(x)||x==='2026-11');
+ const all=ms.map(x=>BY.monthLines(x,scn));const mx=Math.max(...all.map(a=>a.take));
+ const cols=all.map(a=>{const tot=a.take;const parts=G.map(g=>a.lines.filter(l=>l.g===g.id&&l.on).reduce((s,l)=>s+l.amt,0));
+   const flagc=a.rest<0?'<span class="fl neg" aria-hidden="true">!</span>':a.rest<2500?'<span class="fl warnt" aria-hidden="true">!</span>':'';
+   return `<button class="mcol" data-m="${a.ym}" aria-pressed="${a.ym===ym}" aria-label="${BY.ymLabel(a.ym)}: take-home ${P(a.take)}, left ${P(a.rest)}${a.rest<0?', over budget':a.rest<2500?', tight':''}">${flagc}<span class="stk" style="height:${a.take/mx*96}px">${parts.map((p,i)=>`<i style="height:${Math.max(0,p)/a.take*100}%;background:${G[i].color}"></i>`).join('')}</span>${BY.MON[+a.ym.slice(5)-1]}</button>`}).join('');
+ $('#left').innerHTML=`<div class="row sp wrap"><div class="row wrap"><label class="field" style="width:130px"><span class="sr">Year</span><select id="yr">${[2027,2028,2029,2030,2031].map(y=>`<option ${y==yr?'selected':''}>${y}</option>`).join('')}</select></label>
+   <div class="seg" id="sc">${Object.values(BY.SCENARIOS).map(s=>`<button data-v="${s.id}" aria-pressed="${s.id===scn}">${s.name}</button>`).join('')}</div></div></div>
+  <section class="card"><div class="row sp wrap"><h2>${yr} by month</h2><div class="legend">${G.map(g=>`<span><i class="dot" style="background:${g.color}"></i>${g.name}</span>`).join('')}<span><i class="dot" style="background:var(--soft);outline:1px solid var(--line)"></i>Left</span></div></div>
+   <div class="months" style="margin-top:12px" role="group" aria-label="Pick a month">${cols}</div><div class="xs muted" style="margin-top:8px">Bar height = take-home. Colours = where it goes; the grey top is what's left. ! = tight or over.</div></section>`
+  +summary(m,m.assumed?'<span class="pill est">assumed raise year</span>':'')+G.map(g=>group(g,m,false)).join('');
+ $('#yr').onchange=e=>{ym=e.target.value+'-06';renderFut()};
+ seg($('#sc'),v=>{scn=v;renderFut()});
+ $$('.mcol').forEach(b=>b.onclick=()=>{ym=b.dataset.m;renderFut();$(`.mcol[data-m="${ym}"]`).focus()});
+}
+function render(){view==='now'?renderNow():renderFut();wire()}
+function wire(){$$('[data-edit]').forEach(b=>b.onclick=()=>openEd(b.dataset.edit))}
+seg($('#view'),v=>{view=v;render()});
+$('#catlist').innerHTML=[['Rent','var(--accent)'],['Food at home','var(--accent)'],['Bills','var(--accent)'],['Transport','var(--teal)'],['Loans','var(--red)'],['Food out','var(--blue)'],['Fun','var(--violet)'],['Savings pool','var(--gold)']].map(([n,c])=>`<div class="cat"><span class="sw-c" style="background:${c}"></span><span class="grow"><b>${n}</b></span><button class="iconbtn s" aria-label="Move ${n} up">${icon('up')}</button><button class="iconbtn s" aria-label="Edit ${n}">${icon('edit')}</button></div>`).join('')+'<div class="xs muted" style="margin-top:6px">Rename, recolour, reorder and archive live behind the pencil. Archived categories keep their history.</div>';
+/* editor */
+const ed=$('#ed'),sc=$('#scrim');$('#x').innerHTML=icon('x');
+function openEd(id){const l=BY.LINES.find(x=>x.id===id);$('#f-name').value=l.name;$$('#rules input').forEach(i=>i.checked=i.value===l.rule);$('#v').value=l.rule==='pct'?l.pct:l.amt||'';upd();ed.classList.add('on');sc.classList.add('on');$('#f-name').focus()}
+function closeEd(){ed.classList.remove('on');sc.classList.remove('on')}
+$('#x').onclick=$('#save').onclick=sc.onclick=closeEd;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEd()});
+function upd(){const r=$('#rules input:checked').value,v=parseFloat($('#v').value)||0,m=BY.monthLines('2026-11');
+ $('#vf').firstChild.textContent=r==='pct'?'Percent':r==='rest'?'Amount (not used)':'Amount per month';$('#v').disabled=r==='rest';
+ const amt=r==='pct'?m.take*v/100:r==='rest'?m.rest:v;
+ $('#prev').innerHTML=`<b>${P(amt)} a month</b> at today's take-home of ${P(m.take)}.`+(r==='pct'?` In ${'2029'} it follows take-home to about <b>${P(BY.monthLines('2029-06').take*v/100)}</b>.`:r==='infl'?` Steps to about <b>${P(v*Math.pow(1.04,3))}</b> by 2029 at 4% inflation.`:r==='fixed'?' Never changes unless you edit it.':' Takes whatever the other lines leave.')}
+$('#rules').addEventListener('change',upd);$('#v').addEventListener('input',upd);seg($('#cut'),()=>{});
+render();
+</script></body></html>

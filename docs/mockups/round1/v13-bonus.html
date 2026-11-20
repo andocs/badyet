@@ -1,0 +1,79 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bonus planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1040px){.cols{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.wf{margin:12px 0 4px}
+.wf .r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.wf .r:last-child{border-bottom:0}
+.wf .r.res{border-top:2px solid var(--line);border-bottom:0;margin-top:4px;padding-top:12px}
+.wf .r.res b{font:800 26px Gabarito}
+.wf .why{font-size:12px;color:var(--muted);display:block}
+.when{font:800 13px Gabarito;color:var(--muted);text-transform:none}
+.sp-r{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);min-height:56px}
+.sp-r:last-child{border-bottom:0}
+.sp-r.done .nm{text-decoration:line-through;color:var(--muted)}
+details.old summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:44px}
+details.old summary::-webkit-details-marker{display:none}
+.rule{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:0}
+</style></head><body data-nav="bonus">
+<main><div class="stack l">
+ <div><h1>Bonuses</h1><div class="lbl">Yearly rules on the right. A planner card for each bonus that is coming.</div></div>
+ <div class="cols">
+  <div class="stack" id="cards"></div>
+  <aside class="stack">
+   <section class="card" aria-labelledby="rh"><div class="row sp"><h2 id="rh">Yearly rules</h2><button class="btn sm">+ Custom</button></div>
+    <div id="rules" style="margin-top:6px"></div></section>
+   <div class="note"><b>Shared ₱90,000 cap.</b> The part of each bonus left after its de minimis counts toward one cap per year. Past it, the excess is taxed. The 13th month has no de minimis.</div>
+  </aside>
+ </div>
+</div></main>
+<script>
+const P=BY.peso;
+const RULES=[
+ ['13th month','Every December','1× base at that month. No de minimis.',null],
+ ['CIP','Every March','Last year’s eligible earnings × 10% × multiplier','De minimis ₱12,000'],
+ ['September bonus','Every September','₱15,000','De minimis ₱5,000'],
+ ['Birthday gift','Every June','₱3,000 fixed, from the office','De minimis ₱0 (taxed)'],
+];
+$('#rules').innerHTML=RULES.map(r=>`<div class="rule"><span class="av m" style="background:var(--tint);color:var(--accent-text)">${icon('gift')}</span><div class="grow"><b>${r[0]}</b> <span class="pill">${r[1]}</span><div class="sm muted">${r[2]}</div>${r[3]?`<div class="xs muted">${r[3]}</div>`:''}</div><button class="iconbtn s" aria-label="Edit ${r[0]}">${icon('edit')}</button></div>`).join('');
+
+const PLAN=[
+ {id:'13',name:'13th month',when:'Dec 2026',kind:'13th',used:62000,tax:0.2,splits:[['Home down payment',25000,'home'],['Emergency',20800,'emg'],['Treat myself (Wants)',6200,null]],base:58000,fixed:58000},
+ {id:'cip',name:'CIP',when:'Mar 2027',kind:'cip',used:0,tax:0.2,mult:1,elig:696000,splitPct:[['Home down payment',.5],['Travel',.2],['Emergency',.3]]},
+];
+const state={cip:{mult:1},ticks:{}};
+function wf(b){
+ const gross=b.kind==='cip'?b.elig*0.1*state.cip.mult:b.fixed;
+ const dm=Math.min(BY.DEMIN[b.kind],gross),ex=gross-dm,room=Math.max(0,BY.CAP-b.used),over=Math.max(0,ex-room),tax=over*b.tax,net=gross-tax;
+ return {gross,dm,ex,room,over,tax,net,after:Math.max(0,room-ex)};
+}
+function card(b){
+ const w=wf(b);
+ const rows=b.kind==='cip'?b.splitPct.map(([n,p])=>[n,Math.round(w.net*p*100)/100]):b.splits;
+ const sum=rows.reduce((s,r)=>s+r[1],0),left=w.net-sum;
+ const mult=b.kind==='cip'?`<div class="row wrap" style="margin-top:10px"><span class="lbl">Multiplier</span><div class="seg" data-mult>${[['0.5','Low ×0.5'],['1','Base ×1.0'],['1.5','High ×1.5']].map(([v,l])=>`<button data-v="${v}" aria-pressed="${+v===state.cip.mult}">${l}</button>`).join('')}</div></div>`:'';
+ return `<section class="card" aria-labelledby="t-${b.id}"><div class="row sp wrap"><h2 id="t-${b.id}">${b.name} <span class="when">· ${b.when}</span></h2><span class="pill ${b.id==='13'?'warn':''}">${b.id==='13'?'in 25 days':'in 4 months'}</span></div>
+ ${mult}
+ <div class="wf">
+  <div class="r"><span>Gross<span class="why">${b.kind==='cip'?`₱${b.elig.toLocaleString()} eligible earnings × 10% × ${state.cip.mult}`:'1 month of base, Dec 2026'}</span></span><b class="num">${P(w.gross)}</b></div>
+  <div class="r"><span>De minimis<span class="why">${b.kind==='13th'?'None for the 13th month':'Tax-free slice for this bonus'}</span></span><b class="num">− ${P(w.dm)}</b></div>
+  <div class="r"><span>Counts toward the cap<span class="why">Cap room left this year: ${P(w.room)} of ${P(BY.CAP)}</span><div class="bar" style="margin-top:6px;width:min(260px,100%)" role="img" aria-label="cap used"><i style="width:${Math.min(100,(b.used+w.ex)/BY.CAP*100)}%;background:${w.over?'var(--gold)':'var(--accent)'}"></i></div></span><b class="num">${P(w.ex)}</b></div>
+  <div class="r"><span>Over the cap, taxed at ${Math.round(b.tax*100)}%<span class="why">${w.over?P(w.over)+' goes past the cap':'Nothing goes past the cap'}</span></span><b class="num ${w.tax?'warnt':''}">− ${P(w.tax)}</b></div>
+  <div class="r res"><span>Net to you</span><b class="num pos">${P(w.net)}</b></div>
+ </div>
+ <h3 style="margin:16px 0 4px">Where it goes</h3>
+ <div>${rows.map((r,i)=>{const k=b.id+i,on=!!state.ticks[k];return `<div class="sp-r ${on?'done':''}"><button class="chk" role="checkbox" aria-checked="${on}" data-t="${k}" aria-label="Mark ${r[0]} done">${CHECK}</button><span class="nm grow"><b>${r[0]}</b></span><span class="num">${P(r[1])}</span></div>`}).join('')}
+  <div class="sp-r"><span class="grow ${Math.abs(left)<.01?'pos':'warnt'}"><b>${Math.abs(left)<.01?'All placed':'Not placed yet'}</b></span><b class="num ${Math.abs(left)<.01?'pos':'warnt'}">${P(left)}</b></div></div>
+ <div class="row wrap" style="margin-top:8px"><button class="btn sm">Change split</button><button class="btn sm ghost">Add destination</button></div></section>`;
+}
+function render(){
+ $('#cards').innerHTML=card(PLAN[0])+card(PLAN[1])+`<details class="card old"><summary><h2>Sep 2026 bonus · done</h2><span class="pill ok">All placed</span></summary><div class="sm muted" style="margin-top:8px">₱15,000.00 gross · ₱5,000.00 de minimis · ₱10,000.00 toward the cap · no tax · net ₱15,000.00, all into Travel.</div></details>`;
+ $$('[data-t]').forEach(b=>b.onclick=()=>{state.ticks[b.dataset.t]=!state.ticks[b.dataset.t];render()});
+ const sg=$('[data-mult]');if(sg)seg(sg,v=>{state.cip.mult=+v;render()});
+}
+render();
+</script></body></html>

@@ -75,6 +75,22 @@
         ],
         "createdAt": "2026-11-20T02:55:46.308Z",
         "reason": "Historical v11 mockup drawn in the previous font pair (Plus Jakarta Sans and Manrope) before the switch to Gabarito and Atkinson Hyperlegible Next; kept as a design reference, not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "hyperlegible next\",system-ui,sans-serif",
+        "createdAt": "2026-11-20T08:15:19.760Z",
+        "reason": "Atkinson Hyperlegible Next is the DESIGN.md body font; detector misparses the quoted family name"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "docs/mockups/v13-shared.css",
+          "docs/mockups/round1/v13-shared.css"
+        ],
+        "createdAt": "2026-11-20T08:28:24.706Z",
+        "reason": "Pip mascot's smile is a rounded bottom border on a 22px mouth shape, not a card border; agent-decided"
       }
     ]
   }

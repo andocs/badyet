@@ -1,0 +1,230 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Budget rules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1040px){.cols{grid-template-columns:minmax(0,1fr) 330px;align-items:start}}
+.grp h2{display:flex;align-items:center;gap:8px}
+.gh{padding-bottom:12px;border-bottom:2px solid var(--g)}
+.gh h2{font-size:20px}.big2{font:800 22px Gabarito;letter-spacing:-.02em}
+.gh .bar{margin:10px 0 6px;height:10px}
+.bl,.blh{display:grid;grid-template-columns:minmax(0,1fr) 150px 58px 150px;gap:4px 14px;align-items:center}
+.blh{padding:8px 4px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line)}
+.bl{width:100%;text-align:left;cursor:pointer;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 4px;min-height:64px}
+.bl:hover{background:var(--soft)}.bl:last-of-type{border-bottom:0}
+.bn{display:flex;gap:10px;align-items:flex-start;min-width:0}.bn .dot{margin-top:6px}
+.bn b{font-weight:700;display:block}.bn small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.bn .pill{margin:3px 4px 0 0;font-size:11px;padding:1px 8px}
+.ba{text-align:right}.ba b{font:800 17px Gabarito;display:block}
+.ba .bar{height:6px;margin:5px 0 2px}.ba small{font-size:11px;color:var(--muted);font-weight:600}
+.cutp{display:inline-flex;gap:3px}.cutp i{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font:700 11px "Atkinson Hyperlegible Next";font-style:normal;color:var(--muted)}
+.cutp i.on{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.rl{font-weight:700}
+.nmbtn{all:unset;cursor:pointer;font-weight:700}.nmbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.bd{display:flex;align-items:center;gap:8px}.bd .xs{display:none}
+@media(max-width:759px){.bd .xs{display:inline}}
+.dy{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:60px;color:var(--muted);font-weight:700;font-size:12px}
+.dy b{font:800 16px Gabarito;color:var(--ink)}
+.dy.on{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}.dy.x{border-style:dashed}.dy.today{outline:2px solid var(--ink);outline-offset:1px}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.wk button{min-height:44px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer}
+.wk button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+@media(max-width:759px){.blh{display:none}.bl{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n a" "r c"}.bn{grid-area:n}.ba{grid-area:a}.br{grid-area:r}.bc{grid-area:c;justify-self:end}}
+.cl{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.cl:last-of-type{border-bottom:0}
+.months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.mcol{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:150px;justify-content:flex-end;color:var(--muted);font-size:11px;font-weight:700;position:relative}
+.mcol[aria-pressed=true]{border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.mcol .stk{background:var(--soft);border-radius:3px;width:70%;display:flex;flex-direction:column-reverse;gap:1px;height:96px;justify-content:flex-start}
+.mcol .stk i{display:block;width:100%}
+.mcol .fl{position:absolute;top:4px;font-size:12px}
+@media(max-width:759px){.months{grid-template-columns:repeat(6,1fr)}}
+.cat{display:flex;align-items:center;gap:8px;padding:6px 0}
+.sw-c{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line)}
+.rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.rulegrid label{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;font-weight:700;font-size:14px}
+.rulegrid input{position:absolute;opacity:0}
+.rulegrid label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.rulegrid label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.rulegrid small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.rtof{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;align-items:end}
+.dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.dgrid .dy{min-height:62px;padding:6px 2px}
+.dy .tag{font-size:10px;font-weight:700;min-height:12px;line-height:12px}
+.legend2{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin:10px 0 0;font-weight:600}
+.legend2 i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.legend2 .k1{background:var(--tint);border:1px solid var(--accent)}.legend2 .k2{border:1px dashed var(--accent)}
+.rtosum{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.stat3 div{background:var(--soft);border-radius:8px;padding:10px 10px 8px}
+.stat3 .xs{display:block}.stat3 b{display:block;font:800 16px Gabarito;font-variant-numeric:tabular-nums;margin-top:2px}
+.pool{padding:14px 0;border-top:1px solid var(--line)}.pool:first-of-type{border-top:0}
+.pool .amtin2{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100px;min-height:40px;text-align:right}
+.pbar{position:relative;height:10px;border-radius:999px;background:var(--soft);margin:10px 0 4px}.pbar i{display:block;height:100%;border-radius:999px;background:var(--accent)}.pbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px}
+.stl{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--soft)}
+.stl.done{display:flex;align-items:center;gap:8px;background:none}
+.plog{font-size:12px;color:var(--muted);margin-top:8px}
+</style></head><body data-nav="budget">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Budget</h1><div class="lbl" id="sub"></div></div>
+  <div class="row wrap"><div class="seg" id="view"><button data-v="now" aria-pressed="true">This month</button><button data-v="fut" aria-pressed="false">Future years</button></div></div></div>
+
+ <div class="cols">
+  <div class="stack" id="left"></div>
+  <aside class="stack">
+   <section class="card" id="settlecard" aria-labelledby="sl"><div class="row sp wrap"><h2 id="sl">Settle office days</h2><span class="pill warn" id="slpill"></span></div><div class="lbl" style="margin:2px 0 8px">When an office day ends under or over its budget, choose where the difference goes.</div><div id="settle"></div></section>
+   <section class="card" aria-labelledby="rt"><h2 id="rt">Office days (RTO)</h2><div id="rto" style="margin-top:12px"></div></section>
+   <section class="card" aria-labelledby="pt"><div class="row sp"><h2 id="pt">Pools</h2><button class="btn sm">+ New pool</button></div><div class="lbl" style="margin:2px 0 4px">Money that builds up across cutoffs. Take from it when something unplanned comes up, or move the excess to Wants.</div><div id="pools"></div><div class="sr" id="plive" role="status"></div></section>
+   <section class="card" aria-labelledby="ch"><div class="row sp"><h2 id="ch">Categories</h2><button class="btn sm">+ Category</button></div>
+    <div id="catlist" style="margin-top:8px"></div>
+    <hr class="hr" style="margin:12px 0"><div class="row sp"><span class="sm muted">Groups: Essentials, Wants, Savings</span><button class="btn sm ghost">Edit groups</button></div></section>
+   <div class="note"><b>Lines are rules.</b> Change take-home on the Salary page and every future month here moves with it.</div>
+  </aside>
+ </div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="ed" role="dialog" aria-modal="true" aria-labelledby="edt"><div class="grab"></div>
+ <div class="row sp"><h2 id="edt">Edit line</h2><button class="iconbtn s" id="x" aria-label="Close"></button></div>
+ <div class="stack" style="margin-top:12px">
+  <div class="grid2"><label class="field">Name<input id="f-name" value="Groceries"></label><label class="field">Category<select><option>Food at home</option><option>Rent</option><option>Bills</option><option>Fun</option></select></label></div>
+  <fieldset style="border:0;padding:0;margin:0"><legend class="lbl">Rule</legend>
+   <div class="rulegrid" id="rules">
+    <label><input type="radio" name="r" value="fixed">Fixed<small>Same peso amount</small></label>
+    <label><input type="radio" name="r" value="pct" checked>% of take-home<small>Grows with raises</small></label>
+    <label><input type="radio" name="r" value="rest">Whatever is left<small>Takes the remainder</small></label></div></fieldset>
+  <div class="grid2"><label class="field" id="vf">Percent<input id="v" value="13" inputmode="decimal"></label>
+   <div class="field">Cutoff<div class="seg" id="cut" style="width:100%"><button style="flex:1" aria-pressed="false" data-v="1">1st</button><button style="flex:1" aria-pressed="false" data-v="2">2nd</button><button style="flex:1" aria-pressed="true" data-v="b">Both</button></div></div></div>
+  <div class="grid2"><label class="field">Goes to (optional)<select><option>GCash</option><option>Maya</option><option>BPI Checking</option><option>Nowhere, just a limit</option></select></label>
+   <div class="grid2" style="gap:8px"><label class="field">Starts<input type="month" placeholder="any"></label><label class="field">Ends<input type="month"></label></div></div>
+  <fieldset style="border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:0"><legend class="lbl" style="padding:0 6px">Counts toward</legend>
+   <label class="row" style="gap:12px;min-height:48px"><button class="sw" role="switch" id="tk-daily" aria-checked="false"></button><span class="grow"><b>Daily spend</b><span class="xs muted" style="display:block">Safe-to-spend on Now is built from the lines you tick.</span></span></label>
+   <label class="row" style="gap:12px;min-height:48px"><button class="sw" role="switch" id="tk-rto" aria-checked="false"></button><span class="grow"><b>RTO days</b><span class="xs muted" style="display:block">Part of your office-day budget. Tick as many lines as you like (commute, food), and the app splits the day between them.</span></span></label>
+   <label class="row" style="gap:12px;min-height:48px"><button class="sw" role="switch" id="tk-rtoc" aria-checked="false"></button><span class="grow"><b>RTO contingency</b><span class="xs muted" style="display:block">Extra office days you mark are paid from this line's pool. Only one line can be the contingency.</span></span></label></fieldset>
+  <div class="prev note" id="prev" aria-live="polite"></div>
+  <div class="row"><button class="btn pri grow" id="save">Save line</button><button class="btn">Archive</button></div>
+ </div></section>
+
+<script>
+const P=BY.peso,G=BY.GROUPS;const DAILY={groc:1,trans:1,eat:1,hob:1};
+let FLAG={rto:['rto','rtof'],rtoc:'rtoc'};
+const RTO={days:[0,1],ov:{}};
+const SPENT={'2026-11-16':180,'2026-11-17':310,'2026-11-18':260};const SET={};
+let WANTS_EXTRA=0;
+const POOLS=[{id:'rtoc',name:'RTO contingency',base:1750,taken:0,cap:1000,use:250,log:[['Tue 10 Nov','Spontaneous office day',-250]]},{id:'car',name:'Car maintenance',base:3200,taken:0,cap:null,add:800,use:1000,log:[]}];
+function dailyPool(m){return m.lines.filter(l=>l.on&&DAILY[l.id]).reduce((t,l)=>t+l.amt*(l.cut==='both'?.5:l.cut==='1st'?1:0),0)}
+let CMP=false;
+function cmpCard(ym,m){if(!CMP)return '';if(!BY.isExpectedAt(ym))return '<div class="note"><b>Nothing to compare.</b> No expected raise has taken effect by '+BY.ymLabel(ym)+'.</div>';
+ const m0=BY.withoutExpected(()=>BY.monthLines(ym,scn)),tops=x=>x.lines.reduce((t,l)=>t+(l.on&&l.tops?l.tops.reduce((u,y)=>u+y.amt,0):0),0),pct=x=>x.lines.filter(l=>l.on&&l.rule==='pct').reduce((t,l)=>t+l.amt,0)-tops(x),fix=x=>x.lines.filter(l=>l.on&&l.rule!=='pct'&&l.rule!=='rest').reduce((t,l)=>t+l.amt,0);
+ const row=(n,a,c)=>'<tr><td>'+n+'</td><td class="num">'+P(a)+'</td><td class="num">'+P(c)+'</td><td class="num '+(a-c>=0?'pos':'neg')+'">'+P(a-c,{sign:1})+'</td></tr>';
+ return '<section class="card" aria-labelledby="cmph"><h2 id="cmph">'+BY.ymLabel(ym)+', with and without your expected raises</h2><div class="scrollx"><table><thead><tr><th>Per month</th><th>With</th><th>Without</th><th>Difference</th></tr></thead><tbody>'+row('Take-home',m.take,m0.take)+row('Percent lines (they follow take-home)',pct(m),pct(m0))+row('Top-ups you tied to the raise',tops(m),tops(m0))+row('Fixed lines',fix(m),fix(m0))+row('Whatever is left',m.rest,m0.rest)+'</tbody></table></div><p class="xs muted" style="margin:10px 0 0">"Without" means the expected raises never happen, so the top-ups you tied to them disappear too.</p></section>'}
+let view='now',ym='2027-06',scn='base';
+const CATC={'Rent':'var(--violet)','Food at home':'var(--accent)','Bills':'var(--muted)','Transport':'var(--teal)','Loans':'var(--red)','Food out':'var(--blue)','Fun':'var(--pink)','Savings pool':'var(--gold)'};
+const spentSoFar={groc:[2410.5,'spent'],eat:[1182.75,'spent'],trans:[868,'spent'],rent1:[7000,'sent'],phone:[799,'sent'],lap:[2650,'sent'],subs:[1100,'sent'],stash:[2908.3,'sent'],util:[0,'sent'],hob:[0,'spent']};
+function ruleTxt(l){return l.rule==='pct'?l.pct+'% of take-home':l.rule==='rest'?'Whatever is left':'Fixed'}
+function cutTxt(l){return l.cut==='1st'?'1st cutoff':l.cut==='2nd'?'2nd cutoff':'Both cutoffs'}
+function dates(l){return (l.tops&&l.tops.length?'<span class="pill ok">+'+P(l.tops.reduce((t,x)=>t+x.amt,0))+' from the '+l.tops[0].label+' raise</span>':'')+(l.start?`<span class="pill warn">starts ${BY.ymLabel(l.start)}</span>`:'')+(l.end?`<span class="pill warn">ends ${BY.ymLabel(l.end)}</span>`:'')+(l.draft?'<span class="pill est">draft</span>':'')}
+function cutPips(c){return '<span class="cutp" role="img" aria-label="'+cutTxt({cut:c})+'"><i class="'+(c!=='2nd'?'on':'')+'">1</i><i class="'+(c!=='1st'?'on':'')+'">2</i></span>'}
+function group(g,m,now){
+ const ls=m.lines.filter(l=>l.g===g.id&&l.on),tot=ls.reduce((s,l)=>s+l.amt,0),share=tot/m.take*100,sentTot=now?ls.reduce((s,l)=>s+(spentSoFar[l.id]?spentSoFar[l.id][0]:0),0):0;
+ return `<section class="card grp" style="--g:${g.color}" aria-label="${g.name}"><header class="gh"><div class="row sp"><h2><i class="dot" style="background:${g.color}"></i>${g.name}</h2><b class="num big2">${P(tot)}</b></div>
+  <div class="bar" role="img" aria-label="${Math.round(share)} percent of take-home"><i style="width:${share}%;background:${g.color}"></i></div>
+  <div class="row sp xs muted"><span>${Math.round(share)}% of take-home · ${ls.length} lines</span>${now?`<span class="num">${P(sentTot)} sent or spent so far</span>`:''}</div></header>
+  <div class="blh" aria-hidden="true"><span>Line</span><span>Rule</span><span>Cutoff</span><span style="text-align:right">This month</span></div>
+  ${ls.map(l=>{const sp=now&&spentSoFar[l.id],pc=sp&&l.amt?Math.min(100,sp[0]/l.amt*100):0;
+   return `<div class="bl" data-edit="${l.id}"><span class="bn"><i class="dot" style="background:${CATC[l.cat]||g.color}"></i><span><b><button class="nmbtn" data-edit="${l.id}">${l.name}</button></b><small>${l.cat} → ${l.to}</small>${dates(l)}</span></span><span class="br"><span class="pill rl">${ruleTxt(l)}</span></span><span class="bc">${cutPips(l.cut==='both'?'both':l.cut)}</span><span class="ba"><b class="num">${P(l.amt)}</b>${sp?`<span class="bar" role="img" aria-label="${Math.round(pc)} percent ${sp[1]}"><i style="width:${pc}%;background:${CATC[l.cat]||g.color}"></i></span><small>${P(sp[0])} ${sp[1]}</small>`:''}</span></div>`}).join('')}
+  <button class="btn sm ghost" style="margin-top:8px">+ Line in ${g.name}</button></section>`}
+function summary(m,extra){const fixed=m.lines.filter(l=>l.on&&(l.rule==='fixed')).reduce((s,l)=>s+l.amt,0);
+ const flag=m.rest<0?`<div class="flag bad"><b>!</b><span>Fixed and percent lines are ${P(-m.rest)} over take-home in ${BY.ymLabel(m.ym)}. Trim a line or move a start date.</span></div>`:m.rest<2500?`<div class="flag"><b>!</b><span>Tight month: only ${P(m.rest)} left after every line.</span></div>`:'';
+ return `<section class="hero"><div class="row sp wrap"><div><div class="lbl">Take-home ${BY.ymLabel(m.ym)}${m.assumed?' (assumed raise)':''}</div><div class="big num" style="font-size:38px">${P(m.take)}</div></div><div style="text-align:right"><div class="lbl">Whatever is left</div><div class="big num" style="font-size:38px">${P(Math.max(0,m.rest))}</div></div></div><div class="row wrap" style="margin-top:10px;gap:8px"><span class="pill">Fixed lines ${P(fixed)} · ${Math.round(fixed/m.take*100)}% of take-home</span>${extra||''}</div></section>${flag}`}
+function renderNow(){
+ const m=BY.monthLines('2026-11');$('#sub').textContent='Nov 2026 · what the rules say, and what has gone out so far';
+ $('#left').innerHTML=summary(m,'<span class="pill">Cutoffs: 11–24 Nov and 25 Nov–10 Dec</span><span class="pill ok">Daily pool this cutoff '+P(dailyPool(m)+WANTS_EXTRA)+(WANTS_EXTRA?' (incl. '+P(WANTS_EXTRA)+' from pools)':'')+'</span>')+G.map(g=>group(g,m,true)).join('');
+}
+function renderFut(){
+ const m=BY.monthLines(ym,scn);const S=BY.SCENARIOS[scn];
+ $('#sub').textContent='Rules re-run against each month\'s projected take-home';
+ const yr=ym.slice(0,4);const ms=[...Array(12)].map((_,i)=>yr+'-'+String(i+1).padStart(2,'0')).filter(x=>BY.months.includes(x)||x==='2026-11');
+ const all=ms.map(x=>BY.monthLines(x,scn));const mx=Math.max(...all.map(a=>a.take));
+ const cols=all.map(a=>{const tot=a.take;const parts=G.map(g=>a.lines.filter(l=>l.g===g.id&&l.on).reduce((s,l)=>s+l.amt,0));
+   const flagc=a.rest<0?'<span class="fl neg" aria-hidden="true">!</span>':a.rest<2500?'<span class="fl warnt" aria-hidden="true">!</span>':'';
+   const ex=BY.isExpectedAt(a.ym);return `<button class="mcol" data-m="${a.ym}" aria-pressed="${a.ym===ym}" aria-label="${BY.ymLabel(a.ym)}: take-home ${P(a.take)}, left ${P(a.rest)}${a.rest<0?', over budget':a.rest<2500?', tight':''}${ex?', includes an expected raise':''}">${flagc}${ex?'<span class="fl" style="left:auto;right:4px;color:var(--accent-text)" aria-hidden="true">○</span>':''}<span class="stk" style="height:${a.take/mx*96}px">${parts.map((p,i)=>`<i style="height:${Math.max(0,p)/a.take*100}%;background:${G[i].color}"></i>`).join('')}</span>${BY.MON[+a.ym.slice(5)-1]}</button>`}).join('');
+ $('#left').innerHTML=`<div class="row sp wrap"><div class="row wrap"><label class="field" style="width:130px"><span class="sr">Year</span><select id="yr">${[2027,2028,2029,2030,2031].map(y=>`<option ${y==yr?'selected':''}>${y}</option>`).join('')}</select></label><label class="row" style="gap:10px;cursor:pointer"><button class="sw" role="switch" id="cmp" aria-checked="${CMP}" aria-label="Compare without expected raises"></button><span class="sm">Compare without expected raises</span></label></div></div>
+  <section class="card"><div class="row sp wrap"><h2>${yr} by month</h2><div class="legend">${G.map(g=>`<span><i class="dot" style="background:${g.color}"></i>${g.name}</span>`).join('')}<span><i class="dot" style="background:var(--soft);outline:1px solid var(--line)"></i>Left</span></div></div>
+   <div class="months" style="margin-top:12px" role="group" aria-label="Pick a month">${cols}</div><div class="xs muted" style="margin-top:8px">Bar height = take-home. Colours = where it goes; the grey top is what's left. ! = tight or over. ○ = includes an expected raise.</div></section>`
+  +summary(m,(m.assumed?'<span class="pill est">assumed raise year</span>':'')+(BY.isExpectedAt(ym)?'<span class="pill est">includes an expected raise</span>':''))+cmpCard(ym,m)+G.map(g=>group(g,m,false)).join('');
+ $('#yr').onchange=e=>{ym=e.target.value+'-06';renderFut()};$('#cmp').onclick=()=>{CMP=!CMP;renderFut();$('#cmp').focus()};
+ $$('.mcol').forEach(b=>b.onclick=()=>{ym=b.dataset.m;renderFut();$(`.mcol[data-m="${ym}"]`).focus()});
+}
+const WD=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+function cutDates(){const out=[];for(let i=0;i<14;i++){const dt=new Date(2026,10,11+i);out.push({k:dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'),d:dt.getDate(),w:(dt.getDay()+6)%7})}return out}
+function rtoState(){const ds=cutDates(),usual=x=>RTO.days.includes(x.w),off=x=>RTO.ov[x.k]!==undefined?RTO.ov[x.k]:usual(x);
+ return {ds,usual,off,nUsual:ds.filter(usual).length,planned:ds.filter(x=>usual(x)&&off(x)).length,extra:ds.filter(x=>!usual(x)&&off(x)),skipped:ds.filter(x=>usual(x)&&!off(x)).length}}
+const rtoLines=()=>BY.LINES.filter(l=>FLAG.rto.includes(l.id));
+function perDay(){const n=rtoState().nUsual,tot=rtoLines().reduce((t,l)=>t+l.amt,0)/2;return n?tot/n:0}
+function contAmt(){const l=BY.LINES.find(x=>x.id===FLAG.rtoc);return l?l.amt/2:0}
+function poolBal(p){return p.base-p.taken-(p.id==='rtoc'?rtoState().extra.length*perDay():0)}
+function poolAdd(p){return p.id==='rtoc'?contAmt():p.add}
+const rp=()=>POOLS[0];
+function excessNow(){const p=rp();return p.cap!=null?Math.max(0,poolBal(p)-p.cap):0}
+function settleRows(){const st=rtoState();return st.ds.filter(x=>st.off(x)&&SPENT[x.k]!==undefined&&x.k<='2026-11-20').map(x=>({x,spent:SPENT[x.k],diff:perDay()-SPENT[x.k],set:SET[x.k]})).filter(r=>Math.abs(r.diff)>=1)}
+function settle(k,choice){const r=settleRows().find(y=>y.x.k===k);if(!r)return;const amt=Math.abs(r.diff),p=rp(),lab=WD[r.x.w]+' '+r.x.d+' Nov';
+ if(r.diff>0){if(choice==='pool')p.base+=amt;else WANTS_EXTRA+=amt;p.log.unshift([lab,'Left over: '+(choice==='pool'?'into the contingency pool':'moved to Wants'),amt])}
+ else{if(choice==='excess'){if(excessNow()<amt)return;p.taken+=amt}else WANTS_EXTRA-=amt;p.log.unshift([lab,'Overspent: taken from '+(choice==='excess'?'the contingency excess':'Wants'),-amt])}
+ SET[k]={choice,amt,under:r.diff>0};say(P(amt)+(r.diff>0?' saved to ':' taken from ')+(choice==='pool'?'the contingency pool':choice==='excess'?'the contingency excess':'Wants'));render()}
+function unsettle(k){const s=SET[k];if(!s)return;const p=rp();
+ if(s.under){if(s.choice==='pool')p.base-=s.amt;else WANTS_EXTRA-=s.amt}else{if(s.choice==='excess')p.taken-=s.amt;else WANTS_EXTRA+=s.amt}
+ p.log=p.log.filter((l,i)=>!(i===p.log.findIndex(z=>z[1].indexOf(s.under?'Left over':'Overspent')===0)));delete SET[k];render()}
+function rtoCard(){const st=rtoState(),pd=perDay(),cap=contAmt(),used=Math.min(cap,st.extra.length*pd);
+ $('#rto').innerHTML=`<div class="lbl" style="margin-bottom:8px">Usual office days</div><div class="wk" role="group" aria-label="Usual office days">${WD.map((n,i)=>`<button data-wd="${i}" aria-pressed="${RTO.days.includes(i)}">${n}</button>`).join('')}</div>
+  <div class="lbl" style="margin:16px 0 8px">This cutoff, 11–24 Nov. Tap a day you went in outside your usual days.</div>
+  <div class="dgrid">${st.ds.map(x=>{const on=st.off(x),ex=on&&!st.usual(x);return `<button class="dy ${on?'on':''} ${ex?'x':''} ${x.k==='2026-11-20'?'today':''}" data-day="${x.k}" aria-pressed="${on}" aria-label="${WD[x.w]} ${x.d} Nov, ${on?(ex?'extra office day':'office day'):'not an office day'}${x.k==='2026-11-20'?', today':''}"><span>${WD[x.w]}</span><b>${x.d}</b><span class="tag">${ex?'extra':' '}</span></button>`}).join('')}</div>
+  <div class="legend2"><span><i class="k1"></i>Usual day</span><span><i class="k2"></i>Extra day (from the contingency)</span></div>
+  <div class="rtosum"><div class="row sp sm"><span><b>${st.planned} planned</b>${st.skipped?' · '+st.skipped+' skipped':''}</span><b class="num">${P(st.planned*pd)}</b></div>
+   <div class="row sp sm"><span><b>${st.extra.length} extra day${st.extra.length===1?'':'s'}</b></span><b class="num">${P(used)} of ${P(cap)}</b></div>
+   <div class="bar ${st.extra.length*pd>cap?'bad':''}" role="img" aria-label="Contingency used"><i style="width:${cap?Math.min(100,st.extra.length*pd/cap*100):0}%"></i></div></div>
+  <div class="lbl" style="margin:16px 0 6px">RTO lines</div>
+  <div class="row wrap" style="gap:6px">${rtoLines().map(l=>`<span class="pill ok">${l.name} · ${P(l.amt)} / mo</span>`).join('')}<span class="pill warn">${(BY.LINES.find(x=>x.id===FLAG.rtoc)||{name:'No contingency line'}).name}</span></div>
+  <p class="xs muted" style="margin:10px 0 0">The app works out a day's budget (${P(pd)} now) from your RTO lines and the usual days. Change which lines count in a line's editor.</p>`;
+ $$('[data-wd]').forEach(b=>b.onclick=()=>{const k=+b.dataset.wd;RTO.days=RTO.days.includes(k)?RTO.days.filter(x=>x!==k):[...RTO.days,k];RTO.ov={};render();$('[data-wd="'+k+'"]').focus()});
+ $$('[data-day]').forEach(b=>b.onclick=()=>{const k=b.dataset.day,x=st.ds.find(y=>y.k===k),want=!st.off(x);if(want===st.usual(x))delete RTO.ov[k];else RTO.ov[k]=want;render();$('[data-day="'+k+'"]').focus()});
+ }
+function settleCard(){const rows=settleRows(),pd=perDay(),open=rows.filter(r=>!r.set).length;
+ $('#settlecard').hidden=open===0;try{localStorage.setItem('v13settle',open)}catch(e){}
+ $('#slpill').textContent=open?open+' to settle':'All settled';$('#slpill').className='pill '+(open?'warn':'ok');
+ $('#settle').innerHTML=rows.length?rows.map(r=>{const lab=WD[r.x.w]+' '+r.x.d+' Nov',amt=Math.abs(r.diff);
+   if(r.set)return `<div class="stl done"><div class="grow sm"><b>${lab}</b> · ${r.diff>0?P(amt)+' left':P(amt)+' over'} → <b>${r.set.choice==='pool'?'contingency pool':r.set.choice==='excess'?'contingency excess':'Wants'}</b></div><button class="btn sm ghost" data-unset="${r.x.k}">Undo</button></div>`;
+   return `<div class="stl"><div class="sm"><b>${lab}</b> · spent ${P(r.spent)} of ${P(pd)}. <b>${P(amt)} ${r.diff>0?'left':'over'}.</b> ${r.diff>0?'Put it in:':'Take it from:'}</div><div class="row wrap" style="gap:8px;margin-top:8px">${r.diff>0?`<button class="btn sm pri" data-set="${r.x.k}|pool">Contingency pool</button><button class="btn sm" data-set="${r.x.k}|wants">Wants</button>`:`<button class="btn sm pri" data-set="${r.x.k}|wants">Wants</button><button class="btn sm" data-set="${r.x.k}|excess" ${excessNow()<amt?'disabled style="opacity:.5"':''}>Contingency excess (${P(excessNow())})</button>`}</div></div>`}).join(''):'<div class="sm muted">Nothing to settle.</div>';
+ $$('[data-set]').forEach(b=>b.onclick=()=>{const [k,c]=b.dataset.set.split('|');settle(k,c)});
+ $$('[data-unset]').forEach(b=>b.onclick=()=>unsettle(b.dataset.unset))}
+function say(t){$('#plive').textContent=t}
+function poolsCard(){
+ $('#pools').innerHTML=POOLS.map(p=>{const bal=poolBal(p),ex=p.cap!=null?Math.max(0,bal-p.cap):0,max=Math.max(bal,p.cap||0,1)*1.15,pd=perDay(),extras=p.id==='rtoc'?rtoState().extra.map(x=>[WD[x.w]+' '+x.d+' Nov','Extra office day you marked',-pd]):[],log=[...extras,...p.log];
+  return `<div class="pool"><div class="row sp top"><div><b>${p.name}</b><div class="xs muted">Adds ${P(poolAdd(p))} each cutoff${p.cap!=null?' · keep up to '+P(p.cap):''}</div></div><div style="text-align:right"><div class="num" style="font:800 22px Gabarito">${P(bal)}</div>${ex>0?`<span class="pill warn">${P(ex)} excess</span>`:''}</div></div>
+   <div class="pbar" role="img" aria-label="${p.name} balance ${P(bal)}"><i style="width:${Math.max(0,bal)/max*100}%"></i>${p.cap!=null?`<u style="left:${p.cap/max*100}%" title="Keep up to"></u>`:''}</div>
+   <div class="row wrap" style="gap:8px;margin-top:10px"><label class="sr" for="pa-${p.id}">Amount from ${p.name}</label><input class="amtin2" id="pa-${p.id}" data-pa="${p.id}" inputmode="decimal" value="${p.use}"><button class="btn sm" data-use="${p.id}">Use it</button><button class="btn sm" data-wants="${p.id}">Move to Wants</button>${ex>0?`<button class="btn sm ghost" data-excess="${p.id}">Fill excess</button>`:''}</div>
+   ${log.length?`<div class="plog">${log.slice(0,4).map(l=>l[0]+' · '+l[1]+' · '+P(l[2])).join('<br>')}</div>`:''}</div>`}).join('');
+ $$('[data-use]').forEach(b=>b.onclick=()=>{const p=POOLS.find(x=>x.id===b.dataset.use),v=Math.min(poolBal(p),parseFloat($('#pa-'+p.id).value)||0);if(v<=0)return;p.taken+=v;p.log.unshift(['Fri 20 Nov','Used for something unplanned',-v]);say(P(v)+' taken from '+p.name);poolsCard();rtoCard();$('[data-use="'+p.id+'"]').focus()});
+ $$('[data-wants]').forEach(b=>b.onclick=()=>{const p=POOLS.find(x=>x.id===b.dataset.wants),v=Math.min(poolBal(p),parseFloat($('#pa-'+p.id).value)||0);if(v<=0)return;p.taken+=v;WANTS_EXTRA+=v;p.log.unshift(['Fri 20 Nov','Moved to Wants',-v]);say(P(v)+' moved from '+p.name+' to Wants');render();$('[data-wants="'+p.id+'"]').focus()});
+ $$('[data-excess]').forEach(b=>b.onclick=()=>{const p=POOLS.find(x=>x.id===b.dataset.excess);$('#pa-'+p.id).value=Math.max(0,poolBal(p)-p.cap);$('#pa-'+p.id).focus()})}
+function render(){view==='now'?renderNow():renderFut();wire();settleCard();rtoCard();poolsCard()}
+function wire(){$$('[data-edit]').forEach(b=>b.onclick=()=>openEd(b.dataset.edit))}
+seg($('#view'),v=>{view=v;render()});
+$('#catlist').innerHTML=Object.entries(CATC).map(([n,c])=>{const k=BY.LINES.filter(l=>l.cat===n).length;return `<div class="cl"><span class="sw-c" style="background:${c}"></span><span class="grow"><b>${n}</b><span class="xs muted" style="display:block">${k} line${k===1?'':'s'}</span></span><button class="iconbtn s" aria-label="Move ${n} up">${icon('up')}</button><button class="iconbtn s" aria-label="Edit ${n}">${icon('edit')}</button></div>`}).join('')+'<div class="xs muted" style="margin-top:6px">Rename, recolour, reorder and archive live behind the pencil. Archived categories keep their history.</div>';
+/* editor */
+const ed=$('#ed'),sc=$('#scrim');$('#x').innerHTML=icon('x');
+let edId=null;
+function syncTick(){const id=edId;$('#tk-daily').setAttribute('aria-checked',!!DAILY[id]);$('#tk-rto').setAttribute('aria-checked',FLAG.rto.includes(id));$('#tk-rtoc').setAttribute('aria-checked',FLAG.rtoc===id)}
+function openEd(id){edId=id;const l=BY.LINES.find(x=>x.id===id);$('#f-name').value=l.name;$$('#rules input').forEach(i=>i.checked=i.value===l.rule);$('#v').value=l.rule==='pct'?l.pct:l.amt||'';upd();ed.classList.add('on');sc.classList.add('on');syncTick();$('#f-name').focus()}
+$('#tk-daily').onclick=()=>{DAILY[edId]=!DAILY[edId];syncTick();render()};
+$('#tk-rto').onclick=()=>{FLAG.rto=FLAG.rto.includes(edId)?FLAG.rto.filter(x=>x!==edId):[...FLAG.rto,edId];syncTick();rtoCard();poolsCard()};
+$('#tk-rtoc').onclick=()=>{FLAG.rtoc=FLAG.rtoc===edId?null:edId;syncTick();rtoCard();poolsCard()};
+function closeEd(){ed.classList.remove('on');sc.classList.remove('on')}
+$('#x').onclick=$('#save').onclick=sc.onclick=closeEd;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEd()});
+function upd(){const r=$('#rules input:checked').value,v=parseFloat($('#v').value)||0,m=BY.monthLines('2026-11');
+ $('#vf').firstChild.textContent=r==='pct'?'Percent':r==='rest'?'Amount (not used)':'Amount per month';$('#v').disabled=r==='rest';
+ const amt=r==='pct'?m.take*v/100:r==='rest'?m.rest:v;
+ $('#prev').innerHTML=`<b>${P(amt)} a month</b> at today's take-home of ${P(m.take)}.`+(r==='pct'?` In ${'2029'} it follows take-home to about <b>${P(BY.monthLines('2029-06').take*v/100)}</b>.`:r==='fixed'?' Never changes unless you edit it.':' Takes whatever the other lines leave.')}
+$('#rules').addEventListener('change',upd);$('#v').addEventListener('input',upd);seg($('#cut'),()=>{});
+render();
+</script></body></html>

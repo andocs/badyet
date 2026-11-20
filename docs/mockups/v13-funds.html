@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Savings funds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.cols{grid-template-columns:minmax(0,420px) minmax(0,1fr);align-items:start}}
+.fund{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:8px;width:100%;text-align:left;cursor:pointer;min-height:72px}
+.fund[aria-pressed=true]{border-color:var(--accent);background:var(--tint)}
+.fund .n{width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px Gabarito;flex:none}
+.fund .bar{margin-top:6px}
+.mv{display:flex;flex-direction:column;gap:4px}
+.rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+@media(max-width:520px){.rulegrid{grid-template-columns:1fr}}
+.rulegrid label{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;font-weight:700;font-size:14px;position:relative}
+.rulegrid input{position:absolute;opacity:0}
+.rulegrid label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.rulegrid label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.rulegrid small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.sw-c{width:24px;height:24px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line);cursor:pointer;padding:0}
+.sw-c[aria-pressed=true]{outline:2px solid var(--ink)}
+</style></head><body data-nav="funds">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Savings funds</h1><div class="lbl">Where the savings pool goes each month, first come first served.</div></div><button class="btn pri">+ New fund</button></div>
+ <div class="cols">
+  <section aria-labelledby="po"><div class="row sp" style="margin-bottom:8px"><h2 id="po">Default priority</h2><span class="xs muted">Top gets filled first</span></div><div id="list"></div>
+   <div class="note">Any month can use a different order, a pinned amount or a skip. Those live on the <a href="v13-forecast.html">Forecast</a>, never here.</div></section>
+  <section class="card" id="ed" aria-labelledby="edh"></section>
+ </div>
+</div></main>
+<script>
+const P=BY.peso;
+let funds=BY.FUNDS.map(f=>({...f,cap:f.cap||(f.tranches?f.tranches[f.tranches.length-1]:0)}));let sel='emg';
+const COLORS=['var(--accent)','var(--blue)','var(--gold)','var(--violet)','var(--teal)','var(--pink)'];
+const BAL={emg:96400,trv:18000,gdg:6500,home:40000};
+function list(){
+ $('#list').innerHTML=funds.map((f,i)=>{const p=Math.min(100,BAL[f.id]/f.cap*100);return `<div class="row" style="align-items:stretch;gap:8px"><button class="fund grow" data-sel="${f.id}" aria-pressed="${f.id===sel}"><span class="n">${i+1}</span><i class="dot" style="background:${f.color};width:14px;height:14px"></i><span class="grow"><b>${f.name}</b><span class="xs muted" style="display:block">${f.rt}</span><div class="bar" role="img" aria-label="${f.name} ${Math.round(p)} percent of target"><i style="width:${p}%;background:${f.color}"></i></div></span><span style="text-align:right"><b class="num">${P(BAL[f.id])}</b><span class="xs muted num" style="display:block">of ${P(f.cap)}</span></span></button>
+  <div class="mv"><button class="iconbtn s" data-up="${i}" aria-label="Move ${f.name} up" ${i===0?'disabled style="opacity:.4"':''}>${icon('up')}</button><button class="iconbtn s" data-dn="${i}" aria-label="Move ${f.name} down" ${i===funds.length-1?'disabled style="opacity:.4"':''}>${icon('down')}</button></div></div>`}).join('');
+}
+function edit(){
+ const f=funds.find(x=>x.id===sel);
+ const R=[['steps','Fill in steps','One tranche at a time (like today’s Emergency fund)'],['cap','Fill to cap','Keep going until the target is full'],['reset','Reset each year','Starts again every January (like today’s Travel)'],['fixed','Fixed monthly','Same amount every month until the cap']];
+ $('#ed').innerHTML=`<div class="row sp"><h2 id="edh">${f.name}</h2><span class="pill">Priority ${funds.indexOf(f)+1} of ${funds.length}</span></div>
+ <div class="stack" style="margin-top:14px">
+  <div class="grid2"><label class="field">Name<input value="${f.name}"></label>
+   <div class="field">Colour<div class="row wrap" style="gap:8px;padding-top:8px" role="group" aria-label="Colour">${COLORS.map(c=>`<button class="sw-c" style="background:${c}" aria-label="Colour" aria-pressed="${c===f.color}" data-c="${c}"></button>`).join('')}</div></div></div>
+  <div class="field">Starting balance<div class="seg" id="bs" style="width:100%"><button style="flex:1" data-v="l" aria-pressed="${!!f.link||sel!=='gdg'}">Linked to an account</button><button style="flex:1" data-v="m" aria-pressed="${!f.link&&sel==='gdg'}">Typed in</button></div></div>
+  <div class="grid2"><label class="field">Account<select><option>${f.link||'BPI Savings'}</option><option>Maya Savings</option><option>GCash GSave</option></select></label><label class="field">Balance today<input value="${P(BAL[f.id])}" readonly aria-describedby="lk"><span class="xs" id="lk" style="font-weight:500">Updates itself from the account.</span></label></div>
+  <fieldset style="border:0;padding:0;margin:0"><legend class="lbl">Fill rule</legend><div class="rulegrid" id="rules">${R.map(([v,n,d])=>`<label><input type="radio" name="r" value="${v}" ${f.rule===v?'checked':''}>${n}<small>${d}</small></label>`).join('')}</div></fieldset>
+  <div class="grid2"><label class="field" id="tf">Target or cap<input value="${f.cap}" inputmode="numeric"></label><label class="field" id="mf">Most per month (optional)<input value="${f.max||f.fixed||''}" inputmode="numeric" placeholder="no limit"></label></div>
+  ${f.rule==='steps'?`<label class="field">Tranches<input value="${(f.tranches||[f.cap]).join(', ')}"><span class="xs" style="font-weight:500">Fills the first one, then the next.</span></label>`:''}
+  <div class="note" id="eff"></div>
+  <div class="row"><button class="btn pri">Save fund</button><button class="btn">Archive</button></div>
+ </div>`;
+ const eff=()=>{const r=$('#rules input:checked').value;$('#eff').innerHTML={steps:'<b>In steps:</b> takes up to your monthly limit until the current tranche is full, then moves on to the next tranche.',cap:'<b>To cap:</b> takes what the pool allows, in priority order, until it hits the cap. Then it drops out.',reset:'<b>Resets every January:</b> balance returns to zero (the trips got spent) and filling starts over.',fixed:'<b>Fixed:</b> the same amount each month if the pool can cover it, until the cap.'}[r]};eff();$('#rules').onchange=eff;
+ $$('[data-c]').forEach(b=>b.onclick=()=>{f.color=b.dataset.c;list();edit()});
+ seg($('#bs'),()=>{});
+}
+$('#list').addEventListener('click',e=>{
+ const s=e.target.closest('[data-sel]');if(s){sel=s.dataset.sel;list();edit();return}
+ const u=e.target.closest('[data-up]'),d=e.target.closest('[data-dn]');const i=u?+u.dataset.up:d?+d.dataset.dn:-1;if(i<0)return;const j=u?i-1:i+1;[funds[i],funds[j]]=[funds[j],funds[i]];list();edit();
+ $(`[data-${u?'up':'dn'}="${j}"]`)?.focus();
+});
+list();edit();
+</script></body></html>

@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v13 gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css">
+<style>
+body{padding:0}
+.wrapg{max-width:1360px;margin:0 auto;padding:28px 20px 80px}
+header.top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+header.top p{max-width:760px;color:var(--muted);margin:8px 0 0}
+section.g{margin-top:44px}
+section.g>h2{font-size:24px}section.g>p{color:var(--muted);margin:6px 0 18px;max-width:760px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.tile h3{font-size:17px}
+.pv{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);position:relative;height:240px}
+.pv iframe{border:0;transform-origin:0 0;position:absolute;left:0;top:0;pointer-events:none}
+.pv.ph{display:flex;justify-content:center;height:300px}
+.pv.ph iframe{width:375px;height:760px;transform:scale(.4);left:50%;margin-left:-75px}
+.pv.dk iframe{width:1280px;height:760px;transform:scale(.235)}
+.pv.dk{height:179px}
+.pv a.cover{position:absolute;inset:0;z-index:2}
+.note1{font-size:14px;color:var(--muted);margin:0}
+.note1 b{color:var(--ink)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:12px;max-width:100%}
+dialog::backdrop{background:rgba(5,10,18,.7)}
+dialog iframe{width:375px;height:min(780px,82vh);border:1px solid var(--line);border-radius:10px;display:block;max-width:100%}
+.tag{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--soft);color:var(--muted);align-self:flex-start}
+.docs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+</style></head><body>
+<div class="wrapg">
+ <header class="top"><div><h1 style="font-size:36px">Bad(yet), rehauled</h1>
+  <p>From a sheet port to a real tracker and five-year projector. Every page is live and keyboard-operable, in both themes, with invented numbers (Fri 20 Nov 2026, paid on the 10th and 25th). Phone previews are the primary app; planning pages are desktop-first but work at 375px.</p>
+  <p>Use <b>Phone</b> to open a page at 375px, <b>Open</b> for full width. Use the Dark / Light switch at the top of any page.</p></div>
+  <div class="docs"><a class="btn" href="round1/v13-gallery.html">Round 1 (before your notes), to compare</a><a class="btn" href="../rehaul/ia.md">IA, flows, open questions</a><a class="btn" href="../rehaul/model.md">Data model sketch</a></div></header>
+
+ <section class="g" id="changes"><h2>New pieces from your answers (round 7)</h2>
+  <ul class="note1" style="line-height:1.7;padding-left:20px;max-width:900px;margin:0">
+   <li><b>Round 13:</b> Raises you expect can be planned around. The raise wizard has a <b>Where does the extra go?</b> step (top-ups tied to the raise); Budget tags those lines and months, and has a <b>Compare without expected raises</b> switch; Forecast shows a with / without total.</li>
+   <li><b>Round 10:</b> Budget can have several RTO lines (commute, food) and one contingency; no per-day inputs; extra days are tapped by hand; settle an office day (leftover to the pool or Wants, overspend from Wants or the contingency excess); allowances and bonuses have a "lands in" cutoff that the payslip builder reads.</li>
+   <li><b>Round 8:</b> Now has no switch (office days come from the calendar); Budget has a tidier Office days card and a <b>Pools</b> card (use it, or move excess to Wants); Salary builder has income tax in both cutoffs, tables with an inline add row, per-allowance Taxable switches, and 13th month / CIP lines on the payslip.</li>
+   <li><b>Budget:</b> every line has a <b>Daily</b> switch (counts toward daily spend). A new <b>Office days (RTO)</b> card sets the usual days, the peso per office day and the spontaneous-day count, and lets you tap days in the cutoff. RTO days and RTO contingency are budget lines.</li>
+   <li><b>Now:</b> an <b>In office today</b> switch adds the office-day amount to today's safe-to-spend and draws it from the contingency.</li>
+   <li><b>Salary and tax:</b> the Payslip tab is now a <b>payslip builder</b>: one payslip per cutoff (1st: income tax; 2nd: contributions and allowances). Move any line between cutoffs, override an amount, add your own lines, change the base split. The chart and year table show both cutoffs.</li>
+   <li><b>Wizards:</b> contribution overrides moved into the builder; inflation is gone everywhere.</li>
+  </ul></section>
+ <section class="g" id="now"><h2>Today: now, inbox, accounts</h2><p>Phone is the main way to use these. Desktop adds wide cards and a side panel.</p><div class="tiles" id="g-now"></div></section>
+ <section class="g" id="plan"><h2>Plan: salary, budget, bonuses, funds, forecast</h2><p>Desktop-first, every one works at 375px. Each answers “what does this change in five years?”</p><div class="tiles" id="g-plan"></div></section>
+ <section class="g" id="override"><h2>Override a month</h2><p>A edits one month in detail. B edits several at once. Reach both from the Forecast's month sheet.</p><div class="tiles" id="g-ov"></div></section>
+ <section class="g" id="wizard"><h2>Wizards</h2><p>Step by step, skippable, with a live preview on the right (below on a phone).</p><div class="tiles" id="g-misc"></div></section>
+</div>
+<dialog id="dlg" aria-label="Phone preview"><div class="row sp" style="margin-bottom:8px"><b id="dt"></b><button class="btn sm" id="dc">Close</button></div><iframe id="df" title="Phone preview"></iframe></dialog>
+<script src="v13-shared.js"></script>
+<script>
+const T=[
+['g-now','v13-now.html','Now','ph','<b>One screen for the morning.</b> Full-width hero with the runway chart, a sideways-scrolling row of account cards, planned vs spent envelopes (70%) beside recent spends (30%).'],
+['g-now','v13-inbox.html','Inbox and quick add','ph','Phone opens on <b>All activity</b>. Desktop shows To check as 2 to 4 cards per row with All activity on the right; cards open a details panel (<a href="v13-inbox.html#to-check">try it</a>). Quick add: <a href="v13-inbox.html#add">open</a>.'],
+['g-now','v13-accounts.html','Accounts','dk','Cards in each account’s colour; pick one for <b>last confirmed balance + transactions since</b>, and its saved receive-QR.'],
+['g-plan','v13-salary.html','Salary and tax','dk','<b>Timeline</b> (two-cutoff chart, events, allowances, year by year) and the <b>Payslip builder</b>: one editable payslip per cutoff, tax working underneath.'],
+['g-plan','v13-budget.html','Budget','dk','Daily switch on every line, an <b>Office days (RTO)</b> card with a tap-a-day cutoff view, and the rule-based lines as before.'],
+['g-plan','v13-bonus.html','Bonuses','dk','Yearly rules and one-offs. Pick a year, past or future. Each bonus: gross to net, then an editable split. Destinations can be custom, entered as flat pesos or a percent.'],
+['g-plan','v13-funds.html','Savings funds','dk','Custom funds with a default priority and four fill rules. Linked accounts keep balances honest.'],
+['g-plan','v13-forecast.html','Forecast','dk','<b>Chart</b> or <b>Year by year</b> switch. Click a fund pill to isolate its line; Stacked or Lines, 60 months or by year.'],
+['g-ov','v13-override-a.html','Override · one month (A)','dk','Drag or arrow-reorder, pin, skip, live result and five-year effect. <b>Best for a single change.</b>'],
+['g-ov','v13-override-b.html','Override · many months (B)','dk','Tick months, then reorder, pin or skip them together. <b>Best for bulk.</b>'],
+['g-misc','v13-wizard.html','First run','dk','Accounts, salary, paydays, budget, funds. Each step skippable; a setup summary builds up on the right.'],
+['g-misc','v13-wizard-raise.html','Add a raise or promotion','dk','Merit, promotion, allowance or one-off. A <b>before and after payslip</b> shows the tax change and the five-year effect as you type.'],
+['g-misc','v13-wizard-bonus.html','Plan a bonus','dk','Yearly or one-off, gross to net on a payslip, then where it goes (funds, gifts, big purchases). Try <a href="v13-wizard-bonus.html#once">one-off</a>.'],
+['g-misc','v13-settings.html','Settings','dk','Plain settings: paydays, tax tables, notification rules, looks, data.'],
+];
+const th=()=>document.documentElement.dataset.theme;
+function build(){
+ $$('.tiles').forEach(e=>e.innerHTML='');
+ T.forEach(([sec,f,t,k,n])=>{
+  const el=document.createElement('article');el.className='tile';
+  el.innerHTML=`<h3>${t}</h3><div class="pv ${k}"><iframe src="${f}#${th()}" title="${t} preview" loading="lazy" tabindex="-1"></iframe></div><p class="note1">${n}</p><div class="acts"><a class="btn sm pri" href="${f}#${th()}">Open</a><button class="btn sm" data-ph="${f}" data-t="${t}">Phone 375px</button></div>`;
+  $('#'+sec).appendChild(el);
+ });
+}
+build();
+document.addEventListener('themechange',()=>{$$('.pv iframe').forEach(i=>{const u=i.getAttribute('src').split('#')[0];i.setAttribute('src',u+'#'+th());try{i.contentWindow.location.hash=th()}catch(e){}});$$('a.btn.pri').forEach(a=>a.href=a.getAttribute('href').split('#')[0]+'#'+th())});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(!b)return;$('#dt').textContent=b.dataset.t;$('#df').src=b.dataset.ph+'#'+th();$('#dlg').showModal()});
+$('#dc').onclick=()=>$('#dlg').close();
+</script></body></html>

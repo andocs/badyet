@@ -1,0 +1,78 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v13 gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css">
+<style>
+body{padding:0}
+.wrapg{max-width:1360px;margin:0 auto;padding:28px 20px 80px}
+header.top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+header.top p{max-width:760px;color:var(--muted);margin:8px 0 0}
+section.g{margin-top:44px}
+section.g>h2{font-size:24px}section.g>p{color:var(--muted);margin:6px 0 18px;max-width:760px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow)}
+.tile h3{font-size:17px}
+.pv{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg);position:relative;height:240px}
+.pv iframe{border:0;transform-origin:0 0;position:absolute;left:0;top:0;pointer-events:none}
+.pv.ph{display:flex;justify-content:center;height:300px}
+.pv.ph iframe{width:375px;height:760px;transform:scale(.4);left:50%;margin-left:-75px}
+.pv.dk iframe{width:1280px;height:760px;transform:scale(.235)}
+.pv.dk{height:179px}
+.pv a.cover{position:absolute;inset:0;z-index:2}
+.note1{font-size:14px;color:var(--muted);margin:0}
+.note1 b{color:var(--ink)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:12px;max-width:100%}
+dialog::backdrop{background:rgba(5,10,18,.7)}
+dialog iframe{width:375px;height:min(780px,82vh);border:1px solid var(--line);border-radius:10px;display:block;max-width:100%}
+.tag{font-size:12px;font-weight:700;border-radius:999px;padding:2px 10px;background:var(--soft);color:var(--muted);align-self:flex-start}
+.docs{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+</style></head><body>
+<div class="wrapg">
+ <header class="top"><div><h1 style="font-size:36px">Bad(yet), rehauled</h1>
+  <p>From a sheet port to a real tracker and five-year projector. Every page is live and keyboard-operable, in both themes, with invented numbers (Fri 20 Nov 2026, paid on the 10th and 25th). Phone previews are the primary app; planning pages are desktop-first but work at 375px.</p>
+  <p>Use <b>Phone</b> to open a page at 375px, <b>Open</b> for full width. Use the Dark / Light switch at the top of any page.</p></div>
+  <div class="docs"><a class="btn pri" href="../v13-gallery.html">Round 2 (current)</a><a class="btn" href="../../rehaul/ia.md">IA, flows, open questions</a><a class="btn" href="../../rehaul/model.md">Data model sketch</a></div></header>
+
+ <section class="g" id="now"><h2>Now: what can I spend until payday?</h2><p>Same data in three directions. Pick the one you would open every morning.</p><div class="tiles" id="g-now"></div></section>
+ <section class="g" id="phone"><h2>Phone: inbox, quick add, accounts</h2><p>One direction each. Quick add opens as a sheet from the + tab.</p><div class="tiles" id="g-phone"></div></section>
+ <section class="g" id="plan"><h2>Plan: salary, budget, bonuses, funds</h2><p>One direction each, desktop-first. Each one answers “what does this change in five years?”</p><div class="tiles" id="g-plan"></div></section>
+ <section class="g" id="forecast"><h2>Forecast: where will I be in 5 years?</h2><p>Three directions. A and C show one scenario at a time (scenario option 1: the active scenario is a tab and overrides carry a scope chip). B overlays up to three scenarios (option 2: overrides are one layer on the chart; filled marker = every scenario, ring = one).</p><div class="tiles" id="g-fc"></div></section>
+ <section class="g" id="override"><h2>Override a month: reorder, pin, skip, reset</h2><p>Three directions for the same power. Open one from the forecast’s month sheet, or directly here. All three share the same data, so a change in one shows in the others during this session.</p><div class="tiles" id="g-ov"></div></section>
+ <section class="g" id="wizard"><h2>First run</h2><p>Five short steps, no mockup this round: <b>Accounts</b> (name, last four digits, balance) → <b>Salary</b> (base, start date, title) → <b>Paydays</b> (10th and 25th prefilled) → <b>Categories</b> (Essentials, Wants, Savings with starter lines) → <b>Funds</b> (starter set, or none). Details in ia.md.</p><div class="tiles" id="g-misc"></div></section>
+</div>
+<dialog id="dlg" aria-label="Phone preview"><div class="row sp" style="margin-bottom:8px"><b id="dt"></b><button class="btn sm" id="dc">Close</button></div><iframe id="df" title="Phone preview"></iframe></dialog>
+<script src="v13-shared.js"></script>
+<script>
+const T=[
+['g-now','v13-now-a.html','Now · A Daily allowance','ph','Leads with one number: <b>₱271.07 safe per day</b>. Fastest read on a busy morning, but the category that is bleeding hides below the fold.'],
+['g-now','v13-now-b.html','Now · B Envelopes','ph','<b>Per-category control.</b> Pace marker on every envelope, receipts one tap down. You see who is overspending; no single hero number to glance at.'],
+['g-now','v13-now-c.html','Now · C Runway','ph','<b>Trajectory first.</b> A pace chart tells you if you are heading for trouble, not only where you are. Needs a second to read; figures sit second.'],
+['g-phone','v13-inbox.html','Inbox and quick add','ph','Confirm, recategorise or make a rule in one tap. Quick add opens from the + tab (<a href="v13-inbox.html#add">try it</a>).'],
+['g-phone','v13-accounts.html','Accounts','ph','Total at the top, tap an account to see <b>last confirmed balance + transactions since</b>. Fund accounts link to their fund.'],
+['g-plan','v13-salary.html','Salary path','dk','Dated events with the peso change per cutoff, a take-home chart (assumed years dashed) and an assumptions card.'],
+['g-plan','v13-budget.html','Budget rules','dk','Custom categories and rule-based lines. <b>This month</b> shows planned vs sent; <b>Future years</b> shows 12 months with tight or over flags. Click any line to edit its rule.'],
+['g-plan','v13-bonus.html','Bonus planner','dk','Gross → de minimis → cap room → tax → net, then the split ticked off. Try the CIP multiplier: high crosses the ₱90,000 cap.'],
+['g-plan','v13-funds.html','Savings funds','dk','Custom funds with a default priority and four fill rules. Linked accounts keep balances honest.'],
+['g-fc','v13-forecast-a.html','Forecast · A One scenario at a time','dk','Calmest and most readable: one stacked chart, tap a month for pool, where it went and why. Comparing scenarios means flipping tabs.'],
+['g-fc','v13-forecast-b.html','Forecast · B Compare overlay','dk','Best for “what if the promotion slips”: up to three lines and a milestone table. Loses the fund stack unless you switch it; override markers add a small legend.'],
+['g-fc','v13-forecast-c.html','Forecast · C Year ladder','ph','Phone-friendly: five year cards, then twelve month cards with override and tight tags. No continuous curve, so the growth shape is harder to feel.'],
+['g-ov','v13-override-a.html','Override · A Reorder list','dk','<b>Most power.</b> Drag or arrow-reorder, pin and skip per fund, live result and five-year effect, scope and range apply. Most to look at.'],
+['g-ov','v13-override-b.html','Override · B Year grid','dk','<b>Fastest for bulk.</b> Tick Jan–Mar, then change them together; spot patterns across the year. Dense and desktop-leaning.'],
+['g-ov','v13-override-c.html','Override · C Quick actions','ph','<b>Fastest on a phone.</b> First / Pin / Skip buttons, a diff of what changed, Undo, and “do the same for next 3 months”. No free reordering of the middle funds.'],
+['g-misc','v13-settings.html','Settings','dk','Plain settings: paydays, tax tables, notification rules, looks, data.'],
+];
+const th=()=>document.documentElement.dataset.theme;
+function build(){
+ $$('.tiles').forEach(e=>e.innerHTML='');
+ T.forEach(([sec,f,t,k,n])=>{
+  const el=document.createElement('article');el.className='tile';
+  el.innerHTML=`<h3>${t}</h3><div class="pv ${k}"><iframe src="${f}#${th()}" title="${t} preview" loading="lazy" tabindex="-1"></iframe></div><p class="note1">${n}</p><div class="acts"><a class="btn sm pri" href="${f}#${th()}">Open</a><button class="btn sm" data-ph="${f}" data-t="${t}">Phone 375px</button></div>`;
+  $('#'+sec).appendChild(el);
+ });
+}
+build();
+document.addEventListener('themechange',()=>{$$('.pv iframe').forEach(i=>{const u=i.getAttribute('src').split('#')[0];i.setAttribute('src',u+'#'+th());try{i.contentWindow.location.hash=th()}catch(e){}});$$('a.btn.pri').forEach(a=>a.href=a.getAttribute('href').split('#')[0]+'#'+th())});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ph]');if(!b)return;$('#dt').textContent=b.dataset.t;$('#df').src=b.dataset.ph+'#'+th();$('#dlg').showModal()});
+$('#dc').onclick=()=>$('#dlg').close();
+</script></body></html>

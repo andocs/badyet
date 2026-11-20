@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Now · B Envelopes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+details.env{border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow)}
+details.env summary{list-style:none;cursor:pointer;padding:16px;min-height:44px}
+details.env summary::-webkit-details-marker{display:none}
+details.env[open] summary{border-bottom:1px solid var(--line)}
+.pace{position:relative}.pace u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.8;border-radius:2px}
+.envleft{font:800 26px Gabarito;letter-spacing:-.02em}
+details.env .tx{padding:4px 16px 8px}
+.chev{transition:transform .15s}details[open] .chev{transform:rotate(90deg)}
+</style></head><body data-nav="now">
+<main><div class="narrow stack">
+ <div class="row sp wrap"><div><h1>Until payday</h1><div class="lbl">1st cutoff · 11–24 Nov · 5 days to 25 Nov</div></div><a class="btn" href="v13-inbox.html">Inbox <span class="pill ok">4</span></a></div>
+
+ <div class="card row sp wrap" style="gap:14px"><div><div class="lbl">Left across envelopes</div><div class="big num" style="font-size:36px">₱1,355.35</div></div>
+  <div style="text-align:right"><div class="lbl">Safe per day</div><div class="envleft num pos">₱271.07</div></div></div>
+
+ <div class="flag"><span>!</span><span><b>₱1,516.90 is waiting in Inbox.</b> Pending spends are not counted until you confirm them. They would use up Groceries.</span></div>
+
+ <div class="stack" id="envs"></div>
+
+ <div class="card row sp"><span class="row"><span class="chk" aria-checked="true" role="img" aria-label="done" style="cursor:default"></span><b>Bills and transfers</b></span><span class="num muted">5 of 5 sent</span></div>
+</div></main>
+<script>
+const N=BY.NOW,P=BY.peso,ratio=N.cutoff.day/N.cutoff.days;
+$('#envs').innerHTML=N.cats.map((c,i)=>{const left=c.plan-c.spent,pace=c.plan*ratio,diff=c.spent-pace,p=c.spent/c.plan*100;
+ const st=diff>25?`<span class="pill warn">${P(diff)} over pace</span>`:diff<-25?`<span class="pill ok">${P(-diff)} under pace</span>`:`<span class="pill ok">on pace</span>`;
+ const tx=N.txns.filter(t=>t.cat===c.name);
+ return `<details class="env" ${i===0?'open':''}><summary><div class="row sp"><span class="row" style="gap:8px"><i class="dot" style="background:${c.c}"></i><b>${c.name}</b> ${st}</span><span class="row"><span class="envleft num">${P(left)}</span><svg class="i chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></span></div>
+ <div class="pace" style="margin-top:12px"><div class="bar t" role="img" aria-label="${c.name}: ${Math.round(p)} percent used, pace marker at ${Math.round(ratio*100)} percent"><i style="width:${p}%;background:${c.c}"></i></div><u style="left:${ratio*100}%"></u></div>
+ <div class="row sp xs muted" style="margin-top:6px"><span class="num">${P(c.spent)} spent</span><span class="num">of ${P(c.plan)} · marker = where pace says you should be</span></div></summary>
+ <ul class="list tx">${tx.map(t=>`<li><div class="grow"><b>${t.who}</b><div class="xs muted">${t.when} · ${t.acct}${t.st==='pending'?' · <span class="warnt">pending</span>':''}</div></div><b class="num">${P(t.amt)}</b></li>`).join('')||'<li class="muted">Nothing yet. Pip is proud.</li>'}</ul></details>`}).join('');
+$('.chk[role=img]').innerHTML=CHECK;
+</script></body></html>

@@ -1,0 +1,86 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Month override · A Reorder list</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.cols{grid-template-columns:minmax(0,1fr) 360px;align-items:start}}
+.fr{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px 12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:8px}
+.fr.drag{opacity:.5}.fr.over-t{border-color:var(--accent)}
+.fr.skip{background:var(--gold-tint)}.fr.skip .nm{text-decoration:line-through}
+.fr.pinned{border-color:var(--accent)}
+.fr .grip{cursor:grab;color:var(--muted);display:grid;place-items:center;width:28px;height:36px;background:none;border:0;padding:0}
+.fr .rk{width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px Gabarito}
+.fr .tools{display:flex;gap:6px;align-items:center}
+.fr .sub{grid-column:3 / span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pinin{width:130px;font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;min-height:36px}
+@media(max-width:759px){.fr{grid-template-columns:auto auto minmax(0,1fr)}.fr .tools{grid-column:1 / -1;justify-content:flex-end}.fr .sub{grid-column:1 / -1}}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+</style></head><body data-nav="forecast">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><a href="v13-forecast.html" class="sm">← Forecast</a><h1 style="margin-top:4px">Change a month</h1><div class="lbl">Reorder, pin an amount or skip a fund, for this month only. Changing several months? <a href="v13-override-b.html">Edit months in bulk</a>.</div></div>
+  <div class="row"><button class="iconbtn" id="prev" aria-label="Previous month"></button><div style="text-align:center;min-width:110px"><div class="disp" style="font-size:22px" id="mname"></div><div class="xs" id="mstat"></div></div><button class="iconbtn" id="next" aria-label="Next month"></button></div></div>
+
+ <div class="cols">
+  <section aria-labelledby="ph"><div class="row sp" style="margin-bottom:8px"><h2 id="ph">Priority this month</h2><span class="pill" id="pool"></span></div>
+   <div id="list" aria-live="polite"></div>
+   <div class="note">Drag the handle, or use the arrows. Pinned amounts come out of the pool first; the rest fill top to bottom.</div>
+   <section class="card" style="margin-top:14px"><h3>Reset or copy</h3>
+    <div class="row wrap" style="margin-top:10px;gap:14px"><div class="row-actions"><button class="btn" id="reset">Reset month to default</button></div></div>
+    <hr class="hr" style="margin:14px 0"><div class="row wrap" style="gap:10px"><b>Apply this order to</b><label class="field"><span class="sr">From</span><select id="from"></select></label><span>to</span><label class="field"><span class="sr">To</span><select id="to"></select></label><button class="btn pri" id="range">Apply order</button></div>
+    <div class="xs muted" style="margin-top:6px" id="rangenote">Copies the order only. Pins and skips stay on their own month.</div></section>
+  </section>
+  <aside class="stack"><section class="card"><h2>What it does</h2><div id="res" style="margin-top:8px"></div></section>
+   <section class="card"><h2>Five years later</h2><div id="down" style="margin-top:8px"></div></section></aside>
+ </div>
+</div>
+<div class="sheet" id="toast" role="status" style="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);border-radius:999px;padding:10px 18px;z-index:70;display:none;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.35)"></div>
+</main>
+<script>
+const P=BY.peso,F=BY.FUNDS,SC=BY.SCENARIOS;
+let ym=/^[0-9]{4}-[0-9]{2}$/.test(location.hash.slice(1))?location.hash.slice(1):'2027-03',scope='all',cur=null,dragId=null,pinOpen=null;
+const def=()=>F.map(f=>f.id);
+function load(){const o=FC.ov[ym];cur=o?{order:o.order?[...o.order]:def(),pin:{...(o.pin||{})},skip:[...(o.skip||[])]}:{order:def(),pin:{},skip:[]};scope=o?o.scope:'all';}
+function isDefault(){return cur.order.join()===def().join()&&!Object.keys(cur.pin).length&&!cur.skip.length}
+function commit(){if(isDefault())delete FC.ov[ym];else FC.ov[ym]={order:cur.order.join()===def().join()?undefined:[...cur.order],pin:Object.keys(cur.pin).length?{...cur.pin}:undefined,skip:cur.skip.length?[...cur.skip]:undefined,scope,note:(FC.ov[ym]||{}).note||'My change'}}
+function eff(){return FC.run(scope==='all'?'base':scope)}
+function render(){
+ const sid=scope==='all'?'base':scope,rows=FC.run(sid),r=rows.find(x=>x.ym===ym),dflt=(()=>{const o=FC.ov;const saved=o[ym];delete o[ym];const x=BY.simulate(sid,o).find(x=>x.ym===ym);if(saved)o[ym]=saved;return x})();
+ $('#mname').textContent=BY.ymLabel(ym);$('#mstat').innerHTML=FC.ov[ym]?'<span class="pill ok">Overridden</span>':'<span class="pill">Default</span>';
+ $('#pool').textContent='Pool '+P(r.pool)+(r.bonus?' + '+r.bonus.name+' '+P(r.bonus.net):'');
+ $('#list').innerHTML=cur.order.map((id,i)=>{const f=FC.fund(id),a=r.alloc[id],pinned=cur.pin[id]!==undefined,sk=cur.skip.includes(id);
+  return `<div class="fr ${sk?'skip':''} ${pinned?'pinned':''}" draggable="true" data-id="${id}"><button class="grip" aria-label="Drag ${f.name}" tabindex="-1">${icon('grip')}</button><span class="rk">${i+1}</span><span><b class="nm"><i class="dot" style="background:${f.color}"></i> ${f.name}</b><span class="xs muted" style="display:block">${f.rt}</span></span>
+  <span style="text-align:right"><b class="num">${P(a.amt)}</b><span class="xs muted" style="display:block">${FC.why(r,id)}</span></span>
+  <span class="sub"><span class="tools" style="margin-left:auto"><button class="iconbtn s" data-up="${id}" aria-label="Move ${f.name} up" ${i===0?'disabled style="opacity:.4"':''}>${icon('up')}</button><button class="iconbtn s" data-dn="${id}" aria-label="Move ${f.name} down" ${i===F.length-1?'disabled style="opacity:.4"':''}>${icon('down')}</button><button class="btn sm" data-pin="${id}" aria-pressed="${pinned}">${icon('pin','')}${pinned?'Pinned':'Pin amount'}</button><button class="btn sm" data-skip="${id}" aria-pressed="${sk}">${icon('skip')}${sk?'Skipped':'Skip'}</button></span></span>
+  ${pinOpen===id||pinned&&pinOpen===id?'':''}</div>${(pinOpen===id)?`<div class="fr" style="margin-top:-4px;border-style:dashed"><span></span><span></span><label class="field grow">Pin ${f.name} at (₱)<input class="pinin" id="pinv" inputmode="decimal" value="${cur.pin[id]??Math.round(a.amt)}" style="width:100%"></label><button class="btn pri sm" data-pinok="${id}">Set</button></div>`:''}`}).join('');
+ /* results */
+ const d=F.map(f=>({f,now:r.alloc[f.id].amt,was:dflt.alloc[f.id].amt}));
+ $('#res').innerHTML=isDefault()?'<p class="muted" style="margin:0">Nothing changed. This month follows the default order. Pip is relaxed.</p>':d.map(x=>{const df=x.now-x.was;return `<div class="row sp" style="padding:7px 0;border-bottom:1px solid var(--line)"><span class="row" style="gap:8px"><i class="dot" style="background:${x.f.color}"></i>${x.f.name}</span><span class="num"><b>${P(x.now)}</b> ${Math.abs(df)>.5?`<span class="${df>0?'pos':'neg'} sm">${P(df,{sign:1})}</span>`:'<span class="muted sm">same</span>'}</span></div>`}).join('');
+ const L=rows[59],L0=(()=>{const o=FC.ov,s=o[ym];delete o[ym];const x=BY.simulate(sid,o)[59];if(s)o[ym]=s;return x})();
+ $('#down').innerHTML=F.map(f=>{const df=L.bal[f.id]-L0.bal[f.id];return `<div class="row sp sm" style="padding:6px 0"><span>${f.name} in Nov 2031</span><span class="num"><b>${P(L.bal[f.id])}</b> ${Math.abs(df)>.5?`<span class="${df>0?'pos':'neg'}">${P(df,{sign:1})}</span>`:''}</span></div>`}).join('');
+ const ms=BY.months;$('#from').innerHTML=$('#to').innerHTML=ms.map(m=>`<option value="${m}">${BY.ymLabel(m)}</option>`).join('');$('#from').value=ym;$('#to').value=ms[Math.min(59,ms.indexOf(ym)+2)];
+}
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>e.style.display='none',2600)}
+$('#list').addEventListener('click',e=>{
+ const g=k=>e.target.closest(`[data-${k}]`)?.dataset[k];let id;
+ if(id=g('up')){const i=cur.order.indexOf(id);[cur.order[i-1],cur.order[i]]=[cur.order[i],cur.order[i-1]]}
+ else if(id=g('dn')){const i=cur.order.indexOf(id);[cur.order[i+1],cur.order[i]]=[cur.order[i],cur.order[i+1]]}
+ else if(id=g('skip')){cur.skip=cur.skip.includes(id)?cur.skip.filter(x=>x!==id):[...cur.skip,id];delete cur.pin[id]}
+ else if(id=g('pin')){if(cur.pin[id]!==undefined){delete cur.pin[id];pinOpen=null}else{pinOpen=pinOpen===id?null:id;cur.skip=cur.skip.filter(x=>x!==id)}}
+ else if(id=g('pinok')){cur.pin[id]=Math.max(0,parseFloat($('#pinv').value)||0);pinOpen=null}
+ else return;
+ commit();render();const k=['up','dn','skip','pin'].find(k=>e.target.closest(`[data-${k}]`));if(pinOpen)$('#pinv')?.focus();else if(k&&id)$(`[data-${k}="${id}"]`)?.focus();
+});
+$('#list').addEventListener('keydown',e=>{if(e.target.id==='pinv'&&e.key==='Enter')$('[data-pinok]').click()});
+/* drag and drop */
+$('#list').addEventListener('dragstart',e=>{const r=e.target.closest('.fr');dragId=r?.dataset.id;r?.classList.add('drag')});
+$('#list').addEventListener('dragover',e=>{e.preventDefault()});
+$('#list').addEventListener('drop',e=>{e.preventDefault();const t=e.target.closest('.fr[data-id]');if(!t||!dragId||t.dataset.id===dragId)return;const o=cur.order.filter(x=>x!==dragId);o.splice(o.indexOf(t.dataset.id)+(cur.order.indexOf(dragId)<cur.order.indexOf(t.dataset.id)?1:0),0,dragId);cur.order=o;dragId=null;commit();render()});
+$('#list').addEventListener('dragend',()=>{dragId=null;render()});
+$('#reset').onclick=()=>{delete FC.ov[ym];load();render();toast('Back to default for '+BY.ymLabel(ym))};
+$('#range').onclick=()=>{const a=BY.months.indexOf($('#from').value),b=BY.months.indexOf($('#to').value);if(a<0||b<a)return;for(let i=a;i<=b;i++){const m=BY.months[i];FC.ov[m]={...(FC.ov[m]||{}),order:[...cur.order],scope,note:'Copied order'}}toast('Order applied to '+BY.ymLabel(BY.months[a])+' to '+BY.ymLabel(BY.months[b]));render()};
+function go(d){const i=BY.months.indexOf(ym)+d;if(i<0||i>59)return;ym=BY.months[i];pinOpen=null;load();render()}
+$('#prev').innerHTML=icon('chev','').replace('m9 6 6 6-6 6','m15 6-6 6 6 6');$('#next').innerHTML=icon('chev');$('#prev').onclick=()=>go(-1);$('#next').onclick=()=>go(1);
+addEventListener('hashchange',()=>{if(/^\d{4}-\d\d$/.test(location.hash.slice(1))){ym=location.hash.slice(1);load();render()}});
+load();render();
+</script></body></html>

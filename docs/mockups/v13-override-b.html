@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Month override · B Year grid</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table.g{min-width:980px;border-collapse:separate;border-spacing:0}
+.g th,.g td{padding:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;font-size:13px}
+.g th:first-child,.g td:first-child{position:sticky;left:0;background:var(--surface);z-index:2;text-align:left;padding:0 12px;min-width:148px}
+.g thead th{background:var(--surface);padding:6px 4px;vertical-align:bottom}
+.g th.sel{background:var(--tint)}
+.mh{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800}
+.mh label{display:flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}
+.mh input{width:18px;height:18px;accent-color:var(--accent)}
+.cell{display:block;width:100%;min-height:52px;background:none;border:0;cursor:pointer;color:var(--ink);font:600 13px "Atkinson Hyperlegible Next";font-variant-numeric:tabular-nums;padding:4px 2px;position:relative}
+.cell:hover{background:var(--soft)}
+.cell small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.cell.pin{box-shadow:inset 0 0 0 2px var(--accent);border-radius:6px}
+.cell.skip{background:var(--gold-tint);color:var(--gold-text);text-decoration:line-through}
+.cell.sel{outline:2px solid var(--ink);outline-offset:-2px}
+.ordc{font-size:11px;font-weight:700;color:var(--muted)}
+.ordc.c{color:var(--accent-text)}
+.tot td{font-weight:800;background:var(--soft)}
+.actions{position:sticky;bottom:12px;z-index:30;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent);box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.actions select,.actions input{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:40px}
+.actions input{width:110px}
+@media(max-width:759px){.actions{bottom:78px}}
+</style></head><body data-nav="forecast">
+<main><div class="stack">
+ <div class="row sp wrap"><div><a href="v13-forecast.html" class="sm">← Forecast</a><h1 style="margin-top:4px">Edit months in bulk</h1><div class="lbl">Tick months, then change them together. Click one cell to pin or skip just that fund. For one month in detail, <a href="v13-override-a.html">use the reorder list</a>.</div></div>
+  <div class="row wrap"><label class="field" style="width:120px"><span class="sr">Year</span><select id="yr"><option>2027</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option></select></label></div></div>
+ <div class="gridwrap" tabindex="0" role="region" aria-label="Savings by fund and month"><table class="g" id="tbl"></table></div>
+ <div class="row wrap sm muted"><span class="legend"><span><span class="pill ok" style="padding:1px 8px">pinned</span></span><span><span class="pill warn" style="padding:1px 8px">skipped</span></span><span>Cell number is what the fund got that month</span><span>"Custom" under a month = its order differs from default</span></span></div>
+ <div class="actions" id="bar" hidden role="region" aria-label="Actions for selected months">
+  <b id="cnt"></b>
+  <label class="row" style="gap:6px">Put <select id="topf"></select> first <button class="btn sm" id="dotop">Apply</button></label>
+  <span class="row" style="gap:6px">Pin <select id="pinf"></select><input id="pinv" inputmode="decimal" aria-label="Pin amount" value="2000"><button class="btn sm" id="dopin">Apply</button></span>
+  <span class="row" style="gap:6px">Skip <select id="skipf"></select><button class="btn sm" id="doskip">Apply</button></span>
+  <button class="btn sm" id="doreset">Reset to default</button><button class="btn sm ghost" id="clr">Clear ticks</button>
+ </div>
+ <div class="card" id="pop" hidden style="border-color:var(--accent)" role="dialog" aria-labelledby="popt"><div class="row sp wrap"><h2 id="popt"></h2><button class="iconbtn s" id="popx" aria-label="Close"></button></div><div class="row wrap" style="margin-top:10px;gap:10px"><label class="field">Pin at (₱)<input id="ppin" inputmode="decimal" style="width:140px"></label><button class="btn pri sm" id="popin" style="align-self:flex-end">Pin amount</button><button class="btn sm" id="posk" style="align-self:flex-end">Skip this month</button><button class="btn sm ghost" id="pclr" style="align-self:flex-end">Clear</button></div></div>
+</div></main>
+<script>
+const P=BY.peso,F=BY.FUNDS,def=F.map(f=>f.id);let yr='2027',sel=new Set(),pc=null;
+const opts=F.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');['topf','pinf','skipf'].forEach(i=>$('#'+i).innerHTML=opts);
+function sid(){return FC.scn}
+function render(){
+ const rows=FC.run().filter(r=>r.y==yr);
+ let h='<thead><tr><th><span class="sr">Fund</span></th>'+rows.map(r=>`<th class="${sel.has(r.ym)?'sel':''}"><div class="mh"><label><input type="checkbox" data-m="${r.ym}" ${sel.has(r.ym)?'checked':''} aria-label="Select ${BY.ymLabel(r.ym)}"><span>${BY.MON[r.mo-1]}</span></label><span class="ordc ${r.ovr&&r.ovr.order?'c':''}">${r.ovr&&r.ovr.order?'Custom':'Default'}</span></div></th>`).join('')+'</tr></thead><tbody>';
+ F.forEach(f=>{h+=`<tr><td><span class="row" style="gap:8px"><i class="dot" style="background:${f.color}"></i><b>${f.name}</b></span></td>`+rows.map(r=>{const a=r.alloc[f.id],b=r.bonusTo[f.id]||0,k=a.why==='pinned'?'pin':a.why==='skipped'?'skip':'';
+  return `<td><button class="cell ${k} ${pc&&pc.ym===r.ym&&pc.id===f.id?'sel':''}" data-c="${r.ym}|${f.id}" aria-label="${f.name}, ${BY.ymLabel(r.ym)}: ${P(a.amt)}${b?' plus '+P(b)+' bonus':''}${k?', '+(k==='pin'?'pinned':'skipped'):''}">${a.amt?P(a.amt).replace('₱','').replace(/\.00$/,''):'0'}<small>${b?'+'+Math.round(b/1000)+'k bonus':FC.why(r,f.id).replace('Priority ','#')}</small></button></td>`}).join('')+'</tr>'});
+ h+='<tr class="tot"><td>Pool</td>'+rows.map(r=>`<td style="padding:8px 2px">${P(r.pool).replace('₱','').replace(/\.00$/,'')}</td>`).join('')+'</tr></tbody>';
+ $('#tbl').innerHTML=h;
+ $('#bar').hidden=!sel.size;$('#cnt').textContent=sel.size+' month'+(sel.size>1?'s':'')+' ticked';
+}
+function apply(fn){sel.forEach(ym=>{const o=FC.ov[ym]||{scope:'all',note:'Bulk change'};fn(o);const empty=!o.order&&!(o.pin&&Object.keys(o.pin).length)&&!(o.skip&&o.skip.length);if(empty)delete FC.ov[ym];else FC.ov[ym]=o});render()}
+$('#tbl').addEventListener('change',e=>{const m=e.target.dataset.m;if(!m)return;e.target.checked?sel.add(m):sel.delete(m);render();$(`[data-m="${m}"]`).focus()});
+$('#tbl').addEventListener('click',e=>{const c=e.target.closest('[data-c]');if(!c)return;const[ym,id]=c.dataset.c.split('|');pc={ym,id};const r=FC.run().find(x=>x.ym===ym);$('#popt').textContent=FC.fund(id).name+' · '+BY.ymLabel(ym);$('#ppin').value=Math.round(r.alloc[id].amt);$('#pop').hidden=false;render();$('#ppin').focus()});
+$('#popx').innerHTML=icon('x');const closeP=()=>{pc=null;$('#pop').hidden=true;render()};$('#popx').onclick=closeP;
+function pcApply(fn){const o=FC.ov[pc.ym]||{scope:'all',note:'My change'};fn(o);const empty=!o.order&&!(o.pin&&Object.keys(o.pin).length)&&!(o.skip&&o.skip.length);empty?delete FC.ov[pc.ym]:FC.ov[pc.ym]=o;closeP()}
+$('#popin').onclick=()=>pcApply(o=>{o.pin={...(o.pin||{}),[pc.id]:parseFloat($('#ppin').value)||0};o.skip=(o.skip||[]).filter(x=>x!==pc.id)});
+$('#posk').onclick=()=>pcApply(o=>{o.skip=[...new Set([...(o.skip||[]),pc.id])];if(o.pin)delete o.pin[pc.id]});
+$('#pclr').onclick=()=>pcApply(o=>{if(o.pin)delete o.pin[pc.id];o.skip=(o.skip||[]).filter(x=>x!==pc.id)});
+$('#dotop').onclick=()=>{const id=$('#topf').value;apply(o=>{o.order=[id,...def.filter(x=>x!==id)]})};
+$('#dopin').onclick=()=>{const id=$('#pinf').value,v=parseFloat($('#pinv').value)||0;apply(o=>{o.pin={...(o.pin||{}),[id]:v};o.skip=(o.skip||[]).filter(x=>x!==id)})};
+$('#doskip').onclick=()=>{const id=$('#skipf').value;apply(o=>{o.skip=[...new Set([...(o.skip||[]),id])];if(o.pin)delete o.pin[id]})};
+$('#doreset').onclick=()=>{sel.forEach(m=>delete FC.ov[m]);render()};
+$('#clr').onclick=()=>{sel.clear();render()};
+$('#yr').onchange=e=>{yr=e.target.value;sel.clear();render()};
+render();
+</script></body></html>

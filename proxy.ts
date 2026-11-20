@@ -39,6 +39,10 @@ export async function proxy(request: NextRequest) {
     email = fresh.user?.email ?? null;
   }
   const allowed = signedIn && isAllowedEmail(email, process.env.ALLOWED_EMAIL);
+  // TEMPORARY diagnostics for the "unexpected response" Server Action error. Remove once it is understood.
+  if (process.env.NODE_ENV !== "production" && request.method !== "GET") {
+    console.log("[proxy-debug]", request.method, path, { claims: !!data?.claims, signedIn, allowed, hasEmail: !!email, action: request.headers.has("next-action") });
+  }
 
   if (!allowed && !isPublic) return toLogin();
   if (allowed && path === "/login") return NextResponse.redirect(new URL("/", request.url));

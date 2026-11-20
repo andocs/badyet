@@ -1,0 +1,91 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inbox and quick add</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.tx{padding:16px}
+.tx .who{font:800 17px Gabarito}
+.src{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);font-weight:600}
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.cats button{min-height:40px;border-radius:999px;border:1px solid var(--line);background:var(--soft);padding:6px 14px;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.cats button[aria-pressed=true]{border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.guess{font-size:12px;font-weight:700}
+.amtin{font:800 44px Gabarito;letter-spacing:-.03em;background:none;border:0;color:var(--ink);width:100%;padding:0;font-variant-numeric:tabular-nums}
+.amtin:focus{outline:2px solid var(--accent);outline-offset:4px;border-radius:8px}
+.pair{display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:700}
+.empty{text-align:center;padding:36px 14px}
+</style></head><body data-nav="inbox">
+<main><div class="narrow stack">
+ <div class="row sp wrap"><div><h1>Inbox</h1><div class="lbl" id="sub">4 from your notifications. One tap each.</div></div>
+  <div class="seg" id="view"><button data-v="p" aria-pressed="true">To check</button><button data-v="a" aria-pressed="false">All activity</button></div></div>
+
+ <div class="stack" id="pending"></div>
+ <div class="card empty" id="empty" hidden><div class="pip" style="margin:0 auto 10px"></div><h2>All caught up</h2><p class="muted" style="margin:4px 0 0">Balances are current as of now.</p></div>
+ <div class="card" id="all" hidden><ul class="list" id="alllist"></ul></div>
+
+ <div class="note"><b>How it gets here (phone app):</b> Bad(yet) reads GCash, Maya and BPI notifications on your phone, turns them into pending rows and sends only amount, merchant and time. Nothing posts to your balances until you confirm.</div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="addsheet" role="dialog" aria-modal="true" aria-labelledby="addt">
+ <div class="grab"></div>
+ <div class="row sp"><h2 id="addt">New expense</h2><button class="iconbtn s" id="closeadd" aria-label="Close"></button></div>
+ <label class="lbl" for="amt" style="display:block;margin-top:10px">How much?</label>
+ <div class="row" style="gap:6px"><span class="disp" style="font-size:30px;color:var(--muted)">₱</span><input class="amtin" id="amt" inputmode="decimal" value="185.00"></div>
+ <div class="lbl" style="margin-top:8px">Category</div>
+ <div class="cats" id="qcats"></div>
+ <div class="grid2"><label class="field">Paid from<select><option>GCash</option><option>Maya</option><option>BPI Checking</option><option>Cash</option></select></label>
+  <label class="field">Where<input value="Mang Inasal"></label></div>
+ <div class="row" style="margin-top:12px;gap:10px"><label class="field grow">Date<input value="Today"></label><label class="field grow">Note (optional)<input placeholder="lunch with team"></label></div>
+ <div class="row" style="margin-top:16px"><button class="btn pri grow" id="saveadd">Save expense</button></div>
+ <p class="xs muted" style="margin:10px 0 0">Saves as confirmed. Lands in Eating out and uses ₱185.00 of its ₱272.60 left.</p>
+</section>
+
+<script>
+const P=BY.peso,N=BY.NOW;
+const CATS=['Groceries','Eating out','Commute','Bills','Fun','Other'];
+let pend=[
+ {id:1,who:'Grab',amt:-186,acct:'GCash',when:'Today 6:42 pm',src:'GCash notification',cat:'Commute',rule:true,ruled:true},
+ {id:2,who:'SM Supermarket',amt:-1236.4,acct:'BPI Checking',when:'Today 1:05 pm',src:'BPI notification',cat:'Groceries',rule:false},
+ {id:3,who:'7-Eleven',amt:-94.5,acct:'BPI Checking',when:'Today 8:12 am',src:'BPI notification',cat:null,rule:false},
+ {id:4,who:'Cash-in from BPI',amt:2000,acct:'GCash',when:'Today 7:55 am',src:'GCash + BPI notifications',transfer:true},
+];
+function render(){
+ const el=$('#pending');
+ el.innerHTML=pend.map(t=>{
+  const head=`<div class="row sp top"><div><div class="who">${t.who}</div><div class="src">${icon('bell')} ${t.src} · ${t.when}</div></div><div class="who num ${t.amt>0?'pos':''}">${P(t.amt,{sign:1})}</div></div>`;
+  if(t.transfer) return `<article class="card tx" data-id="${t.id}">${head}<div class="pair"><span class="pill">BPI Checking</span>${icon('arrow')}<span class="pill">GCash</span><span class="pill ok">Matched as a transfer</span></div><div class="xs muted">Not income and not an expense. Moves ₱2,000.00 between your own accounts.</div><div class="row" style="margin-top:12px"><button class="btn pri grow" data-ok>Confirm transfer</button><button class="btn" data-no>It's something else</button></div></article>`;
+  return `<article class="card tx" data-id="${t.id}">${head}
+   <div class="cats" role="group" aria-label="Category for ${t.who}">${CATS.slice(0,5).map(c=>`<button aria-pressed="${t.cat===c}" data-cat="${c}">${c}</button>`).join('')}</div>
+   ${t.cat?`<div class="guess ${t.ruled?'pos':'muted'}">${t.ruled?'Auto-picked by your rule: Grab is Commute':'Best guess from past purchases'}</div>`:`<div class="guess warnt">No guess yet. Pick one and Pip will remember.</div>`}
+   <div class="row sp" style="margin-top:12px"><label class="row" style="gap:10px"><button class="sw" role="switch" aria-checked="${!!t.rule}" data-rule aria-label="Always put ${t.who} under this category"></button><span class="sm">Always put ${t.who} here</span></label></div>
+   <div class="row" style="margin-top:12px"><button class="btn pri grow" data-ok ${t.cat?'':'disabled style="opacity:.5"'}>Confirm</button><button class="btn" data-no aria-label="Ignore ${t.who}">Not mine</button></div></article>`}).join('');
+ $('#empty').hidden=pend.length>0||$('#view [aria-pressed=true]').dataset.v!=='p';
+ const n=pend.length;$('#sub').textContent=n?`${n} from your notifications. One tap each.`:'Nothing waiting.';
+ $$('.tabs .badge,.rail .badge').forEach(b=>{b.textContent=n;b.style.display=n?'':'none'});
+}
+$('#pending').addEventListener('click',e=>{
+ const art=e.target.closest('article');if(!art)return;const t=pend.find(x=>x.id==art.dataset.id);
+ const c=e.target.closest('[data-cat]');if(c){t.cat=c.dataset.cat;t.ruled=false;render();$(`[data-id="${t.id}"] [data-cat="${t.cat}"]`).focus();return}
+ const r=e.target.closest('[data-rule]');if(r){t.rule=toggleChk(r);return}
+ if(e.target.closest('[data-ok],[data-no]')){pend=pend.filter(x=>x!==t);render()}
+});
+seg($('#view'),v=>{$('#pending').hidden=v!=='p';$('#all').hidden=v!=='a';$('#empty').hidden=!(v==='p'&&!pend.length)});
+$('#alllist').innerHTML=[...N.txns.slice(3),{who:'Rent · BPI',cat:'Rent',acct:'BPI Checking',amt:-7000,when:'Tue 10 Nov',st:'ok'},{who:'Payday',cat:'Salary',acct:'BPI Checking',amt:24235.83,when:'Tue 10 Nov',st:'ok'}].map(t=>`<li><span class="av ${t.amt>0?'m':'b'}" aria-hidden="true" style="width:36px;height:36px">${t.who[0]}</span><div class="grow"><b>${t.who}</b><div class="xs muted">${t.cat} · ${t.acct} · ${t.when}</div></div><b class="num ${t.amt>0?'pos':''}">${P(t.amt,{sign:1})}</b></li>`).join('');
+/* quick add sheet */
+$('#qcats').innerHTML=CATS.map((c,i)=>`<button aria-pressed="${i===1}">${c}</button>`).join('');
+$('#qcats').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;$$('#qcats button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+$('#closeadd').innerHTML=icon('x');
+const sh=$('#addsheet'),sc=$('#scrim');
+function openAdd(){sh.classList.add('on');sc.classList.add('on');$('#amt').focus();$('#amt').select()}
+function closeAdd(){sh.classList.remove('on');sc.classList.remove('on')}
+$('#closeadd').onclick=$('#saveadd').onclick=sc.onclick=closeAdd;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdd()});
+document.addEventListener('DOMContentLoaded',()=>{
+ const fab=document.createElement('button');fab.className='btn pri';fab.innerHTML=icon('plus')+' Expense';fab.style.cssText='position:fixed;right:24px;bottom:24px;z-index:30;box-shadow:0 6px 18px rgba(0,0,0,.35)';
+ fab.onclick=openAdd;if(innerWidth>=760)document.body.appendChild(fab);
+ if(/add/.test(location.hash))openAdd();
+ render();
+});
+addEventListener('hashchange',()=>{if(/add/.test(location.hash))openAdd()});
+</script></body></html>

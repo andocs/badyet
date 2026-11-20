@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forecast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.cols{grid-template-columns:minmax(0,1fr) 320px;align-items:start}}
+.fx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+@media(max-width:759px){.fx{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fx div{background:rgba(255,255,255,.1);border-radius:10px;padding:10px 12px}
+.fx b{display:block;font:800 18px Gabarito;font-variant-numeric:tabular-nums}
+.ovl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.ovl:last-child{border-bottom:0}
+.ovl button{all:unset;cursor:pointer;flex:1;min-width:0}.ovl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--ink);margin-top:5px;flex:none}
+.ladder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media(max-width:759px){.ladder{grid-template-columns:1fr}}
+.yr{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px;text-align:left;cursor:pointer;color:inherit;width:100%;display:block;box-shadow:var(--shadow)}
+.yr[aria-expanded=true]{border-color:var(--accent);background:var(--tint)}
+.yr.est{border-style:dashed}
+.yr .t{font:800 22px Gabarito;letter-spacing:-.02em}
+.yr .stk{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:10px 0 8px;background:var(--soft)}
+.yr .stk i{display:block;height:100%}
+@media(max-width:759px){.yr{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}}
+.mgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media(max-width:759px){.mgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.mc{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px;text-align:left;cursor:pointer;color:inherit;min-height:104px;display:flex;flex-direction:column;gap:6px}
+.mc:hover{border-color:var(--muted)}.mc.ov{border-color:var(--ink)}
+.mc .m{display:flex;justify-content:space-between;font-weight:800;font-size:14px}
+.mc .stk{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--soft)}.mc .stk i{display:block}
+.mc .p{font:800 15px Gabarito;font-variant-numeric:tabular-nums}
+.mc .tags{display:flex;gap:4px;flex-wrap:wrap}.mc .tags .pill{font-size:11px;padding:1px 8px}
+.pillrow button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:6px 14px;min-height:40px;font-weight:700;font-size:14px;cursor:pointer}
+.pillrow button[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.pillrow button[aria-pressed=false]{color:var(--muted)}
+</style></head><body data-nav="forecast">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Where I'll be</h1><div class="lbl">60 months from Dec 2026. Tap a month for the story.</div></div>
+  <div class="seg" id="view" aria-label="View"><button data-v="c" aria-pressed="true">Chart</button><button data-v="y" aria-pressed="false">Year by year</button></div></div>
+
+ <section class="hero" aria-labelledby="hh"><div class="row sp wrap"><div><div class="lbl" id="hh">Nov 2031, all my funds together</div><div class="big xl num" id="total">₱0.00</div><div class="muted" id="gain"></div><div class="sm" id="wo" style="margin-top:4px"></div></div><span class="pip" aria-hidden="true"></span></div>
+  <div class="fx" id="fx"></div></section>
+
+ <div class="cols">
+  <div class="stack l">
+   <section class="card" id="chartsec"><div class="row sp wrap"><h2>Fund balances</h2><div class="row wrap"><div class="seg" id="style" aria-label="Chart style"><button data-v="s" aria-pressed="true">Stacked</button><button data-v="l" aria-pressed="false">Lines</button></div><div class="seg" id="zoom" aria-label="Zoom"><button data-v="m" aria-pressed="true">60 months</button><button data-v="y" aria-pressed="false">By year</button></div></div></div>
+    <div class="legend pillrow" id="leg" style="margin-top:12px" role="group" aria-label="Show lines for"></div>
+    <div id="chart" style="margin-top:10px"></div>
+    <div class="row sp wrap sm muted" style="margin-top:6px"><span><span class="tri" style="display:inline-block;margin-right:6px"></span>= a month with an override</span><label class="row" style="gap:8px">Jump to <select id="jump" style="font:inherit;background:var(--soft);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-height:36px"></select></label></div></section>
+
+   <div class="stack l" id="yearsec" hidden>
+   <section aria-labelledby="lh"><div class="row sp wrap" style="margin-bottom:8px"><h2 id="lh">Year by year</h2><span class="lbl">Pick a year to see its twelve months.</span></div>
+    <div class="ladder" id="ladder"></div></section>
+
+   <section class="card" aria-labelledby="yh"><div class="row sp wrap"><h2 id="yh"></h2><a class="btn sm" href="v13-override-b.html">Edit months in bulk</a></div>
+    <div class="mgrid" id="mgrid" style="margin-top:12px"></div>
+    <div class="xs muted" style="margin-top:10px">Each bar splits the month's savings pool by fund. <span class="pill" style="font-size:11px;padding:1px 8px">Changed</span> marks an override. Gift icon = bonus month. * = assumed raises, drawn dashed.</div></section>
+   </div>
+  </div>
+  <aside class="stack">
+   <section class="card"><h2>Months that differ</h2><div class="lbl" style="margin:2px 0 6px">Months you changed from the default order.</div><div id="ovs"></div></section>
+  </aside>
+ </div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="mo" role="dialog" aria-modal="true" aria-labelledby="mot"><div class="grab"></div>
+ <div class="row sp"><div><h2 id="mot">Mar 2027</h2><div class="xs muted" id="mosub"></div></div><button class="iconbtn s" id="mx" aria-label="Close"></button></div>
+ <div id="mob" style="margin-top:12px"></div>
+ <div class="row wrap" style="margin-top:14px"><a class="btn pri" id="mlink" href="v13-override-a.html">Override this month</a><a class="btn" href="v13-override-b.html">Edit several months</a><span id="mrst"></span></div></section>
+
+<script>
+const P=BY.peso,F=BY.FUNDS;let zoom='m',style='s',view='c',sel=null,yr=2027,vis=new Set(F.map(f=>f.id));
+const T=r=>F.reduce((s,f)=>s+r.bal[f.id],0);
+function render(){
+ const rows=FC.run(),last=rows[59];
+ const tot=T(last),start=F.reduce((s,f)=>s+f.start,0);
+ $('#total').textContent=P(tot);$('#gain').textContent=`up ${P(tot-start)} from ${P(start)} today`;const wo=BY.withoutExpected(()=>FC.run()),w0=T(wo[59]);$('#wo').textContent=tot-w0>0.5?`Without your expected raises: ${P(w0)} (${P(w0-tot,{sign:1})}).`:'';
+ $('#fx').innerHTML=F.map(f=>`<div><span class="xs" style="color:#B9C9DD">${f.name}</span><b>${P(last.bal[f.id])}</b></div>`).join('');
+ $('#leg').innerHTML=`<button data-f="*" aria-pressed="${vis.size===F.length}">All funds</button>`+F.map(f=>`<button data-f="${f.id}" aria-pressed="${vis.has(f.id)}"><i class="dot" style="background:${f.color}"></i>${f.name}</button>`).join('');
+ $('#chartsec').hidden=view!=='c';$('#yearsec').hidden=view!=='y';const fo={funds:[...vis]};
+ $('#chart').innerHTML=zoom==='m'?(style==='s'?FC.area(rows,{sel,...fo}):FC.lines(rows,{sel,...fo})):(style==='s'?FC.years(rows,fo):FC.yearLines(rows,fo));
+ $('#jump').innerHTML='<option value="">Pick a month…</option>'+rows.map(r=>`<option value="${r.ym}">${BY.ymLabel(r.ym)}${r.over?' (override)':''}</option>`).join('');
+ $('#ovs').innerHTML=Object.entries(FC.ov).map(([ym,o])=>{const what=[o.order?'New order':'',o.pin?'Pinned '+Object.keys(o.pin).map(id=>FC.fund(id).name+' '+P(o.pin[id])).join(', '):'',o.skip?'Skipped '+o.skip.map(id=>FC.fund(id).name).join(', '):''].filter(Boolean).join(' · ');
+  return `<div class="ovl"><span class="tri"></span><button data-ym="${ym}"><b>${BY.ymLabel(ym)}</b> <span class="muted">· ${o.note}</span><div class="sm muted">${what}</div></button></div>`}).join('')||'<p class="muted sm" style="margin:0">None. Every month follows the default.</p>';
+ /* ladder */
+ $('#ladder').innerHTML=[2027,2028,2029,2030,2031].map(y=>{const e=rows.filter(r=>r.y===y).slice(-1)[0],tt=T(e),est=e.assumed;
+  return `<button class="yr ${est?'est':''}" data-y="${y}" aria-expanded="${y===yr}" aria-controls="mgrid"><div><div class="t">${y}${est?'*':''}</div><div class="xs muted">end of year</div></div><div><div class="num" style="font:800 18px Gabarito">${P(tt)}</div><div class="stk" role="img" aria-label="Split by fund">${F.slice().reverse().map(f=>`<i style="width:${e.bal[f.id]/tt*100}%;background:${f.color}"></i>`).join('')}</div><div class="xs muted">${P(e.take)} take-home a month</div></div></button>`}).join('');
+ $('#yh').textContent=yr+' month by month';
+ $('#mgrid').innerHTML=rows.filter(r=>r.y===yr).map(r=>{const parts=F.map(f=>r.alloc[f.id].amt+(r.bonusTo[f.id]||0)),tt=parts.reduce((a,b)=>a+b,0)||1;
+  return `<button class="mc ${r.over?'ov':''}" data-ym="${r.ym}" aria-label="${BY.ymLabel(r.ym)}: ${P(tt)} saved${r.over?', overridden':''}${r.bonus?', '+r.bonus.name+' month':''}"><span class="m"><span>${BY.MON[r.mo-1]}</span>${r.bonus?icon('gift'):''}</span><span class="p">${P(tt)}</span><span class="stk">${F.map((f,i)=>`<i style="width:${parts[i]/tt*100}%;background:${f.color}"></i>`).join('')}</span><span class="tags">${r.over?'<span class="pill">Changed</span>':''}${r.overspent?'<span class="pill bad">Over</span>':r.tight?'<span class="pill warn">Tight</span>':''}</span></button>`}).join('');
+}
+function openMonth(ym){
+ sel=ym;const rows=FC.run(),r=rows.find(x=>x.ym===ym);
+ $('#mot').textContent=BY.ymLabel(ym);$('#mosub').textContent=r.over?'Overridden month':'Following the default order';
+ $('#mob').innerHTML=FC.detail(r);$('#mlink').href='v13-override-a.html#'+ym;
+ $('#mrst').innerHTML=r.over?'<button class="btn" id="rst">Reset to default</button>':'';
+ if($('#rst'))$('#rst').onclick=()=>{delete FC.ov[ym];closeMonth();render()};
+ $('#mo').classList.add('on');$('#scrim').classList.add('on');$('#mx').focus();render();
+}
+function closeMonth(){$('#mo').classList.remove('on');$('#scrim').classList.remove('on');sel=null;render()}
+$('#mx').innerHTML=icon('x');$('#mx').onclick=$('#scrim').onclick=closeMonth;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMonth()});
+seg($('#zoom'),v=>{zoom=v;render()});seg($('#view'),v=>{view=v;render()});
+$('#leg').addEventListener('click',e=>{const b=e.target.closest('[data-f]');if(!b)return;const id=b.dataset.f;if(id==='*')vis=new Set(F.map(f=>f.id));else if(vis.size===F.length)vis=new Set([id]);else{vis.has(id)?vis.delete(id):vis.add(id);if(!vis.size)vis=new Set(F.map(f=>f.id))}render();$('#leg [data-f="'+id+'"]').focus()});seg($('#style'),v=>{style=v;render()});
+$('#jump').onchange=e=>e.target.value&&openMonth(e.target.value);
+FC.bindHits($('#chart'),openMonth);
+$('#ovs').addEventListener('click',e=>{const b=e.target.closest('[data-ym]');if(b)openMonth(b.dataset.ym)});
+$('#ladder').addEventListener('click',e=>{const b=e.target.closest('[data-y]');if(b){yr=+b.dataset.y;render();$(`[data-y="${yr}"]`).focus()}});
+$('#mgrid').addEventListener('click',e=>{const b=e.target.closest('[data-ym]');if(b)openMonth(b.dataset.ym)});
+render();
+</script></body></html>

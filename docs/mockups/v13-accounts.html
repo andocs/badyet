@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+.cols{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.cols{grid-template-columns:minmax(0,1fr) 400px;align-items:start}.cols .detail{position:sticky;top:56px}}
+.acard[aria-pressed=true]{outline:3px solid var(--ink);outline-offset:2px}
+.calc{background:var(--soft);border-radius:8px;padding:12px 14px;margin:12px 0}
+.calc .r{display:flex;justify-content:space-between;gap:12px;padding:3px 0;font-size:14px}
+.calc .r.t{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800}
+.qrbox{display:flex;gap:14px;align-items:center;border:1px dashed var(--line);border-radius:10px;padding:12px}
+.qrimg{background:#fff;padding:8px;border-radius:8px;flex:none;line-height:0}
+.qrimg svg{width:104px;height:104px;display:block}
+.qrfull{position:fixed;inset:40px 0 0 0;z-index:80;background:rgba(5,10,18,.86);display:none;place-items:center;padding:20px}
+.qrfull.on{display:grid}
+.qrfull .qrimg{padding:18px;border-radius:14px}.qrfull .qrimg svg{width:min(78vw,340px);height:min(78vw,340px)}
+</style></head><body data-nav="accounts">
+<main><div class="stack">
+ <div class="row sp wrap"><div><h1>Accounts</h1><div class="lbl">Balances move when you confirm a transaction. Tap a card to see the math and its QR.</div></div>
+  <div class="row wrap"><button class="btn">+ Add account</button><button class="btn">Move money</button></div></div>
+ <section class="hero"><div class="row sp wrap"><div><div class="lbl">What I have right now</div><div class="big xl num">₱187,378.63</div></div>
+  <div class="row wrap" style="gap:8px"><span class="pill">Spending ₱26,478.63</span><span class="pill">Funds ₱160,900.00</span><span class="pill warn">3 pending in Inbox</span></div></div></section>
+
+ <div class="cols">
+  <div class="stack">
+   <section aria-labelledby="sp"><h2 id="sp" style="margin-bottom:8px">Spending accounts</h2><div class="acards" id="spend"></div></section>
+   <section aria-labelledby="fu"><h2 id="fu">Fund accounts</h2><div class="lbl" style="margin:2px 0 8px">Linked to a fund, so the fund balance updates itself.</div><div class="acards" id="fund"></div></section>
+  </div>
+  <aside class="card detail" id="det" aria-live="polite" aria-label="Account details"></aside>
+ </div>
+</div></main>
+<div class="qrfull" id="qrfull" role="dialog" aria-modal="true" aria-label="Receive QR"><div class="stack" style="align-items:center;text-align:center;color:#fff"><div class="qrimg" id="qrbig"></div><b id="qrcap"></b><button class="btn" id="qrx">Close</button></div></div>
+<script>
+const P=BY.peso,A=BY.NOW.accounts;let cur=A[0].n;
+const extra={GCash:{conf:4154.15,on:'Wed 18 Nov',tx:[['Jollibee',-312,'Thu 19 Nov'],['Cash-in from BPI',2000,'Today (pending)'],['Grab',-186,'Today (pending)']],qr:true},
+ Maya:{conf:1205.6,on:'Mon 16 Nov',tx:[],qr:true},
+ 'BPI Checking':{conf:21430.88,on:'Thu 19 Nov',tx:[['SM Supermarket',-1236.4,'pending'],['7-Eleven',-94.5,'pending'],['Cash-in to GCash',-2000,'pending']],qr:true}};
+/* sample QR: deterministic pattern, finder squares. NOT scannable; stands in for an uploaded image. */
+function qr(seed){let h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;const n=25,rnd=()=>{h^=h<<13;h>>>=0;h^=h>>>17;h^=h<<5;h>>>=0;return h/4294967296};
+ const f=(x,y)=>[[0,0],[n-7,0],[0,n-7]].some(([a,b])=>x>=a-1&&x<=a+7&&y>=b-1&&y<=b+7);let d='';
+ for(let y=0;y<n;y++)for(let x=0;x<n;x++){if(f(x,y))continue;if(rnd()>.52)d+=`M${x} ${y}h1v1h-1z`}
+ const fi=(a,b)=>`<path fill-rule="evenodd" d="M${a} ${b}h7v7h-7zM${a+1} ${b+1}v5h5v-5z"/><path d="M${a+2} ${b+2}h3v3h-3z"/>`;
+ return `<svg viewBox="-1 -1 ${n+2} ${n+2}" role="img" aria-label="Sample QR for ${seed}"><path fill="#0A1320" d="${d}"/><g fill="#0A1320">${fi(0,0)}${fi(n-7,0)}${fi(0,n-7)}</g></svg>`}
+function card(a){return `<button class="acard" style="--c:${a.c}" data-n="${a.n}" aria-pressed="${a.n===cur}" id="${a.n.replace(/ /g,'-')}"><span class="an"><span>${a.n}</span>${a.fund?'<span class="tagx">Fund</span>':''}</span><span class="ak">${a.kind} ·· ${a.last4}</span><span class="ab">${P(a.bal)}</span><span class="as">${a.sub}</span></button>`}
+function detail(){const a=A.find(x=>x.n===cur),e=extra[a.n],fund=a.fund?BY.FUNDS.find(f=>f.id===a.fund):null;
+ const pend=e?e.tx.filter(t=>/pending/.test(t[2])):[],conf=e?e.tx.filter(t=>!/pending/.test(t[2])):[];
+ const calc=e?`<div class="calc"><div class="r"><span class="muted">Last confirmed balance · ${e.on}</span><span class="num">${P(e.conf)}</span></div>${conf.map(t=>`<div class="r"><span>${t[0]} <span class="xs muted">${t[2]}</span></span><span class="num">${P(t[1],{sign:1})}</span></div>`).join('')}<div class="r t"><span>Balance now</span><span class="num">${P(a.bal)}</span></div>${pend.length?`<div class="r warnt"><span>Pending, not counted yet</span><span class="num">${P(pend.reduce((s,t)=>s+t[1],0),{sign:1})}</span></div>`:''}</div>`:`<div class="calc"><div class="r"><span class="muted">Last confirmed balance · 1 Nov</span><span class="num">${P(a.bal)}</span></div><div class="r t"><span>Balance now</span><span class="num">${P(a.bal)}</span></div></div>`;
+ const q=e&&e.qr?`<div class="qrbox"><div class="qrimg">${qr(a.n)}</div><div><b>Receive QR</b><div class="xs muted" style="margin:2px 0 8px">Saved so you can show it when someone pays you. Only the receive QR, never a card number.</div><div class="row wrap" style="gap:8px"><button class="btn sm pri" id="qshow">Show big</button><button class="btn sm" id="qrep">Replace</button></div></div></div>`:`<div class="qrbox"><div><b>Receive QR</b><div class="xs muted" style="margin:2px 0 8px">${fund?'Fund accounts rarely take payments, so no QR needed.':'Nothing saved yet.'}</div><button class="btn sm">Add a QR image</button></div></div>`;
+ $('#det').innerHTML=`<div class="row"><span class="av" style="background:${a.c}" aria-hidden="true">${a.n[0]}</span><div class="grow"><h2>${a.n}</h2><div class="xs muted">${a.kind} ·· ${a.last4}</div></div><b class="num" style="font:800 20px Gabarito">${P(a.bal)}</b></div>${calc}
+ <div class="row wrap" style="gap:8px;margin-bottom:14px"><button class="btn sm">Reconcile with real balance</button>${fund?'<span class="pill ok">Linked to '+fund.name+' fund</span>':'<button class="btn sm ghost">Link to a fund</button>'}</div>${q}`;
+ if($('#qshow'))$('#qshow').onclick=()=>{$('#qrbig').innerHTML=qr(a.n);$('#qrcap').textContent=a.n+' · receive QR';$('#qrfull').classList.add('on');$('#qrx').focus()}}
+function render(){$('#spend').innerHTML=A.filter(a=>!a.fund).map(card).join('');$('#fund').innerHTML=A.filter(a=>a.fund).map(card).join('');detail()}
+document.addEventListener('click',e=>{const c=e.target.closest('.acard[data-n]');if(c){cur=c.dataset.n;render();$(`[data-n="${cur}"]`).focus()}});
+$('#qrx').onclick=()=>$('#qrfull').classList.remove('on');document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#qrfull').classList.remove('on')});
+const hn=decodeURIComponent(location.hash.slice(1)).replace(/-/g,' ');if(A.some(a=>a.n===hn))cur=hn;
+render();
+</script></body></html>

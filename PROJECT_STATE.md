@@ -7,38 +7,47 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** Done
-- **Active slice / milestone:** rev-28..31
-- **Gate:** waiting
-- **Next action:** User reviews rev-35; merge PRs rev-27..35 in order
-- **User to-do now:** Check Now header: pill centered with title
+- **Phase:** 2 Build
+- **Active slice / milestone:** 1 Data foundation
+- **Gate:** none
+- **Next action:** Start a new session, run /orchestrate, then build slice 1 (data foundation: migrations with rollback, pure TS calculation code, tests). Slices 2 to 8 follow, one gate each.
+- **User to-do now:** Open a fresh session and type /orchestrate. Optionally commit the docs/ design files first.
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-20 to 2026-11-20) covering ops, rev-27, rev-28, rev-29, rev-30, rev-31, rev-32, rev-33, rev-34, rev-35, rev-36
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering redesign, ops, rev-18, rev-19, rev-24, rev-25, rev-20, rev-21, rev-22, rev-23
 - earlier: 15 events (2026-11-19 to 2026-11-20) covering rev-5, rev-6, phase3, rev-7..10, redesign, rev-11, rev-12, rev-13, rev-14/15, rev-16, rev-17
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-20 11:09 | ops | PR #10 (Google login) merged into main (53a1ccb) and live on https://bad-yet.vercel.app: login page shows Continue with Google and the button reaches Google's sign-in with the correct Supabase redirect URI. Waiting on the user's first real sign-in. If it fails: revert PR #10 (magic link returns; Email provider is still on). | 53a1ccb
-- 2026-11-20 11:12 | rev-27 | Favicon from Pip: app/icon.svg (tab) and app/apple-icon.png (180px), default favicon.ico removed. Build serves both (200). PR open, not merged (waiting for the user). | 2187ad6
-- 2026-11-20 11:38 | rev-28 | Loading skeleton, parallel home queries, payday strip (H1) with Not yet remembered per cutoff, custom link style, floating plan menu. Tests, lint, build PASS. Proxy auth getUser per request left as is (security). | 5e8cba2
-- 2026-11-20 11:40 | rev-29 | Hide amounts now draws ***** over every figure (CSS overlay on .num/.balance/.amt), wrapped unmasked text amounts (unplanned pill, installments, budget, accounts, savings, pay) in .amt, money inputs masked. Tests, lint, build PASS. Real digits remain in page source. | 388eec3
-- 2026-11-20 11:55 | rev-30 | Sidenav rehaul: inline SVG icons (components/icons.tsx), Today/Manage groups, accent bar on current, tools footer, mobile tab icons, 24px spacing rhythm. Tests, lint, build PASS. | f34f200
-- 2026-11-20 11:59 | rev-30 | Fixed hydration error: PlanBar non-active-plan notice had a form inside a p; now a div. Tests, lint, build PASS. | -
-- 2026-11-20 12:02 | rev-30 | Approved by user. New issue: tab switching still slow; investigating as rev-31. | -
-- 2026-11-20 12:03 | rev-31 | Tab switching: proxy now uses getClaims (local token check, no Auth-server round trip per page); Budget page lookups run in parallel (was 6 sequential). Tests, lint, build PASS. rev-30 approved by user. Not measured in browser. | a7d1ae0
-- 2026-11-20 12:06 | rev-31 | Approved by user. | -
-- 2026-11-20 12:10 | rev-32 | Hide amounts button moved into the Now hero (stays top-right during payday steps for phones); hidden figures get a fixed 6ch width so the unplanned pill shrinks. Tests, lint, build PASS. Not viewed in browser. | 5acfcd3
-- 2026-11-20 12:14 | rev-33 | Hide amounts button top-right of Now hero (end of payday strip when shown); hidden figures sized to 3em with monospace asterisks so pills hug them; dropped Consolas to satisfy design-system font rule. Tests, lint, build PASS (CSS font tweak landed after the Runner started). Not viewed in browser. | a973428
-- 2026-11-20 12:17 | rev-34 | Eye icon (icon-only) hide button in Now hero; Pip bottom-right; hidden figures clip with overflow:clip and block balance to stop layout shift; PlanBar and cutoff pill moved into Dashboard, pill at right of header. Tests, lint, build PASS. Not viewed in browser. | 9b14fcc
-- 2026-11-20 12:19 | rev-35 | Cutoff pill vertically centered with the Now page header. Tests, lint, build PASS. | 08b0413
+- 2026-11-20 16:28 | design-v13 | Rehaul design round: docs/rehaul/ia.md (IA, flows, 12 open questions), docs/rehaul/model.md (data model sketch, migration map), 16 mockups docs/mockups/v13-*.html + shared v13-shared.css/js and sample-data v13-data.js, gallery v13-gallery.html. 3 directions each for Now, Forecast, Month override; 2 scenario display options. No app code, migrations or tests changed. Mockups checked in screenshots (dark and light, 375 and 1280) for a subset, not every page. Waiting for the user's pick. | -
+- 2026-11-20 16:34 | design-v13 | Gallery opened in the user's browser (docs/mockups/v13-gallery.html). Gate still waiting for the user's direction picks and answers to the 12 open questions in docs/rehaul/ia.md. | -
+- 2026-11-20 17:51 | design-v13 | Round 2 from review notes: merged Now (A hero + C runway chart + B envelopes + account colour cards), Inbox opens on All activity with desktop wide cards and details panel, Accounts as colour cards with saved receive-QR, Salary and tax calculator (monthly/yearly allowances, payslip with bracket working), Budget group/line redesign, Bonuses (one-offs, past years, mini-budget hero, editable split), single Forecast (stacked or lines, year ladder), Override A single + B bulk, scenario pills removed, wizards for first run / raise / bonus. Removed now-a/b/c, forecast-a/b/c, override-c. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 17:57 | design-v13 | Round 1 mockups restored under docs/mockups/round1/ (gallery: round1/v13-gallery.html) for side-by-side comparison; linked from the round 2 gallery. | -
+- 2026-11-20 18:22 | design-v13 | Round 3 from review notes: full-width content; Now (full-width hero, scrolling account row, 70/30 planned vs recent); Inbox (2-4 cards per row, All activity at right); Salary and tax (chart top, Timeline/Payslip tabs, assumptions moved to wizard); raise wizard + first run get contribution overrides; Bonuses (year tabs fixed, custom flat/percent destinations); Forecast (no assumptions, isolate fund lines, Chart/Year by year switch). ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 18:39 | design-v13 | Round 4 notes applied: Now hero narrowed with Recent beside it, Inbox cards redesigned, Salary tabs moved under title and two-panel payslip, Bonuses explicit + Add destination with custom names. No app code touched. | -
+- 2026-11-20 19:00 | design-v13 | Round 5 notes applied: Now hero ~75% with narrower Recent, Hide amounts button (also wired in Settings), Bills and transfers as a right column beside planned vs spent; Inbox desktop cards reworked (icon+name header, notification line with time at right, bigger amount, pills row, no Details button, smaller standard Confirm/Not mine buttons). No app code touched. | -
+- 2026-11-20 19:10 | design-v13 | Round 6: Now planned vs spent fills the space (envelopes open, stretched); Hide amounts now turns pesos into asterisks (all pages, Settings switch synced); Inbox To check fixed at 2 cards per row. No app code touched. | -
+- 2026-11-20 19:12 | design-v13 | User approved the v13 design (docs/mockups/v13-gallery.html, docs/rehaul/ia.md, model.md). Gate passed. Next: build planning (slices + defaults for the 15 open questions). | -
+- 2026-11-20 19:23 | design-v13 | Open questions answered (ia.md now has a Decisions section). New requirements: counts-to-daily ticker per budget line, RTO budget (per office day amount, contingency line, In office today switch), per-cutoff payslip builder (1st: income tax; 2nd: contributions + allowances), inflation removed, virtual funds, web first then Android, no backup. | -
+- 2026-11-20 19:31 | design-v13 | Round 7 mockups of the new pieces: Budget Daily switch per line and Office days (RTO) card with RTO and contingency lines; Now In office today switch; Salary and tax payslip builder (one payslip per cutoff, move/override/add lines, base split, tax working) with two-cutoff chart and year table; inflation removed from mockups; wizards point to the builder. No app code touched. | -
+- 2026-11-20 19:49 | design-v13 | Round 8 mockups: Now drops the switch (office days from the calendar, only usual days count); Budget office-day card tidied and new Pools card (use, move to Wants, excess); Salary payslip builder reworked: tables with inline add row, income tax in both cutoffs, per-allowance taxable switches, 13th month and CIP lines on the payslip, bonuses column in the year table. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 20:04 | design-v13 | Round 9: Budget office-day card back to the day-grid layout with tidier spacing (usual days, auto-detected extra days tagged, tap to correct); extra days draw from the contingency pool automatically via the RTO days line; tickers (Daily, RTO days, RTO contingency) moved into the line editor and removed from the rows; Salary tax working table shows all brackets with the highlight; payslip notes say where bonuses and allowances come from. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 20:17 | design-v13 | Round 10: multiple RTO lines + one contingency (no per-day or spontaneous-day inputs, derived); extra days are manual; settle office days (under: pool or Wants, over: Wants or contingency excess) with Now nudge; allowance and bonus lands-in cutoff settings read by the payslip builder. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 20:34 | design-v13 | Round 11: Now envelopes always open and fill the height (no collapse); Budget settle-office-days moved to its own card at the top of the right column; Bonuses show the lands-in cutoff only when a rule is being edited. No app code touched. | -
+- 2026-11-20 20:46 | design-v13 | Round 12: Now envelopes collapsible again and not stretched; Budget settle card hidden when nothing to settle (Now card follows); bonus rule edit reopens the wizard; raise wizard simplified (no assumptions step, no assumptions-only option, adds expected vs confirmed); Salary and tax gets a Projected raises card and hollow markers for expected raises. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 20:59 | design-v13 | Round 13: the three raise-planning gaps added. Budget Future years marks months that include an expected raise and has a Compare without expected raises switch; raise wizard has a Where does the extra go step (top-ups tied to the raise, tagged on Budget lines); Forecast shows a with / without expected raises total. ia.md and model.md updated. No app code touched. | -
+- 2026-11-20 21:02 | design-v13 | Round 14: both limits fixed. Raise top-ups now live in the shared budget rules (v13-data.js), so Forecast and Budget agree and the with/without views drop top-ups tied to expected raises; the raise wizard's summary text follows the extra you place. No app code touched. | -
+- 2026-11-20 21:03 | design-v13 | Design approved by the user. Slice plan, decisions and handoff written to PROJECT_STATE.md. Ready to hand over to a fresh session for slice 1. | -
 
 ## 4. Open questions
 
 - [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
 - [x] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates. -> User 2026-11-20: paydays are the 10th and 25th. Cutoffs are payday-to-payday (old spec: P1 = days 11-24, P2 = 25 to 10 next month), so the calendar split by one start day cannot model it. Building as rev-24 (assumption: first = paid 10th covering 11-24, second = paid 25th covering 25 to 10; a period belongs to the month it starts in).
 - [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
+- [x] Q4: Rehaul design v13: pick Now A/B/C, Forecast A/B/C, Override A/B/C, scenario option 1/2, and answer the 12 open questions at the end of docs/rehaul/ia.md -> Directions picked in review 1: merged Now, one Forecast (A hero + A/B chart styles + C ladder), Override A single + B bulk, scenarios removed, wizards added
+- [x] Q5: Rehaul v13 round 2: review the merged mockups (docs/mockups/v13-gallery.html) and answer the 15 open questions at the end of docs/rehaul/ia.md -> Design approved by the user after 6 review rounds (round 6)
 
 ## 5. Token & usage ledger
 
@@ -74,28 +83,33 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Revision batch (approved 2026-11-20). Decisions: inline SVG icons (no dependency); "Not yet" pay answer remembered per cutoff in localStorage; UI changes get a mockup approved before build.
-- rev-28 perf + bugs: loading.tsx skeletons, parallelise page/PlanBar queries, pay prompt remembers "Not yet", global link color token, plan dropdown no longer moves Compare plans button.
-- rev-29 hide amounts: mask as asterisks everywhere (incl. unplanned pill and text amounts), not CSS-only.
-- rev-30 sidenav, spacing, icons: sidenav rehaul, spacing pass, inline SVG icons.
+Approved design: docs/mockups/v13-gallery.html (14 review rounds), docs/rehaul/ia.md (flows + "Decisions" section = answers to all open questions), docs/rehaul/model.md (data model + migration map). Round 1 mockups are kept in docs/mockups/round1/ for comparison only.
+
+Build order (web first, Android later). One slice per gate; slices 1 and 2 must run in order, 3 to 6 can be sequential or parallel after 2.
+1. Data foundation. Migrations (with rollback) for: accounts + balance_anchors, transactions + merchant_rules, category_groups/categories/budget_lines (rules fixed|pct|rest, counts_to_daily, kind normal|rto|rto_contingency), salary_events (status confirmed|expected) + allowances (payslip_cutoff) + tax_table_versions, plan_assumptions, bonus_rules (recurrence yearly|once, payslip_cutoff) + splits (amount|percent, custom label) + instances, funds (virtual shares), month_overrides, payslip_templates/lines, raise_allocations, pools + pool_entries, office_day_overrides, user_settings additions. Migrate existing data (keep current balances and budget lines; non-active plans exported to JSON). Pure TypeScript in lib/: month iterator, salary-timeline resolver, payslip builder (tax split across both cutoffs, contributions + allowances on cutoff 2, bonuses on their cutoff), budget evaluator (incl. raise top-ups, daily pool, RTO day budget), fund allocator with overrides, with/without-expected-raises runner. Keep lib/pay/compute.ts and lib/windfall/compute.ts rules (SSS, PhilHealth, Pag-IBIG, withholding; de minimis per event, shared 90k cap, no de minimis on 13th month). Tests for every rule.
+2. Shell, theme and Now. Phone 5-tab bar + desktop rail, Night Emerald tokens (both themes), hide-amounts (asterisks), Now (hero + runway chart, recent, accounts row, planned vs spent collapsible cards, bills list, settle nudge), quick add.
+3. Accounts and Inbox (colour cards, receive-QR in private storage, confirm/ignore/rules, wide cards on desktop).
+4. Salary and tax (timeline, expected vs confirmed events, projected raises card, allowances with Taxable + lands-in cutoff, payslip builder, raise wizard with "where the extra goes").
+5. Budget and Bonuses (lines, tickers in the editor only, RTO lines + contingency + settle, pools, future years with expected-raise tags and compare switch; bonus rules, one-offs, history, custom flat/percent splits, bonus wizard).
+6. Funds, Forecast, Override (funds editor, 60-month forecast: stacked/lines, isolate pills, year ladder, override A single + B bulk).
+7. First run wizard, Settings, retire plans and old pages.
+8. Android (Expo) phone app, separate effort: notification capture in the first native build.
 
 ## Decisions & architecture
 
-UI mockups approved 2026-11-20: pay prompt = H1 (strip on top inside Left to spend panel: "Payday ₱amount [Not yet] [✓ Landed]" grouped left, no prompt sentence). Links = custom look (accent green, bold, no underline, growing underline on hover, small arrow), never default violet. Plan dropdown = floating menu so Compare plans never moves. Sidenav = grouped sections (Today: Now/Month/Savings; Manage: Setup), inline SVG icons, accent bar on current, tools footer (theme, hide, sign out). Hide amounts = asterisks everywhere. Mockups in scratchpad (mockup-rev28-30.html, mockup-pay-hybrids.html).
+All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions". Highlights: inflation removed; funds sharing an account are virtual shares; income tax is withheld in BOTH cutoffs (split editable), contributions and allowances sit on cutoff 2 by default; payslip builder per cutoff; scenarios removed (one live set of assumptions); expected vs confirmed raises plus a projected yearly raise (dashed); RTO: any number of RTO lines + one contingency, day budget derived (RTO lines' cutoff total / usual office days), extra office days tapped manually, settle under/over to pool or Wants; pools generic; bonus and allowance "lands in" cutoff is a setting; no DB backup needed before migrating.
 
 ## Run & verify guide (detected by Scout, kept current)
 
-| What | Command |
-|---|---|
-| Install deps | `npm install` |
-| Env vars | copy `.env.example` to `.env.local`, fill NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, ALLOWED_EMAIL |
-| Apply DB migration | easiest: paste `supabase/migrations/20261120000000_plans.sql` into Supabase dashboard > SQL Editor > Run. Or CLI: `npx supabase login`, `npx supabase link --project-ref <ref>`, `npx supabase db push` |
-| Start the app | `npm run dev` then open http://localhost:3000 |
-| Run tests | `npm test` (70 tests) |
-| Typecheck / lint / build | `npm run typecheck` / `npm run lint` / `npm run build` |
-| Seed | arrives in a later slice |
+Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+HANDOFF (design approved, build not started)
+- Design is approved after 14 review rounds. Nothing in app/, lib/, supabase/ or tests has been changed yet.
+- Start a fresh session and run /orchestrate. It will read PROJECT_STATE.md and continue at NEXT ACTION: build slice 1 (data foundation).
+- Read first: PROJECT_STATE.md (Slice plan, Decisions), docs/rehaul/ia.md, docs/rehaul/model.md. Use docs/mockups/v13-gallery.html as the visual spec for slices 2 to 7.
+- Your to-do: nothing needed before slice 1. Decide whether to commit the docs/ design files (not committed).
 
 Review rev-31 on branch rev/31-faster-tab-switching: run `npm run build && npm start` (dev mode is always slower on first visits), sign in, and click Now / Month / Savings / Setup. Tell me which tabs still feel slow. Branches rev-27..31 are stacked: merge in order.
 
@@ -243,8 +257,7 @@ Reply: Approve / Request changes / Pause
 _None yet._
 
 ## Assumptions, risks & sources
-- Assumptions: none recorded beyond D1-D8.
-- Security / compliance notes: the sheet contains personal financial data and family names, so the import snapshot JSON is gitignored and never committed; the seed uses the service-role key only locally. Single allowed email is enforced server-side and by RLS.
-- Cleanup: D:\badyet now also contains orchestrator .claude files and a PROJECT_STATE.md added this session (can be removed later).
-- Sources: Google Sheet id 1r7JQq-LOFu5FrZryqhgwsuEHoGKVbpPLxeCD1vPkrG4; D:\badyet\docs\financial-logic-spec.md.
-- Token numbers come from Claude Code session transcripts; they exclude anything run outside this project directory.
+
+- AGENTS.md warns this Next.js version has breaking changes: read the relevant guide in node_modules/next/dist/docs/ before writing app code.
+- Uncommitted changes that predate this work (leave alone unless asked): .impeccable/config.json, package.json, proxy.ts (debug log), earlier PROJECT_STATE.md edits. The design files under docs/ are also uncommitted and nothing has been committed or pushed this session.
+- Impeccable design hook may flag the Pip mascot smile (border-accent-on-rounded) in the mockup CSS; ignored for docs/mockups only.

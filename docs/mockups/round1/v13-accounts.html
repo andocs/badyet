@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-shared.js"></script>
+<style>
+details.acct{border-bottom:1px solid var(--line)}details.acct:last-child{border-bottom:0}
+details.acct summary{list-style:none;display:flex;align-items:center;gap:12px;padding:12px 0;min-height:60px;cursor:pointer}
+details.acct summary::-webkit-details-marker{display:none}
+.calc{background:var(--soft);border-radius:8px;padding:12px 14px;margin:0 0 14px}
+.calc .r{display:flex;justify-content:space-between;padding:3px 0;font-size:14px}
+.calc .r.t{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800}
+.chev{transition:transform .15s}details[open] .chev{transform:rotate(90deg)}
+</style></head><body data-nav="accounts">
+<main><div class="narrow stack">
+ <div><h1>Accounts</h1><div class="lbl">Balances move when you confirm a transaction. Tap one to see the math.</div></div>
+ <section class="hero"><div class="lbl">What I have right now</div><div class="big xl num">₱187,378.63</div>
+  <div class="row wrap" style="margin-top:10px;gap:8px"><span class="pill">Spending ₱26,478.63</span><span class="pill">Funds ₱160,900.00</span><span class="pill warn">3 pending in Inbox</span></div></section>
+
+ <section class="card"><h2>Spending accounts</h2><div id="spend" style="margin-top:6px"></div></section>
+ <section class="card"><h2>Fund accounts</h2><div class="lbl" style="margin:2px 0 6px">Linked to a fund, so the fund balance updates itself.</div><div id="fund"></div></section>
+ <div class="row"><button class="btn grow">+ Add account</button><button class="btn grow">Move money between accounts</button></div>
+</div></main>
+<script>
+const P=BY.peso,A=BY.NOW.accounts;
+const extra={GCash:{conf:4154.15,on:'Wed 18 Nov',tx:[['Jollibee',-312,'Thu 19 Nov'],['Cash-in from BPI',2000,'Today (pending)'],['Grab',-186,'Today (pending)']],pend:1814,real:true},
+ Maya:{conf:1205.6,on:'Mon 16 Nov',tx:[],pend:0},
+ 'BPI Checking':{conf:21430.88,on:'Thu 19 Nov',tx:[['SM Supermarket',-1236.4,'pending'],['7-Eleven',-94.5,'pending'],['Cash-in to GCash',-2000,'pending']],pend:-3330.9}};
+function row(a,i){
+ const e=extra[a.n],fund=a.fund;
+ const calc=e?`<div class="calc"><div class="r"><span class="muted">Last confirmed balance · ${e.on}</span><span class="num">${P(e.conf)}</span></div>${[...e.tx].filter(t=>!/pending/.test(t[2])).map(t=>`<div class="r"><span>${t[0]} <span class="xs muted">${t[2]}</span></span><span class="num">${P(t[1],{sign:1})}</span></div>`).join('')}<div class="r t"><span>Balance now</span><span class="num">${P(a.bal)}</span></div>${e.tx.filter(t=>/pending/.test(t[2])).length?`<div class="r warnt"><span>Pending, not counted yet</span><span class="num">${P(e.tx.filter(t=>/pending/.test(t[2])).reduce((s,t)=>s+t[1],0),{sign:1})}</span></div>`:''}</div>`:`<div class="calc"><div class="r"><span class="muted">Last confirmed balance · 1 Nov</span><span class="num">${P(a.bal)}</span></div><div class="r t"><span>Balance now</span><span class="num">${P(a.bal)}</span></div></div>`;
+ return `<details class="acct"><summary><span class="av ${a.k}" aria-hidden="true">${a.n[0]}</span><div class="grow"><b>${a.n}</b><div class="xs muted">${a.sub}</div></div><b class="num">${P(a.bal)}</b>${icon('chev','chev')}</summary>${calc}
+ <div class="row wrap" style="padding-bottom:14px;gap:8px"><button class="btn sm">Reconcile with real balance</button>${fund?'<span class="pill ok">Linked to '+BY.FUNDS.find(f=>f.id===fund).name+' fund</span>':'<button class="btn sm ghost">Link to a fund</button>'}</div></details>`}
+$('#spend').innerHTML=A.filter(a=>!a.fund).map(row).join('');
+$('#fund').innerHTML=A.filter(a=>a.fund).map(row).join('');
+</script></body></html>

@@ -1,0 +1,73 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Forecast · B Compare overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v13-shared.css"><script src="v13-data.js"></script><script src="v13-fc.js"></script><script src="v13-shared.js"></script>
+<style>
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chipc{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--soft);border-radius:999px;padding:6px 14px 6px 10px;min-height:40px;font-weight:700;cursor:pointer;font-size:14px}
+.chipc[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.chipc i{width:18px;height:0;border-top:3px solid currentColor}
+.mile td:first-child{font-weight:700}
+.strip{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted);font-weight:600}
+.mk{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 6px;background:none;color:var(--ink);cursor:pointer;min-height:32px;font-weight:700;font-size:12px}
+.mk svg{width:12px;height:12px}
+</style></head><body data-nav="forecast">
+<main><div class="stack l">
+ <div class="row sp wrap"><div><h1>Where I'll be</h1><div class="lbl">Put up to three versions of the future on one chart.</div></div>
+  <div class="seg" id="what" aria-label="What to plot"></div></div>
+
+ <section class="card">
+  <div class="row sp wrap"><div class="chips" id="chips" role="group" aria-label="Scenarios to compare"></div><button class="btn sm">+ New scenario</button></div>
+  <div id="chart" style="margin-top:12px"></div>
+  <div class="strip"><span>Overrides:</span><span id="mks" class="row wrap" style="gap:6px"></span></div>
+ </section>
+
+ <section class="card"><h2>What changes</h2>
+  <div class="scrollx"><table class="mile"><thead id="mh"></thead><tbody id="mb"></tbody></table></div>
+  <p class="xs muted" style="margin:10px 0 0">Dates are the month the fund first reaches its cap. A dash means not within 60 months.</p></section>
+
+ <div class="note"><b>How overrides read here:</b> an override is stored once per month and shown on the strip above. A filled marker applies to every scenario. A ring marker applies to one; its colour says which.</div>
+</div></main>
+
+<div class="scrim" id="scrim"></div>
+<section class="sheet sheetfix" id="mo" role="dialog" aria-modal="true" aria-labelledby="mot"><div class="grab"></div>
+ <div class="row sp"><h2 id="mot"></h2><button class="iconbtn s" id="mx" aria-label="Close"></button></div>
+ <div class="seg" id="msc" style="margin:10px 0" aria-label="Scenario for this month"></div><div id="mob"></div>
+ <div class="row wrap" style="margin-top:14px"><a class="btn pri" id="mlink" href="v13-override-a.html">Override this month</a></div></section>
+
+<script>
+const P=BY.peso,F=BY.FUNDS,SC=Object.values(BY.SCENARIOS);
+const DASH={base:'',cautious:'8 5',stretch:'2 5'};
+let on=new Set(['base','cautious','stretch']),what='tot',msc='base';
+function val(r,w){return w==='tot'?F.reduce((s,f)=>s+r.bal[f.id],0):r.bal[w]}
+function firstCap(rows,f){const cap=f.cap||f.tranches[f.tranches.length-1];const r=rows.find(r=>r.bal[f.id]>=cap-0.5);return r?BY.ymLabel(r.ym):'—'}
+function render(){
+ $('#what').innerHTML=[['tot','Everything'],...F.map(f=>[f.id,f.name])].map(([v,l])=>`<button data-v="${v}" aria-pressed="${v===what}">${l}</button>`).join('');
+ $('#chips').innerHTML=SC.map(s=>`<button class="chipc" data-s="${s.id}" aria-pressed="${on.has(s.id)}" style="color:${on.has(s.id)?'':'var(--muted)'}"><i style="${DASH[s.id]?'border-top-style:dashed':''};border-top-color:${s.color}"></i><span style="color:var(--ink)">${s.name}</span></button>`).join('');
+ const sims={};SC.forEach(s=>sims[s.id]=FC.run(s.id));
+ const W=720,H=320,L=60,R=96,T=16,B=30;let mx=0;SC.filter(s=>on.has(s.id)).forEach(s=>sims[s.id].forEach(r=>mx=Math.max(mx,val(r,what))));const nm=FC.nice(mx);mx=nm.mx;
+ const x=i=>L+(W-L-R)*i/59,y=v=>T+(H-T-B)*(1-v/mx);let o='';
+ for(let v=0;v<=mx;v+=nm.st)o+=`<line class="grid" x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}"/><text x="${L-6}" y="${y(v)+4}" text-anchor="end">${FC.k(v)}</text>`;
+ const rows0=sims.base;rows0.forEach((r,i)=>{if(r.mo===1)o+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${r.y}</text>`});
+ SC.filter(s=>on.has(s.id)).forEach(s=>{const rs=sims[s.id];o+=`<path d="M${rs.map((r,i)=>x(i)+' '+y(val(r,what))).join(' L')}" fill="none" style="stroke:${s.color}" stroke-width="3" ${DASH[s.id]?`stroke-dasharray="${DASH[s.id]}"`:''}/>`;
+  o+=`<text x="${W-R+8}" y="${y(val(rs[59],what))+4}" style="fill:var(--ink);font-weight:800">${s.name} ${FC.k(val(rs[59],what))}</text>`});
+ const bw=(W-L-R)/59;rows0.forEach((r,i)=>{o+=`<rect class="hit" tabindex="-1" data-ym="${r.ym}" x="${x(i)-bw/2}" y="${T}" width="${bw}" height="${H-T-B}" aria-hidden="true"/>`});
+ $('#chart').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Savings in each selected scenario over 60 months">${o}</svg>`;
+ $('#mks').innerHTML=Object.entries(FC.ov).map(([ym,ov])=>{const all=ov.scope==='all';const col=all?'var(--ink)':BY.SCENARIOS[ov.scope].color;return `<button class="mk" data-ym="${ym}" aria-label="${BY.ymLabel(ym)} override, ${all?'all scenarios':'only '+BY.SCENARIOS[ov.scope].name}"><svg viewBox="0 0 12 12"><path d="M6 1 11 11H1z" style="fill:${all?col:'none'};stroke:${col}" stroke-width="1.8"/></svg>${BY.ymLabel(ym)}</button>`}).join('');
+ const on3=SC.filter(s=>on.has(s.id));
+ $('#mh').innerHTML=`<tr><th>Nov 2031 unless noted</th>${on3.map(s=>`<th>${s.name}</th>`).join('')}</tr>`;
+ const tc=s=>{const rs=sims[s.id],sa=BY.salaryAt('2031-11',s);return BY.takeHome(sa.base,sa.allow).cutoff};
+ const bon=s=>BY.byYear(sims[s.id]).find(y=>y.y===2028).bonusNet;
+ $('#mb').innerHTML=[['Total savings',s=>P(F.reduce((t,f)=>t+sims[s.id][59].bal[f.id],0))],['Emergency full (₱300,000)',s=>firstCap(sims[s.id],BY.FUNDS[0])],['Home fund full (₱1,500,000)',s=>firstCap(sims[s.id],BY.FUNDS[3])],['Take-home per cutoff, Nov 2031',s=>P(tc(s))],['Bonuses taken home in 2028',s=>P(bon(s))],['Tight or over months',s=>sims[s.id].filter(r=>r.tight).length+' ('+sims[s.id].filter(r=>r.overspent).length+' over)']].map(([l,f])=>`<tr><td>${l}</td>${on3.map(s=>`<td class="num">${f(s)}</td>`).join('')}</tr>`).join('');
+}
+function openMonth(ym){const r=FC.run(msc).find(x=>x.ym===ym);$('#mot').textContent=BY.ymLabel(ym);
+ $('#msc').innerHTML=SC.map(s=>`<button data-v="${s.id}" aria-pressed="${s.id===msc}">${s.name}</button>`).join('');$('#mob').innerHTML=FC.detail(r,msc);$('#mlink').href='v13-override-a.html#'+ym;
+ $('#mo').dataset.ym=ym;$('#mo').classList.add('on');$('#scrim').classList.add('on');$('#mx').focus()}
+function closeMonth(){$('#mo').classList.remove('on');$('#scrim').classList.remove('on')}
+$('#mx').innerHTML=icon('x');$('#mx').onclick=$('#scrim').onclick=closeMonth;document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMonth()});
+seg($('#what'),v=>{what=v;render()});seg($('#msc'),v=>{msc=v;openMonth($('#mo').dataset.ym)});
+$('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-s]');if(!b)return;const id=b.dataset.s;if(on.has(id)){if(on.size>1)on.delete(id)}else on.add(id);render()});
+$('#chart').addEventListener('click',e=>{const h=e.target.closest('.hit');if(h)openMonth(h.dataset.ym)});
+$('#mks').addEventListener('click',e=>{const b=e.target.closest('[data-ym]');if(b)openMonth(b.dataset.ym)});
+render();
+</script></body></html>
