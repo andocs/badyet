@@ -25,6 +25,8 @@ function useAct() {
 }
 const Err = ({ error }: { error: string | null }) => (error ? <p className="v-flag v-bad" role="alert">{error}</p> : null);
 
+type RtoChange = { type: "day"; date: string; office: boolean } | { type: "weekday"; weekday: number };
+
 export interface DayView { date: string; weekday: number; usual: boolean; office: boolean; extra: boolean }
 
 /** Usual office days, this cutoff's days (tap one you went in on outside your usual days), the day budget and the contingency used. */
@@ -32,16 +34,38 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
   usual: number[]; days: DayView[]; today: string; dayBudget: number; contingency: number; extraUsed: number;
   rtoLines: { name: string; amount: number }[]; contingencyName: string | null; range: string; planned: number; skipped: number;
 }) {
-  const { error, busy, act } = useAct();
-  // A tapped day changes on screen at once; the server catches up in the background and the screen settles on its answer.
-  const [shown, tap] = useOptimistic(days, (cur, change: { date: string; office: boolean }) => cur.map((d) => (d.date === change.date ? { ...d, office: change.office, extra: change.office && !d.usual } : d)));
+  // A tapped weekday or day changes on screen at once; the server catches up in the background and the screen settles on its answer.
+  const [st, apply] = useOptimistic({ usual, days }, (cur, c: RtoChange) => {
+    if (c.type === "day") return { ...cur, days: cur.days.map((d) => (d.date === c.date ? { ...d, office: c.office, extra: c.office && !d.usual } : d)) };
+    const wasUsual = cur.usual.includes(c.weekday);
+    return {
+      usual: wasUsual ? cur.usual.filter((x) => x !== c.weekday) : [...cur.usual, c.weekday],
+      // A day you tapped yourself keeps your tap; every other day of that weekday follows the new usual setting.
+      days: cur.days.map((d) => {
+        if (d.weekday !== c.weekday) return d;
+        const tapped = d.office !== d.usual;
+        const usualNow = !wasUsual;
+        const office = tapped ? d.office : usualNow;
+        return { ...d, usual: usualNow, office, extra: office && !usualNow };
+      }),
+    };
+  });
+  const shown = st.days;
   const [tapErr, setTapErr] = useState<string | null>(null);
   const [, startTap] = useTransition();
   const toggleDay = (d: DayView) =>
     startTap(async () => {
       setTapErr(null);
-      tap({ date: d.date, office: !d.office });
+      apply({ type: "day", date: d.date, office: !d.office });
       const r = await setOfficeDay({ date: d.date, office: !d.office, usual: d.usual, dayBudget });
+      if (r.error) setTapErr(r.error);
+    });
+  const toggleWeekday = (day: number) =>
+    startTap(async () => {
+      setTapErr(null);
+      const on = st.usual.includes(day);
+      apply({ type: "weekday", weekday: day });
+      const r = await setUsualOfficeDays(on ? st.usual.filter((x) => x !== day) : [...st.usual, day]);
       if (r.error) setTapErr(r.error);
     });
   const extra = shown.filter((d) => d.extra).length;
@@ -59,8 +83,8 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
         <div className="v-wk" role="group" aria-label="Usual office days">
           {WD.map((n, i) => {
             const day = i + 1;
-            const on = usual.includes(day);
-            return <button key={n} type="button" aria-pressed={on} disabled={busy} onClick={() => act(() => setUsualOfficeDays(on ? usual.filter((x) => x !== day) : [...usual, day]))}>{n}</button>;
+            const on = st.usual.includes(day);
+            return <button key={n} type="button" aria-pressed={on} onClick={() => toggleWeekday(day)}>{n}</button>;
           })}
         </div>
         <div className="v-lbl" style={{ margin: "16px 0 8px" }}>This cutoff, {range}. Tap a day you went in outside your usual days.</div>
@@ -85,7 +109,7 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
           <span className="v-pill v-warn">{contingencyName ?? "No contingency line"}</span>
         </div>
         <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>The app works out a day&apos;s budget (<Money value={money(dayBudget)} /> now) from your RTO lines and the usual days. Change which lines count in a line&apos;s editor.</p>
-        <Err error={tapErr ?? error} />
+        <Err error={tapErr} />
       </div>
     </section>
   );
