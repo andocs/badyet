@@ -174,9 +174,11 @@ export function Dashboard({ data }: { data: DashData }) {
 
   return (
     <main className="main now">
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
-        <HideAmounts className="btn sm ghost" />
-      </div>
+      {ritual && (
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+          <HideAmounts className="btn sm ghost" />
+        </div>
+      )}
       {ritual ? (
         <section aria-label="Payday">
           <div className="steps" role="progressbar" aria-label="Payday steps" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step}>
@@ -351,6 +353,7 @@ export function Dashboard({ data }: { data: DashData }) {
                     <div className="balance rise"><small>₱</small>{data.cutoffNet === null ? "Set up Pay" : peso(data.cutoffNet)}</div>
                     <div className="hero-actions">
                       {data.unplanned !== null && <span className="pill"><span className="amt">₱{peso(Math.abs(data.unplanned))}</span>&nbsp;{data.unplanned >= 0 ? "unplanned" : "over"}</span>}
+                      <HideAmounts className="btn sm ghost" />
                       {lines.length === 0 ? (
                         <Link href="/budget" className="btn">Go to Budget</Link>
                       ) : (

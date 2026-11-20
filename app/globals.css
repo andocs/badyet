@@ -329,7 +329,8 @@ a { color: var(--accent-text); text-decoration: none; }
 
 /* Set by components/hide-amounts.tsx. */
 /* Hide amounts: the figure is replaced by asterisks (the real text is made invisible, then ***** drawn over it). */
-html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; -webkit-text-fill-color: transparent; user-select: none; }
+html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; display: inline-block; width: 6ch; max-width: 100%; overflow: hidden; white-space: nowrap; vertical-align: bottom; -webkit-text-fill-color: transparent; user-select: none; }
+html[data-hide="1"] :is(td, th).num { display: table-cell; width: auto; overflow: visible; }
 html[data-hide="1"] :is(.num, .balance, .amt)::after { content: "*****"; position: absolute; inset: 0; text-align: inherit; white-space: nowrap; -webkit-text-fill-color: currentColor; letter-spacing: 0.08em; }
 html[data-hide="1"] input[inputmode="decimal"] { -webkit-text-security: disc; }
 html[data-hide="1"] input[inputmode="decimal"]::placeholder { color: transparent; }
