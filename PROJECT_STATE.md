@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-11..17 redesign
+- **Active slice / milestone:** rev-18..23
 - **Gate:** building
-- **Next action:** Build rev-11, 12, 13, 14, 15, 16, 17 in order; one gate at the end (assumed one-shot like last round)
-- **User to-do now:** -
+- **Next action:** Build rev-18 Google login first, then rev-19..23; one gate at the end
+- **User to-do now:** Answer Q1 (paydays) and Q2 (payslip, CIP inputs) when ready
 
 ## 3. Execution log
 
@@ -32,13 +32,16 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 09:48 | rev-13 | Nav cut to 4 (Now, Month, Savings, Setup); SubNav strips on Month and Setup pages; tab bar 4 columns. Tests, lint, typecheck, build, e2e PASS. | d68fd8f
 - 2026-11-20 09:50 | rev-14/15 | Now rebuilt as direction A: 4-step payday ritual (pay landed, spoken for, send by wallet, yours to spend) with in-place ticks and Pip; between paydays shows days to next cutoff, cutoff net, unplanned, charts. Not visually checked (needs signed-in session). Tests, lint, typecheck, build PASS. | 9b46391
 - 2026-11-20 09:53 | rev-16 | Accounts: migration 20261201000000_accounts.sql (kind, institution, last4 CHECK exactly 4 digits, balance, limit, statement/due day, rollback), parser + tests, /accounts page with 4-step wizard, update balance, delete confirm, position summary. Never stores full numbers/CVV/PIN. Migration must be applied. 4 test files added; checks PASS. | 1fe37bd
+- 2026-11-20 09:55 | rev-17 | Now shows Your money: cash in accounts, card debt, cash minus debt, % of limit, cards due within 14 days; loaded separately so Now works before the migration is applied. Fixed a duplicated-edit typecheck failure. 155 tests, lint, typecheck, build, 24 e2e PASS. | 9313901
+- 2026-11-20 09:59 | redesign | Final gate APPROVED by user: rev-11..rev-17. | -
+- 2026-11-20 10:18 | ops | User: migrations 20261130000000 and 20261201000000 applied; rev/11..17 merged; default branch moved to main (origin/main contains 9313901, verified). Open: signed-in click-through unconfirmed, Vercel env check unconfirmed, local branch cleanup. | -
+- 2026-11-20 10:29 | ops | Git cleanup done: on main (up to date with origin/main), 20 merged local branches deleted incl. stale master. User answers: Google login built before merge and configured by user (magic link removed in same change); balances auto-update on tick (add on tick, subtract on untick); import brings paid counts, savings balances, 13th/CIP, HMO deduction. Q1 (paydays) and Q2 (payslip/CIP inputs) still unanswered; pay-date model NOT started. Plan: rev-18 Google login, rev-19 small features (hide amounts, accounts CSV, auto-sync commitments, mark paid in ritual, balance on tick), rev-20 per-plan Pay/Bonuses, rev-21 tap-to-edit autosave, rev-22 import extras + HMO, rev-23 DESIGN.md regen. | -
 
 ## 4. Open questions
-<!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
-Blocking: Q3 (blocks Gate 1).
+
 - [ ] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates.
 - [ ] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app.
-- [ ] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19.
+- [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
 
 ## 5. Token & usage ledger
 
@@ -47,7 +50,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 474,074 | 2,248,397 | 108,961 | 682,607 | 89,868,305 | 447,006 |  |
+| **Cumulative** | 594,159 | 2,828,394 | 136,781 | 1,029,566 | 110,257,468 | 562,026 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -61,6 +64,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
 | Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
 | rev-7..10 | 39,382 | 215,399 | 8,700 | 19,459 | 1,105,451 | 8,538 |  |
+| rev-11..17 | 120,085 | 579,997 | 27,820 | 126,989 | 15,445,879 | 70,608 |  |
 
 <!-- END SUMMARY -->
 
@@ -114,6 +118,11 @@ Decisions: direction A "payday ritual" (docs/mockups/v11-a-payday-ritual.html) f
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+1. Apply supabase/migrations/20261130000000_installment_payments.sql and 20261201000000_accounts.sql to Supabase (accounts and Mark paid need them).
+2. Merge the rev branches in order (rev/11 ... rev/17) into main; they are stacked.
+3. Open the live app signed in and click through Now (payday steps), plan switcher, Compare, Accounts wizard. Signed-in pages were not visually checked.
+4. Optional: save a session (docs/e2e.md) and run npm run e2e for signed-in checks.
 
 1. Apply supabase/migrations/20261130000000_installment_payments.sql to Supabase (rev-6).
 2. On Vercel, check env vars and Supabase redirect URLs against docs/deploy.md (rev-8).

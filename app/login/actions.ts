@@ -2,22 +2,19 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { isAllowedEmail } from "@/lib/auth/allowed";
 import { createClient } from "@/lib/supabase/server";
 
-export async function sendLink(formData: FormData) {
-  const email = String(formData.get("email") ?? "").trim();
+// Sends you to Google. Who may then use the app is decided in /auth/callback (and the proxy) against ALLOWED_EMAIL,
+// so any other Google account that signs in is turned away and never reaches your data.
+export async function signInWithGoogle() {
   const supabase = await createClient();
   if (!supabase) redirect("/login?error=setup");
 
-  // Same answer whether or not the address is allowed, so the form never reveals who may log in.
-  if (!isAllowedEmail(email, process.env.ALLOWED_EMAIL)) redirect("/login?sent=1");
-
   const origin = process.env.NEXT_PUBLIC_SITE_URL ?? (await headers()).get("origin") ?? "http://localhost:3000";
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    // The user is created once in the Supabase dashboard; this form never creates accounts.
-    options: { emailRedirectTo: `${origin}/auth/callback`, shouldCreateUser: false },
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origin}/auth/callback`, queryParams: { prompt: "select_account" } },
   });
-  redirect(error ? "/login?error=send" : "/login?sent=1");
+  if (error || !data.url) redirect("/login?error=google");
+  redirect(data.url);
 }

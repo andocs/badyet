@@ -9,7 +9,7 @@ The app runs on Vercel with Supabase for the database and sign-in. It is already
 | `NEXT_PUBLIC_SUPABASE_URL` | all environments | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | all environments | public anon key; row-level security protects the data |
 | `ALLOWED_EMAIL` | all environments | the one email allowed to sign in; server-only |
-| `NEXT_PUBLIC_SITE_URL` | Production | your live URL, e.g. `https://your-app.vercel.app`; used in the magic link |
+| `NEXT_PUBLIC_SITE_URL` | Production | your live URL, e.g. `https://your-app.vercel.app`; used as the sign-in return address |
 
 Never set `SUPABASE_SERVICE_ROLE_KEY` on Vercel. It is for local seeding only.
 After changing a variable, redeploy (variables apply to new builds only).
@@ -19,7 +19,7 @@ After changing a variable, redeploy (variables apply to new builds only).
 - Site URL: your live URL.
 - Redirect URLs: `https://<your-live-url>/auth/callback` and `http://localhost:3000/auth/callback`.
 
-If the magic link lands on the wrong site or says the link is invalid, check these first.
+If Google sign-in returns to the wrong site or fails, check these first.
 
 ## Releasing a change
 
@@ -37,3 +37,17 @@ Confirm these exist in the live database (Table editor): `user_settings`, `insta
 - Roll back the app: Vercel > Deployments > pick the last good one > Promote to Production.
 - Roll back a migration: run the rollback comment at the bottom of that migration file.
 - Sign-in loops back to /login: `ALLOWED_EMAIL` must match your email exactly.
+
+## Google sign-in (replaces the emailed magic link)
+
+Set this up **before** merging the change that removes the magic link, or you will be locked out. Test it on a Vercel preview or `http://localhost:3000` first.
+
+1. Google Cloud Console > APIs and Services > OAuth consent screen: create it (External is fine for one person; add your own email as a test user, or publish it).
+2. Credentials > Create credentials > OAuth client ID > Web application.
+   - Authorized redirect URI: `https://<your-supabase-project-ref>.supabase.co/auth/v1/callback` (Supabase shows the exact URL on its Google provider page).
+3. Supabase > Authentication > Providers > Google: turn it on and paste the Client ID and Client secret.
+4. Supabase > Authentication > URL Configuration: keep the Site URL and the `/auth/callback` redirect URLs listed above (the app's own callback).
+5. Sign in once with the Google account whose address equals `ALLOWED_EMAIL`. Supabase links it to your existing user because the email matches.
+6. Optional: in Supabase > Authentication > Sign In / Providers, turn off new sign-ups and disable the Email provider. The app already turns away every Google account except `ALLOWED_EMAIL`, so this is extra.
+
+The Client secret lives only in the Supabase dashboard. Never put it in `.env.local` or in the repo.
