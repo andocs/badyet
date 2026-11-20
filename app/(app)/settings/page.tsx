@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import { DEFAULT_SECOND_START } from "@/lib/dashboard/helpers";
 import { EXPORTS } from "@/lib/export/csv";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +19,7 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
 
   return (
     <main className="main">
+      <SubNav group="setup" />
       <div className="head">
         <div>
           <h1>Settings</h1>

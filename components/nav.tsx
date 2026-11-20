@@ -11,26 +11,13 @@ interface Item {
 }
 
 // Only destinations that exist are links; the rest show as disabled until their slice lands.
-export const SIDE_ITEMS: Item[] = [
-  { label: "Dashboard", href: "/" },
-  { label: "Plans", href: "/plans" },
-  { label: "Cutoff", href: "/transfer" },
-  { label: "Pay", href: "/pay" },
-  { label: "Budget", href: "/budget" },
-  { label: "Installments", href: "/installments" },
-  { label: "Subscriptions", href: "/subscriptions" },
-  { label: "Bonuses", href: "/bonuses" },
-  { label: "Savings", href: "/savings" },
-  { label: "Settings", href: "/settings" },
-  { label: "Import", href: "/import" },
-];
-export const TAB_ITEMS: Item[] = [
-  { label: "Home", href: "/" },
-  { label: "Plans", href: "/plans" },
-  { label: "Transfer", href: "/transfer" },
-  { label: "Budget", href: "/budget" },
-  { label: "More", href: "/more", also: ["/pay", "/bonuses", "/installments", "/subscriptions", "/savings", "/settings", "/import"] },
-];
+// Four destinations. The rest live inside them (see SubNav): Month holds the budget and its commitments, Setup holds the rarely changed pages.
+const NOW: Item = { label: "Now", href: "/", also: ["/transfer"] };
+const MONTH: Item = { label: "Month", href: "/budget", also: ["/installments", "/subscriptions", "/bonuses"] };
+const SAVINGS: Item = { label: "Savings", href: "/savings" };
+const SETUP: Item = { label: "Setup", href: "/plans", also: ["/pay", "/settings", "/import", "/more"] };
+export const SIDE_ITEMS: Item[] = [NOW, MONTH, SAVINGS, SETUP];
+export const TAB_ITEMS: Item[] = [NOW, MONTH, SAVINGS, SETUP];
 
 // Pages that follow the chosen cutoff. Their links carry it along, so picking "2nd" once sticks as you move around.
 const CUTOFF_PAGES = ["/", "/budget", "/transfer"];

@@ -15,23 +15,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-19 22:09 | slice-6 | Slice 6 built: installments (domain schedule with interest) + subscriptions tables with RLS, pages, Sync to budget (budget_lines.source), shared WalletSelect. Runner PASS 108 tests, typecheck, lint, build. | 889c44e
-- 2026-11-19 22:11 | slice-6 | Gate 2 APPROVED by user. Slice 6 merged to master (local). | -
-- 2026-11-19 22:13 | slice-7 | Slice 7 built: windfall_events + windfall_allocations tables with RLS, lib/windfall (net via domain netCutoff, shared yearly 90k exemption, CIP via domain cipGross), /bonuses page with allocation checklists, buildItems exported from pay compute. Runner PASS 119 tests, typecheck, lint, build. | 3a5514f
-- 2026-11-19 22:19 | slice-7 | Gate 2 APPROVED by user. Slice 7 merged to master (local). Note: a git remote is now configured but the last push failed with a server-side write error; commits are safe locally. | -
-- 2026-11-19 22:21 | slice-8 | Slice 8 built: savings_settings + savings_overrides tables with RLS, lib/savings (settings parsing, forecast wiring over domain allocateForecast), SavingsChart, /savings page. Runner PASS 127 tests, typecheck, lint, build. | 83231c1
-- 2026-11-19 22:21 | slice-8 | Gate 2 APPROVED by user. Slice 8 merged to master. | -
-- 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
-- 2026-11-19 22:25 | slice-9 | Gate 2 APPROVED by user. Slice 9 merged to master (local). All 9 planned slices approved: Phase 2 complete. | -
-- 2026-11-19 22:27 | phase3 | Gap analysis done. User selected all 10 items (rev-1 to rev-10), including the 3 nice-to-haves. Found: phone More menu dead (Pay, Bonuses, Installments, Subscriptions, Savings unreachable on phone); duplicate plan copies only name/dates; cutoff 1-15 assumption; unverified tax/PhilHealth/cap; no import/deploy/visual QA/e2e. | -
-- 2026-11-19 22:28 | rev-1 | rev-1 built: /more page (Pay, Bonuses, Savings, Installments, Subscriptions, Theme, Sign out), More tab links to it and stays active on those pages. Runner PASS 131 tests, typecheck, lint, build. | b117c9b
-- 2026-11-19 22:29 | rev-1 | Gate 3 APPROVED by user. Merged to master (local). User asked to do ALL remaining revisions on ONE branch: rev/phase3-revisions (per-revision gates stay). | -
-- 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
-- 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
-- 2026-11-19 22:32 | rev-3 | rev-3 built: user_settings table (second_cutoff_start_day, default 16), /settings page, dashboard currentCutoff/cutoffLabel use it, linked from More and rail. Checks pending in batch run. | c76967b
-- 2026-11-19 22:33 | rev-4 | rev-4 done: TRAIN 2023+ table and 90,000 bonus exemption match published 2026 guides (third-party, not BIR circulars). PhilHealth fixed: employee share 2.5% of monthly basic with 10,000 floor and 100,000 ceiling (250 to 2,500 a month), was 5% of semi-monthly basic with no limits. UI notices updated. Runner PASS 135 tests. | b4e344a
 - 2026-11-19 22:35 | rev-5 | rev-5 built: /import page + importSnapshot action (validated snapshot JSON, creates a NEW inactive plan, wallets, pay, lines, installments, subscriptions; undoes itself on failure; never changes existing data). Snapshot generated from the Sheet (Dec 10 onwards tab) into data/import/sheet-import.json (git-ignored, personal data). Sheet totals reproduce: 1st cutoff 25,008, 2nd 30,555. Not imported: savings fund balances, 13th month, CIP, HMO deduction, older plans. | 0d4d3f4
 - 2026-11-20 09:01 | rev-6 | Installment payments: Mark paid / Undo per installment, 'payments already made' on add, installment_payments table (RLS, rollback noted). Migration must be applied to Supabase. 141 tests, lint, typecheck, build PASS. | 91ec216
 - 2026-11-20 09:02 | phase3 | User: project is already deployed on Vercel. rev-8 becomes verify/document (runbook, env, redirect URLs), not first deploy. Run rev-7..10 in one shot, single gate after the last. | -
@@ -42,6 +28,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 09:27 | redesign | Mockups v11-a payday ritual, v11-b money sentence, v11-c plan compare in docs/mockups (impeccable surface roll, Night Emerald kept). Awaiting direction pick before building rev-11..15. | -
 - 2026-11-20 09:42 | redesign | User picked direction A (payday ritual), DESIGN.md regen not now, and added accounts: wizard to add e-wallet/debit/credit with balances and card debt, with security. Added rev-16 (accounts wizard) and rev-17 (net position). Security decision: store last 4 digits only, never full card/account numbers, CVV or PIN. | -
 - 2026-11-20 09:44 | rev-11 | Shared cutoff (resolveCutoff, nav carries ?cutoff, Home switch), Transfer/Budget default to current cutoff, ConfirmButton on 7 deletes, placeholder contrast. 146 tests, lint, typecheck, build, e2e PASS. | b67f9bc
+- 2026-11-20 09:47 | rev-12 | Plan switcher (?plan=, PlanBar, viewing banner, nav carries plan), /plans/compare with diff table. Pay/Bonuses/Installments stay active-plan only. 148 tests, lint, typecheck, build PASS. | 6b8cd9a
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->

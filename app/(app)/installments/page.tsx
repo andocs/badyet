@@ -1,3 +1,4 @@
+import { SubNav } from "@/components/subnav";
 import { ConfirmButton } from "@/components/confirm-button";
 import { WalletSelect } from "@/components/wallet-select";
 import { dueByCutoff, summarize, type InstalmentRow } from "@/lib/installments/calc";
@@ -42,6 +43,7 @@ export default async function InstallmentsPage({ searchParams }: PageProps<"/ins
 
   return (
     <main className="main">
+      <SubNav group="month" />
       <div className="head">
         <div>
           <h1>Installments</h1>
