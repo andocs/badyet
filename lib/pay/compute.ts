@@ -1,6 +1,7 @@
 import { divRound, money, sub, type Money } from "@/lib/domain/money";
 import { CUTOFFS_PER_YEAR, netCutoff, percentOfBasic, type CutoffPay, type PayItem } from "@/lib/domain/pay";
-import { PHILHEALTH_BP, TAX_ROWS } from "./tax-table";
+import { philhealthMonthly } from "./philhealth";
+import { TAX_ROWS } from "./tax-table";
 
 export interface PayProfile {
   /** Annual base salary. Basic per cutoff = annual / 24. */
@@ -35,7 +36,7 @@ function withTax(pay: CutoffPay, tax: Money | null): CutoffPay {
 /** The regular pay items for a profile (basic, allowance, contributions, savings plan). */
 export function buildItems(profile: PayProfile): { items: PayItem[]; basic: Money; philhealth: Money } {
   const basic = divRound(profile.annualBase, CUTOFFS_PER_YEAR);
-  const philhealth = profile.philhealthOverride ?? percentOfBasic(basic, PHILHEALTH_BP);
+  const philhealth = profile.philhealthOverride ?? philhealthMonthly(profile.annualBase);
   const items: PayItem[] = [
     { name: "Basic pay", kind: "earning_taxable", amount: basic, scope: "both" },
     { name: "Allowance", kind: "earning_nontaxable", amount: profile.allowanceSecond, scope: "second" },

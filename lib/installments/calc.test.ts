@@ -17,7 +17,7 @@ const base: InstalmentRow = {
 
 describe("installment calculations", () => {
   it("splits a no-interest plan evenly", () => {
-    const s = summarize(base, "2026-12-01");
+    const s = summarize(base);
     expect(s.perPayment).toBe(p(2_000));
     expect(s.total).toBe(p(12_000));
     expect(s.interest).toBe(0);
@@ -25,17 +25,20 @@ describe("installment calculations", () => {
     expect(s.lastDueOn).toBe("2027-05-09");
   });
   it("matches the old app for 20,000 at 6% over 60 months (V-I1)", () => {
-    const s = summarize({ ...base, price: p(20_000), termCount: 60, rateBp: 600 }, "2026-12-01");
+    const s = summarize({ ...base, price: p(20_000), termCount: 60, rateBp: 600 });
     expect(s.perPayment).toBe(p(386.66));
     expect(s.total).toBe(p(23_199.36));
     expect(s.interest).toBe(p(3_199.36));
   });
-  it("counts remaining payments from today", () => {
-    expect(summarize(base, "2027-02-01").remaining).toBe(4); // Feb, Mar, Apr, May
-    expect(summarize(base, "2027-06-01").remaining).toBe(0);
+  it("counts remaining payments from the ones marked paid, not from the date", () => {
+    expect(summarize(base).remaining).toBe(6);
+    const s = summarize(base, new Set([1, 2]));
+    expect(s.remaining).toBe(4);
+    expect(s.paidCount).toBe(2);
+    expect(summarize(base, new Set([1, 2, 3, 4, 5, 6])).remaining).toBe(0);
   });
   it("subtracts a down payment before financing", () => {
-    const s = summarize({ ...base, downPayment: p(3_000) }, "2026-12-01");
+    const s = summarize({ ...base, downPayment: p(3_000) });
     expect(s.financed).toBe(p(9_000));
     expect(s.perPayment).toBe(p(1_500));
   });

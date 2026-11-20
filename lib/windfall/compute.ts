@@ -8,7 +8,7 @@ import { TAX_ROWS } from "@/lib/pay/tax-table";
 export type WindfallKind = "thirteenth" | "cip" | "bonus";
 
 // Yearly cap on the tax-free part of 13th month, CIP and other bonuses, in centavos (90,000 pesos).
-// UNVERIFIED: carried over from the old app, which marked the exemption rule "CONFIRM" (spec section 3).
+// Matches published 2026 guides (checked Nov 2026; the old app marked it "CONFIRM"). Not checked against a BIR issuance.
 export const EXEMPTION_CAP: Money = money(9_000_000);
 export const CIP_COMPONENT_DENOMINATOR = 10_000_000; // 13.81505% is stored as 1,381,505
 export const CIP_MULTIPLIER_DENOMINATOR = 100; // 1.25 is stored as 125

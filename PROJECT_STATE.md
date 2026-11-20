@@ -7,33 +7,32 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 2 Build
-- **Active slice / milestone:** 7 Bonuses
-- **Gate:** Gate 2: Slice 7 awaiting approval
-- **Next action:** User applies windfalls migration and tries /bonuses; on approval merge and start Slice 8 (Savings forecast)
-- **User to-do now:** Run migration 20261126000000_windfalls.sql; try /bonuses
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-3..rev-10 (one shot)
+- **Gate:** building (no intermediate gates)
+- **Next action:** Build rev-3, 4, 6, 7, 5, 8, 9, 10 then final gate
+- **User to-do now:** -
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-19 21:07 | phase1 | Gate 1 APPROVED by user: Night Emerald design + plan, with changes: dashboard first (Slice 1 now scaffold+theme+dashboard on sample data; auth/plans moved to Slice 2; real-data wiring is Slice 9) and less round corners with contrast (square cards, round controls) recorded in DESIGN.md. | -
-- 2026-11-19 21:14 | slice-1 | Slice 1 built: Next.js 16 scaffold, tokens (dark/light, square cards + round controls), shell, dashboard on sample data, domain logic copied (56 tests pass). Runner PASS (test, typecheck, lint, build). Committed locally on slice/1-scaffold-dashboard (no remote). | 21640c6
-- 2026-11-19 21:16 | slice-1 | Revision at Gate 2: user reported dashboard not centered / not spanning page width. Fixed (content fills column, max 1680px centered). Runner PASS. | 1794447
-- 2026-11-19 21:16 | slice-1 | Gate 2 APPROVED by user. Slice 1 merged to master (local, no remote). | 1794447
-- 2026-11-19 21:20 | slice-2 | Slice 2 built: proxy.ts login gate, magic-link login (shouldCreateUser false, ALLOWED_EMAIL checked in action, callback and proxy), plans migration with RLS + activate_plan(), plans CRUD pages/actions, Past plans read-only. Disabled cacheComponents (not needed). Runner PASS 70 tests, typecheck, lint, build. Not tested against live Supabase. | 01e9ad8
-- 2026-11-19 21:29 | slice-2 | Gate 2 APPROVED by user. Slice 2 merged to master (local). | -
-- 2026-11-19 21:32 | slice-3 | Slice 3 built: lib/pay (TRAIN table, computePay on domain netCutoff, form parsing), pay_profiles migration with RLS, /pay screen with overrides, Pay nav enabled. Runner PASS 81 tests, typecheck, lint, build. Hand-worked synthetic test cases; unverified tax/PhilHealth rules flagged in UI. | e77050c
-- 2026-11-19 21:49 | slice-3 | Gate 2 revision requested: (1) plans can be ongoing with no end date (migration 20261122000000_plans_open_ended.sql); (2) Pay is now a 4-step wizard: monthly or annual base salary, auto-computed PhilHealth/tax/net, review then save. Runner PASS 85 tests, typecheck, lint, build. | 5a5b139
-- 2026-11-19 21:52 | slice-3 | User reported Pay/Plans not saving. Cannot test against live Supabase from here. Added dev-only Technical detail line + server console.error for DB errors in plans and pay actions. Runner PASS 85 tests. Waiting for user to retry and report the message. | 6a160b2
-- 2026-11-19 21:54 | slice-3 | Bug fix: pay wizard auto-submitted when clicking Next on step 3 (button type swapped button->submit mid-click). Fixed with distinct React keys. Runner PASS 85 tests. | 8762ef0
-- 2026-11-19 21:55 | slice-3 | Gate 2 APPROVED by user. Slice 3 (with revisions and fixes) merged to master (local). | -
-- 2026-11-19 21:57 | slice-4 | Slice 4 built: budget_lines migration with RLS, lib/budget (validation, summary on domain budgetLeft), /budget screen (cutoff tabs, three buckets, add/edit/delete, left-to-budget states, month roll-up), shared requireAuthed helper. Runner PASS 93 tests, typecheck, lint, build. | 0dad2b8
-- 2026-11-19 22:00 | slice-4 | Gate 2 APPROVED by user. Slice 4 merged to master (local). | -
-- 2026-11-19 22:02 | slice-5 | Slice 5 built: wallets + transfer_marks migration with RLS, wallet per budget line, /transfer checklist grouped by wallet (month + cutoff), default wallets button. Runner PASS 100 tests, typecheck, lint, build. | 27e8601
-- 2026-11-19 22:04 | slice-5 | Gate 2 APPROVED by user. Slice 5 merged to master (local). | -
 - 2026-11-19 22:09 | slice-6 | Slice 6 built: installments (domain schedule with interest) + subscriptions tables with RLS, pages, Sync to budget (budget_lines.source), shared WalletSelect. Runner PASS 108 tests, typecheck, lint, build. | 889c44e
 - 2026-11-19 22:11 | slice-6 | Gate 2 APPROVED by user. Slice 6 merged to master (local). | -
 - 2026-11-19 22:13 | slice-7 | Slice 7 built: windfall_events + windfall_allocations tables with RLS, lib/windfall (net via domain netCutoff, shared yearly 90k exemption, CIP via domain cipGross), /bonuses page with allocation checklists, buildItems exported from pay compute. Runner PASS 119 tests, typecheck, lint, build. | 3a5514f
+- 2026-11-19 22:19 | slice-7 | Gate 2 APPROVED by user. Slice 7 merged to master (local). Note: a git remote is now configured but the last push failed with a server-side write error; commits are safe locally. | -
+- 2026-11-19 22:21 | slice-8 | Slice 8 built: savings_settings + savings_overrides tables with RLS, lib/savings (settings parsing, forecast wiring over domain allocateForecast), SavingsChart, /savings page. Runner PASS 127 tests, typecheck, lint, build. | 83231c1
+- 2026-11-19 22:21 | slice-8 | Gate 2 APPROVED by user. Slice 8 merged to master. | -
+- 2026-11-19 22:24 | slice-9 | Slice 9 built: dashboard reads real plan data (wallets, budget lines for current cutoff, transfer marks, savings forecast via shared loadSavings, 13th month countdown, cutoff bars), setSent/markAllSent actions, removed sample fixture. Runner PASS 131 tests, typecheck, lint, build. | 750891a
+- 2026-11-19 22:25 | slice-9 | Gate 2 APPROVED by user. Slice 9 merged to master (local). All 9 planned slices approved: Phase 2 complete. | -
+- 2026-11-19 22:27 | phase3 | Gap analysis done. User selected all 10 items (rev-1 to rev-10), including the 3 nice-to-haves. Found: phone More menu dead (Pay, Bonuses, Installments, Subscriptions, Savings unreachable on phone); duplicate plan copies only name/dates; cutoff 1-15 assumption; unverified tax/PhilHealth/cap; no import/deploy/visual QA/e2e. | -
+- 2026-11-19 22:28 | rev-1 | rev-1 built: /more page (Pay, Bonuses, Savings, Installments, Subscriptions, Theme, Sign out), More tab links to it and stays active on those pages. Runner PASS 131 tests, typecheck, lint, build. | b117c9b
+- 2026-11-19 22:29 | rev-1 | Gate 3 APPROVED by user. Merged to master (local). User asked to do ALL remaining revisions on ONE branch: rev/phase3-revisions (per-revision gates stay). | -
+- 2026-11-19 22:30 | rev-2 | rev-2 built: duplicate_plan SQL function (atomic copy of plan, pay profile, budget lines with wallets, savings settings); duplicatePlan action calls it. Runner PASS 131 tests, typecheck, lint, build. | ec17fcb
+- 2026-11-19 22:31 | rev-2 | Gate 3 APPROVED by user. User instruction: run ALL remaining revisions (rev-3 to rev-10) in one go on rev/phase3-revisions with NO gates in between; gate only when all complete. | -
+- 2026-11-19 22:32 | rev-3 | rev-3 built: user_settings table (second_cutoff_start_day, default 16), /settings page, dashboard currentCutoff/cutoffLabel use it, linked from More and rail. Checks pending in batch run. | c76967b
+- 2026-11-19 22:33 | rev-4 | rev-4 done: TRAIN 2023+ table and 90,000 bonus exemption match published 2026 guides (third-party, not BIR circulars). PhilHealth fixed: employee share 2.5% of monthly basic with 10,000 floor and 100,000 ceiling (250 to 2,500 a month), was 5% of semi-monthly basic with no limits. UI notices updated. Runner PASS 135 tests. | b4e344a
+- 2026-11-19 22:35 | rev-5 | rev-5 built: /import page + importSnapshot action (validated snapshot JSON, creates a NEW inactive plan, wallets, pay, lines, installments, subscriptions; undoes itself on failure; never changes existing data). Snapshot generated from the Sheet (Dec 10 onwards tab) into data/import/sheet-import.json (git-ignored, personal data). Sheet totals reproduce: 1st cutoff 25,008, 2nd 30,555. Not imported: savings fund balances, 13th month, CIP, HMO deduction, older plans. | 0d4d3f4
 
 ## 4. Open questions
 <!-- - [ ] Q1: ...   resolved: - [x] Q1: ... -> answer -->
@@ -49,7 +48,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 356,734 | 1,649,493 | 85,497 | 487,638 | 58,960,345 | 335,716 |  |
+| **Cumulative** | 387,423 | 1,876,270 | 91,794 | 561,344 | 76,508,963 | 390,864 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 62,731 | 370,397 | 15,215 | 41,667 | 8,438,561 | 24,781 |  |
 | Slice 2 | 9,884 | 85,063 | 2,502 | 28,251 | 4,081,821 | 24,667 |  |
@@ -58,6 +57,10 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice 5 | 2,948 | 40,664 | 877 | 18,622 | 3,164,006 | 14,653 |  |
 | Slice 6 | 18,778 | 70,060 | 3,110 | 34,428 | 5,788,748 | 24,935 |  |
 | Slice 7 | 6,549 | 64,826 | 2,129 | 24,800 | 4,102,935 | 19,879 |  |
+| Slice 8 | 10,233 | 35,048 | 820 | 22,369 | 3,767,210 | 17,380 |  |
+| Slice 9 | 13,213 | 106,954 | 3,450 | 32,395 | 8,555,518 | 25,211 |  |
+| Rev-1 | 3,644 | 42,355 | 1,093 | 3,857 | 1,180,225 | 1,181 |  |
+| Rev-2 | 3,599 | 42,420 | 934 | 5,576 | 1,791,033 | 2,293 |  |
 
 <!-- END SUMMARY -->
 
@@ -67,15 +70,17 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | # | Slice | Depends on | Run | Status | Branch |
 |---|---|---|---|---|---|
-| 1 | Scaffold + theme + **Dashboard on sample data**: Next.js app, design tokens (dark default + light, DESIGN.md radii: square cards, round controls), app shell (rail / bottom tabs), the full dashboard (greeting, hero balance, wallet cards, 13th month ring, forecast + cutoff charts, pending transfers, Pip), sample data from a local fixture, domain logic copied with tests passing. No login yet. **Needed** | none | sequential | planned | - |
-| 2 | Auth, DB and plans: Supabase schema + RLS, magic-link login limited to ALLOWED_EMAIL, plans CRUD (create/duplicate/activate/date range), gitignored sheet snapshot + seed script skeleton. **Needed** | 1 | sequential | planned | - |
-| 3 | Pay: per-plan salary screen; annual base -> per-cutoff earnings, deductions, tax, net; overrides. **Needed** | 2 | sequential | planned | - |
-| 4 | Budget split: Essentials/Wants/Savings lines per cutoff + monthly roll-up, budget-left vs net pay, seeded from sheet. **Needed** | 3 | sequential | planned | - |
-| 5 | To Transfer: wallets (Gcash, Maya, BPI, Vybe), wallet per line, per-cutoff checklist with done state. **Needed** | 4 | sequential | planned | - |
-| 6 | Installments & subscriptions trackers feeding Essentials. **Needed** | 4 | parallel with 7 | planned | - |
-| 7 | Bonuses: 13th month and CIP computation + allocation checklists. **Needed** | 3 | parallel with 6 | planned | - |
-| 8 | Savings forecast: funds with caps, priority rules, month-by-month projection. **Needed** | 4 | sequential | planned | - |
-| 9 | Wire dashboard to real data (replace sample fixture with plan data from slices 3-8). **Needed**. Pip confetti polish is **Nice-to-have** | 5, 7, 8 | sequential | planned | - |
+| 1-9 | Scaffold+dashboard, auth/plans, pay, budget, transfer, installments+subscriptions, bonuses, savings forecast, dashboard on real data | - | sequential | merged to master (local) | slice/1..9 |
+| rev-1 | Phone menu: working "More" so every destination is reachable on a phone. **Needed** | - | sequential | planned | - |
+| rev-2 | Duplicate plan copies pay, budget lines (with wallets), savings settings. **Needed** | - | sequential | planned | - |
+| rev-3 | Cutoff days setting so cutoffs match real paydays (dashboard, labels). **Needed** | - | sequential | planned | - |
+| rev-4 | Verify tax, PhilHealth and 90,000 bonus cap against current rules; update with tests. **Needed** (needs your payslip to confirm) | - | sequential | planned | - |
+| rev-5 | Import from your Bad(yet) Sheet (one-time, data not committed). **Needed** | rev-3 | sequential | planned | - |
+| rev-6 | Mark installment payments paid one by one. Nice-to-have | - | sequential | planned | - |
+| rev-7 | Export your data as CSV. Nice-to-have | - | sequential | planned | - |
+| rev-8 | Deploy online: Vercel + Supabase env, redirect URLs, runbook. **Needed** | rev-1 | sequential | planned | - |
+| rev-9 | Visual check with a real browser (Playwright Chromium): phone and desktop, light and dark, fix findings. **Needed** | rev-1..3 | sequential | planned | - |
+| rev-10 | Automated end-to-end smoke tests (login, plan, pay, tick a transfer). Nice-to-have | rev-9 | sequential | planned | - |
 
 ## Decisions & architecture
 - Stack: Next.js (App Router, TypeScript) on Vercel + Supabase (Postgres; Auth magic link restricted to one allowed email; RLS by user_id).
@@ -103,6 +108,46 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Seed | arrives in a later slice |
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-2 (duplicate copies everything): what you do now
+1. Get the code:   git checkout rev/phase3-revisions   (one branch for all Phase 3 revisions)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261128000000_duplicate_plan.sql (adds function duplicate_plan). Rollback: drop function public.duplicate_plan(uuid);
+4. Config:         none
+5. Start the app:  npm run dev  ->  http://localhost:3000/plans
+6. Check these:    (a) set up a plan with Pay, a few budget lines (with wallets) and Savings settings; (b) press Duplicate on it: the copy appears named "... (copy)", inactive; (c) Activate the copy: Pay, Budget lines, wallets per line and Savings settings are all there, so you can edit them freely as an estimate; (d) the original is untouched
+7. Known limits:   not copied on purpose: transfer ticks and per-month savings overrides (month-specific) and bonuses (dated for the original period); not tested against live Supabase
+Reply: Approve / Request changes / Pause
+
+AFTER REV-1 (phone menu): what you do now
+1. Get the code:   git checkout rev/1-phone-menu   (merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000 and narrow the window below 760px (or open it on your phone)
+6. Check these:    (a) bottom bar shows Home, Plans, Transfer, Budget, More; (b) tap More: a page lists Pay, Bonuses, Savings forecast, Installments, Subscriptions, plus Theme and Sign out; (c) open one (for example Pay): the More tab stays highlighted; (d) Theme and Sign out work from this page
+7. Known limits:   desktop is unchanged (the left rail already lists everything); not visually checked in a browser (rev-9 does that)
+Reply: Approve / Request changes / Pause
+
+AFTER SLICE 9: what you do now
+1. Get the code:   git checkout slice/9-dashboard-data   (merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       no new migrations. All earlier ones (plans ... savings) must be applied.
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000
+6. Check these:    (a) the greeting, big "Left to send", wallet cards and Pending transfers now come from your real budget lines for the current cutoff (1st = days 1 to 15, 2nd = 16 to month end); (b) tap "Pending · tap to mark sent" on a transfer, or "Mark all sent": the balance drops, confetti fires, Pip smiles, and the same ticks show on the Cutoff (Transfer) page; (c) the Emergency fund forecast chart uses your Savings settings (or invites you to set them up); (d) the 13th month ring counts days to your next 13th month event with its estimated net; (e) "Spend by cutoff" shows your Essentials / Wants / Savings split for both cutoffs; (f) with no plan, no lines or no savings setup you see friendly prompts instead of empty charts; (g) Theme button and phone width still work
+7. Known limits:   the cutoff split (1st = days 1 to 15) is an assumption (open question Q1); not tested against a live Supabase from my side; tax table, PhilHealth and the 90,000 bonus cap are unverified (Q2); all amounts you see are only as good as what you entered; sheet import was not built (you type your data in)
+Reply: Approve / Request changes / Pause
+
+AFTER SLICE 8: what you do now
+1. Get the code:   git checkout slice/8-savings   (local branch; merge to master after you approve)
+2. Install deps:   no new deps
+3. Database:       Supabase SQL Editor: run supabase/migrations/20261127000000_savings.sql (adds tables savings_settings and savings_overrides; earlier migrations must be applied). Rollback: drop table public.savings_overrides; drop table public.savings_settings;
+4. Config:         none new
+5. Start the app:  npm run dev  ->  http://localhost:3000/savings (needs an active plan; Savings lines on the Budget page feed it)
+6. Check these:    (a) first visit: fill "Set up your funds" (start month, balances today, Emergency fund step e.g. 100,000, caps, priority order) and Save; (b) the chart and month-by-month table appear for 12 months: each fund shows its balance, what it received that month, and a status (Saving, Paused, Step reached); (c) the monthly amount comes from your Savings budget lines (both cutoffs); change a line on Budget and the forecast changes; (d) pick "Travel fund first" for one month in "Lead this month" and press Set: that month's money goes there first; (e) add a CIP on Bonuses: its estimated net is added to the month it is paid, marked CIP; (f) if every fund hits its cap you see a note about leftover savings
+7. Known limits:   rules (EF steps, Travel resets each January with first call until its cap, EF-first window around a CIP month) come straight from your old app's allocator; adding the CIP net to the savings pool is my reading of "the month whose pool includes the CIP"; fund names are fixed (Emergency, Travel, Wants); not tested against live Supabase
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE 7: what you do now
 1. Get the code:   git checkout slice/7-bonuses   (local branch; merge to master after you approve)

@@ -256,3 +256,18 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; }
 /* installments and subscriptions */
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* savings forecast */
+.forecast th, .forecast td { text-align: left; vertical-align: top; white-space: nowrap; }
+.forecast thead th { text-align: left; }
+.ovr { display: flex; gap: 6px; align-items: center; }
+.ovr .input { min-width: 9.5rem; }
+
+/* more (phone menu) */
+.more-group { margin-bottom: 18px; max-width: 640px; }
+.more-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.more-item:first-of-type { border-top: 0; }
+.more-item b { display: block; }
+.more-item:hover { color: var(--accent-text); }
+.more-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.more-actions form { margin: 0; }

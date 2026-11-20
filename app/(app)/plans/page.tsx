@@ -26,7 +26,7 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
       <div className="head">
         <div>
           <h1>Plans</h1>
-          <p className="sub">Each plan is one version of your budget. One is active; duplicate it to try an estimate.</p>
+          <p className="sub">Each plan is one version of your budget. One is active; duplicate it to try an estimate (the copy keeps your pay, budget lines and savings settings).</p>
         </div>
       </div>
 

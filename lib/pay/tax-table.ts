@@ -2,8 +2,8 @@ import { money } from "@/lib/domain/money";
 import type { TaxRow } from "@/lib/domain/pay";
 
 // Philippine TRAIN annual income tax brackets, as used by the old app.
-// UNVERIFIED: labelled effective 1 Jan 2023 and not re-checked against current BIR tables
-// (see PROJECT_STATE open question Q1/Q2). Amounts are in centavos.
+// The schedule in force from 1 Jan 2023. Checked in Nov 2026 against several published 2026 guides
+// (they all show these brackets); not checked against a BIR issuance. Amounts are in centavos.
 const p = (pesos: number) => money(pesos * 100);
 
 export const TAX_ROWS: readonly TaxRow[] = [
@@ -15,5 +15,4 @@ export const TAX_ROWS: readonly TaxRow[] = [
   { lower: p(8_000_000), upper: null, fixed: p(2_202_500), rateBp: 3500 },
 ];
 
-// PhilHealth as the old app modelled it: 5% of the semi-monthly basic. UNVERIFIED (no cap applied).
-export const PHILHEALTH_BP = 500;
+// PhilHealth lives in ./philhealth.ts (2.5% employee share with a 10,000 floor and 100,000 ceiling).
