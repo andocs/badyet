@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { isCutoff, type Cutoff } from "@/lib/budget/validate";
+import { ConfirmButton } from "@/components/confirm-button";
+import { type Cutoff } from "@/lib/budget/validate";
+import { DEFAULT_SECOND_START, resolveCutoff } from "@/lib/dashboard/helpers";
+import { todayManila } from "@/lib/plans/validate";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
 import { currentMonth, isMonth, monthLabel, shiftMonth } from "@/lib/transfer/month";
 import { groupByWallet, leftToSend, type TransferLine } from "@/lib/transfer/summary";
@@ -15,11 +18,12 @@ const peso = (m: Money) => formatPesos(m, { symbol: false });
 export default async function TransferPage({ searchParams }: PageProps<"/transfer">) {
   const params = await searchParams;
   const month = isMonth(params.month) ? params.month : currentMonth();
-  const cutoff: Cutoff = isCutoff(params.cutoff) ? params.cutoff : "first";
   const error = typeof params.error === "string" ? ERRORS[params.error] : undefined;
   const detail = process.env.NODE_ENV !== "production" && typeof params.detail === "string" ? params.detail : undefined;
 
   const supabase = await createClient();
+  const { data: settingsRow } = supabase ? await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle() : { data: null };
+  const cutoff: Cutoff = resolveCutoff(params.cutoff, todayManila(), settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START);
   const { data: plan } = supabase ? await supabase.from("plans").select("id,name").eq("is_active", true).maybeSingle() : { data: null };
   const { data: lineRows } =
     plan && supabase
@@ -132,7 +136,7 @@ export default async function TransferPage({ searchParams }: PageProps<"/transfe
                     {hidden}
                     <input type="hidden" name="id" value={w.id} />
                     <span>{w.name}</span>
-                    <button type="submit" className="btn sm danger" aria-label={`Delete wallet ${w.name}`}>Delete</button>
+                    <ConfirmButton message={`Delete wallet ${w.name}? Lines using it lose their wallet.`} className="btn sm danger" aria-label={`Delete wallet ${w.name}`}>Delete</ConfirmButton>
                   </form>
                 ))
               )}

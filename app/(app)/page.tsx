@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Dashboard, type DashData } from "@/components/dashboard";
 import { money } from "@/lib/domain/money";
-import { DEFAULT_SECOND_START, currentCutoff, cutoffLabel, daysBetween } from "@/lib/dashboard/helpers";
+import { DEFAULT_SECOND_START, cutoffLabel, daysBetween, resolveCutoff } from "@/lib/dashboard/helpers";
 import type { PayProfile } from "@/lib/pay/compute";
 import { todayManila } from "@/lib/plans/validate";
 import { loadSavings } from "@/lib/savings/load";
@@ -14,7 +14,8 @@ const dateLabel = (iso: string) => {
   return `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][m - 1]} ${d}, ${y}`;
 };
 
-export default async function Home() {
+export default async function Home({ searchParams }: PageProps<"/">) {
+  const params = await searchParams;
   const supabase = await createClient();
   const { data: plan } = supabase
     ? await supabase.from("plans").select("id,name").eq("is_active", true).maybeSingle()
@@ -36,7 +37,7 @@ export default async function Home() {
   const month = currentMonth();
   const { data: settingsRow } = await supabase.from("user_settings").select("second_cutoff_start_day").maybeSingle();
   const secondStart: number = settingsRow?.second_cutoff_start_day ?? DEFAULT_SECOND_START;
-  const cutoff = currentCutoff(today, secondStart);
+  const cutoff = resolveCutoff(params.cutoff, today, secondStart);
 
   const [{ data: walletRows }, { data: lineRows }, { data: markRows }, { data: pay }, { data: bonusRows }, savings] = await Promise.all([
     supabase.from("wallets").select("id,name").order("created_at"),
@@ -118,5 +119,13 @@ export default async function Home() {
   };
 
   // The key restarts the dashboard's local state whenever the saved ticks change on the server.
-  return <Dashboard key={`${month}-${cutoff}-${data.sentIds.join(",")}-${data.lines.length}`} data={data} />;
+  return (
+    <>
+      <nav className="segmented" aria-label="Cutoff" style={{ margin: "18px 22px 0", width: "fit-content" }}>
+        <Link href="/?cutoff=first" aria-current={cutoff === "first" ? "page" : undefined}>1st cutoff</Link>
+        <Link href="/?cutoff=second" aria-current={cutoff === "second" ? "page" : undefined}>2nd cutoff</Link>
+      </nav>
+      <Dashboard key={`${month}-${cutoff}-${data.sentIds.join(",")}-${data.lines.length}`} data={data} />
+    </>
+  );
 }

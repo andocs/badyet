@@ -1,3 +1,4 @@
+import { ConfirmButton } from "@/components/confirm-button";
 import Link from "next/link";
 import { formatRange } from "@/lib/plans/format";
 import { isPastPlan, todayManila } from "@/lib/plans/validate";
@@ -71,7 +72,7 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
                   {!past && <Link href={`/plans/${p.id}`} className="btn sm ghost">Edit</Link>}
                   <form action={duplicatePlan}><input type="hidden" name="id" value={p.id} /><button type="submit" className="btn sm ghost">Duplicate</button></form>
                   {!p.is_active && (
-                    <form action={deletePlan}><input type="hidden" name="id" value={p.id} /><button type="submit" className="btn sm danger" aria-label={`Delete ${p.name}`}>Delete</button></form>
+                    <form action={deletePlan}><input type="hidden" name="id" value={p.id} /><ConfirmButton message={`Delete plan ${p.name} and everything in it? This cannot be undone.`} className="btn sm danger" aria-label={`Delete ${p.name}`}>Delete</ConfirmButton></form>
                   )}
                 </div>
               </div>

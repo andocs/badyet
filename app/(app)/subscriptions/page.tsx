@@ -1,3 +1,4 @@
+import { ConfirmButton } from "@/components/confirm-button";
 import { WalletSelect } from "@/components/wallet-select";
 import { formatPesos, money, sum, type Money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
@@ -71,7 +72,7 @@ export default async function SubscriptionsPage({ searchParams }: PageProps<"/su
                 </form>
                 <form action={deleteSubscription}>
                   <input type="hidden" name="id" value={s.id} />
-                  <button type="submit" className="btn sm danger" aria-label={`Delete ${s.name}`}>Delete</button>
+                  <ConfirmButton message={`Delete ${s.name}? This cannot be undone.`} className="btn sm danger" aria-label={`Delete ${s.name}`}>Delete</ConfirmButton>
                 </form>
               </div>
             </div>

@@ -9,6 +9,11 @@ export function currentCutoff(todayIso: string, secondStart: number = DEFAULT_SE
   return Number(todayIso.slice(8, 10)) < secondStart ? "first" : "second";
 }
 
+// The cutoff a page shows: the one in the URL when it is valid, otherwise the cutoff you are in today.
+export function resolveCutoff(param: unknown, todayIso: string, secondStart: number = DEFAULT_SECOND_START): Cutoff {
+  return param === "first" || param === "second" ? param : currentCutoff(todayIso, secondStart);
+}
+
 export function daysInMonthOf(month: string): number {
   const [y, m] = month.split("-").map(Number);
   return new Date(Date.UTC(y, m, 0)).getUTCDate();

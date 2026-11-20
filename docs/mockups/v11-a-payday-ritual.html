@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v11-A · Payday ritual</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v11-shared.css">
+<style>
+/* A: one decision per screen. The app opens on the step you are in, not on a dashboard. */
+.steps{display:flex;gap:6px;padding:14px 18px 0}
+.steps i{flex:1;height:5px;border-radius:999px;background:var(--soft)}.steps i.on{background:var(--accent)}.steps i.now{background:linear-gradient(90deg,var(--accent) 50%,var(--soft) 50%)}
+.kick{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-text)}
+.stage{display:flex;flex-direction:column;gap:14px;padding:20px 18px;flex:1;overflow:auto}
+.stage h1{font-size:30px;line-height:1.1}
+.fig{font-size:52px;line-height:1}
+.wal{border-radius:10px;border:1px solid var(--line);background:var(--surface);overflow:hidden}
+.wal.open{border-color:var(--accent)}
+.wal>.hd{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.chip{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font:800 14px "Plus Jakarta Sans";color:#fff;flex:none}
+.wal .ln{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line);min-height:56px}
+.wal .ln.done b,.wal .ln.done .num{color:var(--muted)}
+.foot{padding:14px 18px 18px;border-top:1px solid var(--line);display:flex;gap:10px}
+.foot .btn{flex:1}
+.glance{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.mline{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.mline:first-child{border-top:0}
+.big-done{font-size:60px;line-height:1}
+.confetti{position:absolute;inset:0;pointer-events:none;background:
+ radial-gradient(circle at 20% 18%,var(--gold) 0 3px,transparent 4px),radial-gradient(circle at 78% 12%,var(--accent) 0 3px,transparent 4px),radial-gradient(circle at 60% 26%,var(--blue) 0 3px,transparent 4px),radial-gradient(circle at 30% 34%,var(--red) 0 3px,transparent 4px),radial-gradient(circle at 88% 30%,var(--gold) 0 3px,transparent 4px)}
+</style></head><body>
+<div class="gallery">
+<header><h1>A · Payday ritual</h1><p>The app opens on the step you are in. On payday it walks you through: pay landed, what is spoken for, send by wallet, yours to spend. Between paydays it quietly shows when the next one is. Fake figures; Night Emerald; Pip and the voice stay.</p></header>
+<div class="frames">
+
+<div><p class="cap">Phone · payday, step 3 of 4 (send by wallet)</p>
+<div class="phone">
+<div class="steps"><i class="on"></i><i class="on"></i><i class="now"></i><i></i></div>
+<div class="stage">
+ <div><h1>Send it where it belongs.</h1></div>
+ <div class="row sp"><span class="muted">Left to send, 2nd cutoff</span><span class="big num" style="font-size:26px">₱14,820.00</span></div>
+ <div class="bar"><i style="width:38%"></i></div>
+ <div class="wal open">
+  <div class="hd"><span class="chip" style="background:#2F5BD7">G</span><div style="flex:1"><b>GCash</b><div class="muted" style="font-size:13px">1 of 3 sent</div></div><b class="num">₱6,200.00</b></div>
+  <div class="ln done"><span class="chk on">✓</span><div style="flex:1"><b>Rent share</b><div class="muted" style="font-size:13px">Essentials</div></div><span class="num">₱3,000.00</span></div>
+  <div class="ln"><span class="chk"></span><div style="flex:1"><b>Load and data</b><div class="muted" style="font-size:13px">Essentials</div></div><span class="num">₱1,200.00</span></div>
+  <div class="ln"><span class="chk"></span><div style="flex:1"><b>Weekend food</b><div class="muted" style="font-size:13px">Wants</div></div><span class="num">₱2,000.00</span></div>
+ </div>
+ <div class="wal"><div class="hd"><span class="chip" style="background:#087A5A">M</span><div style="flex:1"><b>Maya</b><div class="muted" style="font-size:13px">0 of 2 sent</div></div><b class="num">₱5,120.00</b></div></div>
+ <div class="wal"><div class="hd"><span class="chip" style="background:#B03030">B</span><div style="flex:1"><b>BPI</b><div class="muted" style="font-size:13px">0 of 1 sent</div></div><b class="num">₱3,500.00</b></div></div>
+</div>
+<div class="foot"><button class="btn">Back</button><button class="btn pri">Mark GCash all sent</button></div>
+</div></div>
+
+<div><p class="cap">Phone · step 2 (what is spoken for)</p>
+<div class="phone">
+<div class="steps"><i class="on"></i><i class="now"></i><i></i><i></i></div>
+<div class="stage">
+ <div><h1>Already spoken for.</h1><p class="muted" style="margin:6px 0 0">These came out of this cutoff by themselves. Nothing to do, just look.</p></div>
+ <div class="card" style="padding:6px 16px">
+  <div class="mline"><span class="pill">due 20th</span><div><b>Phone installment</b><div class="muted" style="font-size:13px">6 of 12 paid</div></div><span class="num">₱1,950.00</span></div>
+  <div class="mline"><span class="pill">due 24th</span><div><b>Streaming</b><div class="muted" style="font-size:13px">Subscription</div></div><span class="num">₱549.00</span></div>
+  <div class="mline"><span class="pill">due 28th</span><div><b>Laptop installment</b><div class="muted" style="font-size:13px">2 of 10 paid</div></div><span class="num">₱3,400.00</span></div>
+ </div>
+ <div class="row sp"><span class="muted">Total spoken for</span><b class="num">₱5,899.00</b></div>
+ <button class="btn sm" style="align-self:flex-start">Mark Phone installment paid</button>
+</div>
+<div class="foot"><button class="btn">Back</button><button class="btn pri">Looks right</button></div>
+</div></div>
+
+<div><p class="cap">Phone · done</p>
+<div class="phone"><div class="confetti"></div>
+<div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+<div class="stage" style="align-items:center;justify-content:center;text-align:center;gap:18px">
+ <div class="pip" style="width:96px;height:96px"><span style="font-size:40px">◡</span></div>
+ <span class="kick">All 7 transfers sent</span>
+ <div><div class="muted">Yours to spend until Dec 1</div><div class="big big-done num">₱3,260</div></div>
+ <p class="muted" style="max-width:260px;margin:0">That is about ₱217 a day for 15 days. Go touch grass.</p>
+</div>
+<div class="foot"><button class="btn pri">Close</button></div>
+</div></div>
+
+<div style="flex:1 1 100%"><p class="cap">Desktop · between paydays (the ritual waits; Month is one click away)</p>
+<div class="desk">
+<nav class="rail" aria-label="Main"><b>Bad(yet)</b><a href="#" aria-current="page">Now</a><a href="#">Month</a><a href="#">Savings</a><a href="#">Setup</a><small>Plan: December 2026</small></nav>
+<div class="scroll" style="padding:26px 30px">
+ <div class="row sp" style="align-items:flex-start"><div><h1 style="font-size:34px">6 days to the 1st cutoff.</h1><p class="muted" style="margin:6px 0 0">Nothing to do until then. Here is how the month looks.</p></div>
+  <div class="seg" role="group" aria-label="Cutoff"><button aria-pressed="true">1st</button><button aria-pressed="false">2nd</button></div></div>
+ <div class="glance" style="margin-top:22px">
+  <div class="hero"><span style="color:#CFE3F5">Expected on Dec 1</span><div class="big num fig" style="margin-top:6px">₱25,008</div><div style="margin-top:10px;color:#CFE3F5">₱5,899 already spoken for · ₱19,109 to place</div><button class="btn pri" style="margin-top:14px">Start payday early</button></div>
+  <div class="card"><b>Month at a glance</b>
+   <div style="margin-top:12px;display:grid;gap:10px">
+    <div><div class="row sp"><span><span class="dot dotE"></span> Essentials</span><b class="num">₱21,400</b></div><div class="bar" style="margin-top:5px"><i style="width:62%"></i></div></div>
+    <div><div class="row sp"><span><span class="dot dotW"></span> Wants</span><b class="num">₱9,100</b></div><div class="bar" style="margin-top:5px"><i style="width:27%;background:var(--blue)"></i></div></div>
+    <div><div class="row sp"><span><span class="dot dotS"></span> Savings</span><b class="num">₱5,000</b></div><div class="bar" style="margin-top:5px"><i style="width:15%;background:var(--gold)"></i></div></div>
+   </div></div>
+ </div>
+</div></div></div>
+
+</div></div></body></html>

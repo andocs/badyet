@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { currentCutoff, cutoffLabel, daysBetween, daysInMonthOf } from "./helpers";
+import { currentCutoff, cutoffLabel, daysBetween, daysInMonthOf, resolveCutoff } from "./helpers";
+
+describe("resolveCutoff", () => {
+  it("uses a valid URL value, otherwise the cutoff you are in today", () => {
+    expect(resolveCutoff("second", "2026-12-03")).toBe("second");
+    expect(resolveCutoff("first", "2026-12-20")).toBe("first");
+    expect(resolveCutoff(undefined, "2026-12-20")).toBe("second");
+    expect(resolveCutoff("nope", "2026-12-03")).toBe("first");
+    expect(resolveCutoff(undefined, "2026-12-09", 10)).toBe("first");
+  });
+});
 
 describe("dashboard helpers", () => {
   it("picks the cutoff from the day of the month", () => {

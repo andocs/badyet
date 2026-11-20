@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bad(yet) v11-B · Money sentence</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="v11-shared.css">
+<style>
+/* B: no card grid. The page is a sentence you can read and tap; lists are plain ruled text under it. */
+.lede{font:800 27px/1.32 "Plus Jakarta Sans";letter-spacing:-.025em}
+.lede button{font:inherit;color:inherit;background:none;border:0;padding:0;border-bottom:3px solid;cursor:pointer;min-height:44px}
+.lede .a{border-color:var(--accent);color:var(--accent-text)}.lede .b{border-color:var(--gold);color:var(--gold-text)}.lede .c{border-color:var(--blue);color:var(--blue)}
+.lede .m{color:var(--muted)}
+.block{margin-top:26px}
+.block>h2{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:Manrope}
+.ln{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:12px 0;min-height:56px;border-bottom:1px solid var(--line)}
+.ln small{display:block;color:var(--muted);font-size:13px}
+.ln.done b,.ln.done .num{color:var(--muted);text-decoration:line-through}
+.wtag{font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;color:#fff;margin-left:6px}
+.sheet{background:var(--surface);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:16px 18px 20px;margin:0 -18px -20px;position:sticky;bottom:0}
+.sheet .grab{width:38px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 12px}
+.field{display:flex;align-items:center;gap:10px;margin-top:10px}
+.field input{flex:1;min-height:44px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:700 18px Manrope;padding:0 12px}
+.two{display:grid;grid-template-columns:1.1fr .9fr;gap:30px}
+.rightcol{border-left:1px solid var(--line);padding-left:30px}
+.stat{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+</style></head><body>
+<div class="gallery">
+<header><h1>B · Money sentence</h1><p>Home reads like a sentence from your own notebook, with the figures tappable. Tap a figure and a sheet lets you change it in place. Below it, the transfers are plain ruled text, no cards. Fake figures; Night Emerald; Pip and the voice stay.</p></header>
+<div class="frames">
+
+<div><p class="cap">Phone · Now</p>
+<div class="phone">
+<div class="scroll">
+ <div class="row sp"><span class="pill ok">2nd cutoff</span><button class="pill" style="border:0;cursor:pointer;min-height:36px">Plan: December ▾</button></div>
+ <p class="lede" style="margin:18px 0 0">You get <button class="a num">₱30,555</button> on the 30th. <button class="b num">₱5,899</button> is spoken for, <button class="c num">₱6,000</button> goes to savings, and <span class="m">that leaves</span> <button class="a num">₱18,656</button> <span class="m">to send.</span></p>
+ <div class="block"><h2>Send, 4 left</h2>
+  <div class="ln"><span class="chk on">✓</span><div><b>Rent share</b><small>GCash · Essentials</small></div><span class="num">₱3,000.00</span></div>
+  <div class="ln done"><span class="chk on">✓</span><div><b>Load and data</b><small>GCash</small></div><span class="num">₱1,200.00</span></div>
+  <div class="ln"><span class="chk"></span><div><b>Groceries</b><small>Maya · Essentials</small></div><span class="num">₱4,500.00</span></div>
+  <div class="ln"><span class="chk"></span><div><b>Emergency fund</b><small>BPI · Savings</small></div><span class="num">₱6,000.00</span></div>
+ </div>
+ <div class="sheet" style="margin-top:22px"><div class="grab"></div>
+  <b>Savings this cutoff</b><div class="muted" style="font-size:13px">Tap the number to change it. Left to send updates right away.</div>
+  <div class="field"><input class="num" value="6,000.00" aria-label="Savings amount"><button class="btn pri sm">Done</button></div></div>
+</div>
+<nav class="tabs" aria-label="Main"><a href="#" aria-current="page">Now</a><a href="#">Month</a><a href="#">Savings</a><a href="#">Setup</a></nav>
+</div></div>
+
+<div><p class="cap">Phone · Month</p>
+<div class="phone">
+<div class="scroll">
+ <div class="row sp"><h1 style="font-size:26px">December</h1><span class="pill">Plan: Dec ▾</span></div>
+ <p class="lede" style="margin-top:14px;font-size:22px"><button class="a num">₱55,563</button> <span class="m">comes in. You have placed</span> <button class="c num">₱54,100</button> <span class="m">and</span> <button class="b num">₱1,463</button> <span class="m">is still unplaced.</span></p>
+ <div class="block"><h2>Commitments in this month</h2>
+  <div class="ln"><span class="dot dotE"></span><div><b>Installments</b><small>2 active · 6 payments left</small></div><span class="num">₱5,350.00</span></div>
+  <div class="ln"><span class="dot dotW"></span><div><b>Subscriptions</b><small>3 active</small></div><span class="num">₱1,297.00</span></div>
+  <div class="ln"><span class="dot dotS"></span><div><b>Bonuses</b><small>13th month on Dec 15</small></div><span class="num">₱0.00</span></div>
+ </div>
+ <div class="block"><h2>Every line</h2>
+  <div class="ln"><span class="dot dotE"></span><div><b>Rent share</b><small>1st · GCash</small></div><span class="num">₱3,000.00</span></div>
+  <div class="ln"><span class="dot dotE"></span><div><b>Groceries</b><small>2nd · Maya</small></div><span class="num">₱4,500.00</span></div>
+  <div class="ln"><span class="dot dotW"></span><div><b>Weekend food</b><small>1st · GCash</small></div><span class="num">₱2,000.00</span></div>
+ </div>
+</div>
+<nav class="tabs" aria-label="Main"><a href="#">Now</a><a href="#" aria-current="page">Month</a><a href="#">Savings</a><a href="#">Setup</a></nav>
+</div></div>
+
+<div style="flex:1 1 100%"><p class="cap">Desktop · Now (sentence left, the send list right)</p>
+<div class="desk">
+<nav class="rail" aria-label="Main"><b>Bad(yet)</b><a href="#" aria-current="page">Now</a><a href="#">Month</a><a href="#">Savings</a><a href="#">Setup</a><small>Plan: December 2026</small></nav>
+<div class="scroll" style="padding:30px 34px"><div class="two">
+ <div><div class="row" style="gap:10px"><div class="seg" role="group" aria-label="Cutoff"><button aria-pressed="false">1st</button><button aria-pressed="true">2nd</button></div><span class="pill">Plan: December ▾</span></div>
+  <p class="lede" style="margin:22px 0 0;font-size:34px">You get <button class="a num">₱30,555</button> on the 30th. <button class="b num">₱5,899</button> is spoken for, <button class="c num">₱6,000</button> goes to savings, <span class="m">and that leaves</span> <button class="a num">₱18,656</button> <span class="m">to send.</span></p>
+  <div class="row" style="margin-top:22px;gap:14px"><div class="pip"><span>◡</span></div><span class="muted">4 transfers to go. Almost there.</span></div>
+ </div>
+ <div class="rightcol"><div class="row sp"><h2 style="font-size:18px">Send</h2><button class="btn sm pri">Mark all sent</button></div>
+  <div class="ln"><span class="chk on">✓</span><div><b>Rent share <span class="wtag" style="background:#2F5BD7">GCash</span></b><small>Essentials</small></div><span class="num">₱3,000.00</span></div>
+  <div class="ln"><span class="chk"></span><div><b>Groceries <span class="wtag" style="background:#087A5A">Maya</span></b><small>Essentials</small></div><span class="num">₱4,500.00</span></div>
+  <div class="ln"><span class="chk"></span><div><b>Weekend food <span class="wtag" style="background:#2F5BD7">GCash</span></b><small>Wants</small></div><span class="num">₱2,000.00</span></div>
+  <div class="ln"><span class="chk"></span><div><b>Emergency fund <span class="wtag" style="background:#B03030">BPI</span></b><small>Savings</small></div><span class="num">₱6,000.00</span></div>
+ </div></div></div>
+</div></div>
+
+</div></div></body></html>
