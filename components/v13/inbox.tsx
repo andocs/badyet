@@ -120,15 +120,15 @@ export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[
   return (
     <main className="v-main">
       <div className="v-inbox v-stack" data-view={view}>
-        <div className="v-row v-sp v-wrap">
-          <div>
+        <div>
+          <div className="v-row v-sp v-ihead">
             <h1>Inbox</h1>
-            <div className="v-lbl">{view === "a" ? "Everything that moved your money, newest first." : pending.length ? `${pending.length} waiting for you. One tap each.` : "Nothing waiting."}</div>
+            <div className="v-seg v-seg-wrap" role="group" aria-label="View">
+              <button type="button" aria-pressed={view === "a"} onClick={() => setView("a")}>All activity</button>
+              <button type="button" aria-pressed={view === "p"} onClick={() => setView("p")}>{label(pending.length)}</button>
+            </div>
           </div>
-          <div className="v-seg v-seg-wrap" role="group" aria-label="View">
-            <button type="button" aria-pressed={view === "a"} onClick={() => setView("a")}>All activity</button>
-            <button type="button" aria-pressed={view === "p"} onClick={() => setView("p")}>{label(pending.length)}</button>
-          </div>
+          <div className="v-lbl" style={{ marginTop: 4 }}>{view === "a" ? "Everything that moved your money, newest first." : pending.length ? `${pending.length} waiting for you. One tap each.` : "Nothing waiting."}</div>
         </div>
 
         {pending.length > 0 ? (

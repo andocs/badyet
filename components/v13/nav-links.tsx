@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { V13Icon, type V13IconName } from "./icons";
 import { QuickAddButton } from "./quick-add";
 
@@ -40,9 +41,11 @@ export function RailLinks({ items }: { items: NavItem[] }) {
   );
 }
 
-/** The phone's five tabs: Now, Inbox, + (quick add), Accounts, Plan. */
-export function PhoneTabs({ inbox, plan }: { inbox: NavItem; plan: NavItem }) {
+/** The phone's five tabs: Now, Inbox, + (quick add), Accounts, More. More opens a sheet with every other page. */
+export function PhoneTabs({ inbox, plan, more }: { inbox: NavItem; plan: NavItem; more: React.ReactNode }) {
   const path = usePathname();
+  const sheet = useRef<HTMLDialogElement>(null);
+  useEffect(() => sheet.current?.close(), [path]);
   const tab = (item: NavItem) => (
     <Link key={item.label} href={item.href!} aria-current={isCurrent(path, item) ? "page" : undefined}>
       <V13Icon name={item.icon} />
@@ -58,7 +61,17 @@ export function PhoneTabs({ inbox, plan }: { inbox: NavItem; plan: NavItem }) {
         <span className="v-fab"><V13Icon name="plus" /></span>
       </QuickAddButton>
       {tab({ label: "Accounts", icon: "wallet", href: "/accounts" })}
-      {tab(plan)}
+      <button type="button" className="v-moretab" aria-current={isCurrent(path, plan) || path === "/settings" ? "page" : undefined} aria-haspopup="dialog" onClick={() => sheet.current?.showModal()}>
+        <V13Icon name={plan.icon} />
+        More
+      </button>
+      <dialog ref={sheet} className="v-dlg" aria-label="More pages" onClick={(e) => e.target === sheet.current && sheet.current.close()}>
+        <div className="v-qa">
+          <div className="v-grab" />
+          <div className="v-row v-sp"><h2>More</h2><button type="button" className="v-btn v-sm" onClick={() => sheet.current?.close()}>Close</button></div>
+          {more}
+        </div>
+      </dialog>
     </nav>
   );
 }

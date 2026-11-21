@@ -14,8 +14,8 @@ export interface BonusData {
 const rows = <T,>(r: { data: unknown }): T[] => (r.data ?? []) as T[];
 
 export async function loadBonuses(supabase: SupabaseClient): Promise<BonusData> {
-  const salary = await loadSalary(supabase);
-  const [inst, splits, funds] = await Promise.all([
+  const [salary, inst, splits, funds] = await Promise.all([
+    loadSalary(supabase),
     supabase.from("bonus_instances").select("id, rule_id, year"),
     supabase.from("bonus_instance_splits").select("instance_id, target_kind, target_id, label, amount, done"),
     supabase.from("funds").select("id, name").is("archived_at", null).order("priority"),

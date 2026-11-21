@@ -4,7 +4,11 @@ export const ACCOUNT_KINDS = ["ewallet", "debit", "savings", "credit", "cash"] a
 export type AccountKind = (typeof ACCOUNT_KINDS)[number];
 
 /** Card colours (the design's flat brand colours). */
-export const ACCOUNT_COLORS = ["#2F5BD7", "#087A5A", "#B03030", "#7A3FB8", "#0F7A95", "#B83A86", "#4A5568"] as const;
+export const ACCOUNT_COLORS = [
+  "#2F5BD7", "#087A5A", "#B03030", "#7A3FB8", "#0F7A95", "#B83A86", "#4A5568",
+  "#1E3A8A", "#0EA5E9", "#14B8A6", "#15803D", "#65A30D", "#CA8A04", "#EA580C",
+  "#DC2626", "#9F1239", "#C026D3", "#6D28D9", "#4F46E5", "#78350F", "#334155", "#111827",
+] as const;
 
 export interface NewAccount {
   name: string;

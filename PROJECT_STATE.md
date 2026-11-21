@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 2 Build
-- **Active slice / milestone:** Next: 8 Android (Expo) phone app, separate effort
-- **Gate:** none
-- **Next action:** Web rehaul (slices 1 to 7) is done. Plan the Android app as its own effort when you are ready.
-- **User to-do now:** Open the app and try each page, push the slice branches (2 to 7), apply any pending migrations, decide when to run docs/rehaul/retire-old-tables.sql.
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev plan
+- **Gate:** waiting
+- **Next action:** Approve rev-1..rev-4 slice plan
+- **User to-do now:** -
 
 ## 3. Execution log
 
@@ -85,17 +85,29 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Approved design: docs/mockups/v13-gallery.html (14 review rounds), docs/rehaul/ia.md (flows + "Decisions" section = answers to all open questions), docs/rehaul/model.md (data model + migration map). Round 1 mockups are kept in docs/mockups/round1/ for comparison only.
+Revision batch (all Needed, from user notes). Scout map is in the chat; no code changed yet.
 
-Build order (web first, Android later). One slice per gate; slices 1 and 2 must run in order, 3 to 6 can be sequential or parallel after 2.
-1. Data foundation. Migrations (with rollback) for: accounts + balance_anchors, transactions + merchant_rules, category_groups/categories/budget_lines (rules fixed|pct|rest, counts_to_daily, kind normal|rto|rto_contingency), salary_events (status confirmed|expected) + allowances (payslip_cutoff) + tax_table_versions, plan_assumptions, bonus_rules (recurrence yearly|once, payslip_cutoff) + splits (amount|percent, custom label) + instances, funds (virtual shares), month_overrides, payslip_templates/lines, raise_allocations, pools + pool_entries, office_day_overrides, user_settings additions. Migrate existing data (keep current balances and budget lines; non-active plans exported to JSON). Pure TypeScript in lib/: month iterator, salary-timeline resolver, payslip builder (tax split across both cutoffs, contributions + allowances on cutoff 2, bonuses on their cutoff), budget evaluator (incl. raise top-ups, daily pool, RTO day budget), fund allocator with overrides, with/without-expected-raises runner. Keep lib/pay/compute.ts and lib/windfall/compute.ts rules (SSS, PhilHealth, Pag-IBIG, withholding; de minimis per event, shared 90k cap, no de minimis on 13th month). Tests for every rule.
-2. Shell, theme and Now. Phone 5-tab bar + desktop rail, Night Emerald tokens (both themes), hide-amounts (asterisks), Now (hero + runway chart, recent, accounts row, planned vs spent collapsible cards, bills list, settle nudge), quick add.
-3. Accounts and Inbox (colour cards, receive-QR in private storage, confirm/ignore/rules, wide cards on desktop).
-4. Salary and tax (timeline, expected vs confirmed events, projected raises card, allowances with Taxable + lands-in cutoff, payslip builder, raise wizard with "where the extra goes").
-5. Budget and Bonuses (lines, tickers in the editor only, RTO lines + contingency + settle, pools, future years with expected-raise tags and compare switch; bonus rules, one-offs, history, custom flat/percent splits, bonus wizard).
-6. Funds, Forecast, Override (funds editor, 60-month forecast: stacked/lines, isolate pills, year ladder, override A single + B bulk).
-7. First run wizard, Settings, retire plans and old pages.
-8. Android (Expo) phone app, separate effort: notification capture in the first native build.
+rev-1 Budget + Bonuses (S/M)
+- Budget hero (budget/page.tsx:109-137): show "left / take-home" (e.g. 1000/5000) as the main figure, take-home text smaller.
+- Month-column track (v13.css:389-395, page.tsx:177-191): background must end at the last circle, no trailing gap. (Assumed to be the budget year-by-year columns; confirm.)
+- Bonuses (bonuses/page.tsx, lib/bonuses/load.ts): add bonuses/loading.tsx skeleton, remove the loadSalary -> Promise.all waterfall, filter bonus_instances by year.
+AC: hero shows N/M; no gap after last circle; bonuses tab shows skeleton instantly and loads with one parallel round.
+
+rev-2 Colors + Login (S)
+- Expand ACCOUNT_COLORS (lib/accounts/v13.ts:7) to about 16 swatches; picker wraps cleanly.
+- Restyle app/login/page.tsx with the v13 look (v-card/v-btn, tokens from v13.css).
+AC: more colors selectable in accounts and category pickers; login matches app look in light and dark.
+
+rev-3 Mobile nav + Inbox header (S/M)
+- Phone has no way to Salary, Bonuses, Funds, Forecast, Settings, Sign out. Add a "More" sheet on the Plan tab (reuse .v-sheet) listing them.
+- Inbox filter row (inbox.tsx:128-131, v13.css:231): keep tabs on one line when All activity is selected.
+AC: every page reachable on a phone; Inbox tabs never wrap at 360px.
+
+rev-4 Mobile charts (M)
+- Runway chart (now.tsx:123-154): larger and readable on phone (fixed taller viewBox / fewer labels on narrow screens).
+- Budget year chart: show at most 6 months with next/prev buttons; no overflow at 360px.
+- Year switching: make it client-side or cached instead of a full server re-render.
+AC: chart labels readable at 360px; no horizontal overflow; year change feels instant.
 
 ## Decisions & architecture
 

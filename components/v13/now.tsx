@@ -121,7 +121,17 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
 
 /** Cumulative spending against the plan pace over the cutoff, drawn on the hero's dark gradient. */
 function Runway({ view }: { view: NowView }) {
-  const W = 800, H = 190, L = 44, R = 10, T = 12, B = 28;
+  return (
+    <>
+      <RunwaySvg view={view} W={800} H={190} cls="v-wid" />
+      <RunwaySvg view={view} W={360} H={230} cls="v-nar" />
+    </>
+  );
+}
+
+/** Drawn twice at its own size (wide for desktop, narrow for a phone) so the labels stay readable instead of shrinking. */
+function RunwaySvg({ view, W, H, cls }: { view: NowView; W: number; H: number; cls: string }) {
+  const L = 44, R = 10, T = 12, B = 28;
   const max = Math.max(view.pool, view.cumulative.at(-1) ?? 0, view.cumulative.at(-1)! + view.perDay * view.daysLeft, 100);
   const stepPesos = [500, 1000, 2000, 2500, 5000, 10000, 20000, 25000, 50000, 100000].find((s) => max / 100 / s <= 4) ?? 100000;
   const top = Math.ceil(max / 100 / stepPesos) * stepPesos * 100;
@@ -131,7 +141,7 @@ function Runway({ view }: { view: NowView }) {
   const last = view.cumulative.at(-1) ?? 0;
   const label = `Cumulative spending against plan pace over the ${view.daysTotal} day cutoff. Spent ${formatPesos(money(last))} by day ${view.dayNumber}; the plan allows ${formatPesos(view.pool)} by day ${view.daysTotal}.`;
   return (
-    <svg className="v-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} style={{ marginTop: 12 }}>
+    <svg className={`v-chart ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={label} style={{ marginTop: 12 }}>
       {ticks.map((v) => (
         <g key={v}>
           <line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />

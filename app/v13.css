@@ -384,7 +384,8 @@ table.v-pt tr.v-grp td{font:700 12px var(--font-body);letter-spacing:.06em;text-
 .v-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
 .v-wk button{min-height:44px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer}
 .v-wk button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-@media(max-width:759px){.v-blh{display:none}.v-bl{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n a" "r c"}.v-bn{grid-area:n}.v-ba{grid-area:a}.v-br{grid-area:r}.v-bc{grid-area:c;justify-self:end}}
+@media(max-width:759px){.v-blh{display:none}.v-bl{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n a" "r c"}.v-bn{grid-area:n}.v-ba{grid-area:a}.v-br{grid-area:r}.v-bcut{grid-area:c;justify-self:end}}
+.v-bcut{display:inline-flex;justify-self:start}
 .v-cl{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.v-cl:last-of-type{border-bottom:0}
 .v-months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
 .v-mcol{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:150px;justify-content:flex-end;color:var(--muted);font-size:11px;font-weight:700;position:relative}
@@ -599,3 +600,27 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 @media (prefers-reduced-motion:reduce){
   .v13 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* Revision batch: login, phone nav sheet, inbox header, runway chart, half-year month strip */
+.v13 .v-login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.v13 .v-logincard{width:min(420px,100%);padding:28px}
+.v13 .v-logincard .v-flag{margin-top:6px}
+.v13 .v-ihead{flex-wrap:nowrap}
+.v13 .v-ihead .v-seg-wrap{flex:none}
+.v13 svg.v-chart.v-nar{display:none}
+.v13 .v-mnav{display:none}
+.v13 .v-more{display:flex;flex-direction:column;gap:2px}
+.v13 .v-more a{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:8px;min-height:48px;color:var(--ink);font-weight:700}
+.v13 .v-more a[aria-current]{background:var(--tint);color:var(--accent-text)}
+.v13 .v-more .v-hr{margin:6px 0}
+.v13 .v-tabs button.v-moretab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:0;cursor:pointer;color:var(--muted);font-size:12px;font-weight:700;min-height:56px;padding:8px 2px 4px}
+.v13 .v-tabs button.v-moretab[aria-current]{color:var(--accent-text)}
+@media(max-width:759px){
+ .v13 svg.v-chart.v-wid{display:none}
+ .v13 svg.v-chart.v-nar{display:block}
+ .v13 .v-mnav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+ .v13 .v-months{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .v13 .v-months[data-half="0"] .v-mcol:nth-child(n+7){display:none}
+ .v13 .v-months[data-half="1"] .v-mcol:nth-child(-n+6){display:none}
+}
+.v13 .v-tabs .v-more a{flex-direction:row;justify-content:flex-start;font-size:15px;padding:10px 8px;min-height:48px;gap:12px}

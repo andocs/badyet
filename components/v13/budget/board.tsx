@@ -139,7 +139,7 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                     </span>
                   </span>
                   <span className="v-br"><span className="v-pill v-rl">{ruleText(l)}</span></span>
-                  <span className="v-bc">
+                  <span className="v-bcut">
                     <span className="v-cutp" role="img" aria-label={cutoffText(l.cutoff)}>
                       <i className={l.cutoff !== "second" ? "v-on" : ""}>1</i><i className={l.cutoff !== "first" ? "v-on" : ""}>2</i>
                     </span>

@@ -49,9 +49,11 @@ const nextDay = (d: IsoDate): string => new Date(Date.parse(d) + 86_400_000).toI
 
 /** Everything the Budget screen needs. Row-level security keeps every query to the signed-in user's rows. */
 export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> {
-  const salary = await loadSalary(supabase);
   const today = isoDate(todayManila());
-  const { data: s } = await supabase.from("user_settings").select("first_payday_day, second_payday_day, office_days, rto_amount").maybeSingle();
+  const [salary, { data: s }] = await Promise.all([
+    loadSalary(supabase),
+    supabase.from("user_settings").select("first_payday_day, second_payday_day, office_days, rto_amount").maybeSingle(),
+  ]);
   const settings = (s as { first_payday_day: number; second_payday_day: number; office_days: number[]; rto_amount: number } | null) ?? { first_payday_day: 10, second_payday_day: 25, office_days: [1, 2], rto_amount: 0 };
   const paydays = { first: settings.first_payday_day, second: settings.second_payday_day };
   const { period, budgetMonth } = currentCutoff(today, paydays);

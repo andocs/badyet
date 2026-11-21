@@ -50,7 +50,21 @@ export function V13Shell({ children, pending, accounts, categories }: { children
           </nav>
           <div className="v-content">{children}</div>
         </div>
-        <PhoneTabs inbox={today[1]!} plan={{ label: "Plan", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }} />
+        <PhoneTabs
+          inbox={today[1]!}
+          plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }}
+          more={
+            <div className="v-more">
+              <RailLinks items={[...plan, { label: "Settings", icon: "settings", href: "/settings" }]} />
+              <hr className="v-hr" />
+              <ThemeToggle className="v-railbtn" />
+              <HideAmounts className="v-railbtn" withIcon />
+              <form action={signOut}>
+                <button type="submit" className="v-railbtn">Sign out</button>
+              </form>
+            </div>
+          }
+        />
       </QuickAddProvider>
     </div>
   );

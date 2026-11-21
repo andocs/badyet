@@ -12,6 +12,7 @@ import { shortDate, rangeLabel } from "@/lib/now/format";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { BudgetBoard } from "@/components/v13/budget/board";
+import { YearMonths } from "@/components/v13/budget/year-months";
 import { CategoriesCard, PoolsCard, RtoCard, SettleCard } from "@/components/v13/budget/side-cards";
 
 export const metadata = { title: "Budget · Bad(yet)" };
@@ -116,8 +117,10 @@ function Summary({ shown, fut, data, wantsAdj }: { shown: ProjectionMonth; fut: 
     <>
       <section className="v-hero">
         <div className="v-row v-sp v-wrap">
-          <div><div className="v-lbl">Take-home {ymLabel(shown.month)}{shown.assumed ? " (assumed raise)" : ""}</div><div className="v-big v-num" style={{ fontSize: 38 }}>{formatPesos(take)}</div></div>
-          <div style={{ textAlign: "right" }}><div className="v-lbl">Whatever is left</div><div className="v-big v-num" style={{ fontSize: 38 }}>{formatPesos(money(Math.max(0, rest)))}</div></div>
+          <div>
+            <div className="v-lbl">Left of take-home, {ymLabel(shown.month)}{shown.assumed ? " (assumed raise)" : ""}</div>
+            <div className="v-big v-num" style={{ fontSize: 38 }}>{formatPesos(money(Math.max(0, rest)))}<span className="v-lbl" style={{ fontSize: 18, fontWeight: 700 }}> / {formatPesos(take)}</span></div>
+          </div>
         </div>
         <div className="v-row v-wrap" style={{ marginTop: 10, gap: 8 }}>
           <span className="v-pill">Fixed lines <Money value={fixed} /> · {take > 0 ? Math.round((fixed / take) * 100) : 0}% of take-home</span>
@@ -176,19 +179,23 @@ function FutureYears({ year, thisYear, month, run, without, cmp, link, groupsLis
       </div>
       <section className="v-card">
         <div className="v-row v-sp v-wrap"><h2>{year} by month</h2><div className="v-legend">{groupsList.map((g, i) => <span key={g.id}><i className="v-dot" style={{ background: colors[i % colors.length] }} />{g.name}</span>)}</div></div>
-        <div className="v-months" style={{ marginTop: 12 }} role="group" aria-label="Pick a month">
-          {run.map((m) => {
+        <YearMonths
+          key={year}
+          year={year}
+          cols={run.map((m) => {
             const flag = monthFlag(m.budget, money(TIGHT));
-            return (
-              <Link key={m.month} href={link({ v: "fut", m: m.month, ...(cmp ? { cmp: "1" } : {}) })} className="v-mcol" aria-pressed={m.month === month} aria-label={`${ymLabel(m.month)}: take-home ${formatPesos(m.pay.takeHome)}${flag ? `, ${flag === "over" ? "over budget" : "tight"}` : ""}${m.expected ? ", includes an expected raise" : ""}`}>
-                {flag ? <span className="v-fl v-neg" aria-hidden="true">!</span> : null}
-                {m.expected ? <span className="v-fl" style={{ left: "auto", right: 4, color: "var(--accent-text)" }} aria-hidden="true">○</span> : null}
-                <span className="v-stk" style={{ height: (m.pay.takeHome / maxTake) * 96 }} />
-                {MON[Number(m.month.slice(5)) - 1]}
-              </Link>
-            );
+            return {
+              month: m.month,
+              short: MON[Number(m.month.slice(5)) - 1]!,
+              href: link({ v: "fut", m: m.month, ...(cmp ? { cmp: "1" } : {}) }),
+              selected: m.month === month,
+              flag: flag === "over" || flag === "tight" ? flag : null,
+              expected: m.expected,
+              h: (m.pay.takeHome / maxTake) * 96,
+              aria: `${ymLabel(m.month)}: take-home ${formatPesos(m.pay.takeHome)}${flag ? `, ${flag === "over" ? "over budget" : "tight"}` : ""}${m.expected ? ", includes an expected raise" : ""}`,
+            };
           })}
-        </div>
+        />
         <div className="v-xs v-muted" style={{ marginTop: 8 }}>Bar height = take-home. ! = tight or over. ○ = includes an expected raise.</div>
       </section>
     </>
