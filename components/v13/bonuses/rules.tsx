@@ -5,7 +5,9 @@ import { archiveRule, saveRule } from "@/app/(v13)/bonuses/actions";
 import { parsePesos } from "@/lib/domain/money";
 import type { BonusRule } from "@/lib/engine/types";
 import { V13Icon } from "../icons";
+import { useConfirm, useToast } from "../feedback";
 import { Money } from "../money";
+import { MonthOfYear, MonthPicker } from "../pickers";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const COMPONENT_DENOMINATOR = 10_000_000;
@@ -45,6 +47,9 @@ export function RulesPanel({ rules }: { rules: BonusRule[] }) {
   const [f, setF] = useState<Form>(blank("yearly"));
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
+  const ask = useConfirm();
+  const toast = useToast();
+  const thisYear = new Date().getFullYear();
   const set = (c: Partial<Form>) => setF((x) => ({ ...x, ...c }));
   const open = (form: Form) => { setError(null); setF(form); dialog.current?.showModal(); };
   const yearly = rules.filter((r) => r.recurrence === "yearly");
@@ -68,7 +73,7 @@ export function RulesPanel({ rules }: { rules: BonusRule[] }) {
         deMinimis: f.kind === "thirteenth" ? 0 : dm,
       });
       if (r.error) setError(r.error);
-      else dialog.current?.close();
+      else { dialog.current?.close(); toast("Bonus saved."); }
     });
   };
 
@@ -103,18 +108,16 @@ export function RulesPanel({ rules }: { rules: BonusRule[] }) {
           <div className="v-frm">
             <label className="v-field">Name<input value={f.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} autoFocus /></label>
             {f.recurrence === "yearly" ? (
-              <div className="v-two">
+              <div className="v-frm">
                 <label className="v-field">Kind
                   <select value={f.kind} onChange={(e) => { const kind = e.target.value as Form["kind"]; set({ kind, formula: kind === "thirteenth" ? "base_multiple" : kind === "cip" ? "eligible_x_component_x_multiplier" : f.formula, deMinimis: kind === "thirteenth" ? "0" : f.deMinimis }); }}>
                     <option value="thirteenth">13th month</option><option value="cip">CIP</option><option value="custom">Other yearly bonus</option>
                   </select>
                 </label>
-                <label className="v-field">Lands in
-                  <select value={f.payMonth} onChange={(e) => set({ payMonth: Number(e.target.value) })}>{MON.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select>
-                </label>
+                <div className="v-field">Lands in<MonthOfYear value={f.payMonth} label="Month it lands" onChange={(m) => set({ payMonth: m })} /></div>
               </div>
             ) : (
-              <label className="v-field">Month it lands<input type="month" value={f.onceOn} onChange={(e) => set({ onceOn: e.target.value })} /></label>
+              <div className="v-field">Month it lands<MonthPicker label="Month it lands" value={f.onceOn} min={`${thisYear - 5}-01`} max={`${thisYear + 10}-12`} onChange={(v) => set({ onceOn: v })} /></div>
             )}
             <div className="v-field">Lands in the
               <div className="v-seg" role="group" aria-label="Cutoff it lands in" style={{ width: "100%" }}>
@@ -140,7 +143,7 @@ export function RulesPanel({ rules }: { rules: BonusRule[] }) {
             {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
             <div className="v-row">
               <button type="button" className="v-btn v-pri v-grow" disabled={busy} onClick={save}>{busy ? "Saving…" : "Save bonus"}</button>
-              {f.id ? <button type="button" className="v-btn" disabled={busy} onClick={() => { if (window.confirm("Remove this bonus from your plans? Years already received keep their history.")) start(async () => { const r = await archiveRule(f.id!); if (r.error) setError(r.error); else dialog.current?.close(); }); }}>Remove</button> : null}
+              {f.id ? <button type="button" className="v-btn" disabled={busy} onClick={async () => { if (await ask({ title: "Remove this bonus?", message: "It leaves your plans. Years already received keep their history.", confirmLabel: "Remove", danger: true })) start(async () => { const r = await archiveRule(f.id!); if (r.error) setError(r.error); else { dialog.current?.close(); toast("Bonus removed."); } }); }}>Remove</button> : null}
             </div>
           </div>
         </div>

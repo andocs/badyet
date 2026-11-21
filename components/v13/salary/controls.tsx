@@ -3,8 +3,8 @@
 import { createContext, useContext, useOptimistic, useState, useTransition } from "react";
 import { confirmEvent, deleteEvent, deleteAllowance, saveAssumptions, setAllowance } from "@/app/(v13)/pay/actions";
 import type { FormState } from "@/lib/form-state";
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+import { useConfirm } from "../feedback";
+import { MonthOfYear } from "../pickers";
 
 function useRun() {
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +51,7 @@ export function ExpectedPill() {
 /** Confirm (when expected) and remove, for one salary event. */
 export function EventActions({ id, kind }: { id: string; kind: string }) {
   const { state, apply } = useItem();
+  const ask = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
   const go = (change: Partial<ItemState>, fn: () => Promise<FormState>) =>
@@ -64,7 +65,7 @@ export function EventActions({ id, kind }: { id: string; kind: string }) {
     <>
       {state.status === "expected" ? <button type="button" className="v-btn v-sm v-pri" onClick={() => go({ status: "confirmed" }, () => confirmEvent(id))}>Confirm</button> : null}
       {kind !== "start" ? (
-        <button type="button" className="v-iconbtn v-s" aria-label="Remove this event" title="Remove" onClick={() => { if (window.confirm("Remove this event? Budget top-ups tied to it go too.")) go({ gone: true }, () => deleteEvent(id)); }}>×</button>
+        <button type="button" className="v-iconbtn v-s" aria-label="Remove this event" title="Remove" onClick={async () => { if (await ask({ title: "Remove this event?", message: "Budget top-ups tied to it go too.", confirmLabel: "Remove", danger: true })) go({ gone: true }, () => deleteEvent(id)); }}>×</button>
       ) : null}
       {error ? <span className="v-flag v-bad v-rowerr" role="alert">{error}</span> : null}
     </>
@@ -92,12 +93,10 @@ export function ProjectedRaises({ on, pctBp, month }: { on: boolean; pctBp: numb
           Raise (%)
           <input inputMode="decimal" value={state.pct} disabled={!state.on} onChange={(e) => setState({ ...state, pct: e.target.value })} onBlur={() => save(state)} />
         </label>
-        <label className="v-field">
+        <div className="v-field">
           In the month of
-          <select value={state.month} disabled={!state.on} onChange={(e) => save({ ...state, month: Number(e.target.value) })}>
-            {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
-          </select>
-        </label>
+          <MonthOfYear value={state.month} label="Month of the yearly raise" disabled={!state.on} onChange={(m) => save({ ...state, month: m })} />
+        </div>
       </div>
       {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
     </>
@@ -107,6 +106,7 @@ export function ProjectedRaises({ on, pctBp, month }: { on: boolean; pctBp: numb
 /** Where an allowance lands, and removing it. Whether it is taxed is chosen when it is added. */
 export function AllowanceControls({ id, name }: { id: string; name: string }) {
   const { state, apply } = useItem();
+  const ask = useConfirm();
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
   const go = (change: Partial<ItemState>, fn: () => Promise<FormState>) =>
@@ -122,7 +122,7 @@ export function AllowanceControls({ id, name }: { id: string; name: string }) {
         <button type="button" aria-pressed={state.cutoff === "first"} aria-label="1st cutoff" onClick={() => go({ cutoff: "first" }, () => setAllowance(id, { cutoff: "first" }))}>1st</button>
         <button type="button" aria-pressed={state.cutoff === "second"} aria-label="2nd cutoff" onClick={() => go({ cutoff: "second" }, () => setAllowance(id, { cutoff: "second" }))}>2nd</button>
       </div>
-      <button type="button" className="v-iconbtn v-s" aria-label={`Remove ${name}`} title="Remove" onClick={() => { if (window.confirm(`Remove ${name}?`)) go({ gone: true }, () => deleteAllowance(id)); }}>×</button>
+      <button type="button" className="v-iconbtn v-s" aria-label={`Remove ${name}`} title="Remove" onClick={async () => { if (await ask({ title: `Remove ${name}?`, message: "It leaves your payslips and the timeline.", confirmLabel: "Remove", danger: true })) go({ gone: true }, () => deleteAllowance(id)); }}>×</button>
       {error ? <span className="v-flag v-bad v-rowerr" role="alert">{error}</span> : null}
     </>
   );

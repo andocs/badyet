@@ -10,11 +10,12 @@ import { money, parsePesos } from "@/lib/domain/money";
 import { buildMonthPay } from "@/lib/engine/payslip";
 import { DEFAULT_ASSUMPTIONS, DEFAULT_PAY_SETTINGS } from "@/lib/engine/rows";
 import { resolveSalaryTimeline } from "@/lib/engine/salary";
+import { V13Icon } from "./icons";
 import { Money } from "./money";
+import { DayOfMonth, MonthPicker } from "./pickers";
 
 const STEPS = ["Accounts", "Salary", "Paydays", "Budget", "Funds"];
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
-const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 interface Acct { name: string; kind: string; last4: string; balance: string }
 interface Line { on: boolean; name: string; group: "Essentials" | "Wants" | "Savings"; rule: "fixed" | "pct"; value: string }
@@ -50,7 +51,6 @@ export function SetupWizard({ thisMonth, rerun }: { thisMonth: YearMonth; rerun:
   const baseV = parsePesos(base);
   const sssV = parsePesos(sss);
   const piV = parsePesos(pagibig);
-  const months = useMemo(() => Array.from({ length: 24 }, (_, i) => addMonths(addMonths(thisMonth, -12), i)), [thisMonth]);
   const filled = accts.filter((a) => a.name.trim() !== "");
   const total = filled.reduce((t, a) => t + (parsePesos(a.balance) ?? 0), 0);
 
@@ -126,7 +126,7 @@ export function SetupWizard({ thisMonth, rerun }: { thisMonth: YearMonth; rerun:
                 <div className="v-frm">
                   <div className="v-two">
                     <label className="v-field">Base per month (₱)<input value={base} inputMode="decimal" onChange={(e) => setBase(e.target.value)} placeholder="58,000" /></label>
-                    <label className="v-field">Starting from<select value={start} onChange={(e) => setStart(e.target.value as YearMonth)}>{months.map((m) => <option key={m} value={m}>{MON[Number(m.slice(5)) - 1]} {m.slice(0, 4)}</option>)}</select></label>
+                    <div className="v-field">Starting from<MonthPicker label="Starting from" value={start} min={addMonths(thisMonth, -60)} max={addMonths(thisMonth, 24)} onChange={(v) => v && setStart(v)} /></div>
                   </div>
                   <div className="v-two">
                     <label className="v-field">Job title (optional)<input value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} /></label>
@@ -147,8 +147,8 @@ export function SetupWizard({ thisMonth, rerun }: { thisMonth: YearMonth; rerun:
                 <p className="v-muted">Cutoffs run payday to payday. The usual twice-a-month pattern is filled in.</p>
                 <div className="v-frm">
                   <div className="v-two">
-                    <label className="v-field">First payday<select value={p1} onChange={(e) => setP1(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
-                    <label className="v-field">Second payday<select value={p2} onChange={(e) => setP2(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 2).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
+                    <div className="v-field">First payday<DayOfMonth label="First payday" value={p1} min={1} max={27} onChange={setP1} /></div>
+                    <div className="v-field">Second payday<DayOfMonth label="Second payday" value={p2} min={2} max={28} onChange={setP2} /></div>
                   </div>
                   <div className="v-pre" aria-live="polite">Paid the {ord(p1)} covers the {ord(p1 + 1)} to the {ord(p2 - 1)}. Paid the {ord(p2)} covers the {ord(p2)} to the {ord(p1)} of next month.</div>
                 </div>
@@ -160,12 +160,14 @@ export function SetupWizard({ thisMonth, rerun }: { thisMonth: YearMonth; rerun:
                 <h2>How do you split your pay?</h2>
                 <p className="v-muted">Starter lines in Essentials, Wants and Savings. Untick what you do not need, rename, or change the rule. A &quot;Whatever is left&quot; line is added for the rest.</p>
                 {lines.map((l, i) => (
-                  <div key={i} className="v-ln2">
-                    <input type="checkbox" className="v-cb" checked={l.on} onChange={(e) => setLine(i, { on: e.target.checked })} aria-label={`Use ${l.name}`} />
-                    <input value={l.name} maxLength={60} onChange={(e) => setLine(i, { name: e.target.value })} aria-label="Line name" />
-                    <select value={l.rule} onChange={(e) => setLine(i, { rule: e.target.value as Line["rule"] })} aria-label={`Rule for ${l.name}`}><option value="pct">% of take-home</option><option value="fixed">Fixed ₱</option></select>
-                    <input value={l.value} inputMode="decimal" onChange={(e) => setLine(i, { value: e.target.value })} aria-label={`${l.rule === "pct" ? "Percent" : "Amount"} for ${l.name}`} />
-                    <select value={l.group} onChange={(e) => setLine(i, { group: e.target.value as Line["group"] })} aria-label={`Group for ${l.name}`}><option>Essentials</option><option>Wants</option><option>Savings</option></select>
+                  <div key={i} className={`v-ln2 ${l.on ? "" : "v-off2"}`}>
+                    <button type="button" className="v-chk" role="checkbox" aria-checked={l.on} aria-label={`Use ${l.name || "this line"}`} onClick={() => setLine(i, { on: !l.on })}><V13Icon name="check" /></button>
+                    <input value={l.name} maxLength={60} placeholder="Line name" onChange={(e) => setLine(i, { name: e.target.value })} aria-label="Line name" />
+                    <div className="v-ln2s">
+                      <select value={l.rule} onChange={(e) => setLine(i, { rule: e.target.value as Line["rule"] })} aria-label={`Rule for ${l.name}`}><option value="pct">% of pay</option><option value="fixed">Fixed ₱</option></select>
+                      <input value={l.value} inputMode="decimal" onChange={(e) => setLine(i, { value: e.target.value })} aria-label={`${l.rule === "pct" ? "Percent" : "Amount"} for ${l.name}`} />
+                      <select value={l.group} onChange={(e) => setLine(i, { group: e.target.value as Line["group"] })} aria-label={`Group for ${l.name}`}><option>Essentials</option><option>Wants</option><option>Savings</option></select>
+                    </div>
                   </div>
                 ))}
                 <button type="button" className="v-btn v-sm" style={{ marginTop: 12 }} onClick={() => setLines((x) => [...x, { on: true, name: "", group: "Wants", rule: "pct", value: "5" }])}>+ Add a line</button>
@@ -177,8 +179,8 @@ export function SetupWizard({ thisMonth, rerun }: { thisMonth: YearMonth; rerun:
                 <h2>Where should savings go?</h2>
                 <p className="v-muted">Pick a starter set, or none. Caps and account links come later on the Funds page.</p>
                 <div className="v-stack">
-                  <label className="v-row" style={{ gap: 12 }}><input type="checkbox" className="v-cb" checked={emergency} onChange={(e) => setEmergency(e.target.checked)} /><span><b>Emergency fund</b><span className="v-xs v-muted" style={{ display: "block" }}>Fills in ₱100,000 steps.</span></span></label>
-                  <label className="v-row" style={{ gap: 12 }}><input type="checkbox" className="v-cb" checked={travel} onChange={(e) => setTravel(e.target.checked)} /><span><b>Travel</b><span className="v-xs v-muted" style={{ display: "block" }}>Fills to ₱50,000 and starts again every January.</span></span></label>
+                  <button type="button" className="v-fundopt" role="checkbox" aria-checked={emergency} onClick={() => setEmergency(!emergency)}><span className="v-chk" aria-hidden="true"><V13Icon name="check" /></span><span><b>Emergency fund</b><span className="v-xs v-muted" style={{ display: "block" }}>Fills in ₱100,000 steps.</span></span></button>
+                  <button type="button" className="v-fundopt" role="checkbox" aria-checked={travel} onClick={() => setTravel(!travel)}><span className="v-chk" aria-hidden="true"><V13Icon name="check" /></span><span><b>Travel</b><span className="v-xs v-muted" style={{ display: "block" }}>Fills to ₱50,000 and starts again every January.</span></span></button>
                   {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
                   <div className="v-row v-wrap" style={{ gap: 10 }}>
                     <button type="button" className="v-btn v-pri" disabled={busy} onClick={finish}>{busy ? "Saving…" : "Finish setup"}</button>

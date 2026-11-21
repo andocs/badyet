@@ -3,15 +3,16 @@
 import { useOptimistic, useState, useTransition } from "react";
 import { deleteRule, savePaydays, setNotifCapture } from "@/app/(v13)/settings/actions";
 import type { FormState } from "@/lib/form-state";
+import { useConfirm, useToast } from "./feedback";
+import { DayOfMonth } from "./pickers";
 
+/** Runs a server action and reports the result as a toast, so every save looks the same. */
 function useAct() {
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const toast = useToast();
   const [busy, start] = useTransition();
-  const act = (fn: () => Promise<FormState>, ok: string) => start(async () => { const r = await fn(); setMsg(r.error ? { ok: false, text: r.error } : { ok: true, text: ok }); });
-  return { msg, busy, act };
+  const act = (fn: () => Promise<FormState>, ok: string) => start(async () => { const r = await fn(); toast(r.error ?? ok, r.error ? "bad" : "ok"); });
+  return { busy, act };
 }
-const Msg = ({ msg }: { msg: { ok: boolean; text: string } | null }) =>
-  msg ? <p className={`v-flag ${msg.ok ? "" : "v-bad"}`} role="status" style={msg.ok ? { background: "var(--tint)", color: "var(--accent-text)", margin: 0 } : { margin: 0 }}>{msg.text}</p> : null;
 
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 
@@ -24,12 +25,11 @@ export function PaydaysCard({ first, second }: { first: number; second: number }
     <section className="v-card v-stack" aria-labelledby="pd">
       <h2 id="pd">Paydays</h2>
       <div className="v-grid2">
-        <label className="v-field">First payday<select value={a} onChange={(e) => setA(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 1).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
-        <label className="v-field">Second payday<select value={b} onChange={(e) => setB(Number(e.target.value))}>{Array.from({ length: 27 }, (_, i) => i + 2).map((d) => <option key={d} value={d}>{ord(d)}</option>)}</select></label>
+        <div className="v-field">First payday<DayOfMonth label="First payday" value={a} min={1} max={27} onChange={setA} /></div>
+        <div className="v-field">Second payday<DayOfMonth label="Second payday" value={b} min={2} max={28} onChange={setB} /></div>
       </div>
       <p className="v-xs v-muted" style={{ margin: 0 }}>Cutoffs run payday to payday: paid the {ord(a)} covers the {ord(a + 1)}–{ord(b - 1)}; paid the {ord(b)} covers the {ord(b)}–{ord(a)} of next month.</p>
-      <div className="v-row v-wrap"><button type="button" className="v-btn v-sm v-pri" disabled={p.busy} onClick={() => p.act(() => savePaydays({ first: a, second: b }), "Saved.")}>Save paydays</button></div>
-      <Msg msg={p.msg} />
+      <div className="v-row v-wrap"><button type="button" className="v-btn v-sm v-pri" disabled={p.busy} onClick={() => p.act(() => savePaydays({ first: a, second: b }), "Paydays saved.")}>Save paydays</button></div>
     </section>
   );
 }
@@ -38,16 +38,17 @@ export function PaydaysCard({ first, second }: { first: number; second: number }
 export function NotificationsCard({ enabled, rules: rulesIn }: { enabled: boolean; rules: { id: string; pattern: string; category: string }[] }) {
   const [on, setOn] = useState(enabled);
   const n = useAct();
+  const ask = useConfirm();
+  const toast = useToast();
   // A deleted rule leaves the list at once; the server catches up behind it.
   const [rules, drop] = useOptimistic(rulesIn, (cur, id: string) => cur.filter((x) => x.id !== id));
-  const [ruleMsg, setRuleMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [, startRule] = useTransition();
   const removeRule = (id: string) =>
     startRule(async () => {
-      setRuleMsg(null);
       drop(id);
       const res = await deleteRule(id);
-      if (res.error) setRuleMsg({ ok: false, text: res.error });
+      if (res.error) toast(res.error, "bad");
+      else toast("Rule deleted.");
     });
   return (
     <section className="v-card v-stack" aria-labelledby="nt">
@@ -56,17 +57,15 @@ export function NotificationsCard({ enabled, rules: rulesIn }: { enabled: boolea
         <div><b>Read bank and wallet notifications</b><div className="v-xs v-muted">GCash, Maya, BPI. Only amount, merchant and time leave the phone. The phone app is a later part of the rehaul; this switch is saved for when it arrives.</div></div>
         <button type="button" className="v-sw" role="switch" aria-checked={on} aria-label="Read notifications" disabled={n.busy} onClick={() => { const next = !on; setOn(next); n.act(() => setNotifCapture(next), "Saved."); }} />
       </div>
-      <Msg msg={n.msg} />
       <div>
         <b>Rules</b>
         <div className="v-xs v-muted" style={{ marginBottom: 6 }}>Made from the Inbox with &quot;Always put this here&quot;.</div>
         {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No rules yet.</p> : rules.map((x) => (
           <div key={x.id} className="v-row v-sp" style={{ padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
             <span><b>{x.pattern}</b> → {x.category}</span>
-            <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm(`Delete the rule for ${x.pattern}?`)) removeRule(x.id); }}>Delete</button>
+            <button type="button" className="v-btn v-sm v-ghost" onClick={async () => { if (await ask({ title: "Delete this rule?", message: `Transactions from ${x.pattern} will no longer be sorted automatically.`, confirmLabel: "Delete", danger: true })) removeRule(x.id); }}>Delete</button>
           </div>
         ))}
-        <div style={{ marginTop: 8 }}><Msg msg={ruleMsg} /></div>
       </div>
     </section>
   );

@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/5-salary-timeline-allowances
-- **User to-do now:** Try rev-5 on desktop, tablet and phone; merge rev/1 to rev/5 to main
+- **Next action:** Approve or request changes on rev/5 and rev/6
+- **User to-do now:** Try rev-5 and rev-6; merge rev/1 to rev/6 to main
 
 ## 3. Execution log
 
@@ -34,6 +34,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 10:06 | rev-4 | Payslip builder: controls bar inside the slip column, summary beside it from the top, base pay and income tax splits for 1st and 2nd cutoff with vertical dividers, tablet summary strip | HEAD
 - 2026-11-21 10:09 | rev-4 | Removed the income tax split fields from the payslip builder bar; only base pay is split between cutoffs | HEAD
 - 2026-11-21 10:27 | rev-5 | Salary and tax: timeline cards in one row with year by year below, single-line event and allowance rows, taxable switches removed from timeline and payslip builder (chosen when adding), wizard can add an allowance that already started (up to 36 months back), income tax split text clarified | HEAD
+- 2026-11-21 10:33 | rev-6 | Timeline card order and 2:2:1 widths; fixed the Atkinson font build warning with an explicit fallback | HEAD
 
 ## 4. Open questions
 

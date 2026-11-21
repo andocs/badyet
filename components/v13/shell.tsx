@@ -1,6 +1,7 @@
 import { signOut } from "@/app/auth/actions";
 import { HideAmounts } from "@/components/hide-amounts";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FeedbackProvider } from "./feedback";
 import { PhoneTabs, RailLinks, type NavItem } from "./nav-links";
 import { QuickAddProvider, type QuickAddAccount, type QuickAddCategory } from "./quick-add";
 
@@ -24,6 +25,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
   ];
   return (
     <div className="v13">
+      <FeedbackProvider>
       <QuickAddProvider accounts={accounts} categories={categories}>
         <div className="v-app">
           <nav className="v-rail" aria-label="Main">
@@ -66,6 +68,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
           }
         />
       </QuickAddProvider>
+      </FeedbackProvider>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import type { PayCutoff } from "@/lib/engine/types";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import { salaryAt, type SalaryInput } from "@/lib/salary/view";
 import { Money } from "../money";
+import { MonthPicker } from "../pickers";
 
 interface Draft {
   key: string;
@@ -111,12 +112,10 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
           <h2>Payslip builder</h2>
           <div className="v-lbl">Build each cutoff&apos;s payslip once. Regular lines repeat every month; bonuses appear in the month they land.</div>
         </div>
-        <label className="v-row" style={{ gap: 8 }}>
+        <div className="v-row" style={{ gap: 8 }}>
           <span className="v-lbl">Month</span>
-          <select className="v-lbl-in" value={month} onChange={(e) => (window.location.search = `?tab=payslip&month=${e.target.value}`)} aria-label="Month">
-            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-        </label>
+          <div style={{ minWidth: 150 }}><MonthPicker label="Month" value={month} min={months[0]!.value} max={months[months.length - 1]!.value} onChange={(v) => v && (window.location.search = `?tab=payslip&month=${v}`)} /></div>
+        </div>
       </div>
 
       <div className="v-pbgrid">

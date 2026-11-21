@@ -4,6 +4,8 @@ import { useRef, useState, useTransition } from "react";
 import { deleteLine, saveLine } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
 import { cutoffText, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
+import { useConfirm, useToast } from "../feedback";
+import { MonthPicker } from "../pickers";
 import { Money } from "../money";
 import { V13Icon } from "../icons";
 
@@ -48,6 +50,9 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
+  const ask = useConfirm();
+  const toast = useToast();
+  const thisYear = new Date().getFullYear();
   const set = (c: Partial<Draft>) => setDraft((d) => (d ? { ...d, ...c } : d));
 
   const open = (d: Draft) => {
@@ -96,15 +101,16 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
         kind: draft.rule === "rest" ? "normal" : draft.tick === "none" ? "normal" : draft.tick,
       });
       if (r.error) setError(r.error);
-      else close();
+      else { close(); toast("Line saved."); }
     });
   };
-  const remove = () => {
-    if (!draft?.id || !window.confirm("Delete this line? Its raise top-ups go with it. Past spending stays.")) return;
+  const remove = async () => {
+    if (!draft?.id) return;
+    if (!(await ask({ title: "Delete this line?", message: "Its raise top-ups go with it. Past spending stays.", confirmLabel: "Delete", danger: true }))) return;
     start(async () => {
       const r = await deleteLine(draft.id!);
       if (r.error) setError(r.error);
-      else close();
+      else { close(); toast("Line deleted."); }
     });
   };
 
@@ -196,8 +202,8 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                   <select value={draft.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Nowhere, just a limit</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
                 </label>
                 <div className="v-grid2" style={{ gap: 8 }}>
-                  <label className="v-field">Starts<input type="month" value={draft.startsOn} onChange={(e) => set({ startsOn: e.target.value })} /></label>
-                  <label className="v-field">Ends<input type="month" value={draft.endsOn} onChange={(e) => set({ endsOn: e.target.value })} /></label>
+                  <div className="v-field">Starts<MonthPicker label="Starts" value={draft.startsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No start" onChange={(v) => set({ startsOn: v })} /></div>
+                  <div className="v-field">Ends<MonthPicker label="Ends" value={draft.endsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No end" onChange={(v) => set({ endsOn: v })} /></div>
                 </div>
               </div>
               <fieldset style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "12px 14px", margin: 0 }}>

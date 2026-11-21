@@ -13,6 +13,7 @@ import type { RaisePayload } from "@/lib/salary/event-input";
 import type { PlaceableLine } from "@/lib/salary/load";
 import { eventEffect, salaryAt, type SalaryInput } from "@/lib/salary/view";
 import { Money } from "../money";
+import { MonthOfYear, MonthPicker } from "../pickers";
 
 type Kind = "merit" | "promotion" | "allowance" | "adjustment";
 const KINDS: [Kind, string, string][] = [
@@ -199,9 +200,9 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                     {kind === "allowance" ? <label className="v-field">Name<input value={alName} maxLength={60} onChange={(e) => setAlName(e.target.value)} placeholder="Transport allowance" /></label> : null}
                     {kind === "allowance" ? <label className="v-field">Amount (₱)<input inputMode="decimal" value={alAmount} onChange={(e) => setAlAmount(e.target.value)} /></label> : null}
                     {kind === "adjustment" ? <label className="v-field">Amount (₱, negative for a deduction)<input inputMode="decimal" value={adj} onChange={(e) => setAdj(e.target.value)} placeholder="5,000" /></label> : null}
-                    <label className="v-field">{kind === "allowance" ? "Started or starts in" : "Effective month"}
-                      <select value={month} onChange={(e) => setMonth(e.target.value as YearMonth)}>{months.map((m) => <option key={m} value={m}>{label(m)}</option>)}</select>
-                    </label>
+                    <div className="v-field">{kind === "allowance" ? "Started or starts in" : "Effective month"}
+                      <MonthPicker label="Effective month" value={month} min={months[0]!} max={months[months.length - 1]!} onChange={(v) => v && setMonth(v)} />
+                    </div>
                   </div>
                   {kind === "allowance" ? <p className="v-xs v-muted" style={{ margin: 0 }}>Already getting this allowance? Pick the month it started, up to three years back. It then shows in your earlier payslips and the timeline too.</p> : null}
                   {kind === "promotion" ? (
@@ -216,7 +217,7 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                         <select value={alFreq} onChange={(e) => setAlFreq(e.target.value as "monthly" | "yearly")}><option value="monthly">Every month</option><option value="yearly">Once a year</option></select>
                       </label>
                       {alFreq === "yearly" ? (
-                        <label className="v-field">Month it lands<select value={alMonth} onChange={(e) => setAlMonth(Number(e.target.value))}>{MON.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></label>
+                        <div className="v-field" style={{ gridColumn: "1 / -1" }}>Month it lands<MonthOfYear value={alMonth} label="Month it lands" onChange={setAlMonth} /></div>
                       ) : null}
                       <label className="v-field">Lands in the
                         <select value={alCutoff} onChange={(e) => setAlCutoff(e.target.value as PayCutoff)}><option value="first">1st cutoff</option><option value="second">2nd cutoff</option></select>
@@ -299,7 +300,7 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
               <div className="v-stack">
                 <h2>Ready to save</h2>
                 <p className="v-muted">It will appear on Salary and tax, and the budget, bonuses and forecast will follow.</p>
-                <div className="v-card v-flat" style={{ padding: 0 }}>
+                <div className="v-card v-flat" style={{ display: "grid", gap: 6 }}>
                   <div className="v-row v-sp"><b>{KINDS.find((k) => k[0] === kind)![1]}{status === "expected" ? " (expected)" : ""}</b><span className="v-pill">{label(month)}</span></div>
                   {view && monthly ? <div className="v-sm v-muted" style={{ marginTop: 6 }}><Money value={view.effect.perMonth} signed /> a month. 5-year total <Money value={view.effect.total} signed />.</div> : null}
                 </div>

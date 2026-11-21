@@ -7,7 +7,9 @@ import { money, parsePesos } from "@/lib/domain/money";
 import { allocateFunds, type FundForecastMonth } from "@/lib/engine/funds";
 import type { Fund, MonthOverride } from "@/lib/engine/types";
 import type { ForecastRow } from "@/lib/funds/forecast";
+import { useToast } from "../feedback";
 import { Money } from "../money";
+import { MonthPicker } from "../pickers";
 import type { FundMeta } from "./forecast-view";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -35,7 +37,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
   const [pinOpen, setPinOpen] = useState<string | null>(null);
   const [note, setNote] = useState(existing?.note ?? "");
   const [to, setTo] = useState(month);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const toast = useToast();
   const [busy, start] = useTransition();
   const meta = new Map(funds.map((f) => [f.id, f]));
 
@@ -54,7 +56,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
 
   const move = (id: string, by: -1 | 1) => setOrder((o) => { const n = [...o]; const i = n.indexOf(id); [n[i], n[i + by]] = [n[i + by]!, n[i]!]; return n; });
   const idx = months.indexOf(month);
-  const run = (fn: () => Promise<{ ok?: boolean; error?: string }>, ok: string) => start(async () => { const r = await fn(); setMsg(r.error ? { ok: false, text: r.error } : { ok: true, text: ok }); });
+  const run = (fn: () => Promise<{ ok?: boolean; error?: string }>, ok: string) => start(async () => { const r = await fn(); toast(r.error ?? ok, r.error ? "bad" : "ok"); });
   const payload = (monthsList: string[], orderOnly = false) => ({ months: monthsList, order: current.order, pins: orderOnly ? {} : Object.fromEntries(Object.entries(pinsNum).filter(([k]) => !skips.includes(k))), skips: orderOnly ? [] : skips, note: note || null });
   const range = months.slice(months.indexOf(month), months.indexOf(to) + 1);
 
@@ -118,11 +120,10 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
             <hr className="v-hr" style={{ margin: "14px 0" }} />
             <div className="v-row v-wrap" style={{ gap: 10 }}>
               <b>Apply this order from {label(month)} to</b>
-              <label className="v-field"><span className="v-sr">To</span><select value={to} onChange={(e) => setTo(e.target.value)}>{months.slice(months.indexOf(month)).map((m) => <option key={m} value={m}>{label(m)}</option>)}</select></label>
+              <div className="v-field" style={{ minWidth: 150 }}><span className="v-sr">To</span><MonthPicker label="Apply until" value={to} min={month} max={months[months.length - 1]!} onChange={(v) => v && setTo(v)} /></div>
               <button type="button" className="v-btn v-pri" disabled={busy || order.join() === defaultOrder.join()} onClick={() => run(() => saveOverride(payload(range, true)), `Order applied to ${range.length} month${range.length === 1 ? "" : "s"}.`)}>Apply order</button>
             </div>
             <div className="v-xs v-muted" style={{ marginTop: 6 }}>Copies the order only. Pins and skips stay on their own month.</div>
-            {msg ? <p className={`v-flag ${msg.ok ? "" : "v-bad"}`} role="status" style={msg.ok ? { background: "var(--tint)", color: "var(--accent-text)", marginTop: 10 } : { marginTop: 10 }}>{msg.text}</p> : null}
           </section>
         </section>
         <aside className="v-stack">

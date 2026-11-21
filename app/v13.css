@@ -558,10 +558,14 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13{
 .v-rowf{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 84px minmax(0,1fr) 44px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
 @media(max-width:759px){.v-rowf{grid-template-columns:1fr 1fr}.v-rowf .v-rm{justify-self:end}}
-.v-ln2{display:grid;grid-template-columns:auto minmax(0,1fr) 110px 110px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
-@media(max-width:759px){.v-ln2{grid-template-columns:auto 1fr}.v-ln2>:nth-child(n+3){grid-column:2}}
+.v-ln2{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.v-ln2s{grid-column:2;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.1fr);gap:8px}
+.v-ln2.v-off2 input,.v-ln2.v-off2 select{opacity:.5}
 .v-ln2 select,.v-ln2 input{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:44px;width:100%}
-.v-cb{width:22px;height:22px;accent-color:var(--accent)}
+.v-fundopt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;cursor:pointer}
+.v-fundopt:hover{border-color:var(--muted)}
+.v-fundopt[aria-checked=true]{border-color:var(--accent);background:var(--tint)}
+.v-fundopt[aria-checked=true] .v-chk{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .v-gh3{font:800 13px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 2px}
 }
 
@@ -738,3 +742,29 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-ev .v-pill{flex:none}
 .v13 .v-alw .v-seg{flex:none}
 .v13 .v-rowerr{flex-basis:100%;margin:0}
+
+/* Revision batch 3: confirm dialog, toasts, date pickers, setup wizard rows */
+.v13 .v-btn.v-danger{background:var(--red-tint);border-color:var(--red);color:var(--red)}
+.v13 .v-btn.v-danger:hover{background:var(--red);color:var(--bg)}
+.v13 .v-cfm{width:min(420px,100vw)}
+.v13 .v-toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:80;display:flex;flex-direction:column;gap:8px;align-items:stretch;pointer-events:none;width:min(420px,calc(100vw - 28px))}
+.v13 .v-toast{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.28);font-weight:600;font-size:14px}
+.v13 .v-toast::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.v13 .v-toast.v-bad::before{background:var(--red)}
+@media(prefers-reduced-motion:no-preference){.v13 .v-toast{animation:v13rise .25s cubic-bezier(.16,1,.3,1)}}
+@media(max-width:759px){.v13 .v-toasts{bottom:92px}}
+.v13 .v-pickbtn{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer}
+.v13 .v-pickbtn:hover{border-color:var(--muted)}
+.v13 .v-pickbtn::after{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 2px 0 8px;flex:none}
+.v13 .v-pick .v-qa{gap:16px}
+.v13 .v-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.v13 .v-pg.v-months4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.v13 .v-pg.v-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.v13 .v-pg button,.v13 .v-moy button{min-height:48px;border-radius:10px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer;color:var(--ink)}
+.v13 .v-pg.v-days button{min-height:44px;border-radius:999px}
+.v13 .v-pg button:hover:not(:disabled),.v13 .v-moy button:hover:not(:disabled){border-color:var(--muted)}
+.v13 .v-pg button[aria-pressed=true],.v13 .v-moy button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.v13 .v-pg button:disabled,.v13 .v-moy button:disabled{opacity:.35;cursor:not-allowed}
+.v13 .v-moy{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.v13 .v-moy button{min-height:40px;border-radius:999px;font-size:13px}
+@media(max-width:559px){.v13 .v-moy{grid-template-columns:repeat(4,minmax(0,1fr))}}

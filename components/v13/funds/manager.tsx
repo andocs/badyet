@@ -3,7 +3,9 @@
 import { useState, useTransition } from "react";
 import { archiveFund, reorderFunds, saveFund } from "@/app/(v13)/funds/actions";
 import { money, parsePesos } from "@/lib/domain/money";
+import { useConfirm } from "../feedback";
 import { Money } from "../money";
+import { MonthOfYear } from "../pickers";
 
 export interface FundCard {
   id: string;
@@ -80,6 +82,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, start] = useTransition();
+  const ask = useConfirm();
   const byId = new Map(funds.map((f) => [f.id, f]));
   const list = order.map((id) => byId.get(id)).filter((f): f is FundCard => !!f);
   const set = (c: Partial<Draft>) => setD((x) => ({ ...x, ...c }));
@@ -118,8 +121,9 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
       else setNote("Saved.");
     });
   };
-  const archive = () => {
-    if (!d.id || !window.confirm("Archive this fund? It leaves the forecast.")) return;
+  const archive = async () => {
+    if (!d.id) return;
+    if (!(await ask({ title: "Archive this fund?", message: "It leaves the forecast.", confirmLabel: "Archive", danger: true }))) return;
     start(async () => {
       const r = await archiveFund(d.id!);
       if (r.error) setError(r.error);
@@ -196,7 +200,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
           </div>
           {d.rule === "steps" ? <label className="v-field">Tranches (₱, comma separated)<input value={d.tranches} onChange={(e) => set({ tranches: e.target.value })} placeholder="100,000.00" /><span className="v-xs" style={{ fontWeight: 500 }}>Fills the first one, then the next; the last repeats.</span></label> : null}
           {d.rule === "fixed" ? <label className="v-field">Fixed amount per month (₱)<input value={d.fixed} inputMode="decimal" onChange={(e) => set({ fixed: e.target.value })} /></label> : null}
-          {d.rule === "reset" ? <label className="v-field">Starts again in<select value={d.resetMonth} onChange={(e) => set({ resetMonth: Number(e.target.value) })}>{["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, i) => <option key={m} value={i + 1}>{m}</option>)}</select></label> : null}
+          {d.rule === "reset" ? <div className="v-field">Starts again in<MonthOfYear value={d.resetMonth} label="Month it starts again" onChange={(m) => set({ resetMonth: m })} /></div> : null}
           <div className="v-note"><b>{EFFECT[d.rule]!.split(":")[0]}:</b>{EFFECT[d.rule]!.slice(EFFECT[d.rule]!.indexOf(":") + 1)}</div>
           {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
           {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
