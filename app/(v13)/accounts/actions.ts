@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { anchorAmount, parseNewAccount } from "@/lib/accounts/v13";
+import { anchorAmount, parseAccountEdit, parseNewAccount } from "@/lib/accounts/v13";
 import { requireAuthed } from "@/lib/auth/require";
 import { parsePesos } from "@/lib/domain/money";
 import type { FormState } from "@/lib/form-state";
@@ -45,6 +45,26 @@ export async function addAccount(_prev: FormState, fd: FormData): Promise<FormSt
 
   const anchor = await supabase.from("balance_anchors").insert({ account_id: data.id, as_of: new Date().toISOString(), amount: anchorAmount(a.kind, a.opening), source: "wizard" });
   if (anchor.error) return { error: "The account was added but its starting balance was not saved. Use Reconcile to set it." };
+  refresh();
+  return { ok: true };
+}
+
+/** Renames an account or changes its bank or wallet name, last four digits and colour. The kind and the balance stay as they are. */
+export async function editAccount(_prev: FormState, fd: FormData): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const id = String(fd.get("account") ?? "");
+  if (!UUID.test(id)) return { error: "That account was not found." };
+  const parsed = parseAccountEdit(strings(fd));
+  if (!parsed.ok) return { error: parsed.error };
+  const a = parsed.value;
+  const { data, error } = await supabase
+    .from("accounts")
+    .update({ name: a.name, institution: a.institution, last4: a.last4, color: a.color })
+    .eq("id", id)
+    .is("archived_at", null)
+    .select("id");
+  if (error) return { error: error.code === "23505" ? "You already have an account with that name." : "Could not save the account. Try again." };
+  if (!data || data.length === 0) return { error: "That account was not found." };
   refresh();
   return { ok: true };
 }

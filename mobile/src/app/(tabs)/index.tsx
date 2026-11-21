@@ -23,6 +23,7 @@ const KIND: Record<string, string> = { ewallet: 'E-wallet', debit: 'Debit', savi
 
 export default function Now() {
   const c = useTheme();
+  const router = useRouter();
   const { data, error, refreshing, reload } = useLoad(() => loadNow(supabase));
 
   if (!data) {
@@ -50,7 +51,7 @@ export default function Now() {
   return (
     <Screen
       title={dayLabel(today)}
-      subtitle={`${ordinalCutoff(view.cutoff)} cutoff · ${rangeLabel(view.period.start, view.period.end)} · payday ${shortDate(view.nextPayday)}`}
+      subtitle={`${ordinalCutoff(view.cutoff)} cutoff · payday ${shortDate(view.nextPayday)}`}
       refreshing={refreshing}
       onRefresh={reload}
     >
@@ -61,18 +62,20 @@ export default function Now() {
       <Envelopes envelopes={view.envelopes} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
       <Bills view={view} />
       {data.settleOpen > 0 ? (
-        <Card>
-          <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Settle office days</Text>
-          <Body style={{ color: c.muted, fontSize: 14 }}>
-            {data.settleOpen} office day{data.settleOpen === 1 ? '' : 's'} ended under or over budget. Settle them in Budget.
-          </Body>
-        </Card>
+        <Pressable onPress={() => router.navigate('/plan/budget')} accessibilityRole="button">
+          <Card>
+            <View style={s.between}>
+              <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>{data.settleOpen} office {data.settleOpen === 1 ? 'day' : 'days'} to settle</Text>
+              <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
+            </View>
+          </Card>
+        </Pressable>
       ) : null}
       <Card style={{ backgroundColor: c.tint, borderColor: c.tint }}>
-        <Body>
-          <Body bold>Next payday, {shortDate(data.nextPay.date)}: </Body>
-          <Amount value={data.nextPay.amount} style={{ fontSize: 15 }} /> lands (your {ordinalCutoff(data.nextPay.cutoff)} cutoff).
-        </Body>
+        <View style={s.between}>
+          <Body bold>Payday {shortDate(data.nextPay.date)}</Body>
+          <Amount value={data.nextPay.amount} />
+        </View>
       </Card>
     </Screen>
   );
@@ -96,33 +99,16 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
         </Pressable>
       </View>
       {view.pool === 0 ? (
-        <Text style={[s.heroSub, { fontFamily: fonts.body }]}>No budget line counts towards your daily amount yet. Mark your Wants lines in Budget.</Text>
+        <Text style={[s.heroSub, { fontFamily: fonts.body }]}>Mark your Wants lines in Budget.</Text>
       ) : (
         <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
-          per day for {view.daysLeft} {view.daysLeft === 1 ? 'day' : 'days'}. {peso(view.left, hide)} left of {peso(view.pool, hide)}.
+          {peso(view.left, hide)} left of {peso(view.pool, hide)} · {view.daysLeft} {view.daysLeft === 1 ? 'day' : 'days'}
         </Text>
       )}
-      {officeNote ? (
-        <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
-          <Text style={{ fontFamily: fonts.bodyBold, color: '#fff' }}>
-            {view.isUsualOfficeDay ? 'A usual office day.' : `${weekdayName(today)}, not a usual office day.`}{' '}
-          </Text>
-          {view.nextOffice ? `Next: ${dayLabel(view.nextOffice.date)}, ${peso(view.nextOffice.amount, hide)}.` : ''}
-        </Text>
-      ) : null}
-
       <Runway view={view} />
-      <View style={s.legend}>
-        <Legend color="#5EE6B4" text="Spent" />
-        <Legend color="#B9C9DD" dashed text="Plan pace" />
-        <Legend color="#5EE6B4" dashed text={`If you keep to ${peso(view.perDay, hide)}`} />
-      </View>
-      <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
-        Spent {peso(view.spent, hide)} · pace says {peso(view.pace, hide)} by today
-      </Text>
       {view.pool > 0 ? (
-        <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 14 }}>
-          {peso(money(Math.abs(view.overPace)), hide)} {over ? 'over pace.' : 'under pace.'}
+        <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 13 }}>
+          {peso(money(Math.abs(view.overPace)), hide)} {over ? 'over pace' : 'under pace'}
         </Text>
       ) : null}
     </LinearGradient>
@@ -148,12 +134,12 @@ function Recent({ txns, today, pending }: { txns: NowTxn[]; today: ReturnType<ty
         <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Recent</Text>
         <Pressable onPress={() => router.push('/inbox')} accessibilityRole="link" style={s.link}>
           <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>
-            {pending > 0 ? `${pending} to check · ` : ''}All activity →
+            {pending > 0 ? `${pending} to check ` : 'All '}›
           </Text>
         </Pressable>
       </View>
       {txns.length === 0 ? (
-        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Nothing yet this cutoff. Tap + to add your first spend.</Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Nothing yet.</Text>
       ) : (
         txns.map((t) => {
           const day = manilaDate(t.occurredAt);
@@ -199,7 +185,7 @@ function AccountsRow({ accounts, total }: { accounts: AccountCard[]; total: Retu
         </Pressable>
       </View>
       {accounts.length === 0 ? (
-        <Notice>No accounts yet. Add one under Accounts on the web to see your balances here.</Notice>
+        <Notice>No accounts yet.</Notice>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }} accessibilityLabel="Accounts, scroll sideways">
           {accounts.map((a, i) => (
@@ -255,13 +241,13 @@ function EnvelopeRow({ e, ratio, open: initiallyOpen }: { e: Envelope; ratio: nu
         </View>
         <View style={[s.between, { marginTop: 6 }]}>
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{peso(e.spent, hide)} spent</Text>
-          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>of {peso(e.plan, hide)} · marker = pace</Text>
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>of {peso(e.plan, hide)}</Text>
         </View>
       </Pressable>
       {open ? (
         <View style={{ marginTop: 8, gap: 6 }}>
           {e.txns.length === 0 ? (
-            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Nothing yet. Pip is proud.</Text>
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Nothing yet.</Text>
           ) : (
             e.txns.map((t) => (
               <View key={t.id} style={s.between}>
@@ -292,7 +278,7 @@ function Envelopes({ envelopes, dayNumber, daysTotal }: { envelopes: Envelope[];
         <Label>this cutoff</Label>
       </View>
       {envelopes.length === 0 ? (
-        <Notice>No spending envelopes yet. Add budget lines in Budget on the web and they appear here.</Notice>
+        <Notice>No envelopes yet.</Notice>
       ) : (
         envelopes.map((e, i) => <EnvelopeRow key={e.categoryId} e={e} ratio={ratio} open={i === 0} />)
       )}
@@ -316,7 +302,7 @@ function Bills({ view }: { view: NowView }) {
         ) : null}
       </View>
       {view.bills.length === 0 ? (
-        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Budget lines that go to an account show here for the cutoff.</Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>None this cutoff.</Text>
       ) : (
         <>
           {view.bills.map((b) => (

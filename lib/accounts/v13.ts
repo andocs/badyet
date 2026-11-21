@@ -81,3 +81,22 @@ export function creditAvailable(balance: Money, limit: Money | null): Money | nu
 export function anchorAmount(kind: AccountKind, entered: Money): Money {
   return kind === "credit" ? money(-entered) : entered;
 }
+
+export interface AccountEdit {
+  name: string;
+  institution: string | null;
+  last4: string | null;
+  color: string;
+}
+
+/** Validates an edit of an existing account: name, bank or wallet, last four digits and colour. The kind and the balance are not changed here. */
+export function parseAccountEdit(input: Readonly<Record<string, string>>): Parsed<AccountEdit> {
+  const name = (input.name ?? "").trim();
+  if (name.length < 1 || name.length > 30) return { ok: false, error: "Give the account a name of up to 30 characters." };
+  const institution = (input.institution ?? "").trim() || null;
+  if (institution !== null && institution.length > 40) return { ok: false, error: "The bank or wallet name is too long." };
+  const last4 = (input.last4 ?? "").trim() || null;
+  if (last4 !== null && !/^[0-9]{4}$/.test(last4)) return { ok: false, error: "Last 4 digits means exactly four digits. Never type a full number." };
+  const color = (ACCOUNT_COLORS as readonly string[]).includes(input.color ?? "") ? (input.color as string) : ACCOUNT_COLORS[0];
+  return { ok: true, value: { name, institution, last4, color } };
+}

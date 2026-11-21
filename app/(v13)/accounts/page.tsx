@@ -8,7 +8,7 @@ import { manilaDate } from "@/lib/now/summary";
 import { createClient } from "@/lib/supabase/server";
 import { ColorPick, FormDialog, KindFields, QrViewer } from "@/components/v13/form-dialog";
 import { Money } from "@/components/v13/money";
-import { addAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
+import { addAccount, editAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
 
 export const metadata = { title: "Accounts · Bad(yet)" };
 
@@ -157,6 +157,23 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
                       {selected.kind === "credit" ? "What you owe right now (₱)" : "What the bank or wallet shows now (₱)"}
                       <input name="balance" inputMode="decimal" autoComplete="off" required autoFocus />
                     </label>
+                  </FormDialog>
+                  <FormDialog trigger="Edit account" triggerClassName="v-btn v-sm" title={`Edit ${selected.name}`} action={editAccount} submitLabel="Save">
+                    <input type="hidden" name="account" value={selected.id} />
+                    <label className="v-field">
+                      Name
+                      <input name="name" maxLength={30} required autoComplete="off" defaultValue={selected.name} />
+                    </label>
+                    <label className="v-field">
+                      Bank or wallet (optional)
+                      <input name="institution" maxLength={40} autoComplete="off" defaultValue={selected.institution ?? ""} />
+                    </label>
+                    <label className="v-field">
+                      Last 4 digits (optional)
+                      <input name="last4" inputMode="numeric" maxLength={4} autoComplete="off" defaultValue={selected.last4 ?? ""} />
+                    </label>
+                    <ColorPick key={selected.id} colors={ACCOUNT_COLORS} initial={selected.color} />
+                    <p className="v-xs v-muted" style={{ margin: 0 }}>Only the last four digits are kept. The kind and the balance do not change here.</p>
                   </FormDialog>
                   {selected.fund ? <span className="v-pill v-ok">Linked to {selected.fund} fund</span> : null}
                 </div>

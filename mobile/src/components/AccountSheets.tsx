@@ -145,6 +145,7 @@ export function AddAccountSheet({ onClose, onSaved }: { onClose: () => void; onS
 
 export function EditAccountSheet({ a, onClose, onSaved }: { a: AccountCard; onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState(a.name);
+  const [institution, setInstitution] = useState(a.institution ?? '');
   const [last4, setLast4] = useState(a.last4 ?? '');
   const [color, setColor] = useState(a.color);
   const { problem, busy, run } = useSave(onSaved);
@@ -153,13 +154,16 @@ export function EditAccountSheet({ a, onClose, onSaved }: { a: AccountCard; onCl
       <Field label="Name">
         <Input value={name} onChangeText={setName} maxLength={30} />
       </Field>
+      <Field label="Bank or wallet (optional)">
+        <Input value={institution} onChangeText={setInstitution} maxLength={40} />
+      </Field>
       <Field label="Last four digits">
         <Input value={last4} onChangeText={setLast4} keyboardType="number-pad" maxLength={4} />
       </Field>
       <Field label="Colour">
         <Swatches value={color} onPick={setColor} />
       </Field>
-      <SheetActions onClose={onClose} onSave={() => run(() => editAccount(supabase, { id: a.id, kind: a.kind as AccountKind, name, last4, color }))} busy={busy} problem={problem} />
+      <SheetActions onClose={onClose} onSave={() => run(() => editAccount(supabase, { id: a.id, name, institution, last4, color }))} busy={busy} problem={problem} />
     </Sheet>
   );
 }
