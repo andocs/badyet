@@ -8,13 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-budget-cleanup: web budget page cleanup
+- **Active slice / milestone:** Mockups (cover screen)
 - **Gate:** none
-- **Next action:** Cleanup web budget page, then mockups
-- **User to-do now:** Test on the phone; Wallet sample
+- **Next action:** Build Z Fold 3 cover-screen mockups in docs/mockups/ for approval
+- **User to-do now:** Test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-21 to 2026-11-21) covering slice-E2, slice-E3, expo-plan, slice-E4, slice-E4b, vercel, slice-E5, slice-E6
 - earlier: 15 events (2026-11-21 to 2026-11-21) covering rev-10, rev-11, merge, expo-p1, slice-E1, expo-plan, slice-E2
 - earlier: 15 events (2026-11-20 to 2026-11-21) covering slice-6, slice-7, perf, rev-1, rev-2, rev-3, rev-4, rev-5, rev-6, rev-7, rev-8, rev-9
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13, slice-1, slice-2, slice-3, slice-4, slice-5
@@ -25,21 +26,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-21 15:34 | slice-E2 | Branded APK (build aaf160c6, Pip icon/splash); Accounts coloured cards + detail sheet with balance math; first OTA update published (group a7db7e8f, channel preview, runtime 1.0.0); 11 tests, tsc, lint pass | 70a792f
-- 2026-11-21 15:35 | slice-E2 | E2 approved at gate; not merged to main yet | -
-- 2026-11-21 15:39 | slice-E3 | Inbox: pending list, suggestions (rule then history via lib/inbox/rules), confirm (note, rule, transfer legs), not mine, All activity; 21 tests, tsc, lint, android bundle OK; OTA group 8a9a6463 | f605bc5
-- 2026-11-21 15:49 | slice-E3 | User paused at E3 gate | -
-- 2026-11-21 16:09 | slice-E3 | APK build d6ed2977: declares POST_NOTIFICATIONS, blocks unused permissions (mic, camera, overlay, storage); Settings asks for notifications. Fixes greyed-out notification access | -
-- 2026-11-21 16:18 | expo-plan | User approved E3 and asked to proceed; added E4b parity pass after E4; later slices include a web parity check | -
-- 2026-11-21 16:23 | slice-E4 | Quick add (amount, where, account, category) saved as confirmed manual expense; local SQLite outbox + idempotent upsert, sync on launch/foreground/network back; cached pickers; 37 tests, tsc, lint, bundle OK; OTA group 436b4a82 | 4b70db4
-- 2026-11-21 16:23 | slice-E4 | E4 approved at gate | -
-- 2026-11-21 16:27 | slice-E4b | Now brought to web parity (header, hero with office note and spending chart, Recent by day, accounts row, collapsible envelopes with pace, bills, settle note, next payday); shared AccountTile; 39 tests, tsc, lint, bundle OK; OTA group 5f9c8929; permission-fix APK RD1KmHqP finished | 77230a7
-- 2026-11-21 16:28 | slice-E4b | User paused at E4b gate | -
-- 2026-11-21 16:31 | vercel | Fixed failing Vercel preview: mobile/ excluded from root tsc and eslint; local npm run build passes | 98fa297
-- 2026-11-21 16:32 | slice-E4b | E4b approved at gate; Accounts write features deferred (user did not choose), E5 next | -
-- 2026-11-21 16:39 | slice-E5 | Capture rules: migration 20261207000000 (capture_sources, capture_rules, RLS, rollback), shared lib/capture (decide, validate, sources) with 30 tests, web Settings Capture section + server actions, phone Capture rules screen with seen-apps picker, listener allowlist sync; mobile 47 tests, web 274 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 81d4c1f6 | 60658f9
-- 2026-11-21 16:47 | slice-E5 | E5 approved at gate | -
-- 2026-11-21 16:53 | slice-E6 | Notification capture: parsers for GCash, Maya, GoTyme, MariBank, BPI push (19 tests on real samples), decide/row/dedupe/account resolution, transfer pairing (shared lib/capture, 66 tests), phone pipeline with held captures, safe drain, send queue handles duplicates, runner on launch/foreground/new notification; mobile 59 tests, web 310 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c4234731 | 8c3f80e
 - 2026-11-21 16:55 | slice-E6 | E6 approved at gate (not yet tested on real notifications) | -
 - 2026-11-21 16:57 | slice-E7 | Approach chosen: google-signin library, Gmail now; Android custom-scheme OAuth is unsupported by Google | -
 - 2026-11-21 17:04 | slice-E7 | Gmail capture: email reader and BPI/Grab/foodpanda parsers (shared lib/capture/email, 14 tests), Gmail REST client, runner (seen ids, held items, cross-source duplicate check for emails), connect card, google-signin library loaded defensively so older builds do not crash; mobile 73 tests, web 324 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group ed63cce6; APK build e5f5bd62 started | d201f21
@@ -50,6 +36,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:35 | slice-E10 | Plan: Forecast (hero, stacked/lines chart with month tap, year ladder, month cards, story sheet, overrides list) and Settings (paydays editor with ported savePaydays, looks, tax and data notes); mobile 97 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 0588ad64 | 28d9065
 - 2026-11-21 17:39 | slice-E11 | Tab icons, wide-screen column, mobile README; final checks: mobile 97 tests, web 332 tests, tsc, lint, expo-doctor 18/18, web build, bundle OK; Vercel success; OTA group 84a8adcc | 68d82dc
 - 2026-11-21 17:55 | handoff | Merged all slices to main; added Grab/foodpanda senders (E12, OTA 8d6b6c7a); wrote docs/mobile-next-session.md for the next session | 9f958be
+- 2026-11-21 18:04 | rev-1 | Web budget page now uses buildBudgetScreen (added compare/yearWithout); removed dead validateLine in validate.ts, hardcoded TIGHT, hardcoded pay labels (paydays from user_settings via loadSalary), stale shell comment. tsc/vitest/lint PASS, Vercel preview success. Branch rev/1-budget-cleanup, not yet merged. | 72669ec
 
 ## 4. Open questions
 
@@ -84,7 +71,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 |  |
+| **Cumulative** | 2,354,516 | 9,533,515 | 435,416 | 4,241,939 | 561,941,123 | 2,468,447 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -127,6 +114,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E9 | 2,274,724 | 9,188,425 | 424,415 | 4,125,147 | 538,474,423 | 2,417,034 | no mark 'slice-E9': all-time |
 | Slice E10 | 2,274,724 | 9,188,425 | 424,415 | 4,156,838 | 546,265,133 | 2,436,245 | no mark 'slice-E10': all-time |
 | Slice E11 | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 | no mark 'slice-E11': all-time |
+| rev-1 | 61,948 | 271,167 | 10,438 | 39,709 | 1,647,594 | 11,679 |  |
 
 <!-- END SUMMARY -->
 
