@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Mockups v4 (cover screen)
+- **Active slice / milestone:** rev-2 capture rules style (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval start slice R1: Reconcile + Add account
-- **User to-do now:** Review docs/mockups/phone/index.html; test on the phone; Wallet sample tomorrow
+- **Next action:** On approval merge rev/2-capture-rules-style, then slice R1: Reconcile + Add account to the approved mockups
+- **User to-do now:** Check capture rules on the web; test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:12 | mockups-v2 | User rejected v1 as ugly. Rebuilt 10 mockups in docs/mockups/phone/ from the real app styles (theme.ts, ui.tsx, AccountTile): Gabarito + Atkinson Hyperlegible Next, same cards/hero/tiles/chips/tab bar, less text, folded detail. v1 removed. Awaiting approval. | -
 - 2026-11-21 18:30 | mockups-v3 | Mockups reworked per user notes: smaller type, More tab with sheet, eye toggle, Now hero/balance/tiles fixed, Inbox/Add/Accounts/Forecast kept as existing, Budget/Salary/Bonuses/Funds/Settings trimmed with edit affordances, yearly slider. In docs/mockups/phone/. Awaiting approval. | -
 - 2026-11-21 18:37 | mockups-v4 | Notes applied: small eye circle, every add/edit opens in a sheet or wizard (accounts, reconcile, move, budget line, raise wizard, event, allowance, projected raises, payslip, bonus edit/received/rule, funds, forecast month, paydays, capture rules), Budget Future years removed (month slider covers it). Awaiting approval. | -
+- 2026-11-21 18:57 | rev-2 | Web capture rules restyled (textarea style, source cards, rule rows, add-rule panel); mockup hide button now a circle. Mockups v4 approved by user (only the hide circle and capture rules styling remained). Vercel preview success. Branch rev/2-capture-rules-style. | b8f8b28
 
 ## 4. Open questions
 
@@ -75,7 +76,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,354,516 | 9,533,515 | 435,416 | 4,241,939 | 561,941,123 | 2,468,447 |  |
+| **Cumulative** | 2,435,643 | 9,781,643 | 449,050 | 4,401,363 | 570,719,865 | 2,551,178 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -96,7 +97,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
-| rev-2 | 1,233,332 | 5,150,158 | 214,872 | 2,673,180 | 322,317,032 | 1,461,845 |  |
+| rev-2 | 143,075 | 519,295 | 24,072 | 199,133 | 10,426,336 | 94,410 |  |
 | rev-3 | 1,237,217 | 5,128,597 | 214,549 | 2,698,695 | 321,747,427 | 1,479,260 |  |
 | rev-4 | 1,243,561 | 5,149,458 | 215,342 | 2,698,015 | 321,941,135 | 1,481,033 |  |
 | rev-5 | 1,302,028 | 5,300,887 | 224,606 | 2,728,682 | 322,138,795 | 1,490,869 |  |
