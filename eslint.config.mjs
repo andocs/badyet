@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     ".claude/**",
     ".impeccable/**",
     "docs/**",
+    // The Android app has its own tooling (mobile/package.json), not part of the web build:
+    "mobile/**",
   ]),
 ]);
 

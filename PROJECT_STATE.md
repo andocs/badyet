@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build (Expo)
 - **Active slice / milestone:** E4b Parity pass
-- **Gate:** none
-- **Next action:** Compare web vs phone for Now, Accounts, Inbox, Quick add; fix gaps
-- **User to-do now:** APK d6ed2977 building; E4b in progress
+- **Gate:** paused
+- **Next action:** User paused at E4b. After comparing Now with the web: Approve or Request changes; also decide if Accounts write features (Add account, Move money, Reconcile, receive QR) go before E5
+- **User to-do now:** Install APK RD1KmHqP (notification permission), get OTA 5f9c8929, compare Now with the web, send screenshots of differences
 
 ## 3. Execution log
 
@@ -47,6 +47,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 16:18 | expo-plan | User approved E3 and asked to proceed; added E4b parity pass after E4; later slices include a web parity check | -
 - 2026-11-21 16:23 | slice-E4 | Quick add (amount, where, account, category) saved as confirmed manual expense; local SQLite outbox + idempotent upsert, sync on launch/foreground/network back; cached pickers; 37 tests, tsc, lint, bundle OK; OTA group 436b4a82 | 4b70db4
 - 2026-11-21 16:23 | slice-E4 | E4 approved at gate | -
+- 2026-11-21 16:27 | slice-E4b | Now brought to web parity (header, hero with office note and spending chart, Recent by day, accounts row, collapsible envelopes with pace, bills, settle note, next payday); shared AccountTile; 39 tests, tsc, lint, bundle OK; OTA group 5f9c8929; permission-fix APK RD1KmHqP finished | 77230a7
+- 2026-11-21 16:28 | slice-E4b | User paused at E4b gate | -
 
 ## 4. Open questions
 
@@ -81,7 +83,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,109,446 | 8,381,043 | 383,934 | 3,791,187 | 474,872,142 | 2,180,639 |  |
+| **Cumulative** | 2,109,446 | 8,381,043 | 383,934 | 3,824,115 | 478,226,711 | 2,204,419 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -116,6 +118,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E2 | 41,685 | 170,665 | 9,995 | 39,565 | 3,339,073 | 22,950 |  |
 | Slice E3 | 28,847 | 110,887 | 5,315 | 26,843 | 2,605,927 | 19,209 |  |
 | Slice E4 | 24,134 | 85,191 | 5,961 | 24,914 | 4,120,774 | 17,102 |  |
+| Slice E4b | 0 | 0 | 0 | 31,602 | 3,000,641 | 23,294 |  |
 
 <!-- END SUMMARY -->
 
@@ -151,6 +154,16 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E4b (parity pass): what you do now
+1. Get the code:   git fetch && git checkout slice/E4b-parity   (E1-E4 included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Get the update: new APK first if you have not: https://expo.dev/artifacts/eas/RD1KmHqP2wFlP7Mzwo6gOV4UKl1sj-xoatg33i8s784.apk (declares the notification permission). Then open the app twice (or Settings > Check for updates) for update group 5f9c8929.
+6. Check these, phone next to the web: Now - (a) title is the date ("Sat 21 Nov") with "1st cutoff · range · payday"; (b) hero with safe-to-spend, "+ Expense" button, office-day note, the spending chart with legend, "Spent / pace says / over or under pace"; (c) Recent grouped by day with "All activity →"; (d) "What I have right now" with total and sideways account cards; (e) "Planned vs spent" envelopes: tap to open, status pill, bar with pace marker; (f) Bills with "N of M sent" and "Sent this cutoff"; (g) next payday note. Accounts and Inbox and Quick add: same checks as before. Send me screenshots of any place that looks different from the web.
+7. Known limits:   I compared by reading the web code, not by looking at both screens side by side; I have not seen the phone render. Not yet on the phone: Accounts Add account, Move money, Reconcile with real balance, receive-QR (they write data; proposed as a follow-up); "Settle office days" button (Budget comes in E8); the web's desktop-only side layout.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E4: what you do now
 1. Get the code:   git fetch && git checkout slice/E4-quick-add   (E1-E3 included; merge to main after you approve)
