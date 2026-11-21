@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Bad(yet)",
+    "slug": "badyet",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "badyet",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0B1220",
+    "runtimeVersion": { "policy": "appVersion" },
+    "android": {
+      "package": "com.docoats.badyet",
+      "adaptiveIcon": {
+        "backgroundColor": "#0B1220",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": true
+    },
+    "experiments": { "typedRoutes": true },
+    "plugins": ["expo-router", "expo-sqlite", "expo-web-browser"]
+  }
+}

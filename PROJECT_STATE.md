@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions
-- **Active slice / milestone:** Web revisions done
+- **Phase:** 2 Build (Expo)
+- **Active slice / milestone:** E1 Scaffold + sign-in
 - **Gate:** none
-- **Next action:** Start the Android (Expo) app in a new conversation: type /orchestrate and point it at docs/expo-handoff.md (Phase 1 plan first)
-- **User to-do now:** Open a new conversation, read docs/expo-handoff.md, answer its 6 open questions, then approve the plan
+- **Next action:** Build E1: mobile/ scaffold, EAS preview APK, listener + expo-updates, Google sign-in
+- **User to-do now:** Real card/tap-to-pay (Google Wallet) sample when you can; run /orchestrate to start E1
 
 ## 3. Execution log
 
@@ -41,6 +41,12 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 11:10 | rev-10 | Bonus destinations redesigned: '+ Add destination' button, choose a fund (dropdown) or something else (name), amount as flat pesos or percent of the bonus with preview, categories and tags removed, responsive form | HEAD
 - 2026-11-21 11:16 | rev-11 | Bonus hero and split bars: funds show their own colour; custom lines get a stable palette colour not used by any fund, gold, or another line | HEAD
 - 2026-11-21 11:18 | merge | Merged rev/1 to rev/11 into main in order (fast-forward) and pushed main. Wrote docs/expo-handoff.md for the Android (Expo) effort. | HEAD
+- 2026-11-21 11:24 | expo-p1 | Phase 1 plan for Android app: 6 slices E1-E6, answers recorded | -
+- 2026-11-21 11:27 | expo-p1 | Expo plan approved at gate; Q6 answer text mislabeled (it holds the offline answer), see Q11 for offline and Q7-Q10 for the rest | -
+- 2026-11-21 11:37 | expo-p1 | Plan revised: capture rules (E5), Gmail (E7), OTA in E1; Q12-Q18 answered | -
+- 2026-11-21 11:37 | expo-p1 | Revised Expo plan approved (E1-E8) | -
+- 2026-11-21 12:03 | expo-p1 | Samples received: docs/expo-samples.md (BPI, GCash, MariBank, Maya, GoTyme, Grab email, foodpanda email) | -
+- 2026-11-21 12:16 | expo-p1 | Second sample batch recorded in docs/expo-samples.md; Q19-Q23 answered; transfer pairing and MariBank/GoTyme added to E6 | -
 
 ## 4. Open questions
 
@@ -49,6 +55,24 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
 - [x] Q4: Rehaul design v13: pick Now A/B/C, Forecast A/B/C, Override A/B/C, scenario option 1/2, and answer the 12 open questions at the end of docs/rehaul/ia.md -> Directions picked in review 1: merged Now, one Forecast (A hero + A/B chart styles + C ladder), Override A single + B bulk, scenarios removed, wizards added
 - [x] Q5: Rehaul v13 round 2: review the merged mockups (docs/mockups/v13-gallery.html) and answer the 15 open questions at the end of docs/rehaul/ia.md -> Design approved by the user after 6 review rounds (round 6)
+- [x] Q6: Distribution? -> Yes. Quick add and notification captures queue locally and sync later; client-generated ids and dedupe_hash make retries idempotent.
+- [x] Q7: Shared code layout? -> mobile/ folder in this repo, own package.json, Metro watchFolders + alias to ../lib.
+- [x] Q8: Notification samples? -> User will send redacted samples; not yet received. Blocks E5 only.
+- [x] Q9: Sign-up lock? -> Disable Supabase sign-ups + RLS; no auth hook.
+- [x] Q10: Deep link and EAS? -> Existing Expo account; scheme badyet, redirect badyet://auth/callback.
+- [x] Q11: Offline quick add? -> Yes, offline quick add and captures queue and sync later (client ids + dedupe_hash).
+- [x] Q12: Expo username for EAS builds? -> Expo username: docoats
+- [x] Q13: Send redacted GCash, Maya, BPI notification samples (blocks E5) -> Samples pending: user to paste redacted text or screenshots into chat. Blocks E6 only.
+- [x] Q14: Gmail: which senders/emails (BPI, GCash, Maya alerts or statements?) and sample email text? -> Senders: all banks/wallets (BPI, GCash, Maya) plus Grab, foodpanda, Google Wallet. Email samples still needed for E7.
+- [x] Q15: Gmail approach: (a) read Gmail app notifications via listener, (b) Gmail API on device, (c) server-side poller? -> Gmail API on device (gmail.readonly, Google Cloud OAuth in testing mode, re-sign-in about every 7 days).
+- [x] Q16: Capture rules: edit on phone only, or synced table also viewable on web? Which actions (ignore, auto-confirm, set category/account)? -> Capture rules editable on phone and web; stored in a synced Supabase table.
+- [x] Q17: May a rule auto-confirm (skip Inbox) or must all captures stay pending until tapped? -> Default pending; auto-confirm is an opt-in per rule.
+- [x] Q18: Confirm push notifications and OTA updates stay cut from v1? -> Push notifications stay out of v1; OTA updates (expo-updates) IN v1, wired into the first build.
+- [x] Q19: Outgoing samples: GCash pay/send, Maya QR/payment, GoTyme sent, MariBank sent (real text)? -> Outgoing samples received for GCash (load, Express Send), GoTyme, MariBank, Maya; Google Wallet and card payments cannot be emulated yet.
+- [x] Q20: BPI: full InstaPay email body with amount; BPI push is not firing, so rely on Gmail for BPI? -> Full BPI emails (outgoing and incoming) received. BPI via Gmail only.
+- [x] Q21: Own-account moves (Maya to BPI, GrabPay to MariBank): detect as transfers between your accounts, or leave as income/expense for you to fix in Inbox? -> Yes: detect own-account transfers by pairing amount, opposite direction, short time window, own last4.
+- [x] Q22: foodpanda order-placed email is not a payment (no method shown): capture as pending anyway, or only Grab receipts? -> Grab and foodpanda emails are receipts; capture as pending expense.
+- [x] Q23: Add MariBank and GoTyme as capture sources (besides GCash, Maya, BPI, Grab, foodpanda, Wallet)? -> Yes: add MariBank and GoTyme as sources.
 
 ## 5. Token & usage ledger
 
@@ -57,7 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,804,412 | 7,562,355 | 338,018 | 3,464,752 | 424,908,096 | 1,982,354 |  |
+| **Cumulative** | 1,867,261 | 7,751,296 | 346,018 | 3,512,610 | 430,290,941 | 1,996,039 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -87,6 +111,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-9 | 1,781,135 | 7,498,513 | 335,287 | 3,432,972 | 420,015,261 | 1,962,695 | no mark 'rev-9': all-time |
 | rev-10 | 1,791,713 | 7,534,413 | 336,960 | 3,448,107 | 422,001,286 | 1,972,339 | no mark 'rev-10': all-time |
 | rev-11 | 1,330,338 | 5,313,958 | 229,057 | 2,562,175 | 330,096,507 | 1,490,936 |  |
+| Expo Phase 1 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -94,37 +119,28 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Revision batch (all Needed, from user notes). Scout map is in the chat; no code changed yet.
-
-rev-1 Budget + Bonuses (S/M)
-- Budget hero (budget/page.tsx:109-137): show "left / take-home" (e.g. 1000/5000) as the main figure, take-home text smaller.
-- Month-column track (v13.css:389-395, page.tsx:177-191): background must end at the last circle, no trailing gap. (Assumed to be the budget year-by-year columns; confirm.)
-- Bonuses (bonuses/page.tsx, lib/bonuses/load.ts): add bonuses/loading.tsx skeleton, remove the loadSalary -> Promise.all waterfall, filter bonus_instances by year.
-AC: hero shows N/M; no gap after last circle; bonuses tab shows skeleton instantly and loads with one parallel round.
-
-rev-2 Colors + Login (S)
-- Expand ACCOUNT_COLORS (lib/accounts/v13.ts:7) to about 16 swatches; picker wraps cleanly.
-- Restyle app/login/page.tsx with the v13 look (v-card/v-btn, tokens from v13.css).
-AC: more colors selectable in accounts and category pickers; login matches app look in light and dark.
-
-rev-3 Mobile nav + Inbox header (S/M)
-- Phone has no way to Salary, Bonuses, Funds, Forecast, Settings, Sign out. Add a "More" sheet on the Plan tab (reuse .v-sheet) listing them.
-- Inbox filter row (inbox.tsx:128-131, v13.css:231): keep tabs on one line when All activity is selected.
-AC: every page reachable on a phone; Inbox tabs never wrap at 360px.
-
-rev-4 Mobile charts (M)
-- Runway chart (now.tsx:123-154): larger and readable on phone (fixed taller viewBox / fewer labels on narrow screens).
-- Budget year chart: show at most 6 months with next/prev buttons; no overflow at 360px.
-- Year switching: make it client-side or cached instead of a full server re-render.
-AC: chart labels readable at 360px; no horizontal overflow; year change feels instant.
+| # | Slice | Depends on | Run | Status | Branch |
+|---|---|---|---|---|---|
+| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates in first build, Google sign-in via badyet://, (Needed) | none | seq | planned | exp/1 |
+| E2 | Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme (Needed) | E1 | seq | planned | exp/2 |
+| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | planned | exp/3 |
+| E4 | Quick add + offline queue and sync (Needed) | E2 | seq | planned | exp/4 |
+| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E3 | seq | planned | exp/5 |
+| E6 | Notification capture: GCash, Maya, BPI, Grab, foodpanda, Google Wallet, dedupe, offline queue, permission onboarding (Needed; blocked on samples) | E4, E5 | seq | planned | exp/6 |
+| E7 | Gmail API capture: on-device OAuth, parsers, rules, dedupe (Needed; blocked on email samples) | E6 | seq | planned | exp/7 |
+| E8 | Release APK, OTA channel check, polish, Z Fold layout (Needed) | E7 | seq | planned | exp/8 |
+Cut: Plan screens on mobile, widgets, push notifications.
 
 ## Decisions & architecture
 
-All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions". Highlights: inflation removed; funds sharing an account are virtual shares; income tax is withheld in BOTH cutoffs (split editable), contributions and allowances sit on cutoff 2 by default; payslip builder per cutoff; scenarios removed (one live set of assumptions); expected vs confirmed raises plus a projected yearly raise (dashed); RTO: any number of RTO lines + one contingency, day budget derived (RTO lines' cutoff total / usual office days), extra office days tapped manually, settle under/over to pool or Wants; pools generic; bonus and allowance "lands in" cutoff is a setting; no DB backup needed before migrating.
+- Sign-ups disabled in Supabase Auth (done by user 2026-11-21). EAS account: docoats. Scheme badyet.
+- OTA updates in v1: expo-updates configured in E1 (first build) so JS fixes ship without a new APK.
+- Capture rules: table capture_rules (RLS own), edited on phone and web Settings; actions ignore / set account / set category / opt-in auto-confirm; min amount; ignore keywords. Unmatched captures from known sources stay pending.
+- Sources: GCash, Maya, BPI, Grab, foodpanda, Google Wallet via notification listener; Gmail via Gmail API on device (parsed on device, raw email never stored or sent).
 
 ## Run & verify guide (detected by Scout, kept current)
 
-Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
+Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
 
@@ -337,6 +353,8 @@ _None yet._
 
 ## Assumptions, risks & sources
 
-- AGENTS.md warns this Next.js version has breaking changes: read the relevant guide in node_modules/next/dist/docs/ before writing app code.
-- Uncommitted changes that predate this work (leave alone unless asked): .impeccable/config.json, package.json, proxy.ts (debug log), earlier PROJECT_STATE.md edits. The design files under docs/ are also uncommitted and nothing has been committed or pushed this session.
-- Impeccable design hook may flag the Pip mascot smile (border-accent-on-rounded) in the mockup CSS; ignored for docs/mockups only.
+- lib/ is almost pure TS; only lib/auth/require.ts and lib/supabase/server.ts import Next/SSR. Mobile imports engine, budget, now, inbox, domain only.
+- Phone talks to Supabase directly (supabase-js + RLS). No new route handlers unless Now proves too heavy on device.
+- Raw notification text never leaves the device or is stored; only account, amount, merchant, time, dedupe_hash.
+- Notification listener native module and manifest permission go into the FIRST build. Module choice (a maintained RN listener + Expo config plugin) decided and justified in slice 1.
+- Security: disable Supabase sign-ups; anon key only in app; never ship the service role key.
