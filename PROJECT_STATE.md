@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/8-popover-pickers-settings
-- **User to-do now:** Try rev-8 on desktop and phone; merge rev/1 to rev/8 to main
+- **Next action:** Approve or request changes on rev/9-picker-everywhere-bonus-rows
+- **User to-do now:** Try rev-9 on desktop, tablet and phone; merge rev/1 to rev/9 to main
 
 ## 3. Execution log
 
@@ -37,6 +37,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 10:33 | rev-6 | Timeline card order and 2:2:1 widths; fixed the Atkinson font build warning with an explicit fallback | HEAD
 - 2026-11-21 10:47 | rev-7 | Shared confirm dialog and toasts (no native confirm), MonthPicker (years first), MonthOfYear and DayOfMonth replace date selects and type=month inputs, setup wizard: wider start range, budget rows and funds use round tick controls, raise wizard summary padded | HEAD
 - 2026-11-21 10:55 | rev-8 | Month picker is now a calendar popover (month grid, year arrows, year grid on tap), day picker popover; Settings separates Looks and Setup wizard | HEAD
+- 2026-11-21 11:03 | rev-9 | MonthOfYear is a popover too (projected raises, bonuses, allowances, funds), budget line sheet Goes to on its own row with Starts/Ends side by side, bonus destination tick shows a spinner and reverts on error, add-destination box and rows re-spaced for phone and tablet | HEAD
 
 ## 4. Open questions
 
@@ -53,7 +54,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,771,871 | 7,482,453 | 334,525 | 3,416,464 | 417,721,352 | 1,953,810 |  |
+| **Cumulative** | 1,781,135 | 7,498,513 | 335,287 | 3,432,972 | 420,015,261 | 1,962,695 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -80,6 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-5 | 1,302,028 | 5,300,887 | 224,606 | 2,728,682 | 322,138,795 | 1,490,869 |  |
 | rev-7 | 1,324,261 | 5,408,789 | 232,990 | 2,742,622 | 326,747,867 | 1,506,865 |  |
 | rev-8 | 1,771,871 | 7,482,453 | 334,525 | 3,416,464 | 417,721,352 | 1,953,810 | no mark 'rev-8': all-time |
+| rev-9 | 1,781,135 | 7,498,513 | 335,287 | 3,432,972 | 420,015,261 | 1,962,695 | no mark 'rev-9': all-time |
 
 <!-- END SUMMARY -->
 

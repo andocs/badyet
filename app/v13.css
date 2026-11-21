@@ -784,13 +784,20 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-spin{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:v13spin .7s linear infinite}
 .v13 .v-chk[aria-busy=true]{opacity:1}
 .v13 .v-addbox{container-type:inline-size}
-.v13 .v-addgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.v13 .v-addgrid>:first-child,.v13 .v-addgrid>.v-btn{grid-column:1/-1}
-.v13 .v-addgrid .v-lbl-in{width:100%}
-@container (min-width:560px){
- .v13 .v-addgrid{grid-template-columns:minmax(0,1fr) 130px 120px auto}
- .v13 .v-addgrid>:first-child,.v13 .v-addgrid>.v-btn{grid-column:auto}
+.v13 .v-addform{display:grid;gap:12px;margin-top:8px}
+.v13 .v-addform>.v-seg{display:flex;width:100%}
+.v13 .v-addform>.v-seg button{flex:1}
+.v13 .v-addfields{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.v13 .v-amtrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.v13 .v-addform .v-lbl-in{width:100%}
+.v13 .v-addpre{min-height:18px}
+.v13 .v-addgo{width:100%}
+@container (min-width:540px){
+ .v13 .v-addfields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .v13 .v-addform>.v-seg{width:fit-content}
+ .v13 .v-addgo{width:auto;justify-self:start}
 }
+.v13 .v-sr-row .v-nm .v-dot{margin-right:8px;vertical-align:1px}
 .v13 .v-sr-row{gap:12px}
 .v13 .v-sr-row .v-nm .v-tkn{margin-left:6px;vertical-align:1px}
 @media(max-width:759px){
