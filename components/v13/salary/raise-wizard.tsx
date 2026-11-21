@@ -33,11 +33,12 @@ interface Alloc { lineId: string; mode: "amount" | "percent"; value: string }
  */
 export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { input: SalaryInput; thisMonth: YearMonth; placeable: PlaceableLine[]; initialKind: Kind | null }) {
   const router = useRouter();
-  const months = useMemo(() => monthRange(addMonths(thisMonth, 1), 60), [thisMonth]);
   const [step, setStep] = useState(0);
   const [kind, setKind] = useState<Kind>(initialKind ?? "merit");
+  // An allowance you already get can start in the past (up to three years back); everything else starts from next month.
+  const months = useMemo(() => (kind === "allowance" ? monthRange(addMonths(thisMonth, -36), 97) : monthRange(addMonths(thisMonth, 1), 60)), [thisMonth, kind]);
   const [status, setStatus] = useState<"confirmed" | "expected">("confirmed");
-  const [month, setMonth] = useState<YearMonth>(months[0]!);
+  const [month, setMonth] = useState<YearMonth>(addMonths(thisMonth, 1));
   const [mode, setMode] = useState<"pct" | "amt">("pct");
   const [pct, setPct] = useState("3.5");
   const [newBase, setNewBase] = useState("");
@@ -96,6 +97,8 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
 
   const monthly = kind !== "adjustment" && !(kind === "allowance" && alFreq === "yearly");
   const extra = view && monthly ? money(Math.max(0, view.effect.perMonth)) : money(0);
+  // Budget top-ups only make sense for new money. An allowance that already started is already in your take-home.
+  const canPlace = monthly && month > thisMonth;
   const lineOf = (id: string) => placeable.find((l) => l.id === id);
   const placed = allocs.reduce((t, a) => {
     const v = Number(a.value);
@@ -117,7 +120,7 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
       grade: kind === "promotion" ? grade : undefined,
       allowance: kind === "allowance" ? { name: alName.trim(), amount: parsed.alAmt ?? 0, frequency: alFreq, payMonth: alFreq === "yearly" ? alMonth : undefined, cutoff: alCutoff, taxable } : undefined,
       adjustment: kind === "adjustment" ? { amount: parsed.adjAmt ?? 0, taxable } : undefined,
-      allocations: monthly
+      allocations: canPlace
         ? allocs.flatMap((a): RaisePayload["allocations"] => {
             const v = Number(a.value);
             const line = lineOf(a.lineId);
@@ -165,7 +168,7 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                 <p className="v-muted">Pick the closest one. You can add more events later.</p>
                 <div className="v-choice" role="radiogroup" aria-label="What happened">
                   {KINDS.map(([v, l, d]) => (
-                    <label key={v}><input type="radio" name="k" checked={kind === v} onChange={() => setKind(v)} />{l}<small>{d}</small></label>
+                    <label key={v}><input type="radio" name="k" checked={kind === v} onChange={() => { setKind(v); if (v !== "allowance" && month <= thisMonth) setMonth(addMonths(thisMonth, 1)); }} />{l}<small>{d}</small></label>
                   ))}
                 </div>
                 <div style={{ marginTop: 20 }}>
@@ -196,10 +199,11 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                     {kind === "allowance" ? <label className="v-field">Name<input value={alName} maxLength={60} onChange={(e) => setAlName(e.target.value)} placeholder="Transport allowance" /></label> : null}
                     {kind === "allowance" ? <label className="v-field">Amount (₱)<input inputMode="decimal" value={alAmount} onChange={(e) => setAlAmount(e.target.value)} /></label> : null}
                     {kind === "adjustment" ? <label className="v-field">Amount (₱, negative for a deduction)<input inputMode="decimal" value={adj} onChange={(e) => setAdj(e.target.value)} placeholder="5,000" /></label> : null}
-                    <label className="v-field">Effective month
+                    <label className="v-field">{kind === "allowance" ? "Started or starts in" : "Effective month"}
                       <select value={month} onChange={(e) => setMonth(e.target.value as YearMonth)}>{months.map((m) => <option key={m} value={m}>{label(m)}</option>)}</select>
                     </label>
                   </div>
+                  {kind === "allowance" ? <p className="v-xs v-muted" style={{ margin: 0 }}>Already getting this allowance? Pick the month it started, up to three years back. It then shows in your earlier payslips and the timeline too.</p> : null}
                   {kind === "promotion" ? (
                     <div className="v-two">
                       <label className="v-field">New title<input value={title} maxLength={60} onChange={(e) => setTitle(e.target.value)} /></label>
@@ -233,8 +237,8 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
               <>
                 <h2>Where does the extra go?</h2>
                 <p className="v-muted">Optional. Put part of the new take-home on budget lines. Whatever you leave unplaced lands in Whatever is left, so it still gets saved.</p>
-                {!view || !monthly || extra <= 0 ? (
-                  <div className="v-note"><b>Nothing monthly to place.</b> This one does not change your monthly take-home.</div>
+                {!view || !canPlace || extra <= 0 ? (
+                  <div className="v-note"><b>Nothing monthly to place.</b> {monthly && month <= thisMonth ? "This one has already started, so it is already part of your take-home." : "This one does not change your monthly take-home."}</div>
                 ) : (
                   <div className="v-stack">
                     <div className="v-row v-sp"><span className="v-muted">New take-home each month</span><b className="v-disp" style={{ fontSize: 24 }}><Money value={extra} /></b></div>

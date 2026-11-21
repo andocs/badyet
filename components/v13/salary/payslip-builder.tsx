@@ -220,7 +220,7 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
         <div key={d.key} className="v-plr">
           <div className="v-grow v-nm"><b>{line.label}</b>
             <small>
-              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) / 100}% of the month's tax` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
+              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) === 5000 ? "Half" : `${(d.spec.shareBp ?? 5000) / 100}%`} of the month's tax, split across both cutoffs` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
             </small>
           </div>
           <div className="v-pla">
@@ -243,12 +243,6 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
       <div key={`auto-${i}`} className="v-plr">
         <div className="v-grow v-nm"><b>{line.label}</b>
           <small>{allowance ? (allowance.frequency === "yearly" ? "once a year · from Recurring allowances" : "every month · from Recurring allowances") : line.source === "bonus" || line.source === "bonus_tax" ? "from Bonuses" : line.source === "savings_plan" ? "payroll savings plan" : "your payroll setting"}</small>
-          {allowance ? (
-            <span className="v-tx">
-              <button type="button" className="v-sw v-s" role="switch" aria-checked={allowance.taxable} aria-label={`${line.label} is taxable`} onClick={() => onAllowance(allowance.id, { taxable: !allowance.taxable })} />
-              Taxable
-            </span>
-          ) : null}
         </div>
         <div className="v-pla"><span className="v-fixedv">{sign}<Money value={line.amount} /></span></div>
         <div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{moveLabel}</button> : null}</div>

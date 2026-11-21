@@ -723,3 +723,17 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
  .v13 .v-pbsum2>h2{margin-bottom:6px}
  .v13 .v-pbsum2>p{margin-top:12px!important}
 }
+
+/* Salary and tax timeline: events, projected raises and allowances in one row; each item stays on a single line */
+.v13 .v-tl3{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:start}
+@media(min-width:1100px){.v13 .v-tl3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.v13 .v-ev,.v13 .v-alw{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0}
+.v13 .v-ev .v-when{width:48px}
+.v13 .v-ev>.v-grow,.v13 .v-alw>.v-grow{flex:1 1 0;min-width:0}
+.v13 .v-evt{display:flex;align-items:center;gap:6px;min-width:0}
+.v13 .v-one{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-evt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-ev .v-delta{flex:none;font-size:16px;line-height:1.2}
+.v13 .v-ev .v-pill{flex:none}
+.v13 .v-alw .v-seg{flex:none}
+.v13 .v-rowerr{flex-basis:100%;margin:0}

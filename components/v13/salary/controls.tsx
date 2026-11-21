@@ -21,7 +21,6 @@ interface ItemState {
   gone: boolean;
   status: "confirmed" | "expected";
   cutoff: "first" | "second";
-  taxable: boolean;
 }
 const ItemCtx = createContext<{ state: ItemState; apply: (c: Partial<ItemState>) => void } | null>(null);
 const useItem = () => {
@@ -31,7 +30,7 @@ const useItem = () => {
 };
 
 /**
- * A row you can change in place. A confirm, a cutoff move, a taxable switch or a removal shows at once; the server catches up in the
+ * A row you can change in place. A confirm, a cutoff move or a removal shows at once; the server catches up in the
  * background, and if it says no the row goes back to how it was and shows why.
  */
 export function OptimisticItem({ initial, className, style, children }: { initial: ItemState; className?: string; style?: React.CSSProperties; children: React.ReactNode }) {
@@ -62,15 +61,13 @@ export function EventActions({ id, kind }: { id: string; kind: string }) {
       if (r.error) setError(r.error);
     });
   return (
-    <div className="v-row v-wrap" style={{ gap: 8, marginTop: 8 }}>
-      {state.status === "expected" ? <button type="button" className="v-btn v-sm" onClick={() => go({ status: "confirmed" }, () => confirmEvent(id))}>It happened: confirm</button> : null}
+    <>
+      {state.status === "expected" ? <button type="button" className="v-btn v-sm v-pri" onClick={() => go({ status: "confirmed" }, () => confirmEvent(id))}>Confirm</button> : null}
       {kind !== "start" ? (
-        <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm("Remove this event? Budget top-ups tied to it go too.")) go({ gone: true }, () => deleteEvent(id)); }}>
-          Remove
-        </button>
+        <button type="button" className="v-iconbtn v-s" aria-label="Remove this event" title="Remove" onClick={() => { if (window.confirm("Remove this event? Budget top-ups tied to it go too.")) go({ gone: true }, () => deleteEvent(id)); }}>×</button>
       ) : null}
-      {error ? <span className="v-flag v-bad" role="alert">{error}</span> : null}
-    </div>
+      {error ? <span className="v-flag v-bad v-rowerr" role="alert">{error}</span> : null}
+    </>
   );
 }
 
@@ -107,7 +104,7 @@ export function ProjectedRaises({ on, pctBp, month }: { on: boolean; pctBp: numb
   );
 }
 
-/** Where an allowance lands, whether it is taxable, and removing it. */
+/** Where an allowance lands, and removing it. Whether it is taxed is chosen when it is added. */
 export function AllowanceControls({ id, name }: { id: string; name: string }) {
   const { state, apply } = useItem();
   const [error, setError] = useState<string | null>(null);
@@ -121,19 +118,12 @@ export function AllowanceControls({ id, name }: { id: string; name: string }) {
     });
   return (
     <>
-      <div className="v-xs v-muted" style={{ marginTop: 8 }}>Lands in the</div>
-      <div className="v-seg v-fit" role="group" aria-label={`${name} lands in`}>
-        <button type="button" aria-pressed={state.cutoff === "first"} onClick={() => go({ cutoff: "first" }, () => setAllowance(id, { cutoff: "first" }))}>1st cutoff</button>
-        <button type="button" aria-pressed={state.cutoff === "second"} onClick={() => go({ cutoff: "second" }, () => setAllowance(id, { cutoff: "second" }))}>2nd cutoff</button>
+      <div className="v-seg" role="group" aria-label={`${name} lands in`} title="Lands in">
+        <button type="button" aria-pressed={state.cutoff === "first"} aria-label="1st cutoff" onClick={() => go({ cutoff: "first" }, () => setAllowance(id, { cutoff: "first" }))}>1st</button>
+        <button type="button" aria-pressed={state.cutoff === "second"} aria-label="2nd cutoff" onClick={() => go({ cutoff: "second" }, () => setAllowance(id, { cutoff: "second" }))}>2nd</button>
       </div>
-      <div className="v-row v-wrap" style={{ gap: 12, marginTop: 8 }}>
-        <label className="v-row" style={{ gap: 8 }}>
-          <span className="v-xs v-muted">Taxable</span>
-          <button type="button" className="v-sw" role="switch" aria-checked={state.taxable} aria-label={`${name} is taxable`} onClick={() => go({ taxable: !state.taxable }, () => setAllowance(id, { taxable: !state.taxable }))} />
-        </label>
-        <button type="button" className="v-btn v-sm v-ghost" onClick={() => { if (window.confirm(`Remove ${name}?`)) go({ gone: true }, () => deleteAllowance(id)); }}>Remove</button>
-      </div>
-      {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
+      <button type="button" className="v-iconbtn v-s" aria-label={`Remove ${name}`} title="Remove" onClick={() => { if (window.confirm(`Remove ${name}?`)) go({ gone: true }, () => deleteAllowance(id)); }}>×</button>
+      {error ? <span className="v-flag v-bad v-rowerr" role="alert">{error}</span> : null}
     </>
   );
 }

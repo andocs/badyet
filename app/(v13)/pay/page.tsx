@@ -80,32 +80,30 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
         <Chart range={range} events={input.events.filter((e) => e.kind !== "start" && e.kind !== "adjustment").map((e) => ({ month: e.effectiveMonth, expected: e.status === "expected" }))} />
       </section>
 
-      <div className="v-cols2">
-        <div className="v-stack">
+      <div className="v-tl3">
           <section className="v-card" aria-labelledby="evh">
             <div className="v-row v-sp"><h2 id="evh">Events</h2><Link className="v-btn v-sm" href="/pay/new">Add with the wizard</Link></div>
             <div>
               {events.map(({ event: e, delta }) => (
-                <OptimisticItem key={e.id} className="v-ev" initial={{ gone: false, status: e.status, cutoff: "second", taxable: false }}>
+                <OptimisticItem key={e.id} className="v-ev" initial={{ gone: false, status: e.status, cutoff: "second" }}>
                   <div className="v-when">{MON[Number(e.effectiveMonth.slice(5)) - 1]}<small>{e.effectiveMonth.slice(0, 4)}</small></div>
                   <div className="v-grow">
-                    <b>{{ start: "Start", merit: "Merit raise", promotion: "Promotion", allowance: "Allowance change", adjustment: "One-off adjustment" }[e.kind]}</b>
-                    <ExpectedPill />
-                    <div className="v-sm v-muted">
+                    <div className="v-evt"><b>{{ start: "Start", merit: "Merit raise", promotion: "Promotion", allowance: "Allowance change", adjustment: "One-off adjustment" }[e.kind]}</b><ExpectedPill /></div>
+                    <div className="v-sm v-muted v-one">
                       {e.kind === "merit" && e.pctBp != null ? `+${e.pctBp / 100}%` : null}
                       {e.newBase != null ? <>{e.kind === "merit" ? " → " : ""}base <Money value={e.newBase} /> a month</> : null}
                       {e.kind === "promotion" && (e.newBase == null) ? "Promotion" : null}
                       {e.kind === "adjustment" && e.oneOffAmount != null ? <><Money value={e.oneOffAmount} /> once{e.oneOffTaxable ? ", taxed" : ""}</> : null}
                       {e.kind === "allowance" ? "A new allowance (see Recurring allowances)" : null}
                     </div>
-                    <EventActions id={e.id} kind={e.kind} />
                   </div>
                   {delta !== null ? (
                     <div className={`v-delta v-num ${delta >= 0 ? "v-pos" : "v-neg"}`} style={{ textAlign: "right" }}>
                       <Money value={delta} signed />
-                      <div className="v-xs v-muted" style={{ font: "600 12px var(--font-body)" }}>take-home a month</div>
+                      <div className="v-xs v-muted" style={{ font: "600 12px var(--font-body)" }}>a month</div>
                     </div>
                   ) : <span className="v-pill">{e.kind === "start" ? "start" : "once"}</span>}
+                  <EventActions id={e.id} kind={e.kind} />
                 </OptimisticItem>
               ))}
             </div>
@@ -123,20 +121,20 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             <div>
               {input.allowances.length === 0 ? <p className="v-muted v-sm">No allowances yet.</p> : null}
               {input.allowances.map((al) => (
-                <OptimisticItem key={al.id} className="v-alw" style={{ alignItems: "flex-start" }} initial={{ gone: false, status: "confirmed", cutoff: al.payslipCutoff, taxable: al.taxable }}>
+                <OptimisticItem key={al.id} className="v-alw" initial={{ gone: false, status: "confirmed", cutoff: al.payslipCutoff }}>
                   <div className="v-grow">
-                    <b>{al.name}</b>
-                    <div className="v-sm v-muted"><Money value={al.amount} /> · {al.frequency === "monthly" ? "every month" : `once a year, in ${MON[(al.payMonth ?? 1) - 1]}`} · from {label(al.startsOn)}{al.endsOn ? ` to ${label(al.endsOn)}` : ""}</div>
-                    <AllowanceControls id={al.id} name={al.name} />
+                    <b className="v-one">{al.name}</b>
+                    <div className="v-sm v-muted v-one"><Money value={al.amount} /> · {al.frequency === "monthly" ? "every month" : `once a year, in ${MON[(al.payMonth ?? 1) - 1]}`} · from {label(al.startsOn)}{al.endsOn ? ` to ${label(al.endsOn)}` : ""} · {al.taxable ? "taxed" : "not taxed"}</div>
                   </div>
+                  <AllowanceControls id={al.id} name={al.name} />
                 </OptimisticItem>
               ))}
             </div>
-            <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>Taxable ones add to your taxable pay. The cutoff you pick here is what the payslip builder uses. Bonuses are set on the Bonuses page.</p>
+            <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>Taxed ones add to your taxable pay. You choose that when you add one; to change it, remove it and add it again. The cutoff you pick here is what the payslip builder uses.</p>
           </section>
-        </div>
+      </div>
 
-        <section className="v-card" aria-labelledby="yh">
+      <section className="v-card" aria-labelledby="yh">
           <h2 id="yh">Year by year</h2>
           <div className="v-scrollx">
             <table>
@@ -158,8 +156,7 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             </table>
           </div>
           <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>Regular pay is December of each year, from your payslip builder. Bonuses are the 13th month, CIP and any one-offs paid that year, after tax. The current year shows the whole year.</p>
-        </section>
-      </div>
+      </section>
     </div>
   );
 }
