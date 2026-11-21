@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E7 Gmail capture
+- **Active slice / milestone:** E8 Plan: Budget and Salary
 - **Gate:** none
-- **Next action:** E7: decide Google sign-in approach, build parsers and pipeline
-- **User to-do now:** E7 in progress
+- **Next action:** Build E8 while E7 awaits testing
+- **User to-do now:** E7 gate still open: install APK e5f5bd62, connect Gmail, check captures
 
 ## 3. Execution log
 
@@ -42,6 +42,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 16:53 | slice-E6 | Notification capture: parsers for GCash, Maya, GoTyme, MariBank, BPI push (19 tests on real samples), decide/row/dedupe/account resolution, transfer pairing (shared lib/capture, 66 tests), phone pipeline with held captures, safe drain, send queue handles duplicates, runner on launch/foreground/new notification; mobile 59 tests, web 310 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c4234731 | 8c3f80e
 - 2026-11-21 16:55 | slice-E6 | E6 approved at gate (not yet tested on real notifications) | -
 - 2026-11-21 16:57 | slice-E7 | Approach chosen: google-signin library, Gmail now; Android custom-scheme OAuth is unsupported by Google | -
+- 2026-11-21 17:04 | slice-E7 | Gmail capture: email reader and BPI/Grab/foodpanda parsers (shared lib/capture/email, 14 tests), Gmail REST client, runner (seen ids, held items, cross-source duplicate check for emails), connect card, google-signin library loaded defensively so older builds do not crash; mobile 73 tests, web 324 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group ed63cce6; APK build e5f5bd62 started | d201f21
+- 2026-11-21 17:20 | slice-E7 | E7 awaiting user test (APK e5f5bd62, Google Cloud setup done by user, web client id set, OTA 0c3a2b79). User asked to proceed with E8-E11 meanwhile | -
+- 2026-11-21 17:22 | slice-E7 | Gmail APK finished: build e5f5bd62, https://expo.dev/artifacts/eas/34GCgyG4EtnV_VjM5vLCBTf5H9g_h5T7li5ilIsk6pg.apk | d201f21
 
 ## 4. Open questions
 
@@ -76,7 +79,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,144,206 | 8,508,100 | 394,099 | 3,938,206 | 501,339,493 | 2,298,287 |  |
+| **Cumulative** | 2,195,532 | 8,684,157 | 406,064 | 4,003,669 | 514,312,550 | 2,351,038 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -114,6 +117,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E4b | 0 | 0 | 0 | 31,602 | 3,000,641 | 23,294 |  |
 | Slice E5 | 34,760 | 127,057 | 10,165 | 56,170 | 9,020,239 | 41,456 |  |
 | Slice E6 | 0 | 0 | 0 | 47,276 | 8,147,375 | 38,297 |  |
+| Slice E7 | 51,326 | 176,057 | 11,965 | 62,827 | 12,471,116 | 46,107 |  |
 
 <!-- END SUMMARY -->
 
@@ -148,6 +152,22 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E7 (Gmail capture): what you do now
+1. Get the code:   git fetch && git checkout slice/E7-gmail-capture   (E1-E6 included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       none new
+4. Config:         Google Cloud setup (about 10 minutes), in this order, all in ONE project:
+   a. console.cloud.google.com > create a project (for example "Bad(yet)").
+   b. APIs & Services > Library > enable "Gmail API".
+   c. Google Auth Platform / OAuth consent screen: User type External, app name Bad(yet), your email as support and contact. Data access / scopes: add https://www.googleapis.com/auth/gmail.readonly. Audience / Test users: add the Gmail address that receives your bank emails. Leave it in Testing (no review needed).
+   d. Credentials > Create credentials > OAuth client ID > Application type ANDROID. Package name: com.docoats.badyet. SHA-1 certificate fingerprint: EE:82:9B:C2:B9:C1:6A:7E:D8:1D:8F:A8:E2:11:0C:17:BF:CF:AF:55 (this is the signing key of every build EAS has made for you).
+   e. Credentials > Create credentials > OAuth client ID > Application type WEB application (no redirect URIs needed). Copy its Client ID (ends .apps.googleusercontent.com). This is a public id, not a secret.
+   f. Send me that Web client ID. I add it as EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in EAS and publish it over the air (no new APK).
+5. Get the update: install the new APK from build e5f5bd62 (it contains the Google sign-in module), then open the app twice (or Settings > Check for updates) for update group ed63cce6 plus the one with the client id.
+6. Check these:    (a) Settings has a Gmail card; before the client id arrives it says the id is missing; (b) after: Connect Gmail opens Google's sign-in; Google warns the app is unverified (it is in testing): tap Advanced, Continue; allow read-only Gmail access; (c) the card shows "Connected as ..." and "Check now" reports N new; (d) a BPI transfer email (InstaPay in or out) from the last 3 days appears as a pending Inbox item with the right amount and in the right account (BPI account matched by the last digits or nickname); (e) a Grab receipt paid by card appears in the account whose last 4 digits match the card, and cash rides are skipped; (f) a foodpanda order appears in the foodpanda source's usual account; (g) the same transfer seen in a phone notification and an email is recorded once; (h) it asks you to connect again after about 7 days while the project is in testing.
+7. Known limits:   NOT tested by me on a real mailbox or a real Google sign-in. Parsers are tested on rebuilt layouts of your BPI, Grab and foodpanda emails; if Google or the bank changes the layout, an email is ignored, not guessed. Only the last 3 days are read on each check, once per message. Grab and foodpanda sender addresses are guessed from their domains (grab.com, foodpanda.com/.ph): tell me if their mail comes from another domain, or add the sender in Capture rules. Gmail is checked when you open the app (at most every 5 minutes) or tap Check now; there is no background check yet. Google Wallet is still missing (no sample).
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E6 (notification capture): what you do now
 1. Get the code:   git fetch && git checkout slice/E6-notification-capture   (E1-E5 included; merge to main after you approve)

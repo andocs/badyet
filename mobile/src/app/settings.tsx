@@ -39,6 +39,9 @@ export default function Settings() {
 
   return (
     <Screen title="Settings">
+      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
+      </Pressable>
       <Card>
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>

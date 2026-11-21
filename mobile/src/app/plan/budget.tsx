@@ -1,0 +1,441 @@
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { loadBudget, type BudgetData } from '@/lib/budget/load';
+import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
+import { cutoffText, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
+import type { LineInput } from '@/lib/budget/line-input';
+import { formatPesos, money, parsePesos } from '@/lib/domain/money';
+import { rangeLabel } from '@/lib/now/format';
+import { Amount, Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
+import { deleteLine, saveLine } from '~/lib/budgetWrite';
+import { useHide } from '~/lib/hide';
+import { peso } from '~/lib/money';
+import { supabase } from '~/lib/supabase';
+import { fonts, useTheme } from '~/lib/theme';
+import { useLoad } from '~/lib/useLoad';
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+type Draft = {
+  id?: string;
+  name: string;
+  categoryId: string;
+  rule: LineInput['rule'];
+  amount: string;
+  percent: string;
+  cutoff: LineInput['cutoff'];
+  accountId: string | null;
+  startsOn: string;
+  endsOn: string;
+  isDraft: boolean;
+  countsToDaily: boolean;
+  kind: LineInput['kind'];
+};
+
+const draftOf = (l: LineView): Draft => ({
+  id: l.id,
+  name: l.name,
+  categoryId: l.categoryId,
+  rule: l.rule,
+  amount: l.fixed === null ? '' : formatPesos(l.fixed, { symbol: false }),
+  percent: l.pctBp === null ? '' : String(l.pctBp / 100),
+  cutoff: l.cutoff,
+  accountId: l.accountId,
+  startsOn: l.startsOn ?? '',
+  endsOn: l.endsOn ?? '',
+  isDraft: l.isDraft,
+  countsToDaily: l.countsToDaily,
+  kind: l.kind,
+});
+
+const blankDraft = (categoryId: string): Draft => ({
+  name: '', categoryId, rule: 'fixed', amount: '', percent: '', cutoff: 'both', accountId: null, startsOn: '', endsOn: '', isDraft: false, countsToDaily: false, kind: 'normal',
+});
+
+/** The editor's fields become the shape the shared validator checks. Typed pesos and percents are converted here. */
+function toInput(d: Draft): unknown {
+  const pesos = d.amount.trim() === '' ? undefined : parsePesos(d.amount.trim());
+  const pct = d.percent.trim() === '' ? NaN : Math.round(Number(d.percent) * 100);
+  return {
+    id: d.id,
+    name: d.name,
+    categoryId: d.categoryId,
+    rule: d.rule,
+    amount: d.rule === 'fixed' ? (pesos ?? null) : null,
+    pctBp: d.rule === 'pct' ? (Number.isFinite(pct) ? pct : null) : null,
+    cutoff: d.cutoff,
+    accountId: d.accountId,
+    startsOn: d.startsOn.trim() || null,
+    endsOn: d.endsOn.trim() || null,
+    isDraft: d.isDraft,
+    countsToDaily: d.countsToDaily,
+    kind: d.kind,
+  };
+}
+
+function LineEditor({
+  start, data, onClose, onSaved,
+}: {
+  start: Draft;
+  data: BudgetData;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const c = useTheme();
+  const insets = useSafeAreaInsets();
+  const [d, setD] = useState<Draft>(start);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
+  const input = [s.input, { color: c.ink, backgroundColor: c.soft, fontFamily: fonts.body }];
+
+  async function save() {
+    setBusy(true);
+    setProblem(null);
+    const r = await saveLine(supabase, toInput(d));
+    setBusy(false);
+    if ('error' in r) setProblem(r.error);
+    else onSaved();
+  }
+
+  function remove() {
+    Alert.alert('Delete this line?', `${d.name || 'This line'} will leave the budget. Transactions stay; they just lose the link.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const r = await deleteLine(supabase, d.id!);
+          if ('error' in r) setProblem(r.error);
+          else onSaved();
+        },
+      },
+    ]);
+  }
+
+  return (
+    <Modal visible animationType="slide" transparent onRequestClose={onClose}>
+      <Pressable style={s.scrim} onPress={onClose} accessibilityLabel="Close" />
+      <View style={[s.sheet, { backgroundColor: c.surface, borderColor: c.line, paddingBottom: insets.bottom + 16 }]}>
+        <View style={[s.grab, { backgroundColor: c.line }]} />
+        <ScrollView contentContainerStyle={{ gap: 14 }} keyboardShouldPersistTaps="handled">
+          <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>{d.id ? 'Edit line' : 'Add a line'}</Text>
+
+          <Field label="Name">
+            <TextInput value={d.name} onChangeText={(v) => set('name', v)} maxLength={60} placeholder="Groceries" placeholderTextColor={c.muted} style={input} />
+          </Field>
+
+          <Field label="Category">
+            <View style={s.chips}>
+              {data.categories.map((x) => (
+                <Chip key={x.id} label={x.name} on={d.categoryId === x.id} onPress={() => set('categoryId', x.id)} />
+              ))}
+            </View>
+          </Field>
+
+          <Field label="Rule">
+            <View style={s.chips}>
+              <Chip label="Fixed" on={d.rule === 'fixed'} onPress={() => set('rule', 'fixed')} />
+              <Chip label="% of take-home" on={d.rule === 'pct'} onPress={() => set('rule', 'pct')} />
+              <Chip label="Whatever is left" on={d.rule === 'rest'} onPress={() => setD((x) => ({ ...x, rule: 'rest', kind: 'normal' }))} />
+            </View>
+            {d.rule === 'fixed' ? (
+              <TextInput value={d.amount} onChangeText={(v) => set('amount', v)} keyboardType="decimal-pad" placeholder="Amount per cutoff, like 1,250.50" placeholderTextColor={c.muted} style={input} />
+            ) : null}
+            {d.rule === 'pct' ? (
+              <TextInput value={d.percent} onChangeText={(v) => set('percent', v)} keyboardType="decimal-pad" placeholder="Percent, like 13" placeholderTextColor={c.muted} style={input} />
+            ) : null}
+          </Field>
+
+          <Field label="Cutoff">
+            <View style={s.chips}>
+              <Chip label="1st" on={d.cutoff === 'first'} onPress={() => set('cutoff', 'first')} />
+              <Chip label="2nd" on={d.cutoff === 'second'} onPress={() => set('cutoff', 'second')} />
+              <Chip label="Both" on={d.cutoff === 'both'} onPress={() => set('cutoff', 'both')} />
+            </View>
+          </Field>
+
+          <Field label="Goes to an account (a bill or transfer)">
+            <View style={s.chips}>
+              <Chip label="No, it is spending" on={d.accountId === null} onPress={() => set('accountId', null)} />
+              {data.accounts.map((a) => (
+                <Chip key={a.id} label={a.name} on={d.accountId === a.id} onPress={() => set('accountId', a.id)} />
+              ))}
+            </View>
+          </Field>
+
+          <View style={s.two}>
+            <View style={{ flex: 1 }}>
+              <Field label="Starts (YYYY-MM)">
+                <TextInput value={d.startsOn} onChangeText={(v) => set('startsOn', v)} placeholder="2027-03" placeholderTextColor={c.muted} autoCapitalize="none" style={input} />
+              </Field>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Field label="Ends (YYYY-MM)">
+                <TextInput value={d.endsOn} onChangeText={(v) => set('endsOn', v)} placeholder="optional" placeholderTextColor={c.muted} autoCapitalize="none" style={input} />
+              </Field>
+            </View>
+          </View>
+
+          <Field label="Counts toward">
+            <View style={s.chips}>
+              <Chip label="Normal" on={d.kind === 'normal'} onPress={() => set('kind', 'normal')} />
+              {d.rule !== 'rest' ? <Chip label="Office days" on={d.kind === 'rto'} onPress={() => set('kind', 'rto')} /> : null}
+              {d.rule !== 'rest' ? <Chip label="Office-day contingency" on={d.kind === 'rto_contingency'} onPress={() => set('kind', 'rto_contingency')} /> : null}
+            </View>
+          </Field>
+
+          <Toggle label="Counts toward the daily amount" value={d.countsToDaily} onChange={(v) => set('countsToDaily', v)} />
+          <Toggle label="Draft (not in the budget yet)" value={d.isDraft} onChange={(v) => set('isDraft', v)} />
+
+          {problem ? <Text style={{ color: c.err, fontFamily: fonts.body, fontSize: 14 }}>{problem}</Text> : null}
+          <View style={s.two}>
+            <Pressable onPress={onClose} accessibilityRole="button" style={[s.btn, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Cancel</Text>
+            </Pressable>
+            <Pressable onPress={save} disabled={busy} accessibilityRole="button" style={[s.btn, { flex: 1, backgroundColor: c.accent, opacity: busy ? 0.6 : 1 }]}>
+              <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>{busy ? 'Saving…' : 'Save'}</Text>
+            </Pressable>
+          </View>
+          {d.id ? (
+            <Pressable onPress={remove} accessibilityRole="button" style={[s.btn, { backgroundColor: c.errTint }]}>
+              <Text style={{ color: c.err, fontFamily: fonts.bodyBold, fontSize: 15 }}>Delete line</Text>
+            </Pressable>
+          ) : null}
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Label>{label}</Label>
+      {children}
+    </View>
+  );
+}
+
+function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+  const c = useTheme();
+  return (
+    <View style={s.between}>
+      <Text style={{ color: c.ink, fontFamily: fonts.body, fontSize: 15, flex: 1 }}>{label}</Text>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel={label} />
+    </View>
+  );
+}
+
+function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
+  const c = useTheme();
+  const { hide } = useHide();
+  const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`Edit ${l.name}`} style={s.line}>
+      <View style={{ flex: 1 }}>
+        <Body bold>{l.name}</Body>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{sub}</Text>
+        {l.spent ? (
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+            {peso(l.spent.amount, hide)} {l.spent.word}
+          </Text>
+        ) : null}
+        {l.topUps.length > 0 ? <Text style={{ color: c.accentText, fontFamily: fonts.body, fontSize: 12 }}>includes a raise top-up</Text> : null}
+      </View>
+      {l.amount !== null ? <Amount value={l.amount} /> : <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>off this month</Text>}
+    </Pressable>
+  );
+}
+
+function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+  const c = useTheme();
+  const { hide } = useHide();
+  return (
+    <>
+      {groups.map((g) => {
+        const firstCategory = data.categories.find((x) => x.groupId === g.id)?.id;
+        return (
+          <Card key={g.id}>
+            <View style={s.between}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>{g.name}</Text>
+                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                  {g.feedsSavings ? 'feeds savings · ' : ''}
+                  {Math.round(g.share)}% of take-home
+                </Text>
+              </View>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 16 }}>{peso(g.total, hide)}</Text>
+            </View>
+            <View style={[s.track, { backgroundColor: c.soft }]}>
+              <View style={{ width: `${g.share}%`, height: 6, borderRadius: 3, backgroundColor: c.accent }} />
+            </View>
+            {g.lines.map((l) => (
+              <LineRow key={l.id} l={l} onPress={() => onEdit(l)} />
+            ))}
+            {firstCategory ? (
+              <Pressable onPress={() => onAdd(firstCategory)} accessibilityRole="button" style={[s.add, { backgroundColor: c.soft }]}>
+                <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>+ Add a line to {g.name}</Text>
+              </Pressable>
+            ) : null}
+          </Card>
+        );
+      })}
+    </>
+  );
+}
+
+export default function Budget() {
+  const c = useTheme();
+  const router = useRouter();
+  const { hide } = useHide();
+  const { data, error, refreshing, reload } = useLoad(() => loadBudget(supabase));
+  const [fut, setFut] = useState(false);
+  const [month, setMonth] = useState<string | null>(null);
+  const [editing, setEditing] = useState<Draft | null>(null);
+
+  const screen = data ? buildBudgetScreen(data, { fut, month }) : null;
+
+  return (
+    <Screen
+      title="Budget"
+      subtitle={fut ? 'Rules re-run against each month’s projected take-home' : data ? `${monthLabel(data.period.month)} · what the rules say, and what has gone out so far` : undefined}
+      refreshing={refreshing}
+      onRefresh={reload}
+    >
+      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
+        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
+      </Pressable>
+      {error ? <Notice tone="error">{error}</Notice> : null}
+      {!data && !error ? <Notice>Loading…</Notice> : null}
+
+      {data && screen ? (
+        <>
+          <View style={[s.seg, { backgroundColor: c.soft }]}>
+            {([false, true] as const).map((f) => (
+              <Pressable
+                key={String(f)}
+                onPress={() => setFut(f)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: fut === f }}
+                style={[s.segBtn, fut === f && { backgroundColor: c.surface }]}
+              >
+                <Text style={{ color: fut === f ? c.ink : c.muted, fontFamily: fonts.bodyBold, fontSize: 14 }}>{f ? 'Future years' : 'This month'}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {!screen.hasStart || !screen.shown ? (
+            <Notice>No salary on file yet. The budget needs your take-home. Add your salary under Salary and tax first.</Notice>
+          ) : (
+            <>
+              {fut ? (
+                <Card>
+                  <View style={s.between}>
+                    <Pressable onPress={() => setMonth(`${screen.year - 1}-${screen.month.slice(5)}`)} accessibilityRole="button" accessibilityLabel="Previous year" style={s.yearBtn}>
+                      <Text style={{ color: c.ink, fontSize: 20 }}>‹</Text>
+                    </Pressable>
+                    <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>{screen.year}</Text>
+                    <Pressable onPress={() => setMonth(`${screen.year + 1}-${screen.month.slice(5)}`)} accessibilityRole="button" accessibilityLabel="Next year" style={s.yearBtn}>
+                      <Text style={{ color: c.ink, fontSize: 20 }}>›</Text>
+                    </Pressable>
+                  </View>
+                  <View style={s.chips}>
+                    {MONTH_NAMES.map((n, i) => {
+                      const ym = `${screen.year}-${String(i + 1).padStart(2, '0')}`;
+                      return <Chip key={ym} label={n} on={screen.month === ym} onPress={() => setMonth(ym)} />;
+                    })}
+                  </View>
+                </Card>
+              ) : null}
+
+              <LinearGradient colors={[c.heroA, c.heroB]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
+                <Text style={[s.heroLabel, { fontFamily: fonts.bodyBold }]}>
+                  LEFT OF TAKE-HOME, {monthLabel(screen.shown.month).toUpperCase()}
+                  {screen.shown.assumed ? ' (ASSUMED RAISE)' : ''}
+                </Text>
+                <Text style={{ color: '#fff', fontFamily: fonts.display, fontSize: 36, lineHeight: 42 }}>
+                  {peso(money(Math.max(0, screen.rest)), hide)}
+                  <Text style={{ color: '#d3efe6', fontFamily: fonts.bodyBold, fontSize: 18 }}> / {peso(screen.takeHome, hide)}</Text>
+                </Text>
+                <View style={s.pills}>
+                  <Pill text={`Fixed lines ${peso(screen.fixed, hide)} · ${screen.takeHome > 0 ? Math.round((screen.fixed / screen.takeHome) * 100) : 0}% of take-home`} />
+                  {!fut ? <Pill text={`Cutoff ${rangeLabel(data.period.start, data.period.end)}`} /> : null}
+                  {!fut ? (
+                    <Pill
+                      text={`Daily pool this cutoff ${peso(money(screen.shown.budget.dailyPool[data.period.which === 1 ? 'first' : 'second'] + screen.wantsAdj), hide)}${screen.wantsAdj !== 0 ? ' (incl. pools)' : ''}`}
+                    />
+                  ) : null}
+                  {screen.shown.expected ? <Pill text="includes an expected raise" /> : null}
+                </View>
+              </LinearGradient>
+
+              {screen.flag === 'over' ? (
+                <Notice tone="error">Fixed and percent lines are over take-home in {monthLabel(screen.shown.month)}. Trim a line or move a start date.</Notice>
+              ) : screen.flag === 'tight' ? (
+                <Notice>
+                  Tight month: only {peso(screen.rest, hide)} left after every line.
+                </Notice>
+              ) : null}
+
+              <Board groups={screen.groups} data={data} onEdit={(l) => setEditing(draftOf(l))} onAdd={(cat) => setEditing(blankDraft(cat))} />
+
+              {screen.topUpRaises.length > 0 ? (
+                <Notice>
+                  Top-ups come from raises: {screen.topUpRaises.join(', ')}. Change or remove the raise and they follow.
+                </Notice>
+              ) : null}
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                Settling office days, pools and categories are still on the web for now.
+              </Text>
+            </>
+          )}
+
+          {editing ? (
+            <LineEditor
+              start={editing}
+              data={data}
+              onClose={() => setEditing(null)}
+              onSaved={() => {
+                setEditing(null);
+                void reload();
+              }}
+            />
+          ) : null}
+        </>
+      ) : null}
+    </Screen>
+  );
+}
+
+function Pill({ text }: { text: string }) {
+  return (
+    <View style={s.pill}>
+      <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 12 }}>{text}</Text>
+    </View>
+  );
+}
+
+const s = StyleSheet.create({
+  hero: { borderRadius: 14, padding: 18, gap: 8 },
+  heroLabel: { color: '#bfe9dc', fontSize: 12, letterSpacing: 0.8 },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pill: { backgroundColor: 'rgba(255,255,255,0.16)', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  seg: { flexDirection: 'row', borderRadius: 999, padding: 4 },
+  segBtn: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  yearBtn: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  track: { height: 6, borderRadius: 3, overflow: 'hidden' },
+  line: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 56, paddingVertical: 4 },
+  add: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  input: { minHeight: 48, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, fontSize: 15 },
+  two: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  btn: { minHeight: 48, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  sheet: { maxHeight: '92%', borderTopLeftRadius: 20, borderTopRightRadius: 20, borderWidth: 1, padding: 16, gap: 12 },
+  grab: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2 },
+});

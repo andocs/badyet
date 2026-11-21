@@ -100,3 +100,18 @@ const s = StyleSheet.create({
   label: { fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
 });
+
+/** A round choice button. Selected is filled with the accent. */
+export function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
+  const c = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected: on }}
+      style={{ minHeight: 40, borderRadius: 999, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? c.accent : c.soft }}
+    >
+      <Text style={{ color: on ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>{label}</Text>
+    </Pressable>
+  );
+}

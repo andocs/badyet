@@ -20,7 +20,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="inbox" options={{ title: 'Inbox' }} />
       <Tabs.Screen name="add" options={{ title: '+' }} />
       <Tabs.Screen name="accounts" options={{ title: 'Accounts' }} />
-      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+      <Tabs.Screen name="plan" options={{ title: 'Plan' }} />
     </Tabs>
   );
 }
