@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Mockups (cover screen)
-- **Gate:** paused
-- **Next action:** User reviews docs/mockups/index.html; on approval start slice R1 (Reconcile + Add account)
-- **User to-do now:** Review mockups; test on the phone; Wallet sample tomorrow
+- **Active slice / milestone:** Mockups v2 (cover screen)
+- **Gate:** waiting
+- **Next action:** On approval start slice R1: Reconcile + Add account
+- **User to-do now:** Review docs/mockups/phone/index.html; test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -38,6 +38,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:55 | handoff | Merged all slices to main; added Grab/foodpanda senders (E12, OTA 8d6b6c7a); wrote docs/mobile-next-session.md for the next session | 9f958be
 - 2026-11-21 18:04 | rev-1 | Web budget page now uses buildBudgetScreen (added compare/yearWithout); removed dead validateLine in validate.ts, hardcoded TIGHT, hardcoded pay labels (paydays from user_settings via loadSalary), stale shell comment. tsc/vitest/lint PASS, Vercel preview success. Branch rev/1-budget-cleanup, not yet merged. | 72669ec
 - 2026-11-21 18:09 | mockups | 10 cover-screen mockups (320x872) in docs/mockups/: now, inbox, add, accounts, budget, salary, bonuses, funds, forecast, settings, plus index.html. Includes Reconnect Gmail banner and background-run status in Settings. Not yet viewed on a real screen; awaiting user approval. | -
+- 2026-11-21 18:12 | mockups-v2 | User rejected v1 as ugly. Rebuilt 10 mockups in docs/mockups/phone/ from the real app styles (theme.ts, ui.tsx, AccountTile): Gabarito + Atkinson Hyperlegible Next, same cards/hero/tiles/chips/tab bar, less text, folded detail. v1 removed. Awaiting approval. | -
 
 ## 4. Open questions
 
