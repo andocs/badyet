@@ -98,8 +98,8 @@ export function QrViewer({ url, caption }: { url: string; caption: string }) {
 }
 
 /** Colour choice for a new account: radio-like swatches. */
-export function ColorPick({ colors, name = "color" }: { colors: readonly string[]; name?: string }) {
-  const [value, setValue] = useState(colors[0]!);
+export function ColorPick({ colors, name = "color", initial }: { colors: readonly string[]; name?: string; initial?: string }) {
+  const [value, setValue] = useState(initial && colors.includes(initial) ? initial : colors[0]!);
   return (
     <div>
       <input type="hidden" name={name} value={value} />

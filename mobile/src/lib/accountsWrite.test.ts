@@ -97,13 +97,13 @@ describe('moveMoney', () => {
 });
 
 describe('editAccount', () => {
-  it('updates name, last four and colour only', async () => {
+  it('updates name, bank, last four and colour only', async () => {
     const { supabase, log } = client({});
-    expect(await editAccount(supabase, { id: A, kind: 'debit', name: ' Main ', last4: '1234', color: '#087A5A' })).toEqual({ ok: true });
-    expect(find(log, 'accounts', 'update')?.args[0]).toEqual({ name: 'Main', last4: '1234', color: '#087A5A' });
+    expect(await editAccount(supabase, { id: A, name: ' Main ', institution: ' BPI ', last4: '1234', color: '#087A5A' })).toEqual({ ok: true });
+    expect(find(log, 'accounts', 'update')?.args[0]).toEqual({ name: 'Main', institution: 'BPI', last4: '1234', color: '#087A5A' });
   });
   it('rejects a full card number', async () => {
     const { supabase } = client({});
-    expect(await editAccount(supabase, { id: A, kind: 'debit', name: 'Main', last4: '1234567', color: '#087A5A' })).toHaveProperty('error');
+    expect(await editAccount(supabase, { id: A, name: 'Main', last4: '1234567', color: '#087A5A' })).toHaveProperty('error');
   });
 });

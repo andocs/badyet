@@ -51,7 +51,8 @@ function MoreSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   );
 }
 
-const HIDDEN = { href: null } as const;
+// A `hidden` tab cannot be focused: the navigator sends you back to the first tab. These pages are real tabs with no button.
+const HIDDEN = { tabBarItemStyle: { display: 'none' as const } };
 
 export default function TabsLayout() {
   const c = useTheme();

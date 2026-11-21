@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { money } from "@/lib/domain/money";
-import { anchorAmount, creditAvailable, creditOwed, parseNewAccount } from "./v13";
+import { ACCOUNT_COLORS, anchorAmount, creditAvailable, creditOwed, parseAccountEdit, parseNewAccount } from "./v13";
 
 const ok = (input: Record<string, string>) => {
   const r = parseNewAccount(input);
@@ -46,5 +46,20 @@ describe("credit helpers", () => {
     expect(creditAvailable(money(-12_000), money(50_000))).toBe(38_000);
     expect(creditAvailable(money(-60_000), money(50_000))).toBe(0);
     expect(creditAvailable(money(-1), null)).toBeNull();
+  });
+});
+
+describe("parseAccountEdit", () => {
+  it("trims, keeps the bank name and last four, and falls back to a palette colour", () => {
+    const r = parseAccountEdit({ name: " Main ", institution: " BPI ", last4: "1234", color: "#087A5A" });
+    expect(r).toEqual({ ok: true, value: { name: "Main", institution: "BPI", last4: "1234", color: "#087A5A" } });
+    const odd = parseAccountEdit({ name: "A", color: "red" });
+    expect(odd.ok && odd.value.color).toBe(ACCOUNT_COLORS[0]);
+  });
+  it("rejects an empty or long name and a full card number", () => {
+    expect(parseAccountEdit({ name: " " }).ok).toBe(false);
+    expect(parseAccountEdit({ name: "x".repeat(31) }).ok).toBe(false);
+    expect(parseAccountEdit({ name: "A", last4: "1234567" }).ok).toBe(false);
+    expect(parseAccountEdit({ name: "A", institution: "x".repeat(41) }).ok).toBe(false);
   });
 });

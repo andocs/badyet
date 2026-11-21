@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ACCOUNT_COLORS, anchorAmount, parseNewAccount, type AccountKind } from '@/lib/accounts/v13';
+import { anchorAmount, parseAccountEdit, parseNewAccount, type AccountKind } from '@/lib/accounts/v13';
 import { parsePesos } from '@/lib/domain/money';
 
 export type Result = { ok: true } | { error: string };
@@ -77,16 +77,16 @@ export async function moveMoney(supabase: SupabaseClient, input: { from: string;
   return { ok: true };
 }
 
-/** Renames an account or changes its last four digits and colour. (New on the phone; the web has no edit yet.) */
+/** Renames an account or changes its bank or wallet name, last four digits and colour. Same rules as the web action. */
 export async function editAccount(
   supabase: SupabaseClient,
-  input: { id: string; kind: AccountKind; name: string; last4: string; color: string },
+  input: { id: string; name: string; institution?: string; last4: string; color: string },
 ): Promise<Result> {
   if (!UUID.test(input.id)) return { error: 'That account was not found.' };
-  const parsed = parseNewAccount({ name: input.name, kind: input.kind, last4: input.last4, color: input.color });
+  const parsed = parseAccountEdit({ name: input.name, institution: input.institution ?? '', last4: input.last4, color: input.color });
   if (!parsed.ok) return { error: parsed.error };
-  const color = (ACCOUNT_COLORS as readonly string[]).includes(input.color) ? input.color : parsed.value.color;
-  const { error } = await supabase.from('accounts').update({ name: parsed.value.name, last4: parsed.value.last4, color }).eq('id', input.id).is('archived_at', null);
+  const a = parsed.value;
+  const { error } = await supabase.from('accounts').update({ name: a.name, institution: a.institution, last4: a.last4, color: a.color }).eq('id', input.id).is('archived_at', null);
   if (error) return { error: error.code === '23505' ? 'You already have an account with that name.' : 'Could not save the account. Try again.' };
   return { ok: true };
 }
