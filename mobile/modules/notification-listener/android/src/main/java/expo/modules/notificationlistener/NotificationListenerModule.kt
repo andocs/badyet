@@ -25,10 +25,11 @@ class NotificationListenerModule : Module() {
     }
 
     Function("openAccessSettings") {
-      val ctx = appContext.reactContext ?: return@Function
+      val ctx = appContext.reactContext ?: return@Function null
       ctx.startActivity(
         Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       )
+      null
     }
   }
 }

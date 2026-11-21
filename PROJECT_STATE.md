@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 2 Build (Expo)
 - **Active slice / milestone:** E2 Data layer, Accounts, Now
 - **Gate:** none
-- **Next action:** Build E2 on top of slice/E1-expo-scaffold: Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme
-- **User to-do now:** Build the E1 APK and check sign-in (see handoff); E1 branch not yet merged to main
+- **Next action:** Verify E1 APK, then E2
+- **User to-do now:** E1 APK build 45d0ab40 in progress; then verify sign-in
 
 ## 3. Execution log
 
@@ -35,6 +35,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 12:16 | expo-p1 | Second sample batch recorded in docs/expo-samples.md; Q19-Q23 answered; transfer pairing and MariBank/GoTyme added to E6 | -
 - 2026-11-21 12:27 | slice-E1 | Expo scaffold (SDK 58, Router), Supabase PKCE Google sign-in, tab shell, local listener module, eas.json, vitest 4 tests; tsc, lint pass | 344bc34
 - 2026-11-21 12:32 | slice-E1 | E1 approved at gate; not merged to main yet | -
+- 2026-11-21 13:03 | expo-plan | User asked to include the rest of the web app: added E8-E10 (Plan screens, Settings), release moved to E11; order approved | -
 
 ## 4. Open questions
 
@@ -110,22 +111,23 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | # | Slice | Depends on | Run | Status | Branch |
 |---|---|---|---|---|---|
-| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates in first build, Google sign-in via badyet://, (Needed) | none | seq | planned | exp/1 |
-| E2 | Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme (Needed) | E1 | seq | planned | exp/2 |
-| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | planned | exp/3 |
-| E4 | Quick add + offline queue and sync (Needed) | E2 | seq | planned | exp/4 |
-| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E3 | seq | planned | exp/5 |
-| E6 | Notification capture: GCash, Maya, BPI, Grab, foodpanda, Google Wallet, dedupe, offline queue, permission onboarding (Needed; blocked on samples) | E4, E5 | seq | planned | exp/6 |
-| E7 | Gmail API capture: on-device OAuth, parsers, rules, dedupe (Needed; blocked on email samples) | E6 | seq | planned | exp/7 |
-| E8 | Release APK, OTA channel check, polish, Z Fold layout (Needed) | E7 | seq | planned | exp/8 |
-Cut: Plan screens on mobile, widgets, push notifications.
+| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates, Google sign-in (Needed) | none | seq | built, APK build in progress | slice/E1-expo-scaffold |
+| E2 | Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme (Needed) | E1 | seq | planned | |
+| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | planned | |
+| E4 | Quick add + offline queue and sync (Needed) | E2 | seq | planned | |
+| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E3 | seq | planned | |
+| E6 | Notification capture: GCash, Maya, BPI, GoTyme, MariBank, Grab, foodpanda, Google Wallet; dedupe; transfer pairing; offline queue; permission onboarding (Needed) | E4, E5 | seq | planned | |
+| E7 | Gmail API capture: on-device OAuth, parsers, rules, dedupe (Needed) | E6 | seq | planned | |
+| E8 | Plan: Budget and Salary screens (Needed, added by user 2026-11-21) | E2 | seq | planned | |
+| E9 | Plan: Bonuses and Funds screens (Needed) | E8 | seq | planned | |
+| E10 | Plan: Forecast, plus full Settings (paydays, office days, timezone, hide amounts) (Needed) | E9 | seq | planned | |
+| E11 | Release APK, OTA channel check, polish, Z Fold layout (Needed) | E10 | seq | planned | |
+Nice-to-have (cut): web data export on phone, widgets, push notifications.
+Plan screens write straight to Supabase with RLS, so every check the web server actions do must run on the phone via shared lib/ validation. Scout the web Plan pages before E8.
 
 ## Decisions & architecture
 
-- Sign-ups disabled in Supabase Auth (done by user 2026-11-21). EAS account: docoats. Scheme badyet.
-- OTA updates in v1: expo-updates configured in E1 (first build) so JS fixes ship without a new APK.
-- Capture rules: table capture_rules (RLS own), edited on phone and web Settings; actions ignore / set account / set category / opt-in auto-confirm; min amount; ignore keywords. Unmatched captures from known sources stay pending.
-- Sources: GCash, Maya, BPI, Grab, foodpanda, Google Wallet via notification listener; Gmail via Gmail API on device (parsed on device, raw email never stored or sent).
+- 2026-11-21 user: bring the Plan screens (Budget, Salary, Bonuses, Funds, Forecast) and Settings to the Android app too (E8-E10). Capture work (E5-E7) goes first (user approved this order). Settings tab becomes a Plan tab with Settings inside.
 
 ## Run & verify guide (detected by Scout, kept current)
 
