@@ -3,7 +3,11 @@ import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet,
 import { useFocusEffect, useRouter } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
+import { BackgroundCard } from '~/components/BackgroundCard';
+import { GmailBanner } from '~/components/GmailBanner';
 import { GmailCard } from '~/components/GmailCard';
+import { ExportCard } from '~/components/ExportCard';
+import { OfficeDaysCard } from '~/components/OfficeDaysCard';
 import { PaydaysCard } from '~/components/PaydaysCard';
 import { UpdatesCard } from '~/components/UpdatesCard';
 import { useHide } from '~/lib/hide';
@@ -42,19 +46,17 @@ export default function Settings() {
 
   return (
     <Screen title="Settings">
-      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
-        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
-      </Pressable>
+      <GmailBanner />
       <Card>
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>
       </Card>
       <PaydaysCard />
+      <OfficeDaysCard />
       <Card>
         <Label>Looks</Label>
-        <Body>The app follows your phone’s light or dark setting.</Body>
         <Pressable style={[s.btn, { backgroundColor: hide ? c.accent : c.soft }]} onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: hide }}>
-          <Text style={{ color: hide ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>{hide ? 'Amounts hidden: show them' : 'Hide amounts'}</Text>
+          <Text style={{ color: hide ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>{hide ? 'Amounts hidden: tap to show' : 'Hide amounts'}</Text>
         </Pressable>
       </Card>
       <UpdatesCard />
@@ -69,7 +71,7 @@ export default function Settings() {
       ) : null}
       <Card>
         <Label>Notification access</Label>
-        <Body>{granted ? 'On. Bad(yet) can read bank notifications.' : 'Off. Turn it on so Bad(yet) can read bank notifications.'}</Body>
+        <Body>{granted ? 'On' : 'Off. Turn it on to read bank notifications.'}</Body>
         {!granted ? (
           <Pressable style={[s.btn, { backgroundColor: c.accent }]} onPress={openAccessSettings} accessibilityRole="button">
             <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Open notification access settings</Text>
@@ -79,14 +81,15 @@ export default function Settings() {
           <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Capture rules</Text>
         </Pressable>
       </Card>
+      <BackgroundCard />
       <GmailCard />
       <Card>
         <Label>Tax and contributions</Label>
-        <Body>Income tax uses the 2023 TRAIN schedule. SSS and Pag-IBIG are the amounts you type in the payslip builder. PhilHealth is 2.5% of base, between ₱10,000 and ₱100,000.</Body>
       </Card>
+      <ExportCard />
       <Card>
-        <Label>Setup wizard and your data</Label>
-        <Body>Running the setup wizard again, and downloading your data as CSV files, are on the web app.</Body>
+        <Label>Setup wizard</Label>
+        <Body>On the web app.</Body>
       </Card>
       <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => supabase.auth.signOut()} accessibilityRole="button">
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Sign out</Text>

@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** G1 instant capture + new APK
-- **Gate:** none
-- **Next action:** Scout native listener, then build G1: headless capture task, Gmail check, reconnect banner, then EAS build of a new APK
-- **User to-do now:** Test on the phone; Wallet sample tomorrow
+- **Active slice / milestone:** G1-G5 built, waiting for user to install APK and approve
+- **Gate:** waiting
+- **Next action:** User installs the 1.1.0 APK and tests; on approval merge rev/8 (contains G1-G5) to main and publish OTA on channel preview
+- **User to-do now:** Install the 1.1.0 APK; test capture with app closed; try each new sheet; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -43,6 +43,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:37 | mockups-v4 | Notes applied: small eye circle, every add/edit opens in a sheet or wizard (accounts, reconcile, move, budget line, raise wizard, event, allowance, projected raises, payslip, bonus edit/received/rule, funds, forecast month, paydays, capture rules), Budget Future years removed (month slider covers it). Awaiting approval. | -
 - 2026-11-21 18:57 | rev-2 | Web capture rules restyled (textarea style, source cards, rule rows, add-rule panel); mockup hide button now a circle. Mockups v4 approved by user (only the hide circle and capture rules styling remained). Vercel preview success. Branch rev/2-capture-rules-style. | b8f8b28
 - 2026-11-21 19:05 | rev-3 | Mobile screen subheaders removed except Now; Forecast titled Forecast; mockups updated; stray unused var fixed on web budget page. Merged to main (21c33fc), OTA published group 556cda29, Vercel green. Rev-2 merged (fe69869). Mockups approved. | 21c33fc
+- 2026-11-21 19:20 | G1 | Built (not yet APK-built): captureEngine shared by app, 15 min background task and headless notification task; native CaptureHeadlessService started by the listener when no JS is running; Gmail reconnect banner (Now, Inbox, Settings); Background capture last-run card; entry index.js; app version 1.1.0. tsc and vitest pass (mobile 97, web 329). Untested on device: Android may refuse starting the service from background. | 6cbc69b
+- 2026-11-21 19:28 | G2 | Accounts: Reconcile, Move money, Add account, Edit account in sheets (accountsWrite.ts + 11 tests); More tab with page sheet (plan screens and settings moved into the tabs group, hidden tabs); eye circle replaces Hide; headings 24px; Now hero spacing + Balance panel; Budget month slider (no Future years, no pills); Settings text trimmed. tsc, vitest (mobile 107, web 329) and android bundle pass. Branch rev/5-g2-accounts-shell stacked on G1; not merged. | 3eb631b
+- 2026-11-21 19:34 | G3 | Budget port: settle office days, office-day toggles, usual days, pools (take out, to Wants, new), categories (add, edit, archive) via budgetOps.ts + tests. Salary port: raise wizard (5 steps) as a sheet, event/allowance/projected raises/payslip layout sheets, year-by-year slider via salaryEvents.ts + tests; Sheet/Field/Input shared components. tsc, vitest (mobile 126, web 329), android bundle pass. Branch rev/6-g3-budget-salary stacked on G2; not merged. Untested on device. | bd6b39c
+- 2026-11-21 19:39 | G4 | Bonuses: Edit destinations + multiplier, Mark received, rule add/edit/remove (bonusRules.ts). Funds: create/edit/archive/reorder (fundsWrite.ts). Forecast: Change this month and Change many months (order, pins, skips, note, reset) in sheets. Tests added (fundsWrite 11, bonusRules 4). tsc, vitest, android bundle pass. Branch rev/7-g4-bonuses-funds-forecast stacked on G3; not merged. Untested on device. | 333affb
+- 2026-11-21 19:40 | G5 | Settings: Paydays and Office days edit in sheets, Export data (CSV of 15 tables via the share sheet, same list as web, no new native package), Setup wizard stays on web. tsc and vitest (mobile 144) pass. APK build 41fcb12d FINISHED (runtime 1.1.0, from G1 commit): https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk. Branches rev/4 to rev/8 stacked, unmerged. | 271fa5f
 
 ## 4. Open questions
 

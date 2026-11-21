@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
   <application>
     <service
       android:name="expo.modules.notificationlistener.CaptureListenerService"
@@ -9,5 +10,8 @@
         <action android:name="android.service.notification.NotificationListenerService" />
       </intent-filter>
     </service>
+    <service
+      android:name="expo.modules.notificationlistener.CaptureHeadlessService"
+      android:exported="false" />
   </application>
 </manifest>

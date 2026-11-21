@@ -8,6 +8,7 @@ import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayNam
 import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { AccountTile } from '~/components/AccountTile';
+import { GmailBanner } from '~/components/GmailBanner';
 import { Runway } from '~/components/Runway';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { resolveColor } from '~/lib/color';
@@ -53,6 +54,7 @@ export default function Now() {
       refreshing={refreshing}
       onRefresh={reload}
     >
+      <GmailBanner />
       <Hero view={view} today={today} />
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />
@@ -62,7 +64,7 @@ export default function Now() {
         <Card>
           <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Settle office days</Text>
           <Body style={{ color: c.muted, fontSize: 14 }}>
-            {data.settleOpen} office day{data.settleOpen === 1 ? '' : 's'} ended under or over budget. Settle them in Budget on the web for now.
+            {data.settleOpen} office day{data.settleOpen === 1 ? '' : 's'} ended under or over budget. Settle them in Budget.
           </Body>
         </Card>
       ) : null}
@@ -101,7 +103,7 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
         </Text>
       )}
       {officeNote ? (
-        <Text style={[s.heroSub, { fontFamily: fonts.body, marginTop: 4 }]}>
+        <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
           <Text style={{ fontFamily: fonts.bodyBold, color: '#fff' }}>
             {view.isUsualOfficeDay ? 'A usual office day.' : `${weekdayName(today)}, not a usual office day.`}{' '}
           </Text>
@@ -115,7 +117,7 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
         <Legend color="#B9C9DD" dashed text="Plan pace" />
         <Legend color="#5EE6B4" dashed text={`If you keep to ${peso(view.perDay, hide)}`} />
       </View>
-      <Text style={[s.heroSub, { fontFamily: fonts.body, marginTop: 10 }]}>
+      <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
         Spent {peso(view.spent, hide)} · pace says {peso(view.pace, hide)} by today
       </Text>
       {view.pool > 0 ? (
@@ -189,11 +191,11 @@ function AccountsRow({ accounts, total }: { accounts: AccountCard[]; total: Retu
     <View style={{ gap: 8 }}>
       <View style={s.between}>
         <View style={{ flex: 1 }}>
-          <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>What I have right now</Text>
-          <Amount value={total} style={{ fontFamily: fonts.display, fontSize: 24, lineHeight: 30 }} />
+          <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Balance</Text>
+          <Amount value={total} style={{ fontFamily: fonts.display, fontSize: 22, lineHeight: 28 }} />
         </View>
         <Pressable onPress={() => router.push('/accounts')} accessibilityRole="link" style={s.link}>
-          <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>All accounts →</Text>
+          <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>See all ›</Text>
         </Pressable>
       </View>
       {accounts.length === 0 ? (
@@ -339,16 +341,16 @@ function Bills({ view }: { view: NowView }) {
 }
 
 const s = StyleSheet.create({
-  hero: { borderRadius: 14, padding: 18, gap: 4 },
+  hero: { borderRadius: 14, padding: 16, gap: 8 },
   heroTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   heroLabel: { color: '#bfe9dc', fontSize: 12, letterSpacing: 0.8 },
-  heroAmount: { color: '#ffffff', fontFamily: fonts.display, fontSize: 40, lineHeight: 46 },
-  heroSub: { color: '#d3efe6', fontSize: 14 },
+  heroAmount: { color: '#ffffff', fontFamily: fonts.display, fontSize: 32, lineHeight: 38, marginTop: 2 },
+  heroSub: { color: '#d3efe6', fontSize: 13 },
   addBtn: { minHeight: 44, borderRadius: 999, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' },
-  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginTop: 6 },
+  legend: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   swatch: { width: 16, height: 6, borderRadius: 3 },
-  h2: { fontSize: 18 },
+  h2: { fontSize: 16 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   link: { minHeight: 44, justifyContent: 'center' },

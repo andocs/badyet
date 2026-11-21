@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Body, Card, Label } from '~/components/ui';
+import { setGmailConnected } from '~/lib/captureEngine';
 import { triggerCapture, useCaptureStatus } from '~/lib/CaptureRunner';
 import { connectGmail, disconnectGmail, gmailAccount, gmailSetup } from '~/lib/googleAuth';
 import { fonts, useTheme } from '~/lib/theme';
@@ -18,7 +19,7 @@ export function GmailCard() {
   useFocusEffect(
     useCallback(() => {
       let live = true;
-      if (setup === 'ready') void gmailAccount().then((e) => live && setEmail(e));
+      if (setup === 'ready') void gmailAccount().then((e) => { if (live) setEmail(e); if (e) setGmailConnected(true); });
       return () => {
         live = false;
       };
@@ -32,11 +33,13 @@ export function GmailCard() {
     setBusy(false);
     if ('error' in r) return setProblem(r.error);
     setEmail(r.email);
+    setGmailConnected(true);
     triggerCapture(true);
   }
 
   async function disconnect() {
     await disconnectGmail();
+    setGmailConnected(false);
     setEmail(null);
   }
 

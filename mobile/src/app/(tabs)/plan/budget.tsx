@@ -5,10 +5,12 @@ import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInpu
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
+import { addMonths, type YearMonth } from '@/lib/domain/dates';
 import { cutoffText, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
 import type { LineInput } from '@/lib/budget/line-input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import { rangeLabel } from '@/lib/now/format';
+import { BudgetSide } from '~/components/BudgetSide';
 import { Amount, Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
 import { deleteLine, saveLine } from '~/lib/budgetWrite';
 import { useHide } from '~/lib/hide';
@@ -293,10 +295,10 @@ export default function Budget() {
   const router = useRouter();
   const { hide } = useHide();
   const { data, error, refreshing, reload } = useLoad(() => loadBudget(supabase));
-  const [fut, setFut] = useState(false);
   const [month, setMonth] = useState<string | null>(null);
   const [editing, setEditing] = useState<Draft | null>(null);
 
+  const fut = !!data && month !== null && month !== data.period.month;
   const screen = data ? buildBudgetScreen(data, { fut, month }) : null;
 
   return (
@@ -305,72 +307,40 @@ export default function Budget() {
       refreshing={refreshing}
       onRefresh={reload}
     >
-      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
-        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
-      </Pressable>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
 
       {data && screen ? (
         <>
-          <View style={[s.seg, { backgroundColor: c.soft }]}>
-            {([false, true] as const).map((f) => (
-              <Pressable
-                key={String(f)}
-                onPress={() => setFut(f)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: fut === f }}
-                style={[s.segBtn, fut === f && { backgroundColor: c.surface }]}
-              >
-                <Text style={{ color: fut === f ? c.ink : c.muted, fontFamily: fonts.bodyBold, fontSize: 14 }}>{f ? 'Future years' : 'This month'}</Text>
+          <Card>
+            <View style={s.between}>
+              <Pressable onPress={() => setMonth(addMonths(screen.month as YearMonth, -1))} accessibilityRole="button" accessibilityLabel="Previous month" style={s.yearBtn}>
+                <Text style={{ color: c.ink, fontSize: 20 }}>‹</Text>
               </Pressable>
-            ))}
-          </View>
+              <View style={{ alignItems: 'center' }}>
+                <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>{monthLabel(screen.month)}</Text>
+                {!fut ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>this month</Text> : null}
+              </View>
+              <Pressable onPress={() => setMonth(addMonths(screen.month as YearMonth, 1))} accessibilityRole="button" accessibilityLabel="Next month" style={s.yearBtn}>
+                <Text style={{ color: c.ink, fontSize: 20 }}>›</Text>
+              </Pressable>
+            </View>
+          </Card>
 
           {!screen.hasStart || !screen.shown ? (
             <Notice>No salary on file yet. The budget needs your take-home. Add your salary under Salary and tax first.</Notice>
           ) : (
             <>
-              {fut ? (
-                <Card>
-                  <View style={s.between}>
-                    <Pressable onPress={() => setMonth(`${screen.year - 1}-${screen.month.slice(5)}`)} accessibilityRole="button" accessibilityLabel="Previous year" style={s.yearBtn}>
-                      <Text style={{ color: c.ink, fontSize: 20 }}>‹</Text>
-                    </Pressable>
-                    <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>{screen.year}</Text>
-                    <Pressable onPress={() => setMonth(`${screen.year + 1}-${screen.month.slice(5)}`)} accessibilityRole="button" accessibilityLabel="Next year" style={s.yearBtn}>
-                      <Text style={{ color: c.ink, fontSize: 20 }}>›</Text>
-                    </Pressable>
-                  </View>
-                  <View style={s.chips}>
-                    {MONTH_NAMES.map((n, i) => {
-                      const ym = `${screen.year}-${String(i + 1).padStart(2, '0')}`;
-                      return <Chip key={ym} label={n} on={screen.month === ym} onPress={() => setMonth(ym)} />;
-                    })}
-                  </View>
-                </Card>
-              ) : null}
-
               <LinearGradient colors={[c.heroA, c.heroB]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
                 <Text style={[s.heroLabel, { fontFamily: fonts.bodyBold }]}>
                   LEFT OF TAKE-HOME, {monthLabel(screen.shown.month).toUpperCase()}
                   {screen.shown.assumed ? ' (ASSUMED RAISE)' : ''}
                 </Text>
-                <Text style={{ color: '#fff', fontFamily: fonts.display, fontSize: 36, lineHeight: 42 }}>
+                <Text style={{ color: '#fff', fontFamily: fonts.display, fontSize: 30, lineHeight: 36 }}>
                   {peso(money(Math.max(0, screen.rest)), hide)}
                   <Text style={{ color: '#d3efe6', fontFamily: fonts.bodyBold, fontSize: 18 }}> / {peso(screen.takeHome, hide)}</Text>
                 </Text>
-                <View style={s.pills}>
-                  <Pill text={`Fixed lines ${peso(screen.fixed, hide)} · ${screen.takeHome > 0 ? Math.round((screen.fixed / screen.takeHome) * 100) : 0}% of take-home`} />
-                  {!fut ? <Pill text={`Cutoff ${rangeLabel(data.period.start, data.period.end)}`} /> : null}
-                  {!fut ? (
-                    <Pill
-                      text={`Daily pool this cutoff ${peso(money(screen.shown.budget.dailyPool[data.period.which === 1 ? 'first' : 'second'] + screen.wantsAdj), hide)}${screen.wantsAdj !== 0 ? ' (incl. pools)' : ''}`}
-                    />
-                  ) : null}
-                  {screen.shown.expected ? <Pill text="includes an expected raise" /> : null}
-                </View>
-              </LinearGradient>
+                            </LinearGradient>
 
               {screen.flag === 'over' ? (
                 <Notice tone="error">Fixed and percent lines are over take-home in {monthLabel(screen.shown.month)}. Trim a line or move a start date.</Notice>
@@ -382,14 +352,13 @@ export default function Budget() {
 
               <Board groups={screen.groups} data={data} onEdit={(l) => setEditing(draftOf(l))} onAdd={(cat) => setEditing(blankDraft(cat))} />
 
+              {screen.nowRun ? <BudgetSide data={data} nowRun={screen.nowRun} onChanged={() => void reload()} /> : null}
+
               {screen.topUpRaises.length > 0 ? (
                 <Notice>
                   Top-ups come from raises: {screen.topUpRaises.join(', ')}. Change or remove the raise and they follow.
                 </Notice>
               ) : null}
-              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
-                Settling office days, pools and categories are still on the web for now.
-              </Text>
             </>
           )}
 

@@ -5,6 +5,7 @@ import { money } from '@/lib/domain/money';
 import { relativeDay, timeLabel } from '@/lib/now/format';
 import { manilaDate } from '@/lib/now/summary';
 import { todayManila } from '@/lib/plans/validate';
+import { GmailBanner } from '~/components/GmailBanner';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxTxn } from '~/lib/inbox';
 import { supabase } from '~/lib/supabase';
@@ -144,6 +145,7 @@ export default function Inbox() {
 
   return (
     <Screen title="Inbox" refreshing={refreshing} onRefresh={reload}>
+      <GmailBanner />
       <View style={[s.seg, { backgroundColor: c.soft }]}>
         {(['check', 'all'] as const).map((v) => (
           <Pressable

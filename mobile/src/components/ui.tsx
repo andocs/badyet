@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import type { ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,9 +37,10 @@ export function Screen(props: {
           accessibilityRole="switch"
           accessibilityState={{ checked: hide }}
           accessibilityLabel="Hide amounts"
+          hitSlop={8}
           style={[s.eye, { backgroundColor: hide ? c.accent : c.soft }]}
         >
-          <Text style={{ color: hide ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>{hide ? 'Hidden' : 'Hide'}</Text>
+          <Ionicons name={hide ? 'eye-off-outline' : 'eye-outline'} size={18} color={hide ? c.onAccent : c.ink} />
         </Pressable>
       </View>
       {props.children}
@@ -94,9 +96,9 @@ export function Notice({ children, tone }: { children: ReactNode; tone?: 'error'
 
 const s = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  h1: { fontSize: 30, lineHeight: 36 },
+  h1: { fontSize: 24, lineHeight: 30 },
   sub: { fontSize: 14, marginTop: 2 },
-  eye: { minHeight: 48, minWidth: 64, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
+  eye: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   card: { borderRadius: 10, borderWidth: 1, padding: 14, gap: 8 },
   label: { fontSize: 12, letterSpacing: 0.6, textTransform: 'uppercase' },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },

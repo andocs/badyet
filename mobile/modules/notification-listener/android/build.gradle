@@ -13,3 +13,8 @@ android {
     versionName "0.1.0"
   }
 }
+
+dependencies {
+  // HeadlessJsTaskService, used to run capture when a notification arrives and the app is closed.
+  implementation 'com.facebook.react:react-android'
+}
