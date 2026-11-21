@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** R1 Reconcile + Add account
+- **Active slice / milestone:** G1 instant capture + new APK
 - **Gate:** none
-- **Next action:** Build slice R1 to approved mockups: Reconcile, Move money, Add account, Edit account sheets on the Accounts tab; port server actions to mobile/src/lib/accountsWrite.ts with tests
-- **User to-do now:** Test on the phone (headers now removed; E5 migration, E6-E11); tell me what real data you see; Wallet sample tomorrow
+- **Next action:** Scout native listener, then build G1: headless capture task, Gmail check, reconnect banner, then EAS build of a new APK
+- **User to-do now:** Test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -128,23 +128,16 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-| # | Slice | Depends on | Run | Status | Branch |
-|---|---|---|---|---|---|
-| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates, Google sign-in (Needed) | none | seq | approved | slice/E1-expo-scaffold |
-| E2 | Supabase data layer, Accounts cards + detail, Now, hide amounts, Night Emerald theme, Pip icon/splash (Needed) | E1 | seq | approved | slice/E2-data-accounts-now |
-| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | approved by user 2026-11-21 | slice/E3-inbox |
-| E4 | Quick add + offline queue and sync (Needed) | E3 | seq | in progress | |
-| E4b | Parity pass: compare Now, Accounts, Inbox, Quick add with the web look and behaviour, fix gaps (Now: spending chart, office days, pay info, account strip), refine shared components (Needed, added by user 2026-11-21) | E4 | seq | planned | |
-| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E4b | seq | planned | |
-| E6 | Notification capture: GCash, Maya, BPI, GoTyme, MariBank, Grab, foodpanda, Google Wallet; dedupe; transfer pairing; offline queue; permission onboarding (Needed) | E4, E5 | seq | planned | |
-| E7 | Gmail API capture: on-device OAuth, parsers, rules, dedupe (Needed) | E6 | seq | planned | |
-| E8 | Plan: Budget and Salary screens + parity check vs web (Needed) | E4b | seq | planned | |
-| E9 | Plan: Bonuses and Funds screens + parity check vs web (Needed) | E8 | seq | planned | |
-| E10 | Plan: Forecast, plus full Settings (paydays, office days, timezone, hide amounts) + parity check vs web (Needed) | E9 | seq | planned | |
-| E11 | Release APK, OTA channel check, final polish, Z Fold layout (Needed) | E10 | seq | planned | |
-Accounts follow-up (reconcile with real balance, receive-QR upload): not scheduled yet; proposed with E4b or E8.
-Nice-to-have (cut): web data export on phone, widgets, push notifications.
-Every slice from E4b on ends with a short "check against the web screen" step.
+Round two (2026-11-21). E1 to E12 are merged; rev-1, rev-2, rev-3 and the approved cover-screen mockups (docs/mockups/phone/) are done.
+
+| # | Gate | Contents | New APK? | Status |
+|---|---|---|---|---|
+| G1 | R-APK | Instant capture (headless JS task started by the listener service), Gmail-only periodic check + "last background run" in Settings, Gmail Reconnect banner (Now, Inbox, Settings). Batch every other native need into this one build | yes | next |
+| G2 | R1+R2 | Accounts: Reconcile, Move money, Add account, Edit account sheets; restyle shell to mockups (More tab + sheet, eye icon, Now, Budget/Salary/Bonuses/Funds/Settings trims) | no | planned |
+| G3 | R3+R4 | Budget port (office days settle, pools, categories, RTO card) + Salary port (raise wizard, event, allowance, projected raises, payslip builder) | no | planned |
+| G4 | R5-R7 | Bonuses (rules, destinations, mark received), Funds (create, edit, reorder), Forecast overrides (single, bulk, reset) | no | planned |
+| G5 | R10 | Settings: paydays and office days editors, CSV export, setup wizard, final polish | no | planned |
+On hold: Google Wallet capture (needs a real notification sample). Dropped: compare-without-raises on phone. Not a slice: real-data check (needs the user's screenshots). Every phone slice: check Vercel after any push touching lib/.
 
 ## Decisions & architecture
 
