@@ -8,7 +8,9 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0B1220",
-    "runtimeVersion": { "policy": "appVersion" },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "android": {
       "package": "com.docoats.badyet",
       "adaptiveIcon": {
@@ -19,7 +21,28 @@
       },
       "predictiveBackGestureEnabled": true
     },
-    "experiments": { "typedRoutes": true },
-    "plugins": ["expo-router", "expo-sqlite", "expo-web-browser"]
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-web-browser"
+    ],
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "a37fb64f-8dac-4ed0-a222-984d2bfd36b1"
+      }
+    },
+    "owner": "docoats",
+    "updates": {
+      "url": "https://u.expo.dev/a37fb64f-8dac-4ed0-a222-984d2bfd36b1"
+    },
+    "ios": {}
   }
 }

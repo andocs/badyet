@@ -8,13 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E1 Scaffold + sign-in
+- **Active slice / milestone:** E2 Data layer, Accounts, Now
 - **Gate:** none
-- **Next action:** Build E1: mobile/ scaffold, EAS preview APK, listener + expo-updates, Google sign-in
-- **User to-do now:** Real card/tap-to-pay (Google Wallet) sample when you can; run /orchestrate to start E1
+- **Next action:** Build E2 on top of slice/E1-expo-scaffold: Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme
+- **User to-do now:** Build the E1 APK and check sign-in (see handoff); E1 branch not yet merged to main
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-20 to 2026-11-21) covering slice-6, slice-7, perf, rev-1, rev-2, rev-3, rev-4, rev-5, rev-6, rev-7, rev-8, rev-9
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering ops, rev-27, rev-28, rev-29, rev-30, rev-31, rev-32, rev-33, rev-34, rev-35, rev-36
@@ -23,21 +24,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-20 22:33 | slice-6 | Funds editor, Forecast (chart, ladder, month sheet, with/without expected raises), Override single and bulk with live effect, validators, forecast rows and loaders with tests. Local commit, not pushed, not run in a browser. | -
-- 2026-11-20 22:36 | slice-6 | Slice 6 approved by the user. | a8b8ad5
-- 2026-11-20 22:57 | slice-7 | Setup wizard (5 steps, live payslip), Settings, old shell/pages/libs and tests removed, exports and e2e routes updated, optional retire-old-tables.sql. Local commit, not pushed, not run in a browser. | -
-- 2026-11-20 22:58 | slice-7 | Slice 7 approved by the user. Web rehaul complete. | 94281f7
-- 2026-11-20 23:14 | perf | Merged slices 1 to 7 into main (local, fast-forward). Perf: loading skeleton for every page, 30s client cache (staleTimes), budget loader queries in parallel. Not pushed. | -
-- 2026-11-21 09:00 | rev-1 | Revision batch: budget hero left/take-home, cutoff circle collision fix (.v-bc), bonuses skeleton + parallel loads, budget load parallel, 22 colors, login restyle, phone More sheet, inbox header, runway narrow chart, half-year strip | 632b83f
-- 2026-11-21 09:31 | rev-2 | Second revision batch (login, instant tabs via prefetch, hide-amounts coverage, file inputs, bonus row, fund colors, link underline, RTO inferred from RTO lines, tablet/phone charts, payslip builder + wizard mobile) | HEAD
-- 2026-11-21 09:54 | rev-3 | Payslip builder redesigned from mockups (controls bar, collapsible cutoff cards, summary, no row icons), bottom sheets use dvh and scroll, side nav links no longer animate underline | HEAD
-- 2026-11-21 10:06 | rev-4 | Payslip builder: controls bar inside the slip column, summary beside it from the top, base pay and income tax splits for 1st and 2nd cutoff with vertical dividers, tablet summary strip | HEAD
-- 2026-11-21 10:09 | rev-4 | Removed the income tax split fields from the payslip builder bar; only base pay is split between cutoffs | HEAD
-- 2026-11-21 10:27 | rev-5 | Salary and tax: timeline cards in one row with year by year below, single-line event and allowance rows, taxable switches removed from timeline and payslip builder (chosen when adding), wizard can add an allowance that already started (up to 36 months back), income tax split text clarified | HEAD
-- 2026-11-21 10:33 | rev-6 | Timeline card order and 2:2:1 widths; fixed the Atkinson font build warning with an explicit fallback | HEAD
-- 2026-11-21 10:47 | rev-7 | Shared confirm dialog and toasts (no native confirm), MonthPicker (years first), MonthOfYear and DayOfMonth replace date selects and type=month inputs, setup wizard: wider start range, budget rows and funds use round tick controls, raise wizard summary padded | HEAD
-- 2026-11-21 10:55 | rev-8 | Month picker is now a calendar popover (month grid, year arrows, year grid on tap), day picker popover; Settings separates Looks and Setup wizard | HEAD
-- 2026-11-21 11:03 | rev-9 | MonthOfYear is a popover too (projected raises, bonuses, allowances, funds), budget line sheet Goes to on its own row with Starts/Ends side by side, bonus destination tick shows a spinner and reverts on error, add-destination box and rows re-spaced for phone and tablet | HEAD
 - 2026-11-21 11:10 | rev-10 | Bonus destinations redesigned: '+ Add destination' button, choose a fund (dropdown) or something else (name), amount as flat pesos or percent of the bonus with preview, categories and tags removed, responsive form | HEAD
 - 2026-11-21 11:16 | rev-11 | Bonus hero and split bars: funds show their own colour; custom lines get a stable palette colour not used by any fund, gold, or another line | HEAD
 - 2026-11-21 11:18 | merge | Merged rev/1 to rev/11 into main in order (fast-forward) and pushed main. Wrote docs/expo-handoff.md for the Android (Expo) effort. | HEAD
@@ -47,6 +33,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 11:37 | expo-p1 | Revised Expo plan approved (E1-E8) | -
 - 2026-11-21 12:03 | expo-p1 | Samples received: docs/expo-samples.md (BPI, GCash, MariBank, Maya, GoTyme, Grab email, foodpanda email) | -
 - 2026-11-21 12:16 | expo-p1 | Second sample batch recorded in docs/expo-samples.md; Q19-Q23 answered; transfer pairing and MariBank/GoTyme added to E6 | -
+- 2026-11-21 12:27 | slice-E1 | Expo scaffold (SDK 58, Router), Supabase PKCE Google sign-in, tab shell, local listener module, eas.json, vitest 4 tests; tsc, lint pass | 344bc34
+- 2026-11-21 12:32 | slice-E1 | E1 approved at gate; not merged to main yet | -
 
 ## 4. Open questions
 
@@ -81,7 +69,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,867,261 | 7,751,296 | 346,018 | 3,512,610 | 430,290,941 | 1,996,039 |  |
+| **Cumulative** | 2,014,780 | 8,014,300 | 362,663 | 3,589,371 | 433,999,070 | 2,034,934 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -112,6 +100,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-10 | 1,791,713 | 7,534,413 | 336,960 | 3,448,107 | 422,001,286 | 1,972,339 | no mark 'rev-10': all-time |
 | rev-11 | 1,330,338 | 5,313,958 | 229,057 | 2,562,175 | 330,096,507 | 1,490,936 |  |
 | Expo Phase 1 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| Slice E1 | 147,519 | 263,004 | 16,645 | 40,963 | 2,682,280 | 23,457 |  |
 
 <!-- END SUMMARY -->
 
@@ -143,6 +132,17 @@ Cut: Plan screens on mobile, widgets, push notifications.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E1: what you do now
+1. Get the code:   git fetch && git checkout slice/E1-expo-scaffold   (merge to main after you approve)
+2. Install deps:   cd mobile && npm install
+3. Database:       no DB changes
+4. Config:         create mobile/.env with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY (same values as the web app's NEXT_PUBLIC_ ones). In Supabase > Auth > URL configuration, add badyet://auth/callback to Redirect URLs.
+   Expo: npx eas-cli@latest login (docoats); in mobile/: npx eas-cli init, then npx eas-cli update:configure (writes updates.url and projectId).
+5. Build the APK:  cd mobile && npx eas-cli build -p android --profile preview  -> download the APK from the link and install it on your phone
+6. Check these:    (a) app opens to a login screen; (b) Continue with Google signs you in and lands on the Now tab; (c) tabs Now, Inbox, +, Accounts, Settings show; (d) Settings shows your email and "Notification access: off", the button opens Android's notification access page, enable Bad(yet), come back and it says "on"; (e) Sign out returns to login; (f) a different Google account is refused.
+7. Known limits:   the Android native code (listener module) has never been compiled; the EAS build is its first test. Placeholder colours (E2 applies Night Emerald). expo-doctor flags react duplicated in the web app's node_modules (repo layout; revisit in E2 when mobile imports lib/). No OTA update tested yet: after a first install, run npx eas-cli update --channel preview --message test --environment preview.
+Reply: Approve / Request changes / Pause
 
 Check on desktop, a tablet width (about 800px) and the Z Fold 6 preset (412px): login centered with the Google icon; tab changes feel instant; hide-amounts now covers the Budget hero, payslip builder lines and chart axes; file upload button in Accounts; bonus edit rows; 18 fund colors; links underline left to right on hover; Settings no longer has the RTO amount (Now infers it from the RTO lines); charts on Salary, Forecast, Now readable on tablet and phone; payslip builder panels stack on phone; wizard spacing; bonuses hero mascot stays beside the text. Branch rev/2-batch-notes-2 is pushed. No migrations; the rto_amount column is left in the database but unused.
 
