@@ -119,35 +119,41 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
         </label>
       </div>
 
-      <section className="v-card v-pbbar" aria-label="Layout">
-        <div className="v-pbtot">
-          <div className="v-lbl">Monthly total</div>
-          <div className="v-big v-num" style={{ fontSize: 30, color: "var(--accent-text)" }}><Money value={pay.takeHome} /></div>
-        </div>
-        <label className="v-pbf">
-          <span className="v-sm v-muted">Base pay in 1st cutoff</span>
-          <span className="v-row" style={{ gap: 6 }}>
-            <input className="v-lbl-in" style={{ width: 84, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "base_share") / 100} key={`b${shareOf("first", "base_share")}`} onBlur={(e) => setSplit("base_share", Number(e.target.value) || 0)} aria-label="Percent of base paid in the 1st cutoff" />
-            <span className="v-sm v-muted">%</span>
-          </span>
-        </label>
-        <label className="v-pbf">
-          <span className="v-sm v-muted">Income tax in 1st cutoff</span>
-          <span className="v-row" style={{ gap: 6 }}>
-            <input className="v-lbl-in" style={{ width: 84, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "income_tax") / 100} key={`t${shareOf("first", "income_tax")}`} onBlur={(e) => setSplit("income_tax", Number(e.target.value) || 0)} aria-label="Percent of income tax withheld in the 1st cutoff" />
-            <span className="v-sm v-muted">%</span>
-          </span>
-        </label>
-        <div className="v-pbact">
-          <button type="button" className="v-btn v-sm" onClick={reset} disabled={busy}>Standard layout</button>
-          <button type="button" className="v-btn v-sm v-pri" onClick={save} disabled={busy}>Save from this month on</button>
-        </div>
-      </section>
-      {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
-      {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
-
       <div className="v-pbgrid">
         <div className="v-stack">
+          <section className="v-card v-pbbar" aria-label="Layout">
+            <div className="v-pbtop">
+              <div className="v-pbtot">
+                <div className="v-lbl">Monthly total</div>
+                <div className="v-big v-num" style={{ fontSize: 30, color: "var(--accent-text)" }}><Money value={pay.takeHome} /></div>
+              </div>
+              <div className="v-pbact">
+                <button type="button" className="v-btn v-sm" onClick={reset} disabled={busy}>Standard layout</button>
+                <button type="button" className="v-btn v-sm v-pri" onClick={save} disabled={busy}>Save from this month on</button>
+              </div>
+            </div>
+            <div className="v-pbgroups">
+              {([["base_share", "Base pay"], ["income_tax", "Income tax"]] as const).map(([source, name]) => (
+                <div key={source} className="v-pbgrp">
+                  {(["first", "second"] as const).map((c) => {
+                    const ord = c === "first" ? "1st" : "2nd";
+                    return (
+                      <label key={c} className="v-pbf">
+                        <span className="v-sm v-muted">{name} in {ord} cutoff</span>
+                        <span className="v-row" style={{ gap: 6 }}>
+                          <input className="v-lbl-in" style={{ width: 84, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf(c, source) / 100} key={`${source}${c}${shareOf(c, source)}`}
+                            onBlur={(e) => { const n = Number(e.target.value) || 0; setSplit(source, c === "first" ? n : 100 - n); }} aria-label={`Percent of ${name.toLowerCase()} in the ${ord} cutoff`} />
+                          <span className="v-sm v-muted">%</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </section>
+          {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
+          {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
           {(["first", "second"] as const).map((c) => (
             <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} />
           ))}

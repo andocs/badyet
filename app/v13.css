@@ -661,9 +661,6 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 }
 
 /* Payslip builder: controls bar, collapsible cutoff cards with plain rows, summary beside them */
-.v13 .v-pbbar{display:flex;align-items:center;gap:18px 20px;flex-wrap:wrap}
-.v13 .v-pbf{display:flex;flex-direction:column;gap:6px;padding-left:20px;border-left:1px solid var(--line)}
-.v13 .v-pbact{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 .v13 .v-pbgrid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
 @media(min-width:1100px){.v13 .v-pbgrid{grid-template-columns:minmax(0,1fr) 320px;align-items:start}.v13 .v-pbsum2{position:sticky;top:16px}}
 .v13 .v-pbsum2 .v-ln{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -692,10 +689,6 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 @media(max-width:759px){
  .v13 .v-pbhead{flex-direction:column;align-items:stretch;gap:12px}
  .v13 .v-pbhead>label{justify-content:space-between}
- .v13 .v-pbbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
- .v13 .v-pbtot,.v13 .v-pbact{grid-column:1/-1}
- .v13 .v-pbf{padding-left:0;border-left:0}
- .v13 .v-pbact{margin-left:0}
  .v13 .v-pbact .v-btn{flex:1 1 100%}
  .v13 .v-pbsum{padding:12px 14px}
  .v13 .v-pl{padding:2px 14px 14px}
@@ -706,3 +699,31 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
  .v13 .v-qa{max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
 }
 .v13 .v-qa{overflow-y:auto}
+
+/* Payslip builder bar: total and actions on top, then the base pay and income tax splits with a vertical line between each pair */
+.v13 .v-pbbar{container-type:inline-size;display:flex;flex-direction:column;gap:16px}
+.v13 .v-pbtop{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+.v13 .v-pbact{display:flex;gap:8px;flex-wrap:wrap}
+.v13 .v-pbgroups{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}
+.v13 .v-pbgrp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.v13 .v-pbf{display:flex;flex-direction:column;gap:6px;padding:0 14px}
+.v13 .v-pbf:first-child{padding-left:0}
+.v13 .v-pbf+.v-pbf{border-left:1px solid var(--line)}
+@container (min-width:620px){
+ .v13 .v-pbgroups{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .v13 .v-pbgrp+.v-pbgrp{border-left:1px solid var(--line);padding-left:14px}
+}
+@container (max-width:419px){
+ .v13 .v-pbact{width:100%}
+ .v13 .v-pbact .v-btn{flex:1 1 100%}
+ .v13 .v-pbf .v-lbl-in{width:100%!important}
+}
+/* Tablet: one column of cutoff cards, summary as a strip, rows get a little more room */
+@media(min-width:760px) and (max-width:1099px){
+ .v13 .v-pbsum2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 18px;align-items:start}
+ .v13 .v-pbsum2>h2,.v13 .v-pbsum2>p{grid-column:1/-1}
+ .v13 .v-pbsum2>.v-ln{border-bottom:0;flex-direction:column;gap:2px}
+ .v13 .v-pbtake{margin:0}
+ .v13 .v-pbsum2>h2{margin-bottom:6px}
+ .v13 .v-pbsum2>p{margin-top:12px!important}
+}

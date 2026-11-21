@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/2-batch-notes-2
-- **User to-do now:** Try rev-2 on desktop, tablet and phone; merge rev/1 and rev/2 to main
+- **Next action:** Approve or request changes on rev/3-payslip-sheet-links
+- **User to-do now:** Try rev-3 on phone and desktop; merge rev/1, rev/2, rev/3 to main
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 23:14 | perf | Merged slices 1 to 7 into main (local, fast-forward). Perf: loading skeleton for every page, 30s client cache (staleTimes), budget loader queries in parallel. Not pushed. | -
 - 2026-11-21 09:00 | rev-1 | Revision batch: budget hero left/take-home, cutoff circle collision fix (.v-bc), bonuses skeleton + parallel loads, budget load parallel, 22 colors, login restyle, phone More sheet, inbox header, runway narrow chart, half-year strip | 632b83f
 - 2026-11-21 09:31 | rev-2 | Second revision batch (login, instant tabs via prefetch, hide-amounts coverage, file inputs, bonus row, fund colors, link underline, RTO inferred from RTO lines, tablet/phone charts, payslip builder + wizard mobile) | HEAD
+- 2026-11-21 09:54 | rev-3 | Payslip builder redesigned from mockups (controls bar, collapsible cutoff cards, summary, no row icons), bottom sheets use dvh and scroll, side nav links no longer animate underline | HEAD
 
 ## 4. Open questions
 
@@ -60,7 +61,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,617,156 | 6,984,008 | 305,732 | 3,228,948 | 397,034,962 | 1,850,416 |  |
+| **Cumulative** | 1,624,640 | 7,004,867 | 306,343 | 3,262,397 | 398,856,130 | 1,874,297 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -82,6 +83,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
 | rev-2 | 1,233,332 | 5,150,158 | 214,872 | 2,673,180 | 322,317,032 | 1,461,845 |  |
+| rev-3 | 1,237,217 | 5,128,597 | 214,549 | 2,698,695 | 321,747,427 | 1,479,260 |  |
 
 <!-- END SUMMARY -->
 
