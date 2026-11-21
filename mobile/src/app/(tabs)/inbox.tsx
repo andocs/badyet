@@ -143,7 +143,7 @@ export default function Inbox() {
   }
 
   return (
-    <Screen title="Inbox" subtitle="Nothing moves a balance until you confirm it." refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Inbox" refreshing={refreshing} onRefresh={reload}>
       <View style={[s.seg, { backgroundColor: c.soft }]}>
         {(['check', 'all'] as const).map((v) => (
           <Pressable

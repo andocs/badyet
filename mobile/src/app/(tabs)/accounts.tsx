@@ -115,7 +115,7 @@ export default function Accounts() {
   const open = data ? [...data.spending, ...data.funds].find((a) => a.id === openId) ?? null : null;
 
   return (
-    <Screen title="Accounts" subtitle="Balances move when you confirm a transaction." refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Accounts" refreshing={refreshing} onRefresh={reload}>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
       {data ? (

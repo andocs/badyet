@@ -199,7 +199,7 @@ export default function Capture() {
   const editingCfg = data?.configs.find((x) => x.source === editing) ?? null;
 
   return (
-    <Screen title="Capture rules" subtitle="How notifications and emails become pending items." refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Capture rules" refreshing={refreshing} onRefresh={reload}>
       <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Settings</Text>
       </Pressable>

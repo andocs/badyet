@@ -137,7 +137,7 @@ export default function Forecast() {
   };
 
   return (
-    <Screen title="Where I’ll be" subtitle={rows.length ? `${rows.length} months from ${label(rows[0]!.month)}. Tap a month for the story.` : undefined} refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Forecast" refreshing={refreshing} onRefresh={reload}>
       <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
       </Pressable>

@@ -302,7 +302,6 @@ export default function Budget() {
   return (
     <Screen
       title="Budget"
-      subtitle={fut ? 'Rules re-run against each month’s projected take-home' : data ? `${monthLabel(data.period.month)} · what the rules say, and what has gone out so far` : undefined}
       refreshing={refreshing}
       onRefresh={reload}
     >
