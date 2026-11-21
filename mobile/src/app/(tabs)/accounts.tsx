@@ -7,6 +7,7 @@ import { money } from '@/lib/domain/money';
 import { shortDate } from '@/lib/now/format';
 import { manilaDate } from '@/lib/now/summary';
 import { AccountTile } from '~/components/AccountTile';
+import { AddAccountSheet, EditAccountSheet, MoveSheet, ReconcileSheet } from '~/components/AccountSheets';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { loadAccounts, type AccountCard } from '~/lib/accounts';
 import { useHide } from '~/lib/hide';
@@ -68,7 +69,7 @@ function Calc({ a }: { a: AccountCard }) {
   );
 }
 
-function Detail({ a, onClose }: { a: AccountCard; onClose: () => void }) {
+function Detail({ a, onClose, onAction }: { a: AccountCard; onClose: () => void; onAction: (kind: 'reconcile' | 'move' | 'edit') => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const insets = useSafeAreaInsets();
@@ -98,6 +99,17 @@ function Detail({ a, onClose }: { a: AccountCard; onClose: () => void }) {
               <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>Linked to {a.fund} fund</Text>
             </View>
           ) : null}
+          <View style={s.actions}>
+            <Pressable onPress={() => onAction('reconcile')} accessibilityRole="button" style={[s.close, { flex: 1, backgroundColor: c.accent }]}>
+              <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Reconcile</Text>
+            </Pressable>
+            <Pressable onPress={() => onAction('move')} accessibilityRole="button" style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Move money</Text>
+            </Pressable>
+          </View>
+          <Pressable onPress={() => onAction('edit')} accessibilityRole="button" style={[s.close, { backgroundColor: c.soft }]}>
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Edit account</Text>
+          </Pressable>
           <Pressable onPress={onClose} accessibilityRole="button" style={[s.close, { backgroundColor: c.soft }]}>
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Close</Text>
           </Pressable>
@@ -112,7 +124,14 @@ export default function Accounts() {
   const router = useRouter();
   const { data, error, refreshing, reload } = useLoad(() => loadAccounts(supabase));
   const [openId, setOpenId] = useState<string | null>(null);
-  const open = data ? [...data.spending, ...data.funds].find((a) => a.id === openId) ?? null : null;
+  const [sheet, setSheet] = useState<'reconcile' | 'move' | 'edit' | 'add' | null>(null);
+  const all = data ? [...data.spending, ...data.funds] : [];
+  const open = all.find((a) => a.id === openId) ?? null;
+  const done = () => {
+    setSheet(null);
+    setOpenId(null);
+    void reload();
+  };
 
   return (
     <Screen title="Accounts" refreshing={refreshing} onRefresh={reload}>
@@ -153,16 +172,24 @@ export default function Accounts() {
             </View>
           ) : null}
 
-          {data.spending.length + data.funds.length === 0 ? <Notice>No accounts yet. Add your first one on the web app.</Notice> : null}
+          {data.spending.length + data.funds.length === 0 ? <Notice>No accounts yet. Add your first one with the button below.</Notice> : null}
+          <Pressable onPress={() => setSheet('add')} accessibilityRole="button" style={[s.close, { backgroundColor: c.soft }]}>
+            <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>+ Add account</Text>
+          </Pressable>
         </>
       ) : null}
-      {open ? <Detail a={open} onClose={() => setOpenId(null)} /> : null}
+      {open && !sheet ? <Detail a={open} onClose={() => setOpenId(null)} onAction={setSheet} /> : null}
+      {open && sheet === 'reconcile' ? <ReconcileSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
+      {open && sheet === 'move' ? <MoveSheet accounts={all} from={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
+      {open && sheet === 'edit' ? <EditAccountSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
+      {sheet === 'add' ? <AddAccountSheet onClose={() => setSheet(null)} onSaved={done} /> : null}
     </Screen>
   );
 }
 
 const s = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  actions: { flexDirection: 'row', gap: 10 },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: { maxHeight: '85%', borderTopLeftRadius: 20, borderTopRightRadius: 20, borderWidth: 1, padding: 16, gap: 12 },
   grab: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2 },

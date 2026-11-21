@@ -174,9 +174,6 @@ export default function Bonuses() {
 
   return (
     <Screen title="Bonuses" refreshing={refreshing} onRefresh={reload}>
-      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
-        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
-      </Pressable>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {problem ? <Notice tone="error">{problem}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}

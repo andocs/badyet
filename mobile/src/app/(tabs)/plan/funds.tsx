@@ -27,9 +27,6 @@ export default function Funds() {
 
   return (
     <Screen title="Savings funds" refreshing={refreshing} onRefresh={reload}>
-      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
-        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
-      </Pressable>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
       {data && data.funds.length === 0 ? <Notice>No funds yet. Add them on the web, and they appear here in priority order.</Notice> : null}

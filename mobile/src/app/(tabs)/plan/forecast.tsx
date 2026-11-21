@@ -138,9 +138,6 @@ export default function Forecast() {
 
   return (
     <Screen title="Forecast" refreshing={refreshing} onRefresh={reload}>
-      <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
-        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
-      </Pressable>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
       {data && !hasStart ? <Notice>The forecast needs your salary. Add it under Salary and tax.</Notice> : null}
