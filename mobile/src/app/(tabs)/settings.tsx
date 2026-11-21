@@ -3,6 +3,7 @@ import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet,
 import { useFocusEffect } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
+import { UpdatesCard } from '~/components/UpdatesCard';
 import { useSession } from '~/lib/session';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
@@ -40,6 +41,7 @@ export default function Settings() {
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>
       </Card>
+      <UpdatesCard />
       {!postOk ? (
         <Card>
           <Label>App notifications</Label>

@@ -11,7 +11,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Active slice / milestone:** E3 Inbox
 - **Gate:** paused
 - **Next action:** User paused after E3. When ready: test Inbox on the phone, then reply Approve or Request changes; E4 Quick add is next
-- **User to-do now:** Open app twice to get E3 over the air; check Inbox (see handoff). Pending rows need testing data
+- **User to-do now:** Install APK d6ed2977 when ready (declares notification permission); then Settings > Allow notifications > turn on notification access. E3 Inbox gate still paused
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 15:35 | slice-E2 | E2 approved at gate; not merged to main yet | -
 - 2026-11-21 15:39 | slice-E3 | Inbox: pending list, suggestions (rule then history via lib/inbox/rules), confirm (note, rule, transfer legs), not mine, All activity; 21 tests, tsc, lint, android bundle OK; OTA group 8a9a6463 | f605bc5
 - 2026-11-21 15:49 | slice-E3 | User paused at E3 gate | -
+- 2026-11-21 16:09 | slice-E3 | APK build d6ed2977: declares POST_NOTIFICATIONS, blocks unused permissions (mic, camera, overlay, storage); Settings asks for notifications. Fixes greyed-out notification access | -
 
 ## 4. Open questions
 
