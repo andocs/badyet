@@ -628,8 +628,8 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 
 /* Revision batch 2: link underline, file inputs, spacing, tablet and phone layouts */
 /* Links: an underline draws in from the left on hover. Buttons, tabs, rails and cards keep their own hover. */
-.v13 a:not(.v-btn):not(.v-segl):not(.v-mcol):not(.v-acard):not(.v-iconbtn){background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;padding-bottom:1px;transition:background-size .28s cubic-bezier(.16,1,.3,1)}
-.v13 a:not(.v-btn):not(.v-segl):not(.v-mcol):not(.v-acard):not(.v-iconbtn):hover,.v13 a:not(.v-btn):not(.v-segl):not(.v-mcol):not(.v-acard):not(.v-iconbtn):focus-visible{background-size:100% 1.5px;text-decoration:none}
+.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)){background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;padding-bottom:1px;transition:background-size .28s cubic-bezier(.16,1,.3,1)}
+.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)):hover,.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)):focus-visible{background-size:100% 1.5px;text-decoration:none}
 .v13 .v-rail a,.v13 .v-tabs a,.v13 .v-more a,.v13 .v-subnav a,.v13 .v-tabs2 a{background-image:none;padding-bottom:initial}
 .v13 .v-rail a{padding-bottom:9px}.v13 .v-more a,.v13 .v-subnav a{padding-bottom:10px}
 /* File inputs: the native button matches the round v-btn */
@@ -658,31 +658,51 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
  .v13 .v-hrow .v-pip{width:42px;height:42px}
  .v13 .v-hrow .v-pip::before{left:18px;top:-7px}
  .v13 .v-hrow .v-pip::after{left:11px;top:16px;width:20px;height:10px}
- /* Payslip builder: each line becomes a small card instead of a wide table */
+}
+
+/* Payslip builder: controls bar, collapsible cutoff cards with plain rows, summary beside them */
+.v13 .v-pbbar{display:flex;align-items:center;gap:18px 20px;flex-wrap:wrap}
+.v13 .v-pbf{display:flex;flex-direction:column;gap:6px;padding-left:20px;border-left:1px solid var(--line)}
+.v13 .v-pbact{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.v13 .v-pbgrid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v13 .v-pbgrid{grid-template-columns:minmax(0,1fr) 320px;align-items:start}.v13 .v-pbsum2{position:sticky;top:16px}}
+.v13 .v-pbsum2 .v-ln{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.v13 .v-pbtake{display:flex;flex-direction:column;gap:2px;background:var(--tint);border-radius:10px;padding:14px;margin:14px 0}
+.v13 .v-pbtake b{font:800 26px var(--font-display);letter-spacing:-.02em;color:var(--accent-text)}
+.v13 .v-pbsum{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;list-style:none;border-bottom:1px solid var(--line);background:var(--soft);border-radius:9px 9px 0 0}
+.v13 .v-pbsum::-webkit-details-marker{display:none}
+.v13 .v-pbsum::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 2px 0 4px;flex:none;transition:transform .2s}
+.v13 details.v-slip[open]>.v-pbsum::after{transform:rotate(225deg);margin-top:4px}
+.v13 details.v-slip:not([open])>.v-pbsum{border-bottom:0;border-radius:9px}
+.v13 .v-pbtk{text-align:right}
+.v13 .v-pbtk b{font:800 22px var(--font-display);letter-spacing:-.02em;color:var(--accent-text)}
+.v13 .v-pl{padding:2px 18px 16px}
+.v13 .v-pgh{font:700 12px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 0 4px}
+.v13 .v-plr{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.v13 .v-plr>.v-nm{flex:1 1 140px;min-width:0}
+.v13 .v-plr .v-nm b{display:block;font-weight:700}
+.v13 .v-plr .v-nm small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 .v-plr .v-tx{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);font-weight:600}
+.v13 .v-pla{flex:none}
+.v13 .v-plr input.v-v{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:112px;min-height:40px;text-align:right;font-variant-numeric:tabular-nums}
+.v13 .v-plr .v-fixedv{font-weight:700;font-variant-numeric:tabular-nums}
+.v13 .v-plr .v-acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex:none}
+.v13 .v-plr .v-mv{min-height:34px;padding:2px 12px;font-size:12px;white-space:nowrap}
+.v13 .v-pl .v-addl2{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+@media(max-width:759px){
  .v13 .v-pbhead{flex-direction:column;align-items:stretch;gap:12px}
- .v13 .v-pbhead>.v-row{justify-content:space-between}
- .v13 .v-pbctl{flex-direction:column;align-items:stretch;gap:12px}
- .v13 .v-pbctl>label.v-row{justify-content:space-between}
- .v13 .v-pbctl>.v-btn{width:100%}
- .v13 .v-pair2{gap:18px}
- .v13 .v-slip .v-hd{padding:14px;align-items:center}
- .v13 .v-slip .v-net{padding:14px}
- .v13 .v-slip .v-scrollx{overflow:visible}
- .v13 table.v-pt,.v13 .v-pt tbody,.v13 .v-pt tr,.v13 .v-pt td{display:block;width:100%}
- .v13 .v-pt thead{display:none}
- .v13 .v-pt tr{padding:12px 14px;border-bottom:1px solid var(--line)}
- .v13 .v-pt tr:not(.v-grp):not(.v-addr){display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center}
- .v13 .v-pt tr.v-grp{padding:16px 14px 4px;border-bottom:0}
- .v13 .v-pt td,.v13 table.v-pt td:first-child{padding:0;border:0;width:auto;text-align:left}
- .v13 .v-pt tr.v-grp td{padding:0}
- .v13 .v-pt tr:not(.v-grp):not(.v-addr)>td:first-child{grid-column:1/-1}
- .v13 .v-pt tr:not(.v-grp):not(.v-addr)>td:nth-child(2){grid-column:1}
- .v13 .v-pt tr:not(.v-grp):not(.v-addr)>td:nth-child(3){grid-column:2;grid-row:2}
- .v13 .v-pt input.v-v{width:100%;max-width:170px;text-align:left}
- .v13 .v-pt .v-fixedv{padding:0;font-size:16px}
- .v13 .v-pt .v-acts{justify-content:flex-end;flex-wrap:wrap}
- .v13 .v-pt tr.v-addr{padding:14px}
- .v13 .v-pt tr.v-addr td{padding:0;background:none}
+ .v13 .v-pbhead>label{justify-content:space-between}
+ .v13 .v-pbbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+ .v13 .v-pbtot,.v13 .v-pbact{grid-column:1/-1}
+ .v13 .v-pbf{padding-left:0;border-left:0}
+ .v13 .v-pbact{margin-left:0}
+ .v13 .v-pbact .v-btn{flex:1 1 100%}
+ .v13 .v-pbsum{padding:12px 14px}
+ .v13 .v-pl{padding:2px 14px 14px}
  .v13 .v-addl2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
  .v13 .v-addl2>input:first-child,.v13 .v-addl2>.v-btn{grid-column:1/-1}
+ /* Bottom sheets (budget line editor, quick add) stay inside the visible screen so the save button is reachable */
+ .v13 .v-dlg,.v13 .v-fdlg{max-height:96dvh}
+ .v13 .v-qa{max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
 }
+.v13 .v-qa{overflow-y:auto}

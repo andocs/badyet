@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/1-batch-notes
-- **User to-do now:** Try the changes on desktop and phone, merge rev/1-batch-notes to main
+- **Next action:** Approve or request changes on rev/2-batch-notes-2
+- **User to-do now:** Try rev-2 on desktop, tablet and phone; merge rev/1 and rev/2 to main
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 22:58 | slice-7 | Slice 7 approved by the user. Web rehaul complete. | 94281f7
 - 2026-11-20 23:14 | perf | Merged slices 1 to 7 into main (local, fast-forward). Perf: loading skeleton for every page, 30s client cache (staleTimes), budget loader queries in parallel. Not pushed. | -
 - 2026-11-21 09:00 | rev-1 | Revision batch: budget hero left/take-home, cutoff circle collision fix (.v-bc), bonuses skeleton + parallel loads, budget load parallel, 22 colors, login restyle, phone More sheet, inbox header, runway narrow chart, half-year strip | 632b83f
+- 2026-11-21 09:31 | rev-2 | Second revision batch (login, instant tabs via prefetch, hide-amounts coverage, file inputs, bonus row, fund colors, link underline, RTO inferred from RTO lines, tablet/phone charts, payslip builder + wizard mobile) | HEAD
 
 ## 4. Open questions
 
@@ -59,7 +60,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,551,885 | 6,544,161 | 285,850 | 3,167,962 | 394,080,498 | 1,825,743 |  |
+| **Cumulative** | 1,617,156 | 6,984,008 | 305,732 | 3,228,948 | 397,034,962 | 1,850,416 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -80,6 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
+| rev-2 | 1,233,332 | 5,150,158 | 214,872 | 2,673,180 | 322,317,032 | 1,461,845 |  |
 
 <!-- END SUMMARY -->
 
@@ -120,6 +122,8 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Check on desktop, a tablet width (about 800px) and the Z Fold 6 preset (412px): login centered with the Google icon; tab changes feel instant; hide-amounts now covers the Budget hero, payslip builder lines and chart axes; file upload button in Accounts; bonus edit rows; 18 fund colors; links underline left to right on hover; Settings no longer has the RTO amount (Now infers it from the RTO lines); charts on Salary, Forecast, Now readable on tablet and phone; payslip builder panels stack on phone; wizard spacing; bonuses hero mascot stays beside the text. Branch rev/2-batch-notes-2 is pushed. No migrations; the rto_amount column is left in the database but unused.
 
 Try on desktop and a phone (or 360px width): Budget hero shows left / take-home; the 1/2 circles have no extra box; Bonuses year tabs show a skeleton; color pickers have 22 colors; login matches the app; phone More tab opens every other page; Inbox tabs stay on one line; Now chart is readable; Budget Future years shows six months with arrows. Branch rev/1-batch-notes is pushed; merge to main when happy. No migrations.
 

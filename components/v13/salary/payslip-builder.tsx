@@ -102,6 +102,8 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
     act(() => resetTemplates(month), "Back to the standard layout from this month on.");
   };
 
+  const total = (kind: "earning" | "deduction") => money([...pay.first.lines, ...pay.second.lines].filter((l) => l.kind === kind).reduce((s, l) => s + Number(l.amount), 0));
+
   return (
     <div className="v-stack">
       <div className="v-row v-sp v-wrap v-pbhead">
@@ -109,38 +111,54 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
           <h2>Payslip builder</h2>
           <div className="v-lbl">Build each cutoff&apos;s payslip once. Regular lines repeat every month; bonuses appear in the month they land.</div>
         </div>
-        <div className="v-row v-wrap" style={{ gap: 10 }}>
-          <label className="v-row" style={{ gap: 8 }}>
-            <span className="v-lbl">Month</span>
-            <select className="v-lbl-in" value={month} onChange={(e) => (window.location.search = `?tab=payslip&month=${e.target.value}`)} aria-label="Month">
-              {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
-          </label>
-          <span className="v-pill v-ok">Month total <Money value={pay.takeHome} /></span>
-        </div>
+        <label className="v-row" style={{ gap: 8 }}>
+          <span className="v-lbl">Month</span>
+          <select className="v-lbl-in" value={month} onChange={(e) => (window.location.search = `?tab=payslip&month=${e.target.value}`)} aria-label="Month">
+            {months.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        </label>
       </div>
 
-      <div className="v-row v-wrap v-pbctl" style={{ gap: 16 }}>
-        <label className="v-row" style={{ gap: 8 }}>
+      <section className="v-card v-pbbar" aria-label="Layout">
+        <div className="v-pbtot">
+          <div className="v-lbl">Monthly total</div>
+          <div className="v-big v-num" style={{ fontSize: 30, color: "var(--accent-text)" }}><Money value={pay.takeHome} /></div>
+        </div>
+        <label className="v-pbf">
           <span className="v-sm v-muted">Base pay in 1st cutoff</span>
-          <input className="v-lbl-in" style={{ width: 76, minHeight: 40, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "base_share") / 100} key={`b${shareOf("first", "base_share")}`} onBlur={(e) => setSplit("base_share", Number(e.target.value) || 0)} aria-label="Percent of base paid in the 1st cutoff" />
-          <span className="v-sm v-muted">%</span>
+          <span className="v-row" style={{ gap: 6 }}>
+            <input className="v-lbl-in" style={{ width: 84, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "base_share") / 100} key={`b${shareOf("first", "base_share")}`} onBlur={(e) => setSplit("base_share", Number(e.target.value) || 0)} aria-label="Percent of base paid in the 1st cutoff" />
+            <span className="v-sm v-muted">%</span>
+          </span>
         </label>
-        <label className="v-row" style={{ gap: 8 }}>
+        <label className="v-pbf">
           <span className="v-sm v-muted">Income tax in 1st cutoff</span>
-          <input className="v-lbl-in" style={{ width: 76, minHeight: 40, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "income_tax") / 100} key={`t${shareOf("first", "income_tax")}`} onBlur={(e) => setSplit("income_tax", Number(e.target.value) || 0)} aria-label="Percent of income tax withheld in the 1st cutoff" />
-          <span className="v-sm v-muted">%</span>
+          <span className="v-row" style={{ gap: 6 }}>
+            <input className="v-lbl-in" style={{ width: 84, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "income_tax") / 100} key={`t${shareOf("first", "income_tax")}`} onBlur={(e) => setSplit("income_tax", Number(e.target.value) || 0)} aria-label="Percent of income tax withheld in the 1st cutoff" />
+            <span className="v-sm v-muted">%</span>
+          </span>
         </label>
-        <button type="button" className="v-btn v-sm" onClick={reset} disabled={busy}>Standard layout</button>
-        <button type="button" className="v-btn v-sm v-pri" onClick={save} disabled={busy}>Save from this month on</button>
-      </div>
+        <div className="v-pbact">
+          <button type="button" className="v-btn v-sm" onClick={reset} disabled={busy}>Standard layout</button>
+          <button type="button" className="v-btn v-sm v-pri" onClick={save} disabled={busy}>Save from this month on</button>
+        </div>
+      </section>
       {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
       {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
 
-      <div className="v-pair2">
-        {(["first", "second"] as const).map((c) => (
-          <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} busy={busy} />
-        ))}
+      <div className="v-pbgrid">
+        <div className="v-stack">
+          {(["first", "second"] as const).map((c) => (
+            <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} />
+          ))}
+        </div>
+        <aside className="v-card v-pbsum2" aria-labelledby="pbs">
+          <h2 id="pbs">Summary</h2>
+          <div className="v-ln"><span>Total earnings</span><b className="v-num"><Money value={total("earning")} /></b></div>
+          <div className="v-ln"><span>Total deductions</span><b className="v-num"><Money value={total("deduction")} /></b></div>
+          <div className="v-pbtake"><span className="v-lbl">Take-home pay</span><b className="v-num"><Money value={pay.takeHome} /></b></div>
+          <p className="v-xs v-muted" style={{ margin: 0 }}>Saving applies this layout to both cutoffs from this month on.</p>
+        </aside>
       </div>
 
       <details className="v-card">
@@ -175,15 +193,16 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
 
 const fmt = (m: MoneyValue | number) => `₱${(Number(m) / 100).toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
 
-function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd, busy }: {
+function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd }: {
   cutoff: PayCutoff; slip: Payslip; drafts: Draft[]; salary: ReturnType<typeof salaryAt>; onAllowance: (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) => void;
-  onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void; busy: boolean;
+  onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void;
 }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [kind, setKind] = useState<"deduction" | "earning">("deduction");
   const name2 = cutoff === "first" ? "1st cutoff" : "2nd cutoff";
   const other = cutoff === "first" ? "2nd" : "1st";
+  const moveLabel = cutoff === "first" ? "To 2nd →" : "← To 1st";
 
   const row = (i: number) => {
     const line = slip.lines[i]!;
@@ -192,33 +211,31 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
     if (d) {
       const fixed = d.spec.source === "base_share" || d.spec.source === "income_tax";
       return (
-        <tr key={d.key}>
-          <td className="v-nm"><b>{line.label}</b>
+        <div key={d.key} className="v-plr">
+          <div className="v-grow v-nm"><b>{line.label}</b>
             <small>
               {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) / 100}% of the month's tax` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
             </small>
-          </td>
-          <td>
+          </div>
+          <div className="v-pla">
             {fixed ? <span className="v-fixedv">{sign}<Money value={line.amount} /></span> : (
               <input key={`${d.key}-${line.amount}`} className="v-v" inputMode="decimal" defaultValue={(line.amount / 100).toFixed(2)} aria-label={`${line.label} amount, ${name2}`}
                 onBlur={(e) => { const v = parsePesos(e.target.value.replace(/^-/, "")); if (v !== undefined) onChange(d.key, { amountOverride: v }); }} />
             )}
-          </td>
-          <td>
-            <div className="v-acts">
-              {!fixed && d.spec.amountOverride != null && d.spec.source !== "custom" ? <button type="button" className="v-btn v-sm v-ghost v-mv" onClick={() => onChange(d.key, { amountOverride: null })}>Reset</button> : null}
-              {d.spec.source === "custom" ? <button type="button" className="v-iconbtn v-s" onClick={() => onRemove(d.key)} aria-label={`Remove ${line.label}`}>×</button> : null}
-              {MOVABLE.has(d.spec.source) ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onMove(d.key)} aria-label={`Move ${line.label} to the ${other} cutoff`}>{cutoff === "first" ? "To 2nd →" : "← To 1st"}</button> : null}
-            </div>
-          </td>
-        </tr>
+          </div>
+          <div className="v-acts">
+            {!fixed && d.spec.amountOverride != null && d.spec.source !== "custom" ? <button type="button" className="v-btn v-sm v-ghost v-mv" onClick={() => onChange(d.key, { amountOverride: null })}>Reset</button> : null}
+            {d.spec.source === "custom" ? <button type="button" className="v-iconbtn v-s" onClick={() => onRemove(d.key)} aria-label={`Remove ${line.label}`}>×</button> : null}
+            {MOVABLE.has(d.spec.source) ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onMove(d.key)} aria-label={`Move ${line.label} to the ${other} cutoff`}>{moveLabel}</button> : null}
+          </div>
+        </div>
       );
     }
     // Lines the engine adds itself: allowances, savings plan, other deduction, bonuses.
     const allowance = line.source === "allowance" ? salary.allowances.find((a) => a.allowance.name === line.label && a.allowance.payslipCutoff === cutoff)?.allowance : undefined;
     return (
-      <tr key={`auto-${i}`}>
-        <td className="v-nm"><b>{line.label}</b>
+      <div key={`auto-${i}`} className="v-plr">
+        <div className="v-grow v-nm"><b>{line.label}</b>
           <small>{allowance ? (allowance.frequency === "yearly" ? "once a year · from Recurring allowances" : "every month · from Recurring allowances") : line.source === "bonus" || line.source === "bonus_tax" ? "from Bonuses" : line.source === "savings_plan" ? "payroll savings plan" : "your payroll setting"}</small>
           {allowance ? (
             <span className="v-tx">
@@ -226,10 +243,10 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
               Taxable
             </span>
           ) : null}
-        </td>
-        <td><span className="v-fixedv">{sign}<Money value={line.amount} /></span></td>
-        <td><div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{cutoff === "first" ? "To 2nd →" : "← To 1st"}</button> : null}</div></td>
-      </tr>
+        </div>
+        <div className="v-pla"><span className="v-fixedv">{sign}<Money value={line.amount} /></span></div>
+        <div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{moveLabel}</button> : null}</div>
+      </div>
     );
   };
 
@@ -237,36 +254,29 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
   const earn = idx.filter((i) => slip.lines[i]!.kind === "earning");
   const ded = idx.filter((i) => slip.lines[i]!.kind === "deduction");
   return (
-    <div className="v-slip">
-      <div className="v-hd">
-        <div><div className="v-lbl">{cutoff === "first" ? "Paid on the 10th" : "Paid on the 25th"}</div><div className="v-disp" style={{ fontSize: 22 }}>{name2}</div></div>
-        <div style={{ textAlign: "right" }}><div className="v-lbl">Take-home</div><div className="v-num" style={{ font: "800 22px var(--font-display)", color: "var(--accent-text)" }}><Money value={slip.takeHome} /></div></div>
+    <details className="v-slip" open>
+      <summary className="v-pbsum">
+        <span className="v-pill v-ok">{cutoff === "first" ? "1st" : "2nd"}</span>
+        <span className="v-grow"><span className="v-lbl" style={{ display: "block" }}>{cutoff === "first" ? "Paid on the 10th" : "Paid on the 25th"}</span><b className="v-disp" style={{ fontSize: 20 }}>{name2}</b></span>
+        <span className="v-pbtk"><span className="v-lbl" style={{ display: "block" }}>Take-home pay</span><b className="v-num"><Money value={slip.takeHome} /></b></span>
+      </summary>
+      <div className="v-pl">
+        <h3 className="v-pgh">Earnings</h3>
+        {earn.map(row)}
+        <h3 className="v-pgh">Deductions</h3>
+        {ded.map(row)}
+        <div className="v-addl2">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="+ Add a line, e.g. Salary loan" aria-label={`New line name, ${name2}`} maxLength={60} />
+          <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="₱ amount" aria-label={`New line amount, ${name2}`} />
+          <select value={kind} onChange={(e) => setKind(e.target.value as "deduction" | "earning")} aria-label="Type"><option value="deduction">Deduction</option><option value="earning">Earning</option></select>
+          <button type="button" className="v-btn v-sm v-pri" onClick={() => {
+            const v = parsePesos(amount);
+            if (!name.trim() || v === undefined || v <= 0) return;
+            onAdd({ kind, label: name.trim(), source: "custom", amountOverride: v });
+            setName(""); setAmount("");
+          }}>Add</button>
+        </div>
       </div>
-      <div className="v-scrollx">
-        <table className="v-pt">
-          <thead><tr><th style={{ textAlign: "left" }}>Item</th><th>Amount</th><th /></tr></thead>
-          <tbody>
-            <tr className="v-grp"><td colSpan={3}>Earnings</td></tr>
-            {earn.map(row)}
-            <tr className="v-grp"><td colSpan={3}>Deductions</td></tr>
-            {ded.map(row)}
-            <tr className="v-addr"><td colSpan={3}>
-              <div className="v-addl2">
-                <input value={name} onChange={(e) => setName(e.target.value)} placeholder="+ Add a line, e.g. Salary loan" aria-label={`New line name, ${name2}`} maxLength={60} />
-                <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="₱ amount" aria-label={`New line amount, ${name2}`} />
-                <select value={kind} onChange={(e) => setKind(e.target.value as "deduction" | "earning")} aria-label="Type"><option value="deduction">Deduction</option><option value="earning">Earning</option></select>
-                <button type="button" className="v-btn v-sm v-pri" onClick={() => {
-                  const v = parsePesos(amount);
-                  if (!name.trim() || v === undefined || v <= 0) return;
-                  onAdd({ kind, label: name.trim(), source: "custom", amountOverride: v });
-                  setName(""); setAmount("");
-                }}>Add</button>
-              </div>
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div className="v-net"><div><div className="v-lbl" style={{ color: "var(--accent-text)" }}>Net for the {name2}</div><div className="v-xs v-muted">{slip.lines.length} lines</div></div><b className="v-n v-num"><Money value={slip.takeHome} /></b></div>
-    </div>
+    </details>
   );
 }

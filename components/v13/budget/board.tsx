@@ -163,7 +163,7 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
 
       <dialog ref={dialog} className="v-dlg" aria-labelledby="edt" onClick={(e) => e.target === dialog.current && close()}>
         {draft ? (
-          <div className="v-qa" style={{ maxHeight: "92vh", overflow: "auto" }}>
+          <div className="v-qa">
             <div className="v-grab" aria-hidden="true" />
             <div className="v-row v-sp"><h2 id="edt">{draft.id ? "Edit line" : "New line"}</h2><button type="button" className="v-iconbtn v-s" onClick={close} aria-label="Close"><V13Icon name="x" /></button></div>
             <div className="v-stack" style={{ marginTop: 4 }}>
