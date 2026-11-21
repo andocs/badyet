@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E11 Release and polish
-- **Gate:** none
-- **Next action:** Build E11: icons, wide-screen layout, README, final checks
-- **User to-do now:** E7-E10 checks pending on phone
+- **Active slice / milestone:** E1-E11 built, awaiting your checks
+- **Gate:** waiting
+- **Next action:** Test on the phone (E5 migration, E6 notifications, E7 Gmail, E8-E11 screens), then approve or request changes slice by slice; decide on merging the branches to main
+- **User to-do now:** Apply capture migration if not done; test Gmail with APK e5f5bd62; trigger real GCash/Maya/GoTyme/MariBank notifications; compare Plan screens with web; send screenshots of anything that differs
 
 ## 3. Execution log
 
@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:28 | slice-E8 | Plan tab (Settings moved inside); Budget screen (shared lib/budget/screen.ts with 8 tests, groups, line editor, future years) and Salary screen (chart, events, allowances, projected raises, year table) with ported write actions tested; mobile 88 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c15b540c | a177ea0
 - 2026-11-21 17:31 | slice-E9 | Plan: Bonuses (year chips, hero, cards with waterfall, destination ticks, CIP multiplier, rules) and Funds (priority list with progress); ported saveInstance with tests; mobile 93 tests, web 332 tests, tsc, lint, web build, bundle OK; OTA published; Vercel checked | 1ecdfbac1f1c5f96c2976371b30fae80675a0ccb
 - 2026-11-21 17:35 | slice-E10 | Plan: Forecast (hero, stacked/lines chart with month tap, year ladder, month cards, story sheet, overrides list) and Settings (paydays editor with ported savePaydays, looks, tax and data notes); mobile 97 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 0588ad64 | 28d9065
+- 2026-11-21 17:39 | slice-E11 | Tab icons, wide-screen column, mobile README; final checks: mobile 97 tests, web 332 tests, tsc, lint, expo-doctor 18/18, web build, bundle OK; Vercel success; OTA group 84a8adcc | 68d82dc
 
 ## 4. Open questions
 
@@ -82,7 +83,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,156,838 | 546,265,133 | 2,436,245 |  |
+| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -124,6 +125,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E8 | 79,192 | 504,268 | 18,351 | 77,312 | 15,256,078 | 44,347 |  |
 | Slice E9 | 2,274,724 | 9,188,425 | 424,415 | 4,125,147 | 538,474,423 | 2,417,034 | no mark 'slice-E9': all-time |
 | Slice E10 | 2,274,724 | 9,188,425 | 424,415 | 4,156,838 | 546,265,133 | 2,436,245 | no mark 'slice-E10': all-time |
+| Slice E11 | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 | no mark 'slice-E11': all-time |
 
 <!-- END SUMMARY -->
 
@@ -158,6 +160,14 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E11 (release and polish): what you do now
+1. Get the code:   git fetch && git checkout slice/E11-release-polish (it contains E1-E11; each slice branch builds on the one before)
+2. Install deps / Database / Config: none new
+3. Get the update: open the app twice (or Settings > Check for updates): update group 84a8adcc. The APK to have installed is build e5f5bd62 (https://expo.dev/artifacts/eas/34GCgyG4EtnV_VjM5vLCBTf5H9g_h5T7li5ilIsk6pg.apk): it has the notification permission fix, the listener, the Google sign-in module and the Pip icon. Everything after that ships over the air.
+4. Check these:    tab bar now has icons (Now, Inbox, Add, Accounts, Plan); on a wide screen (Z Fold opened, tablet) screens are a centred readable column; mobile/README.md explains setup, builds, updates and the Google setup.
+5. Known limits:   not looked at on your real screens by me. Still on the web only: Accounts add/move/reconcile/QR, Budget settle/pools/categories/RTO card, raise wizard and payslip builder, bonus rule and destination editing and "mark received", fund create/edit/reorder, forecast overrides, setup wizard, CSV export. Google Wallet capture (no sample). Capture and Gmail run when the app is opened (no background check).
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E10 (Plan: Forecast and Settings): what you do now
 1. Get the code:   git fetch && git checkout slice/E10-forecast-settings
