@@ -145,6 +145,15 @@
         ],
         "createdAt": "2026-11-21T10:30:26.026Z",
         "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "app/v13.css"
+        ],
+        "createdAt": "2026-11-21T10:56:04.612Z",
+        "reason": "line 117 is the Pip mascot's smile, a curved border-bottom drawn on purpose; committed before this session (blame 2026-11-20), not a card accent border"
       }
     ]
   }
