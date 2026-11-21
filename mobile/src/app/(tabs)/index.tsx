@@ -64,7 +64,7 @@ export default function Now() {
         <Card>
           <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Settle office days</Text>
           <Body style={{ color: c.muted, fontSize: 14 }}>
-            {data.settleOpen} office day{data.settleOpen === 1 ? '' : 's'} ended under or over budget. Settle them in Budget on the web for now.
+            {data.settleOpen} office day{data.settleOpen === 1 ? '' : 's'} ended under or over budget. Settle them in Budget.
           </Body>
         </Card>
       ) : null}

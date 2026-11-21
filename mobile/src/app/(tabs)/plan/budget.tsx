@@ -10,6 +10,7 @@ import { cutoffText, ruleText, type GroupView, type LineView } from '@/lib/budge
 import type { LineInput } from '@/lib/budget/line-input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import { rangeLabel } from '@/lib/now/format';
+import { BudgetSide } from '~/components/BudgetSide';
 import { Amount, Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
 import { deleteLine, saveLine } from '~/lib/budgetWrite';
 import { useHide } from '~/lib/hide';
@@ -350,6 +351,8 @@ export default function Budget() {
               ) : null}
 
               <Board groups={screen.groups} data={data} onEdit={(l) => setEditing(draftOf(l))} onAdd={(cat) => setEditing(blankDraft(cat))} />
+
+              {screen.nowRun ? <BudgetSide data={data} nowRun={screen.nowRun} onChanged={() => void reload()} /> : null}
 
               {screen.topUpRaises.length > 0 ? (
                 <Notice>
