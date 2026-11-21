@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** G1 instant capture (awaiting APK build approval)
-- **Gate:** waiting
-- **Next action:** On approval: eas build preview APK, user installs, then merge G1 and start G2
-- **User to-do now:** Approve the APK build; install it; then test capture with the app closed
+- **Active slice / milestone:** G3 Budget + Salary port (G1 APK building)
+- **Gate:** none
+- **Next action:** Finish G3 while the APK builds; merge G1+G2 after the user installs the APK and tests
+- **User to-do now:** Install the new APK when ready; test capture with app closed; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:57 | rev-2 | Web capture rules restyled (textarea style, source cards, rule rows, add-rule panel); mockup hide button now a circle. Mockups v4 approved by user (only the hide circle and capture rules styling remained). Vercel preview success. Branch rev/2-capture-rules-style. | b8f8b28
 - 2026-11-21 19:05 | rev-3 | Mobile screen subheaders removed except Now; Forecast titled Forecast; mockups updated; stray unused var fixed on web budget page. Merged to main (21c33fc), OTA published group 556cda29, Vercel green. Rev-2 merged (fe69869). Mockups approved. | 21c33fc
 - 2026-11-21 19:20 | G1 | Built (not yet APK-built): captureEngine shared by app, 15 min background task and headless notification task; native CaptureHeadlessService started by the listener when no JS is running; Gmail reconnect banner (Now, Inbox, Settings); Background capture last-run card; entry index.js; app version 1.1.0. tsc and vitest pass (mobile 97, web 329). Untested on device: Android may refuse starting the service from background. | 6cbc69b
+- 2026-11-21 19:28 | G2 | Accounts: Reconcile, Move money, Add account, Edit account in sheets (accountsWrite.ts + 11 tests); More tab with page sheet (plan screens and settings moved into the tabs group, hidden tabs); eye circle replaces Hide; headings 24px; Now hero spacing + Balance panel; Budget month slider (no Future years, no pills); Settings text trimmed. tsc, vitest (mobile 107, web 329) and android bundle pass. Branch rev/5-g2-accounts-shell stacked on G1; not merged. | 3eb631b
 
 ## 4. Open questions
 
