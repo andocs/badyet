@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** G5 Settings editors, CSV export, setup wizard (APK build running)
-- **Gate:** none
-- **Next action:** Build G5; when APK finishes the user installs and tests; then merge G1-G5 and OTA
-- **User to-do now:** Install the new APK when ready; test capture with app closed; Wallet sample tomorrow
+- **Active slice / milestone:** G1-G5 built, waiting for user to install APK and approve
+- **Gate:** waiting
+- **Next action:** User installs the 1.1.0 APK and tests; on approval merge rev/8 (contains G1-G5) to main and publish OTA on channel preview
+- **User to-do now:** Install the 1.1.0 APK; test capture with app closed; try each new sheet; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -47,6 +47,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 19:28 | G2 | Accounts: Reconcile, Move money, Add account, Edit account in sheets (accountsWrite.ts + 11 tests); More tab with page sheet (plan screens and settings moved into the tabs group, hidden tabs); eye circle replaces Hide; headings 24px; Now hero spacing + Balance panel; Budget month slider (no Future years, no pills); Settings text trimmed. tsc, vitest (mobile 107, web 329) and android bundle pass. Branch rev/5-g2-accounts-shell stacked on G1; not merged. | 3eb631b
 - 2026-11-21 19:34 | G3 | Budget port: settle office days, office-day toggles, usual days, pools (take out, to Wants, new), categories (add, edit, archive) via budgetOps.ts + tests. Salary port: raise wizard (5 steps) as a sheet, event/allowance/projected raises/payslip layout sheets, year-by-year slider via salaryEvents.ts + tests; Sheet/Field/Input shared components. tsc, vitest (mobile 126, web 329), android bundle pass. Branch rev/6-g3-budget-salary stacked on G2; not merged. Untested on device. | bd6b39c
 - 2026-11-21 19:39 | G4 | Bonuses: Edit destinations + multiplier, Mark received, rule add/edit/remove (bonusRules.ts). Funds: create/edit/archive/reorder (fundsWrite.ts). Forecast: Change this month and Change many months (order, pins, skips, note, reset) in sheets. Tests added (fundsWrite 11, bonusRules 4). tsc, vitest, android bundle pass. Branch rev/7-g4-bonuses-funds-forecast stacked on G3; not merged. Untested on device. | 333affb
+- 2026-11-21 19:40 | G5 | Settings: Paydays and Office days edit in sheets, Export data (CSV of 15 tables via the share sheet, same list as web, no new native package), Setup wizard stays on web. tsc and vitest (mobile 144) pass. APK build 41fcb12d FINISHED (runtime 1.1.0, from G1 commit): https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk. Branches rev/4 to rev/8 stacked, unmerged. | 271fa5f
 
 ## 4. Open questions
 
