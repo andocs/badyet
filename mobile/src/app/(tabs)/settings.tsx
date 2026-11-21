@@ -6,6 +6,8 @@ import { Body, Card, Label, Screen } from '~/components/ui';
 import { BackgroundCard } from '~/components/BackgroundCard';
 import { GmailBanner } from '~/components/GmailBanner';
 import { GmailCard } from '~/components/GmailCard';
+import { ExportCard } from '~/components/ExportCard';
+import { OfficeDaysCard } from '~/components/OfficeDaysCard';
 import { PaydaysCard } from '~/components/PaydaysCard';
 import { UpdatesCard } from '~/components/UpdatesCard';
 import { useHide } from '~/lib/hide';
@@ -50,6 +52,7 @@ export default function Settings() {
         <Body>{session?.user.email ?? 'unknown'}</Body>
       </Card>
       <PaydaysCard />
+      <OfficeDaysCard />
       <Card>
         <Label>Looks</Label>
         <Pressable style={[s.btn, { backgroundColor: hide ? c.accent : c.soft }]} onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: hide }}>
@@ -83,8 +86,10 @@ export default function Settings() {
       <Card>
         <Label>Tax and contributions</Label>
       </Card>
+      <ExportCard />
       <Card>
-        <Label>Setup wizard and your data</Label>
+        <Label>Setup wizard</Label>
+        <Body>On the web app.</Body>
       </Card>
       <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => supabase.auth.signOut()} accessibilityRole="button">
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Sign out</Text>
