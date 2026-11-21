@@ -7,14 +7,14 @@
     "scheme": "badyet",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#0B1220",
+    "backgroundColor": "#0a1320",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "android": {
       "package": "com.docoats.badyet",
       "adaptiveIcon": {
-        "backgroundColor": "#0B1220",
+        "backgroundColor": "#0a1320",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -32,7 +32,20 @@
       "expo-secure-store",
       "expo-background-task",
       "expo-image",
-      "expo-image-picker"
+      "expo-image-picker",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0a1320",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#0a1320",
+            "image": "./assets/splash-icon.png"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {

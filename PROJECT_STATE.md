@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 2 Build (Expo)
 - **Active slice / milestone:** E2 Data layer, Accounts, Now
 - **Gate:** waiting
-- **Next action:** Approve E2 after checking Now/Accounts on the phone; then E3 Inbox
-- **User to-do now:** Install APK 6cb8b6c4, check Now/Accounts vs web (see handoff)
+- **Next action:** Approve E2 after checking the APK; then E3 Inbox (OTA from here on)
+- **User to-do now:** Install APK from build 3a080187 (replaces older install), check Now/Accounts/Hide vs web; send eas update only after this APK is installed
 
 ## 3. Execution log
 
@@ -38,6 +38,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 13:03 | expo-plan | User asked to include the rest of the web app: added E8-E10 (Plan screens, Settings), release moved to E11; order approved | -
 - 2026-11-21 13:55 | slice-E2 | Mobile Now + Accounts screens (reuse lib/now loadNow, balanceNow), hide amounts, Night Emerald dark/light theme and fonts, Metro/tsconfig share ../lib; 10 tests, tsc, lint, android bundle OK | 0eca0db
 - 2026-11-21 13:57 | expo-plan | Canceled build 6cb8b6c4; added native-freeze step before next build | -
+- 2026-11-21 14:56 | slice-E2 | Native-freeze APK built (build 3a080187, commit 79058c1); Kotlin compiled; includes capture queue and native packages for later slices | 79058c1
 
 ## 4. Open questions
 
