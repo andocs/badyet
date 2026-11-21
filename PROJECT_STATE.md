@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E1-E11 built, awaiting your checks
-- **Gate:** waiting
-- **Next action:** Test on the phone (E5 migration, E6 notifications, E7 Gmail, E8-E11 screens), then approve or request changes slice by slice; decide on merging the branches to main
-- **User to-do now:** Apply capture migration if not done; test Gmail with APK e5f5bd62; trigger real GCash/Maya/GoTyme/MariBank notifications; compare Plan screens with web; send screenshots of anything that differs
+- **Phase:** 3 Revisions (Expo round two)
+- **Active slice / milestone:** Round two planning
+- **Gate:** none
+- **Next action:** New session: /orchestrate, read docs/mobile-next-session.md; start with Z Fold 3 mockups for approval
+- **User to-do now:** Test on the phone (E5 migration, E6, E7, E8-E11); tell me what real data you see or do not see; Google Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:31 | slice-E9 | Plan: Bonuses (year chips, hero, cards with waterfall, destination ticks, CIP multiplier, rules) and Funds (priority list with progress); ported saveInstance with tests; mobile 93 tests, web 332 tests, tsc, lint, web build, bundle OK; OTA published; Vercel checked | 1ecdfbac1f1c5f96c2976371b30fae80675a0ccb
 - 2026-11-21 17:35 | slice-E10 | Plan: Forecast (hero, stacked/lines chart with month tap, year ladder, month cards, story sheet, overrides list) and Settings (paydays editor with ported savePaydays, looks, tax and data notes); mobile 97 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 0588ad64 | 28d9065
 - 2026-11-21 17:39 | slice-E11 | Tab icons, wide-screen column, mobile README; final checks: mobile 97 tests, web 332 tests, tsc, lint, expo-doctor 18/18, web build, bundle OK; Vercel success; OTA group 84a8adcc | 68d82dc
+- 2026-11-21 17:55 | handoff | Merged all slices to main; added Grab/foodpanda senders (E12, OTA 8d6b6c7a); wrote docs/mobile-next-session.md for the next session | 9f958be
 
 ## 4. Open questions
 
@@ -153,7 +154,7 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 
 ## Decisions & architecture
 
-- 2026-11-21 user: Gmail access via @react-native-google-signin/google-signin (free version), built now (E7). Google does not support custom-scheme sign-in for Android clients, so this needs a native module, a new APK, and Google Cloud setup by the user (Gmail API, test user, Android OAuth client with the app's SHA-1, Web client id). Refresh tokens for a Testing-mode app expire after 7 days (re-sign-in about weekly).
+- 2026-11-21 user: merged E1-E12 to main (9f958be). Next session: Z Fold 3 mockups (320x872, less text, more visual), then port the rest of the web app to the phone, capture while the app is closed, Gmail re-sign-in prompt, real data visible. Google Wallet on hold until tomorrow. Grab and foodpanda senders set (no-reply@grab.com, info@mail.foodpanda.ph). Full list: docs/mobile-next-session.md.
 
 ## Run & verify guide (detected by Scout, kept current)
 
