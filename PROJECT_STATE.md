@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E4 Quick add + offline queue
+- **Active slice / milestone:** E4b Parity pass
 - **Gate:** none
-- **Next action:** Build E4
-- **User to-do now:** APK d6ed2977 (notification permission fix) building; E4 in progress
+- **Next action:** Compare web vs phone for Now, Accounts, Inbox, Quick add; fix gaps
+- **User to-do now:** APK d6ed2977 building; E4b in progress
 
 ## 3. Execution log
 
@@ -45,6 +45,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 15:49 | slice-E3 | User paused at E3 gate | -
 - 2026-11-21 16:09 | slice-E3 | APK build d6ed2977: declares POST_NOTIFICATIONS, blocks unused permissions (mic, camera, overlay, storage); Settings asks for notifications. Fixes greyed-out notification access | -
 - 2026-11-21 16:18 | expo-plan | User approved E3 and asked to proceed; added E4b parity pass after E4; later slices include a web parity check | -
+- 2026-11-21 16:23 | slice-E4 | Quick add (amount, where, account, category) saved as confirmed manual expense; local SQLite outbox + idempotent upsert, sync on launch/foreground/network back; cached pickers; 37 tests, tsc, lint, bundle OK; OTA group 436b4a82 | 4b70db4
+- 2026-11-21 16:23 | slice-E4 | E4 approved at gate | -
 
 ## 4. Open questions
 
@@ -79,7 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,085,312 | 8,295,852 | 377,973 | 3,746,313 | 461,872,627 | 2,142,838 |  |
+| **Cumulative** | 2,109,446 | 8,381,043 | 383,934 | 3,791,187 | 474,872,142 | 2,180,639 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -113,6 +115,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E1 | 147,519 | 263,004 | 16,645 | 40,963 | 2,682,280 | 23,457 |  |
 | Slice E2 | 41,685 | 170,665 | 9,995 | 39,565 | 3,339,073 | 22,950 |  |
 | Slice E3 | 28,847 | 110,887 | 5,315 | 26,843 | 2,605,927 | 19,209 |  |
+| Slice E4 | 24,134 | 85,191 | 5,961 | 24,914 | 4,120,774 | 17,102 |  |
 
 <!-- END SUMMARY -->
 
@@ -148,6 +151,16 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E4: what you do now
+1. Get the code:   git fetch && git checkout slice/E4-quick-add   (E1-E3 included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Get the update: no new APK. Open Bad(yet), close it fully, open it again (or Settings > Check for updates). Update group 436b4a82, channel preview.
+6. Check these:    (a) + tab shows Amount, Where, Account, Category and Save expense; (b) save an expense with signal: it says Saved, then appears in Inbox > All activity and in Now recent, and the account balance on Accounts drops after pull-to-refresh; (c) turn on airplane mode, save another: it says it will sync later and the "1 waiting to sync" card shows it; (d) turn airplane mode off: it syncs by itself within a few seconds (or tap Sync now) and the card disappears; (e) it appears once only, not twice; (f) with airplane mode on, close and reopen the app: the queued expense is still there and the account and category lists still show; (g) a bad amount (0, abc) shows the web's message.
+7. Known limits:   offline confirm or ignore in Inbox is not queued (only Quick add is); the entry time is saved as when you tapped Save, not when it syncs; not run against real data by me; Accounts balance and Now show it only after you pull to refresh.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E3: what you do now
 1. Get the code:   git fetch && git checkout slice/E3-inbox   (E1, E2 included; merge to main after you approve)
