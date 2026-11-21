@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions (Expo round two)
 - **Active slice / milestone:** Mockups (cover screen)
-- **Gate:** waiting
-- **Next action:** On approval: slice R1 port Reconcile + Add account (one slice) to the approved Accounts mockup
-- **User to-do now:** Open docs/mockups/index.html and approve or comment per screen; test on the phone; Wallet sample tomorrow
+- **Gate:** paused
+- **Next action:** User reviews docs/mockups/index.html; on approval start slice R1 (Reconcile + Add account)
+- **User to-do now:** Review mockups; test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
