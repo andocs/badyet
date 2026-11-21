@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
-import { deleteRule, saveOfficeAmount, savePaydays, setNotifCapture } from "@/app/(v13)/settings/actions";
+import { deleteRule, savePaydays, setNotifCapture } from "@/app/(v13)/settings/actions";
 import type { FormState } from "@/lib/form-state";
 
 function useAct() {
@@ -15,13 +15,11 @@ const Msg = ({ msg }: { msg: { ok: boolean; text: string } | null }) =>
 
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 
-/** Paydays and the office-day amount. */
-export function PaydaysCard({ first, second, officeAmount }: { first: number; second: number; officeAmount: string }) {
+/** Paydays. The office-day amount is worked out from the RTO lines on Budget, so it is not set here. */
+export function PaydaysCard({ first, second }: { first: number; second: number }) {
   const [a, setA] = useState(first);
   const [b, setB] = useState(second);
-  const [amt, setAmt] = useState(officeAmount);
   const p = useAct();
-  const o = useAct();
   return (
     <section className="v-card v-stack" aria-labelledby="pd">
       <h2 id="pd">Paydays</h2>
@@ -32,11 +30,6 @@ export function PaydaysCard({ first, second, officeAmount }: { first: number; se
       <p className="v-xs v-muted" style={{ margin: 0 }}>Cutoffs run payday to payday: paid the {ord(a)} covers the {ord(a + 1)}–{ord(b - 1)}; paid the {ord(b)} covers the {ord(b)}–{ord(a)} of next month.</p>
       <div className="v-row v-wrap"><button type="button" className="v-btn v-sm v-pri" disabled={p.busy} onClick={() => p.act(() => savePaydays({ first: a, second: b }), "Saved.")}>Save paydays</button></div>
       <Msg msg={p.msg} />
-      <hr className="v-hr" />
-      <label className="v-field">Added to your daily amount on a usual office day (₱)<input value={amt} inputMode="decimal" onChange={(e) => setAmt(e.target.value)} placeholder="0" /></label>
-      <p className="v-xs v-muted" style={{ margin: 0 }}>Commute and lunch for an office day. Which weekdays are office days is set on Budget.</p>
-      <div className="v-row v-wrap"><button type="button" className="v-btn v-sm" disabled={o.busy} onClick={() => o.act(() => saveOfficeAmount(amt), "Saved.")}>Save amount</button></div>
-      <Msg msg={o.msg} />
     </section>
   );
 }

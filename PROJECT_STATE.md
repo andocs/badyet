@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve rev-1..rev-4 slice plan
-- **User to-do now:** -
+- **Next action:** Approve or request changes on rev/1-batch-notes
+- **User to-do now:** Try the changes on desktop and phone, merge rev/1-batch-notes to main
 
 ## 3. Execution log
 
@@ -42,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-20 22:57 | slice-7 | Setup wizard (5 steps, live payslip), Settings, old shell/pages/libs and tests removed, exports and e2e routes updated, optional retire-old-tables.sql. Local commit, not pushed, not run in a browser. | -
 - 2026-11-20 22:58 | slice-7 | Slice 7 approved by the user. Web rehaul complete. | 94281f7
 - 2026-11-20 23:14 | perf | Merged slices 1 to 7 into main (local, fast-forward). Perf: loading skeleton for every page, 30s client cache (staleTimes), budget loader queries in parallel. Not pushed. | -
+- 2026-11-21 09:00 | rev-1 | Revision batch: budget hero left/take-home, cutoff circle collision fix (.v-bc), bonuses skeleton + parallel loads, budget load parallel, 22 colors, login restyle, phone More sheet, inbox header, runway narrow chart, half-year strip | 632b83f
 
 ## 4. Open questions
 
@@ -58,7 +59,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,396,718 | 5,624,276 | 260,303 | 3,014,617 | 361,622,787 | 1,766,749 |  |
+| **Cumulative** | 1,551,885 | 6,544,161 | 285,850 | 3,167,962 | 394,080,498 | 1,825,743 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -78,6 +79,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-29 | 4,574 | 30,482 | 744 | 22,631 | 993,397 | 7,844 |  |
 | rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
+| rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
 
 <!-- END SUMMARY -->
 
@@ -118,6 +120,8 @@ All 15 earlier open questions are answered in docs/rehaul/ia.md under "Decisions
 Mockups are static HTML: open docs/mockups/v13-gallery.html. Mock data and tax rules in docs/mockups/v13-data.js are simplified and invented; the real engine in lib/ stays the source of truth. Mockups share some state through localStorage keys (v13place, v13raise, v13settle, v13hide, v13theme) only to demo cross-page behaviour.
 
 ## Slice handoffs (what the user does after each slice)
+
+Try on desktop and a phone (or 360px width): Budget hero shows left / take-home; the 1/2 circles have no extra box; Bonuses year tabs show a skeleton; color pickers have 22 colors; login matches the app; phone More tab opens every other page; Inbox tabs stay on one line; Now chart is readable; Budget Future years shows six months with arrows. Branch rev/1-batch-notes is pushed; merge to main when happy. No migrations.
 
 Slice 7 (First run wizard, Settings, retire old pages) is built and committed locally on slice/7-first-run-settings-retire (not pushed; stacked on slices 2 to 6). No new migration.
 1. Setup wizard (/setup): five skippable steps (accounts with opening balances, salary with optional SSS and Pag-IBIG, paydays, starter budget lines, starter funds) with a live "setup so far" payslip. Re-running it from Settings adds to what you have. Now and Salary and tax point to it when there is no salary.

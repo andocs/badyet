@@ -145,7 +145,7 @@ function RunwaySvg({ view, W, H, cls }: { view: NowView; W: number; H: number; c
       {ticks.map((v) => (
         <g key={v}>
           <line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />
-          <text x={L - 6} y={y(v) + 4} textAnchor="end">₱{v / 100 >= 1000 ? `${v / 100000}k` : v / 100}</text>
+          <text className="amt" x={L - 6} y={y(v) + 4} textAnchor="end">₱{v / 100 >= 1000 ? `${v / 100000}k` : v / 100}</text>
         </g>
       ))}
       {[1, Math.ceil(view.daysTotal / 3), Math.ceil((view.daysTotal * 2) / 3), view.daysTotal].map((d) => (

@@ -3,7 +3,6 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
-import { parsePesos } from "@/lib/domain/money";
 import { validatePaydays } from "@/lib/setup/input";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,17 +23,6 @@ export async function savePaydays(input: { first: number; second: number }): Pro
   const v = validatePaydays(input.first, input.second);
   if (!v.ok) return { error: v.error };
   const ok = await saveSettingsRow(supabase, { first_payday_day: v.value.first, second_payday_day: v.value.second, first_cutoff_start_day: v.value.first + 1, second_cutoff_start_day: v.value.second });
-  if (!ok) return { error: "That did not save. Try again." };
-  refresh();
-  return { ok: true };
-}
-
-/** The peso amount added to the daily amount on a usual office day. */
-export async function saveOfficeAmount(text: string): Promise<FormState> {
-  const supabase = await requireAuthed();
-  const v = parsePesos(text.trim() === "" ? "0" : text);
-  if (v === undefined || v < 0 || v > 100_000_000) return { error: "Enter an amount like 250." };
-  const ok = await saveSettingsRow(supabase, { rto_amount: v });
   if (!ok) return { error: "That did not save. Try again." };
   refresh();
   return { ok: true };

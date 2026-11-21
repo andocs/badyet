@@ -158,11 +158,13 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
 
   const poolEntries = rows<{ kind: PoolEntrySpec["kind"]; amount: number; occurred_on: string }>(poolEntryRes);
   const specs: PoolEntrySpec[] = poolEntries.map((e) => ({ kind: e.kind, amount: money(e.amount) }));
+  // The office-day amount is never typed: it is the RTO lines' cutoff total divided by the usual office days in the cutoff.
+  const dayBudget = rtoDayBudget(here.budget.rtoTotal[period.which === 1 ? "first" : "second"], usualOfficeDays(period, settings.office_days));
   const view = buildNowView({
     today,
     paydays,
     officeDays: settings.office_days,
-    officeDayAmount: money(settings.rto_amount),
+    officeDayAmount: dayBudget,
     budget: here.budget,
     lines,
     categories,
@@ -183,7 +185,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   const settleOpen = settleRows({
     days,
     spendByDay,
-    dayBudget: rtoDayBudget(here.budget.rtoTotal[period.which === 1 ? "first" : "second"], usualOfficeDays(period, settings.office_days)),
+    dayBudget,
     settledDays: new Set(poolEntries.filter((e) => ["settle_to_pool", "settle_to_wants", "over_from_wants", "over_from_excess"].includes(e.kind)).map((e) => e.occurred_on)),
     today,
   }).filter((r) => !r.settled).length;

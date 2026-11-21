@@ -25,7 +25,7 @@ export function RailLinks({ items }: { items: NavItem[] }) {
     <>
       {items.map((item) =>
         item.href ? (
-          <Link key={item.label} href={item.href} aria-current={isCurrent(path, item) ? "page" : undefined}>
+          <Link key={item.label} href={item.href} prefetch aria-current={isCurrent(path, item) ? "page" : undefined}>
             <V13Icon name={item.icon} />
             {item.label}
             {item.badge ? <span className="v-badge" aria-label={`${item.badge} to check`}>{item.badge}</span> : null}
@@ -47,7 +47,7 @@ export function PhoneTabs({ inbox, plan, more }: { inbox: NavItem; plan: NavItem
   const sheet = useRef<HTMLDialogElement>(null);
   useEffect(() => sheet.current?.close(), [path]);
   const tab = (item: NavItem) => (
-    <Link key={item.label} href={item.href!} aria-current={isCurrent(path, item) ? "page" : undefined}>
+    <Link key={item.label} href={item.href!} prefetch aria-current={isCurrent(path, item) ? "page" : undefined}>
       <V13Icon name={item.icon} />
       {item.label}
       {item.badge ? <span className="v-badge" aria-label={`${item.badge} to check`}>{item.badge}</span> : null}

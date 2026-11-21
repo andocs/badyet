@@ -199,14 +199,14 @@ export function OverrideBulk({ year, years, funds, rows, firstMonths }: { year: 
                   return (
                     <td key={r.month}>
                       <button type="button" className={`v-cell ${kind} ${cell?.month === r.month && cell.fund === f.id ? "v-sel" : ""}`} aria-label={`${f.name}, ${label(r.month)}: ${((c?.amount ?? 0) / 100).toFixed(2)} pesos${kind ? (kind === "v-pin" ? ", pinned" : ", skipped") : ""}`} onClick={() => setCell({ month: r.month, fund: f.id, v: String(Math.round((c?.amount ?? 0) / 100)) })}>
-                        {c && c.amount > 0 ? short(c.amount) : "0"}<small>{c && c.bonus > 0 ? `+${Math.round(c.bonus / 100000)}k bonus` : (c?.reasons[0] ?? "").replace("priority ", "#")}</small>
+                        <span className="amt">{c && c.amount > 0 ? short(c.amount) : "0"}</span><small>{c && c.bonus > 0 ? `+${Math.round(c.bonus / 100000)}k bonus` : (c?.reasons[0] ?? "").replace("priority ", "#")}</small>
                       </button>
                     </td>
                   );
                 })}
               </tr>
             ))}
-            <tr className="v-tot"><td>Pool</td>{yearRows.map((r) => <td key={r.month} style={{ padding: "8px 2px" }}>{short(r.pool)}</td>)}</tr>
+            <tr className="v-tot"><td>Pool</td>{yearRows.map((r) => <td key={r.month} style={{ padding: "8px 2px" }}><span className="amt">{short(r.pool)}</span></td>)}</tr>
           </tbody>
         </table>
       </div>

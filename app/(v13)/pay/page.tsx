@@ -165,8 +165,18 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
 }
 
 /** Regular take-home per cutoff over 60 months: solid, dashed where an assumed raise applies, hollow markers for expected events. */
-function Chart({ range, events }: { range: ReturnType<typeof regularRange>; events: { month: YearMonth; expected: boolean }[] }) {
-  const W = 960, H = 240, L = 54, R = 10, T = 14, B = 28;
+function Chart(props: { range: ReturnType<typeof regularRange>; events: { month: YearMonth; expected: boolean }[] }) {
+  // Drawn twice at its own size (wide, and a narrow one for phones) so the labels stay readable instead of shrinking.
+  return (
+    <>
+      <ChartSvg {...props} W={960} H={240} cls="v-wid" />
+      <ChartSvg {...props} W={380} H={260} cls="v-nar" />
+    </>
+  );
+}
+
+function ChartSvg({ range, events, W, H, cls }: { range: ReturnType<typeof regularRange>; events: { month: YearMonth; expected: boolean }[]; W: number; H: number; cls: string }) {
+  const L = 54, R = 10, T = 14, B = 28;
   const v1 = range.map((r) => r.pay.first.takeHome);
   const v2 = range.map((r) => r.pay.second.takeHome);
   const all = [...v1, ...v2];
@@ -195,11 +205,11 @@ function Chart({ range, events }: { range: ReturnType<typeof regularRange>; even
   const yearsShown = range.filter((r) => r.month.endsWith("-01")).map((r) => r.month);
   const indexOf = (m: string) => range.findIndex((r) => r.month === m);
   return (
-    <svg className="v-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Regular take-home for each cutoff over five years, without bonuses" style={{ marginTop: 8 }}>
+    <svg className={`v-chart ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Regular take-home for each cutoff over five years, without bonuses" style={{ marginTop: 8 }}>
       {ticks.map((v) => (
         <g key={v}>
           <line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} />
-          <text x={L - 6} y={y(v) + 4} textAnchor="end">₱{Math.round(v / 100_000)}k</text>
+          <text className="amt" x={L - 6} y={y(v) + 4} textAnchor="end">₱{Math.round(v / 100_000)}k</text>
         </g>
       ))}
       {yearsShown.map((m) => <text key={m} x={x(indexOf(m))} y={H - 8} textAnchor="middle">{m.slice(0, 4)}</text>)}

@@ -45,7 +45,7 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
             ) : (
               <>
                 <section className="v-hero" aria-labelledby="hh">
-                  <div className="v-row v-sp v-wrap">
+                  <div className="v-row v-sp v-hrow">
                     <div>
                       <div className="v-lbl" id="hh">Bonus money in {year}, after tax</div>
                       <div className="v-big v-xl num">{formatPesos(sum.net)}</div>

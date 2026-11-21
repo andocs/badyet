@@ -104,7 +104,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
 
   return (
     <div className="v-stack">
-      <div className="v-row v-sp v-wrap">
+      <div className="v-row v-sp v-wrap v-pbhead">
         <div>
           <h2>Payslip builder</h2>
           <div className="v-lbl">Build each cutoff&apos;s payslip once. Regular lines repeat every month; bonuses appear in the month they land.</div>
@@ -120,7 +120,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
         </div>
       </div>
 
-      <div className="v-row v-wrap" style={{ gap: 16 }}>
+      <div className="v-row v-wrap v-pbctl" style={{ gap: 16 }}>
         <label className="v-row" style={{ gap: 8 }}>
           <span className="v-sm v-muted">Base pay in 1st cutoff</span>
           <input className="v-lbl-in" style={{ width: 76, minHeight: 40, textAlign: "right" }} inputMode="decimal" defaultValue={shareOf("first", "base_share") / 100} key={`b${shareOf("first", "base_share")}`} onBlur={(e) => setSplit("base_share", Number(e.target.value) || 0)} aria-label="Percent of base paid in the 1st cutoff" />
@@ -147,7 +147,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
         <summary style={{ cursor: "pointer", fontWeight: 800, fontFamily: "var(--font-display)", fontSize: 18, minHeight: 32 }}>Income tax working</summary>
         <div style={{ marginTop: 10 }}>
           <div className="v-row v-sp v-sm" style={{ padding: "4px 0" }}>
-            <span>Taxable pay per year <span className="v-xs v-muted">(base {fmt(salary.base)} − contributions {fmt(money((pay.sss + pay.philhealth + pay.pagibig) as number))} + taxable allowances) × 12 + one-time</span></span>
+            <span>Taxable pay per year <span className="v-xs v-muted">(base <span className="amt">{fmt(salary.base)}</span> − contributions <span className="amt">{fmt(money((pay.sss + pay.philhealth + pay.pagibig) as number))}</span> + taxable allowances) × 12 + one-time</span></span>
             <b><Money value={money((pay.regularTaxable * 12 + pay.oneTimeTaxable) as number)} /></b>
           </div>
           <div className="v-scrollx">
@@ -195,7 +195,7 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
         <tr key={d.key}>
           <td className="v-nm"><b>{line.label}</b>
             <small>
-              {d.spec.source === "base_share" ? `${(d.spec.shareBp ?? 5000) / 100}% of ${fmt(salary.base)}` : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) / 100}% of the month's tax` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
+              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) / 100}% of the month's tax` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
             </small>
           </td>
           <td>

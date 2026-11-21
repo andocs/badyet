@@ -119,7 +119,7 @@ function Summary({ shown, fut, data, wantsAdj }: { shown: ProjectionMonth; fut: 
         <div className="v-row v-sp v-wrap">
           <div>
             <div className="v-lbl">Left of take-home, {ymLabel(shown.month)}{shown.assumed ? " (assumed raise)" : ""}</div>
-            <div className="v-big v-num" style={{ fontSize: 38 }}>{formatPesos(money(Math.max(0, rest)))}<span className="v-lbl" style={{ fontSize: 18, fontWeight: 700 }}> / {formatPesos(take)}</span></div>
+            <div className="v-big" style={{ fontSize: 38 }}><span className="amt v-num">{formatPesos(money(Math.max(0, rest)))}</span><span className="v-lbl" style={{ fontSize: 18, fontWeight: 700 }}> / <span className="amt v-num">{formatPesos(take)}</span></span></div>
           </div>
         </div>
         <div className="v-row v-wrap" style={{ marginTop: 10, gap: 8 }}>

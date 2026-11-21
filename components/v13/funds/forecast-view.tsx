@@ -193,8 +193,18 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
 }
 
 /** Stacked area or lines for the visible funds, with a tap target for every month. */
-function Chart({ rows, funds, stacked, onPick, sel }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (m: string) => void; sel: string | null }) {
-  const W = 960, H = 280, L = 56, R = 10, T = 14, B = 28;
+function Chart(props: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (m: string) => void; sel: string | null }) {
+  // Drawn twice at its own size (wide, and a narrow one for phones) so the labels stay readable instead of shrinking.
+  return (
+    <>
+      <ChartSvg {...props} W={960} H={280} cls="v-wid" />
+      <ChartSvg {...props} W={380} H={300} cls="v-nar" />
+    </>
+  );
+}
+
+function ChartSvg({ rows, funds, stacked, onPick, sel, W, H, cls }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (m: string) => void; sel: string | null; W: number; H: number; cls: string }) {
+  const L = 56, R = 10, T = 14, B = 28;
   const n = rows.length;
   const x = (i: number) => L + ((W - L - R) * i) / Math.max(1, n - 1);
   const data = useMemo(() => {
@@ -212,8 +222,8 @@ function Chart({ rows, funds, stacked, onPick, sel }: { rows: ForecastRow[]; fun
   const ticks = Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => i * step);
   const ovIdx = rows.map((r, i) => (r.override ? i : -1)).filter((i) => i >= 0);
   return (
-    <svg className="v-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Fund balances over the next five years" style={{ marginTop: 10 }}>
-      {ticks.map((v) => (<g key={v}><line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text x={L - 6} y={y(v) + 4} textAnchor="end">₱{v >= 100_000_000 ? `${+(v / 100_000_000).toFixed(1)}M` : `${Math.round(v / 100_000)}k`}</text></g>))}
+    <svg className={`v-chart ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Fund balances over the next five years" style={{ marginTop: 10 }}>
+      {ticks.map((v) => (<g key={v}><line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text className="amt" x={L - 6} y={y(v) + 4} textAnchor="end">₱{v >= 100_000_000 ? `${+(v / 100_000_000).toFixed(1)}M` : `${Math.round(v / 100_000)}k`}</text></g>))}
       {rows.filter((r) => r.month.endsWith("-01")).map((r) => <text key={r.month} x={x(rows.indexOf(r))} y={H - 8} textAnchor="middle">{r.year}</text>)}
       {[...data.layers].reverse().map(({ f, vals, bottom }) => stacked ? (
         <path key={f.id} d={`M${vals.map((v, i) => `${x(i)} ${y(v)}`).join(" L")} L${[...bottom].map((v, i) => `${x(i)} ${y(v)}`).reverse().join(" L")} Z`} style={{ fill: f.color, fillOpacity: 0.85 }} />
