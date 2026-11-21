@@ -10,7 +10,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions (Expo round two)
 - **Active slice / milestone:** Round two built; awaiting device test
 - **Gate:** none
-- **Next action:** User reports on device; fix what fails; Wallet capture when sample arrives
+- **Next action:** User reports whether loading after a while is fixed; if not, get the exact message shown
 - **User to-do now:** Test More pages and Now after the update; capture with app closed; send Wallet sample
 
 ## 3. Execution log
@@ -50,6 +50,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 19:40 | G5 | Settings: Paydays and Office days edit in sheets, Export data (CSV of 15 tables via the share sheet, same list as web, no new native package), Setup wizard stays on web. tsc and vitest (mobile 144) pass. APK build 41fcb12d FINISHED (runtime 1.1.0, from G1 commit): https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk. Branches rev/4 to rev/8 stacked, unmerged. | 271fa5f
 - 2026-11-21 19:44 | G1-G5-release | Merged G1-G5 to main (633541c), Vercel green, OTA group 3d883ed9 published on runtime 1.1.0. APK 1.1.0: https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk | 633541c
 - 2026-11-21 19:56 | rev-9 | Fixed More pages redirecting to Now (hidden tabs cannot be focused in this expo-router; pages are now tabs with no button). Trimmed Now text. Edit account added on web (editAccount action + dialog) and phone (shared parseAccountEdit with tests). Merged 4c17f59, Vercel green, OTA published. | 4c17f59
+- 2026-11-21 23:50 | rev-10 | Background capture confirmed working by user. Reported: app does not load or refresh after some time. Fix: supabase auto-refresh start/stop on AppState, useLoad reloads when a screen returns to the front after 20 s and retries once after refreshSession on a JWT or expired error. Merged, OTA published. Cause not confirmed on device. | -
 
 ## 4. Open questions
 
