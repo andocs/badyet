@@ -13,8 +13,8 @@ interface Item {
 const ITEMS: Item[] = [
   { title: 'Salary and tax', blurb: 'Your pay, raises and allowances, month by month.', href: '/plan/salary' },
   { title: 'Budget', blurb: 'What the rules say each cutoff, and what has gone out.', href: '/plan/budget' },
-  { title: 'Bonuses', blurb: '13th month and other bonuses.' },
-  { title: 'Funds', blurb: 'Money you set aside for goals.' },
+  { title: 'Bonuses', blurb: '13th month and other bonuses.', href: '/plan/bonuses' },
+  { title: 'Funds', blurb: 'Money you set aside for goals.', href: '/plan/funds' },
   { title: 'Forecast', blurb: 'Where the next months and years lead.' },
   { title: 'Settings', blurb: 'Paydays, notifications, capture rules, Gmail.', href: '/settings' },
 ];

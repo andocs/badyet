@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E8 Plan: Budget and Salary
+- **Active slice / milestone:** E9 Plan: Bonuses and Funds
 - **Gate:** none
-- **Next action:** Build E8 while E7 awaits testing
-- **User to-do now:** E7 gate still open: install APK e5f5bd62, connect Gmail, check captures
+- **Next action:** Build E9 (user asked to continue through E11; E7 and E8 checks pending on phone)
+- **User to-do now:** E7 Gmail test (APK e5f5bd62) and E8 Plan check pending; E9 in progress
 
 ## 3. Execution log
 
@@ -45,6 +45,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:04 | slice-E7 | Gmail capture: email reader and BPI/Grab/foodpanda parsers (shared lib/capture/email, 14 tests), Gmail REST client, runner (seen ids, held items, cross-source duplicate check for emails), connect card, google-signin library loaded defensively so older builds do not crash; mobile 73 tests, web 324 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group ed63cce6; APK build e5f5bd62 started | d201f21
 - 2026-11-21 17:20 | slice-E7 | E7 awaiting user test (APK e5f5bd62, Google Cloud setup done by user, web client id set, OTA 0c3a2b79). User asked to proceed with E8-E11 meanwhile | -
 - 2026-11-21 17:22 | slice-E7 | Gmail APK finished: build e5f5bd62, https://expo.dev/artifacts/eas/34GCgyG4EtnV_VjM5vLCBTf5H9g_h5T7li5ilIsk6pg.apk | d201f21
+- 2026-11-21 17:28 | slice-E8 | Plan tab (Settings moved inside); Budget screen (shared lib/budget/screen.ts with 8 tests, groups, line editor, future years) and Salary screen (chart, events, allowances, projected raises, year table) with ported write actions tested; mobile 88 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c15b540c | a177ea0
 
 ## 4. Open questions
 
@@ -79,7 +80,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,195,532 | 8,684,157 | 406,064 | 4,003,669 | 514,312,550 | 2,351,038 |  |
+| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,086,451 | 532,423,964 | 2,400,105 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -118,6 +119,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E5 | 34,760 | 127,057 | 10,165 | 56,170 | 9,020,239 | 41,456 |  |
 | Slice E6 | 0 | 0 | 0 | 47,276 | 8,147,375 | 38,297 |  |
 | Slice E7 | 51,326 | 176,057 | 11,965 | 62,827 | 12,471,116 | 46,107 |  |
+| Slice E8 | 79,192 | 504,268 | 18,351 | 77,312 | 15,256,078 | 44,347 |  |
 
 <!-- END SUMMARY -->
 
@@ -152,6 +154,16 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E8 (Plan: Budget and Salary): what you do now
+1. Get the code:   git fetch && git checkout slice/E8-plan-budget-salary
+2. Install deps:   no new deps
+3. Database:       none
+4. Config:         none
+5. Get the update: open the app twice (or Settings > Check for updates): update group c15b540c. No new APK.
+6. Check these:    the Settings tab is now the Plan tab (Settings is inside Plan). Plan > Budget: header with This month / Future years, hero "left of take-home" with fixed-lines, cutoff and daily-pool pills, tight/over flag, groups with share bars and lines (rule, cutoff, account, spent or sent); tap a line to edit (name, category, rule, amount or percent, cutoff, account, start/end, draft, daily, office-day kind) or delete; + Add a line per group; Future years has year arrows and 12 month chips. Plan > Salary and tax: take-home chart with markers, events (Confirm / Remove), recurring allowances (cutoff 1st/2nd, Remove), projected raises (switch, percent, month, Save), year by year. Compare each against the web page.
+7. Known limits:   not run against your real data by me. Still on the web only: Budget's settle office days, pools, categories and the RTO card; the raise wizard (add a raise) and the payslip builder; Future-years "compare without expected raises". The shared Budget view code (lib/budget/screen.ts) is a copy of the web page's assembly, tested; the web page still builds its own view.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E7 (Gmail capture): what you do now
 1. Get the code:   git fetch && git checkout slice/E7-gmail-capture   (E1-E6 included; merge to main after you approve)
