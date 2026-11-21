@@ -34,7 +34,9 @@ export default async function Settings() {
         <section className="v-card v-stack" aria-labelledby="lk">
           <h2 id="lk">Looks</h2>
           <div className="v-row v-wrap" style={{ gap: 8 }}><ThemeToggle className="v-btn v-sm" /><HideAmounts className="v-btn v-sm" withIcon /></div>
-          <div className="v-row v-sp"><b>Setup wizard</b><Link className="v-btn v-sm" href="/setup">Run again</Link></div>
+        </section>
+        <section className="v-card v-stack" aria-labelledby="sw">
+          <div className="v-row v-sp"><h2 id="sw">Setup wizard</h2><Link className="v-btn v-sm" href="/setup">Run again</Link></div>
           <p className="v-xs v-muted" style={{ margin: 0 }}>Running it again adds to what you have: new accounts and budget lines are added, and your starting salary and paydays are updated.</p>
         </section>
         <section className="v-card v-stack" aria-labelledby="yd">

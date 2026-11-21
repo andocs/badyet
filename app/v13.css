@@ -756,9 +756,7 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-pickbtn{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer}
 .v13 .v-pickbtn:hover{border-color:var(--muted)}
 .v13 .v-pickbtn::after{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 2px 0 8px;flex:none}
-.v13 .v-pick .v-qa{gap:16px}
 .v13 .v-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.v13 .v-pg.v-months4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .v13 .v-pg.v-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
 .v13 .v-pg button,.v13 .v-moy button{min-height:48px;border-radius:10px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer;color:var(--ink)}
 .v13 .v-pg.v-days button{min-height:44px;border-radius:999px}
@@ -768,3 +766,15 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-moy{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
 .v13 .v-moy button{min-height:40px;border-radius:999px;font-size:13px}
 @media(max-width:559px){.v13 .v-moy{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* Calendar-style popover for the month and day pickers (replaces the full sheet) */
+.v13 .v-popp{position:fixed;inset:auto;margin:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 12px 36px rgba(0,0,0,.35);display:none;flex-direction:column;gap:12px}
+.v13 .v-popp:popover-open{display:flex}
+.v13 .v-pophd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.v13 .v-yearbtn{font:800 16px var(--font-display);color:var(--ink);background:none;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;min-height:40px}
+.v13 .v-yearbtn::after{content:"";display:inline-block;width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 0 0 8px;vertical-align:middle;transition:transform .15s}
+.v13 .v-yearbtn[aria-expanded=true]::after{transform:rotate(225deg);margin-top:2px}
+.v13 .v-yearbtn:hover{background:var(--soft)}
+.v13 .v-pg.v-months3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v13 .v-pg.v-years{grid-template-columns:repeat(3,minmax(0,1fr));max-height:232px;overflow-y:auto;padding:2px}
+.v13 .v-popp .v-pg button{min-height:42px;font-size:14px}

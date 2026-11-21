@@ -6,29 +6,53 @@ import type { YearMonth } from "@/lib/domain/dates";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 const labelOf = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
+const ymOf = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}` as YearMonth;
 
-/** A small sheet the pickers open in, matching the app's other dialogs. */
-function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLDialogElement>(null);
+/**
+ * A small panel that opens under its field, like a calendar picker. It sits in the browser's top layer, so a dialog or a scrolling
+ * sheet never clips it, and it closes when you tap outside, press Escape, scroll or resize.
+ */
+function Popover({ anchor, open, onClose, label, children }: { anchor: React.RefObject<HTMLButtonElement | null>; open: boolean; onClose: () => void; label: string; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const d = ref.current;
-    if (!d) return;
-    if (open && !d.open) d.showModal();
-    if (!open && d.open) d.close();
-  }, [open]);
+    const el = ref.current;
+    const btn = anchor.current;
+    if (!el || !btn) return;
+    if (!open) {
+      if (el.matches(":popover-open")) el.hidePopover();
+      return;
+    }
+    const place = () => {
+      const r = btn.getBoundingClientRect();
+      const width = Math.min(320, window.innerWidth - 16);
+      const height = el.offsetHeight || 340;
+      const left = Math.min(Math.max(8, r.left), window.innerWidth - width - 8);
+      const below = r.bottom + 6;
+      const top = below + height > window.innerHeight - 8 ? Math.max(8, r.top - height - 6) : below;
+      el.style.width = `${width}px`;
+      el.style.left = `${left}px`;
+      el.style.top = `${top}px`;
+    };
+    if (!el.matches(":popover-open")) el.showPopover();
+    place();
+    const onScroll = (e: Event) => { if (!el.contains(e.target as Node)) onClose(); };
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", onClose);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onClose);
+    };
+  }, [open, anchor, onClose]);
   return (
-    <dialog ref={ref} className="v-fdlg v-pick" aria-label={title} onClose={onClose} onClick={(e) => e.target === ref.current && onClose()}>
-      <div className="v-qa">
-        <div className="v-grab" aria-hidden="true" />
-        {open ? children : null}
-      </div>
-    </dialog>
+    <div ref={ref} popover="auto" role="dialog" aria-label={label} className="v-popp" onToggle={(e) => { if (e.newState === "closed") onClose(); }}>
+      {open ? children : null}
+    </div>
   );
 }
 
 /**
- * Picks a month and year without dropdowns. It opens on the years first, then the months of the year you chose.
- * Pass `name` to submit it with a form; `clearable` lets the value be empty.
+ * Picks a month and year without dropdowns, like a calendar: a grid of months for the year, arrows to change the year, and the year
+ * itself opens a grid of years. Pass `name` to submit it with a form; `clearable` lets the value be empty.
  */
 export function MonthPicker({ value, onChange, min, max, label, name, clearable, placeholder = "Not set" }: {
   value: string;
@@ -40,45 +64,43 @@ export function MonthPicker({ value, onChange, min, max, label, name, clearable,
   clearable?: boolean;
   placeholder?: string;
 }) {
+  const btn = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
-  const [year, setYear] = useState<number | null>(null);
+  const [year, setYear] = useState(() => Number((value || min).slice(0, 4)));
+  const [years, setYears] = useState(false);
   const first = Number(min.slice(0, 4));
   const last = Number(max.slice(0, 4));
-  const years = Array.from({ length: last - first + 1 }, (_, i) => first + i);
-  const pickYear = (y: number) => setYear(y);
-  const close = () => { setOpen(false); setYear(null); };
-  const inRange = (y: number, m: number) => { const ym = `${y}-${String(m).padStart(2, "0")}`; return ym >= min && ym <= max; };
+  const close = () => { setOpen(false); setYears(false); };
+  const inRange = (y: number, m: number) => { const ym = ymOf(y, m); return ym >= min && ym <= max; };
+  const yearList = Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  const shownYear = Math.min(Math.max(year, first), last);
 
   return (
     <>
       {name ? <input type="hidden" name={name} value={value} /> : null}
-      <button type="button" className="v-pickbtn" aria-haspopup="dialog" aria-label={`${label}: ${value ? labelOf(value) : placeholder}. Change`} onClick={() => { setYear(null); setOpen(true); }}>
+      <button ref={btn} type="button" className="v-pickbtn" aria-haspopup="dialog" aria-expanded={open} aria-label={`${label}: ${value ? labelOf(value) : placeholder}. Change`}
+        onClick={() => { setYear(Number((value || min).slice(0, 4))); setYears(false); setOpen(true); }}>
         <span className={value ? "" : "v-muted"}>{value ? labelOf(value) : placeholder}</span>
       </button>
-      <Sheet open={open} onClose={close} title={label}>
-        <div className="v-row v-sp">
-          <h2>{year === null ? "Pick a year" : `${year}`}</h2>
-          <button type="button" className="v-iconbtn v-s" aria-label="Close" onClick={close}>×</button>
+      <Popover anchor={btn} open={open} onClose={close} label={label}>
+        <div className="v-pophd">
+          <button type="button" className="v-iconbtn v-s" aria-label="Previous year" disabled={years || shownYear <= first} onClick={() => setYear(shownYear - 1)}>‹</button>
+          <button type="button" className="v-yearbtn" aria-expanded={years} onClick={() => setYears(!years)}>{shownYear}</button>
+          <button type="button" className="v-iconbtn v-s" aria-label="Next year" disabled={years || shownYear >= last} onClick={() => setYear(shownYear + 1)}>›</button>
         </div>
-        {year === null ? (
-          <div className="v-pg" role="group" aria-label="Year">
-            {years.map((y) => <button key={y} type="button" aria-pressed={value.startsWith(String(y))} onClick={() => pickYear(y)}>{y}</button>)}
+        {years ? (
+          <div className="v-pg v-years" role="group" aria-label="Year">
+            {yearList.map((y) => <button key={y} type="button" aria-pressed={y === shownYear} ref={(el) => { if (el && y === shownYear) el.scrollIntoView({ block: "center" }); }} onClick={() => { setYear(y); setYears(false); }}>{y}</button>)}
           </div>
         ) : (
-          <>
-            <div className="v-pg v-months4" role="group" aria-label={`Month in ${year}`}>
-              {MON.map((m, i) => (
-                <button key={m} type="button" disabled={!inRange(year, i + 1)} aria-pressed={value === `${year}-${String(i + 1).padStart(2, "0")}`} onClick={() => { onChange(`${year}-${String(i + 1).padStart(2, "0")}` as YearMonth); close(); }}>{m}</button>
-              ))}
-            </div>
-            <div className="v-row v-sp">
-              <button type="button" className="v-btn v-sm v-ghost" onClick={() => setYear(null)}>← Years</button>
-              {clearable && value ? <button type="button" className="v-btn v-sm" onClick={() => { onChange(""); close(); }}>Clear</button> : null}
-            </div>
-          </>
+          <div className="v-pg v-months3" role="group" aria-label={`Month in ${shownYear}`}>
+            {MON.map((m, i) => (
+              <button key={m} type="button" disabled={!inRange(shownYear, i + 1)} aria-pressed={value === ymOf(shownYear, i + 1)} onClick={() => { onChange(ymOf(shownYear, i + 1)); close(); }}>{m}</button>
+            ))}
+          </div>
         )}
-        {year === null && clearable && value ? <button type="button" className="v-btn v-sm" onClick={() => { onChange(""); close(); }}>Clear</button> : null}
-      </Sheet>
+        {clearable && value ? <button type="button" className="v-btn v-sm v-ghost" onClick={() => { onChange(""); close(); }}>Clear</button> : null}
+      </Popover>
     </>
   );
 }
@@ -94,22 +116,22 @@ export function MonthOfYear({ value, onChange, label, disabled }: { value: numbe
 
 /** A day of the month as a calendar grid, for paydays. */
 export function DayOfMonth({ value, onChange, min = 1, max = 28, label }: { value: number; onChange: (d: number) => void; min?: number; max?: number; label: string }) {
+  const btn = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
     <>
-      <button type="button" className="v-pickbtn" aria-haspopup="dialog" aria-label={`${label}: the ${ord(value)}. Change`} onClick={() => setOpen(true)}>
+      <button ref={btn} type="button" className="v-pickbtn" aria-haspopup="dialog" aria-expanded={open} aria-label={`${label}: the ${ord(value)}. Change`} onClick={() => setOpen(true)}>
         <span>{ord(value)}</span>
       </button>
-      <Sheet open={open} onClose={close} title={label}>
-        <div className="v-row v-sp"><h2>{label}</h2><button type="button" className="v-iconbtn v-s" aria-label="Close" onClick={close}>×</button></div>
+      <Popover anchor={btn} open={open} onClose={close} label={label}>
+        <div className="v-pophd"><b>{label}</b></div>
         <div className="v-pg v-days" role="group" aria-label="Day of the month">
           {Array.from({ length: 28 }, (_, i) => i + 1).map((d) => (
             <button key={d} type="button" disabled={d < min || d > max} aria-pressed={value === d} onClick={() => { onChange(d); close(); }}>{d}</button>
           ))}
         </div>
-        <p className="v-xs v-muted" style={{ margin: 0 }}>Days run 1 to 28 so every month has them.</p>
-      </Sheet>
+      </Popover>
     </>
   );
 }
