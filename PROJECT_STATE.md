@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** G1 instant capture + new APK
-- **Gate:** none
-- **Next action:** Scout native listener, then build G1: headless capture task, Gmail check, reconnect banner, then EAS build of a new APK
-- **User to-do now:** Test on the phone; Wallet sample tomorrow
+- **Active slice / milestone:** G1 instant capture (awaiting APK build approval)
+- **Gate:** waiting
+- **Next action:** On approval: eas build preview APK, user installs, then merge G1 and start G2
+- **User to-do now:** Approve the APK build; install it; then test capture with the app closed
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:37 | mockups-v4 | Notes applied: small eye circle, every add/edit opens in a sheet or wizard (accounts, reconcile, move, budget line, raise wizard, event, allowance, projected raises, payslip, bonus edit/received/rule, funds, forecast month, paydays, capture rules), Budget Future years removed (month slider covers it). Awaiting approval. | -
 - 2026-11-21 18:57 | rev-2 | Web capture rules restyled (textarea style, source cards, rule rows, add-rule panel); mockup hide button now a circle. Mockups v4 approved by user (only the hide circle and capture rules styling remained). Vercel preview success. Branch rev/2-capture-rules-style. | b8f8b28
 - 2026-11-21 19:05 | rev-3 | Mobile screen subheaders removed except Now; Forecast titled Forecast; mockups updated; stray unused var fixed on web budget page. Merged to main (21c33fc), OTA published group 556cda29, Vercel green. Rev-2 merged (fe69869). Mockups approved. | 21c33fc
+- 2026-11-21 19:20 | G1 | Built (not yet APK-built): captureEngine shared by app, 15 min background task and headless notification task; native CaptureHeadlessService started by the listener when no JS is running; Gmail reconnect banner (Now, Inbox, Settings); Background capture last-run card; entry index.js; app version 1.1.0. tsc and vitest pass (mobile 97, web 329). Untested on device: Android may refuse starting the service from background. | 6cbc69b
 
 ## 4. Open questions
 
