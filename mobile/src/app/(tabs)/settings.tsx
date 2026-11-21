@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet, Text } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
 import { UpdatesCard } from '~/components/UpdatesCard';
@@ -13,6 +13,7 @@ const needsPostPermission = Platform.OS === 'android' && Number(Platform.Version
 
 export default function Settings() {
   const c = useTheme();
+  const router = useRouter();
   const { session } = useSession();
   const [granted, setGranted] = useState(false);
   const [postOk, setPostOk] = useState(true);
@@ -59,6 +60,9 @@ export default function Settings() {
             <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Open notification access settings</Text>
           </Pressable>
         ) : null}
+        <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => router.push('/capture')} accessibilityRole="button">
+          <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Capture rules</Text>
+        </Pressable>
       </Card>
       <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => supabase.auth.signOut()} accessibilityRole="button">
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Sign out</Text>

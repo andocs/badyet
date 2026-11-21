@@ -7,7 +7,7 @@ import { useConfirm, useToast } from "./feedback";
 import { DayOfMonth } from "./pickers";
 
 /** Runs a server action and reports the result as a toast, so every save looks the same. */
-function useAct() {
+export function useAct() {
   const toast = useToast();
   const [busy, start] = useTransition();
   const act = (fn: () => Promise<FormState>, ok: string) => start(async () => { const r = await fn(); toast(r.error ?? ok, r.error ? "bad" : "ok"); });

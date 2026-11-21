@@ -8,13 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E4b Parity pass
-- **Gate:** paused
-- **Next action:** User paused at E4b. After comparing Now with the web: Approve or Request changes; also decide if Accounts write features (Add account, Move money, Reconcile, receive QR) go before E5
-- **User to-do now:** Install APK RD1KmHqP (notification permission), get OTA 5f9c8929, compare Now with the web, send screenshots of differences
+- **Active slice / milestone:** E5 Capture rules
+- **Gate:** none
+- **Next action:** Build E5
+- **User to-do now:** E5 in progress
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-21 to 2026-11-21) covering rev-10, rev-11, merge, expo-p1, slice-E1, expo-plan, slice-E2
 - earlier: 15 events (2026-11-20 to 2026-11-21) covering slice-6, slice-7, perf, rev-1, rev-2, rev-3, rev-4, rev-5, rev-6, rev-7, rev-8, rev-9
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13
@@ -24,21 +25,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-21 11:10 | rev-10 | Bonus destinations redesigned: '+ Add destination' button, choose a fund (dropdown) or something else (name), amount as flat pesos or percent of the bonus with preview, categories and tags removed, responsive form | HEAD
-- 2026-11-21 11:16 | rev-11 | Bonus hero and split bars: funds show their own colour; custom lines get a stable palette colour not used by any fund, gold, or another line | HEAD
-- 2026-11-21 11:18 | merge | Merged rev/1 to rev/11 into main in order (fast-forward) and pushed main. Wrote docs/expo-handoff.md for the Android (Expo) effort. | HEAD
-- 2026-11-21 11:24 | expo-p1 | Phase 1 plan for Android app: 6 slices E1-E6, answers recorded | -
-- 2026-11-21 11:27 | expo-p1 | Expo plan approved at gate; Q6 answer text mislabeled (it holds the offline answer), see Q11 for offline and Q7-Q10 for the rest | -
-- 2026-11-21 11:37 | expo-p1 | Plan revised: capture rules (E5), Gmail (E7), OTA in E1; Q12-Q18 answered | -
-- 2026-11-21 11:37 | expo-p1 | Revised Expo plan approved (E1-E8) | -
-- 2026-11-21 12:03 | expo-p1 | Samples received: docs/expo-samples.md (BPI, GCash, MariBank, Maya, GoTyme, Grab email, foodpanda email) | -
-- 2026-11-21 12:16 | expo-p1 | Second sample batch recorded in docs/expo-samples.md; Q19-Q23 answered; transfer pairing and MariBank/GoTyme added to E6 | -
-- 2026-11-21 12:27 | slice-E1 | Expo scaffold (SDK 58, Router), Supabase PKCE Google sign-in, tab shell, local listener module, eas.json, vitest 4 tests; tsc, lint pass | 344bc34
-- 2026-11-21 12:32 | slice-E1 | E1 approved at gate; not merged to main yet | -
-- 2026-11-21 13:03 | expo-plan | User asked to include the rest of the web app: added E8-E10 (Plan screens, Settings), release moved to E11; order approved | -
-- 2026-11-21 13:55 | slice-E2 | Mobile Now + Accounts screens (reuse lib/now loadNow, balanceNow), hide amounts, Night Emerald dark/light theme and fonts, Metro/tsconfig share ../lib; 10 tests, tsc, lint, android bundle OK | 0eca0db
-- 2026-11-21 13:57 | expo-plan | Canceled build 6cb8b6c4; added native-freeze step before next build | -
-- 2026-11-21 14:56 | slice-E2 | Native-freeze APK built (build 3a080187, commit 79058c1); Kotlin compiled; includes capture queue and native packages for later slices | 79058c1
 - 2026-11-21 15:34 | slice-E2 | Branded APK (build aaf160c6, Pip icon/splash); Accounts coloured cards + detail sheet with balance math; first OTA update published (group a7db7e8f, channel preview, runtime 1.0.0); 11 tests, tsc, lint pass | 70a792f
 - 2026-11-21 15:35 | slice-E2 | E2 approved at gate; not merged to main yet | -
 - 2026-11-21 15:39 | slice-E3 | Inbox: pending list, suggestions (rule then history via lib/inbox/rules), confirm (note, rule, transfer legs), not mine, All activity; 21 tests, tsc, lint, android bundle OK; OTA group 8a9a6463 | f605bc5
@@ -49,6 +35,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 16:23 | slice-E4 | E4 approved at gate | -
 - 2026-11-21 16:27 | slice-E4b | Now brought to web parity (header, hero with office note and spending chart, Recent by day, accounts row, collapsible envelopes with pace, bills, settle note, next payday); shared AccountTile; 39 tests, tsc, lint, bundle OK; OTA group 5f9c8929; permission-fix APK RD1KmHqP finished | 77230a7
 - 2026-11-21 16:28 | slice-E4b | User paused at E4b gate | -
+- 2026-11-21 16:31 | vercel | Fixed failing Vercel preview: mobile/ excluded from root tsc and eslint; local npm run build passes | 98fa297
+- 2026-11-21 16:32 | slice-E4b | E4b approved at gate; Accounts write features deferred (user did not choose), E5 next | -
 
 ## 4. Open questions
 
@@ -146,8 +134,7 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 
 ## Decisions & architecture
 
-- 2026-11-21 user: no more APK builds until every native piece is in, so later changes ship over the air (eas update). Canceled build 6cb8b6c4.
-- Native freeze (slice E2b, before the next build): native capture queue in the listener module (service stores allowlisted notifications in SharedPreferences, JS drains; allowlist set from JS so package names and rules change over the air), plus native packages for later slices: expo-network, expo-secure-store, expo-background-task, expo-task-manager, react-native-svg, expo-image-picker, expo-image, expo-haptics. Anything native added later forces a new build and a runtimeVersion bump.
+- 2026-11-21 user: whenever the app is updated, make sure the Vercel preview build for the web app does not fail. Cause found: the root tsconfig included mobile/**; fixed by excluding mobile in tsconfig.json and eslint.config.mjs (commit 98fa297). After each push to a slice branch, check the Vercel status (gh api repos/{owner}/{repo}/commits/<sha>/status) and run `npm run build` at the repo root if mobile/ or lib/ changed.
 
 ## Run & verify guide (detected by Scout, kept current)
 

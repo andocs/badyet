@@ -2,7 +2,9 @@ import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
 import { HideAmounts } from "@/components/hide-amounts";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { CaptureCard } from "@/components/v13/capture-rules";
 import { NotificationsCard, PaydaysCard } from "@/components/v13/settings";
+import { configsFromRows, rulesFromRows, type RuleRow, type SourceRow } from "@/lib/capture/sources";
 import { EXPORTS } from "@/lib/export/csv";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,11 +13,17 @@ export const metadata = { title: "Settings · Bad(yet)" };
 export default async function Settings() {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
-  const [s, rulesRes, catRes] = await Promise.all([
+  const [s, rulesRes, catRes, acctRes, srcRes, capRulesRes] = await Promise.all([
     supabase.from("user_settings").select("first_payday_day, second_payday_day, notif_capture_enabled").maybeSingle(),
     supabase.from("merchant_rules").select("id, pattern, category_id").order("created_at"),
-    supabase.from("categories").select("id, name"),
+    supabase.from("categories").select("id, name, archived_at").order("sort"),
+    supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
+    supabase.from("capture_sources").select("source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount"),
+    supabase.from("capture_rules").select("id, source, match_text, action, category_id").order("created_at"),
   ]);
+  // Until the capture migration is applied the tables do not exist; say so instead of failing the page.
+  const captureMissing = ["42P01", "PGRST205"].includes(srcRes.error?.code ?? "") || ["42P01", "PGRST205"].includes(capRulesRes.error?.code ?? "");
+  const activeCats = ((catRes.data ?? []) as { id: string; name: string; archived_at: string | null }[]).filter((c) => c.archived_at === null);
   const row = (s.data as { first_payday_day: number; second_payday_day: number; notif_capture_enabled: boolean } | null) ?? { first_payday_day: 10, second_payday_day: 25, notif_capture_enabled: false };
   const cat = new Map(((catRes.data ?? []) as { id: string; name: string }[]).map((c) => [c.id, c.name]));
   const rules = ((rulesRes.data ?? []) as { id: string; pattern: string; category_id: string }[]).map((r) => ({ id: r.id, pattern: r.pattern, category: cat.get(r.category_id) ?? "a category" }));
@@ -31,6 +39,7 @@ export default async function Settings() {
           <p className="v-xs v-muted" style={{ margin: 0 }}>Overrides for your own SSS, PhilHealth, Pag-IBIG or tax amounts live in the <Link href="/pay?tab=payslip">payslip builder</Link>.</p>
         </section>
         <NotificationsCard enabled={row.notif_capture_enabled} rules={rules} />
+        <CaptureCard sources={configsFromRows((srcRes.data ?? []) as SourceRow[])} rules={rulesFromRows((capRulesRes.data ?? []) as RuleRow[])} accounts={(acctRes.data ?? []) as { id: string; name: string }[]} categories={activeCats} missing={captureMissing} />
         <section className="v-card v-stack" aria-labelledby="lk">
           <h2 id="lk">Looks</h2>
           <div className="v-row v-wrap" style={{ gap: 8 }}><ThemeToggle className="v-btn v-sm" /><HideAmounts className="v-btn v-sm" withIcon /></div>
