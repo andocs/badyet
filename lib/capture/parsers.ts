@@ -88,6 +88,12 @@ const maya: Parser = (_title, body) => {
     const amount = centavos(rcv[1]);
     return amount === null ? null : make({ source: 'maya', direction: 'in', amount, counterparty: clean(rcv[2]) });
   }
+  // "You received 100 in your wallet via InstaPay": money in with no sender shown.
+  const wallet = new RegExp(String.raw`received\s+${CUR}${AMT}\s+in\s+your\s+wallet(?:\s+via\s+(.+?))?\.?$`, 'i').exec(body);
+  if (wallet) {
+    const amount = centavos(wallet[1]);
+    return amount === null ? null : make({ source: 'maya', direction: 'in', amount, counterparty: clean(wallet[2]) });
+  }
   const out = new RegExp(String.raw`(?:transferred|paid|sent)\s+${CUR}${AMT}\s+to\s+(.+?)\.?$`, 'i').exec(body);
   if (out) {
     const amount = centavos(out[1]);
