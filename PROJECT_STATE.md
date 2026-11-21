@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** G1-G5 built, waiting for user to install APK and approve
-- **Gate:** waiting
-- **Next action:** User installs the 1.1.0 APK and tests; on approval merge rev/8 (contains G1-G5) to main and publish OTA on channel preview
-- **User to-do now:** Install the 1.1.0 APK; test capture with app closed; try each new sheet; Wallet sample tomorrow
+- **Active slice / milestone:** Round two built; awaiting device test
+- **Gate:** none
+- **Next action:** User installs APK 1.1.0 and reports; fix what fails on device; Wallet capture when sample arrives; real-data check
+- **User to-do now:** Install APK 1.1.0; test capture with the app closed; check each screen shows real data; send the Google Wallet notification sample
 
 ## 3. Execution log
 
@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 19:34 | G3 | Budget port: settle office days, office-day toggles, usual days, pools (take out, to Wants, new), categories (add, edit, archive) via budgetOps.ts + tests. Salary port: raise wizard (5 steps) as a sheet, event/allowance/projected raises/payslip layout sheets, year-by-year slider via salaryEvents.ts + tests; Sheet/Field/Input shared components. tsc, vitest (mobile 126, web 329), android bundle pass. Branch rev/6-g3-budget-salary stacked on G2; not merged. Untested on device. | bd6b39c
 - 2026-11-21 19:39 | G4 | Bonuses: Edit destinations + multiplier, Mark received, rule add/edit/remove (bonusRules.ts). Funds: create/edit/archive/reorder (fundsWrite.ts). Forecast: Change this month and Change many months (order, pins, skips, note, reset) in sheets. Tests added (fundsWrite 11, bonusRules 4). tsc, vitest, android bundle pass. Branch rev/7-g4-bonuses-funds-forecast stacked on G3; not merged. Untested on device. | 333affb
 - 2026-11-21 19:40 | G5 | Settings: Paydays and Office days edit in sheets, Export data (CSV of 15 tables via the share sheet, same list as web, no new native package), Setup wizard stays on web. tsc and vitest (mobile 144) pass. APK build 41fcb12d FINISHED (runtime 1.1.0, from G1 commit): https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk. Branches rev/4 to rev/8 stacked, unmerged. | 271fa5f
+- 2026-11-21 19:44 | G1-G5-release | Merged G1-G5 to main (633541c), Vercel green, OTA group 3d883ed9 published on runtime 1.1.0. APK 1.1.0: https://expo.dev/artifacts/eas/RArDUiiuIodBm-vzNkuOPRuni3_dFv1mQIfARNTvBh0.apk | 633541c
 
 ## 4. Open questions
 
@@ -82,7 +83,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,435,643 | 9,781,643 | 449,050 | 4,401,363 | 570,719,865 | 2,551,178 |  |
+| **Cumulative** | 2,703,624 | 11,148,055 | 510,616 | 4,682,164 | 611,706,666 | 2,708,319 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -126,6 +127,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E10 | 2,274,724 | 9,188,425 | 424,415 | 4,156,838 | 546,265,133 | 2,436,245 | no mark 'slice-E10': all-time |
 | Slice E11 | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 | no mark 'slice-E11': all-time |
 | rev-1 | 61,948 | 271,167 | 10,438 | 39,709 | 1,647,594 | 11,679 |  |
+| G1-G5 | 411,056 | 1,885,707 | 85,638 | 479,934 | 51,413,137 | 251,551 |  |
 
 <!-- END SUMMARY -->
 
