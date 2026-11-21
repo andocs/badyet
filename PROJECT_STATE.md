@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-2 capture rules style (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval merge rev/2-capture-rules-style, then slice R1: Reconcile + Add account to the approved mockups
-- **User to-do now:** Check capture rules on the web; test on the phone; Wallet sample tomorrow
+- **Active slice / milestone:** R1 Reconcile + Add account
+- **Gate:** none
+- **Next action:** Build slice R1 to approved mockups: Reconcile, Move money, Add account, Edit account sheets on the Accounts tab; port server actions to mobile/src/lib/accountsWrite.ts with tests
+- **User to-do now:** Test on the phone (headers now removed; E5 migration, E6-E11); tell me what real data you see; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -42,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:30 | mockups-v3 | Mockups reworked per user notes: smaller type, More tab with sheet, eye toggle, Now hero/balance/tiles fixed, Inbox/Add/Accounts/Forecast kept as existing, Budget/Salary/Bonuses/Funds/Settings trimmed with edit affordances, yearly slider. In docs/mockups/phone/. Awaiting approval. | -
 - 2026-11-21 18:37 | mockups-v4 | Notes applied: small eye circle, every add/edit opens in a sheet or wizard (accounts, reconcile, move, budget line, raise wizard, event, allowance, projected raises, payslip, bonus edit/received/rule, funds, forecast month, paydays, capture rules), Budget Future years removed (month slider covers it). Awaiting approval. | -
 - 2026-11-21 18:57 | rev-2 | Web capture rules restyled (textarea style, source cards, rule rows, add-rule panel); mockup hide button now a circle. Mockups v4 approved by user (only the hide circle and capture rules styling remained). Vercel preview success. Branch rev/2-capture-rules-style. | b8f8b28
+- 2026-11-21 19:05 | rev-3 | Mobile screen subheaders removed except Now; Forecast titled Forecast; mockups updated; stray unused var fixed on web budget page. Merged to main (21c33fc), OTA published group 556cda29, Vercel green. Rev-2 merged (fe69869). Mockups approved. | 21c33fc
 
 ## 4. Open questions
 
