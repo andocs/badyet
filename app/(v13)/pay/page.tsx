@@ -13,6 +13,8 @@ export const metadata = { title: "Salary and tax · Bad(yet)" };
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const label = (m: YearMonth) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 
+const ordinal = (n: number) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"}`;
+
 export default async function Pay({ searchParams }: { searchParams: Promise<{ tab?: string; month?: string }> }) {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
@@ -47,7 +49,7 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
               <Link href="/pay?tab=payslip" role="tab" aria-selected={isPayslip} className="v-tab2">Payslip builder</Link>
             </div>
             {isPayslip ? (
-              <PayslipBuilder key={month} input={input} month={month} months={months.map((m) => ({ value: m, label: label(m) }))} />
+              <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
             ) : (
               <Timeline data={data} />
             )}
@@ -72,8 +74,8 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
         <div className="v-row v-sp v-wrap">
           <h2 id="ch">Regular take-home per cutoff</h2>
           <div className="v-legend">
-            <span><i className="v-dot" style={{ background: "var(--accent)" }} />1st cutoff (paid 10th)</span>
-            <span><i className="v-dot" style={{ background: "var(--blue)" }} />2nd cutoff (paid 25th)</span>
+            <span><i className="v-dot" style={{ background: "var(--accent)" }} />1st cutoff (paid {ordinal(data.paydays.first)})</span>
+            <span><i className="v-dot" style={{ background: "var(--blue)" }} />2nd cutoff (paid {ordinal(data.paydays.second)})</span>
             <span style={{ color: "var(--muted)" }}><i className="v-sw-dash" />Assumed raises</span>
           </div>
         </div>

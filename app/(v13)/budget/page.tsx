@@ -1,13 +1,14 @@
 import Link from "next/link";
-import { cutoffText, buildGroups, monthFlag, type GroupView } from "@/lib/budget/view";
+import { cutoffText, monthFlag } from "@/lib/budget/view";
+import { buildBudgetScreen, monthLabel, TIGHT, type BudgetScreen } from "@/lib/budget/screen";
 import { loadBudget, type BudgetData } from "@/lib/budget/load";
 import { poolBalanceNow, poolExcess } from "@/lib/budget/pools";
 import { cutoffOfficeDays, settleRows } from "@/lib/budget/rto";
-import { addMonths, type YearMonth } from "@/lib/domain/dates";
+import type { YearMonth } from "@/lib/domain/dates";
 import { formatPesos, money, sum, type Money as MoneyValue } from "@/lib/domain/money";
-import { movedToWants, rtoDayBudget, takenFromWants } from "@/lib/engine/budget";
+import { rtoDayBudget } from "@/lib/engine/budget";
 import { cutoffSettingsFromPaydays, usualOfficeDays } from "@/lib/engine/months";
-import { runProjection, type ProjectionInput, type ProjectionMonth } from "@/lib/engine/projection";
+import type { ProjectionMonth } from "@/lib/engine/projection";
 import { shortDate, rangeLabel } from "@/lib/now/format";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
@@ -19,8 +20,6 @@ export const metadata = { title: "Budget · Bad(yet)" };
 
 const PALETTE = ["var(--accent)", "var(--blue)", "var(--gold)", "var(--violet)", "var(--teal)"];
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const ymLabel = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
-const TIGHT = 250_000; // ₱2,500 left a month is "tight"
 
 export default async function Budget({ searchParams }: { searchParams: Promise<{ v?: string; m?: string; cmp?: string }> }) {
   const supabase = await createClient();
@@ -28,41 +27,12 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
   const sp = await searchParams;
   const data = await loadBudget(supabase);
   const thisMonth = data.salary.thisMonth;
-  const hasStart = data.salary.input.events.some((e) => e.kind === "start");
-  const fut = sp.v === "fut";
-  const month: YearMonth = fut && /^\d{4}-(0[1-9]|1[0-2])$/.test(sp.m ?? "") ? (sp.m as YearMonth) : fut ? addMonths(thisMonth, 12) : data.period.month;
-  const year = Number(month.slice(0, 4));
-
-  const input = (start: YearMonth, months: number): ProjectionInput => ({
-    start, months, ...data.salary.input, bonusRules: [], bonusInstances: [], lines: data.lines, allocations: data.allocations, funds: [], fundStart: {},
-  });
-
-  // This cutoff's budget (confirmed events only) drives the side cards on both views.
-  const nowRun = hasStart ? runProjection(input(data.period.month, 1), { includeExpected: false })[0]! : null;
-  const yearRun = fut && hasStart ? runProjection(input(`${year}-01` as YearMonth, 12), { includeExpected: true }) : null;
-  const yearWithout = fut && sp.cmp === "1" && hasStart ? runProjection(input(`${year}-01` as YearMonth, 12), { includeExpected: false }) : null;
-  const shown: ProjectionMonth | null = fut ? (yearRun?.find((m) => m.month === month) ?? null) : nowRun;
-  const eventLabel = new Map(data.salary.input.events.map((e) => [e.id, `${ymLabel(e.effectiveMonth)} raise`]));
-
-  const periodEntries = data.pools.flatMap((p) => p.entries.filter((e) => e.occurredOn >= data.period.start && e.occurredOn <= data.period.end));
-  const wantsAdj = money(movedToWants(periodEntries) - takenFromWants(periodEntries));
-  const accounts = new Map(data.accounts.map((a) => [a.id, a.name]));
+  const cmp = sp.cmp === "1";
+  const screen = buildBudgetScreen(data, { fut: sp.v === "fut", month: sp.m, compare: cmp });
+  const { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, topUpRaises } = screen;
   const cutoffKey = data.period.which === 1 ? "first" : "second";
-  const spentByLine = new Map<string, { amount: MoneyValue; word: "spent" | "sent" }>();
-  if (!fut && nowRun) {
-    for (const l of data.lines) {
-      const planned = nowRun.budget.lines.find((x) => x.lineId === l.id)?.[cutoffKey] ?? 0;
-      if (l.accountId) {
-        if (data.sentLineIds.has(l.id) && planned > 0) spentByLine.set(l.id, { amount: money(planned), word: "sent" });
-      } else if ((data.spentByCategory.get(l.categoryId) ?? 0) > 0) spentByLine.set(l.id, { amount: data.spentByCategory.get(l.categoryId)!, word: "spent" });
-    }
-  }
-  const groups: GroupView[] = shown
-    ? buildGroups({ groups: data.groups, categories: data.categories, lines: data.lines, accounts, budget: shown.budget, takeHome: shown.pay.takeHome, spentByLine })
-    : [];
   const colors = PALETTE;
 
-  const lineChoices = data.lines.filter((l) => l.rule !== "rest").map((l) => ({ id: l.id, name: l.name }));
   const link = (q: Record<string, string>) => `/budget?${new URLSearchParams(q).toString()}`;
 
   return (
@@ -71,7 +41,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
         <div className="v-row v-sp v-wrap">
           <div>
             <h1>Budget</h1>
-            <div className="v-lbl">{fut ? "Rules re-run against each month's projected take-home" : `${ymLabel(data.period.month)} · what the rules say, and what has gone out so far`}</div>
+            <div className="v-lbl">{fut ? "Rules re-run against each month's projected take-home" : `${monthLabel(data.period.month)} · what the rules say, and what has gone out so far`}</div>
           </div>
           <div className="v-seg" role="group" aria-label="View">
             <Link href="/budget" className="v-segl" aria-current={!fut ? "true" : undefined}>This month</Link>
@@ -84,9 +54,9 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
         ) : (
           <div className="v-cols3">
             <div className="v-stack">
-              {fut ? <FutureYears year={year} thisYear={Number(thisMonth.slice(0, 4))} month={month} run={yearRun!} without={yearWithout} cmp={sp.cmp === "1"} link={link} groupsList={data.groups} colors={colors} /> : null}
-              <Summary shown={shown} fut={fut} data={data} wantsAdj={wantsAdj} />
-              {fut && sp.cmp === "1" ? <Compare shown={shown} without={yearWithout?.find((m) => m.month === month) ?? null} /> : null}
+              {fut ? <FutureYears year={year} thisYear={Number(thisMonth.slice(0, 4))} month={month} run={yearRun!} without={yearWithout} cmp={cmp} link={link} groupsList={data.groups} colors={colors} /> : null}
+              <Summary screen={screen} data={data} />
+              {fut && cmp ? <Compare shown={shown} without={yearWithout?.find((m) => m.month === month) ?? null} /> : null}
               <BudgetBoard
                 groups={groups}
                 colors={colors}
@@ -95,8 +65,8 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
                 showSpent={!fut}
                 takeHome={shown.pay.takeHome}
               />
-              {groups.some((g) => g.lines.some((l) => l.topUps.length > 0)) ? (
-                <div className="v-note">Top-ups come from raises: <b>{[...new Set(groups.flatMap((g) => g.lines.flatMap((l) => l.topUps.map((t) => eventLabel.get(t.eventId) ?? "a raise"))))].join(", ")}</b>. Change or remove the raise and they follow.</div>
+              {topUpRaises.length > 0 ? (
+                <div className="v-note">Top-ups come from raises: <b>{topUpRaises.join(", ")}</b>. Change or remove the raise and they follow.</div>
               ) : null}
             </div>
             {nowRun ? <Side data={data} nowRun={nowRun} cutoffKey={cutoffKey} /> : null}
@@ -107,18 +77,16 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
   );
 }
 
-function Summary({ shown, fut, data, wantsAdj }: { shown: ProjectionMonth; fut: boolean; data: BudgetData; wantsAdj: MoneyValue }) {
+function Summary({ screen, data }: { screen: BudgetScreen; data: BudgetData }) {
+  const { shown, fut, wantsAdj, rest, fixed, flag, takeHome: take } = screen;
+  if (!shown) return null;
   const b = shown.budget;
-  const take = shown.pay.takeHome;
-  const rest = money(b.rest.first + b.rest.second);
-  const flag = monthFlag(b, money(TIGHT));
-  const fixed = sum(b.lines.filter((l) => data.lines.find((x) => x.id === l.lineId)?.rule === "fixed").map((l) => l.total));
   return (
     <>
       <section className="v-hero">
         <div className="v-row v-sp v-wrap">
           <div>
-            <div className="v-lbl">Left of take-home, {ymLabel(shown.month)}{shown.assumed ? " (assumed raise)" : ""}</div>
+            <div className="v-lbl">Left of take-home, {monthLabel(shown.month)}{shown.assumed ? " (assumed raise)" : ""}</div>
             <div className="v-big" style={{ fontSize: 38 }}><span className="amt v-num">{formatPesos(money(Math.max(0, rest)))}</span><span className="v-lbl" style={{ fontSize: 18, fontWeight: 700 }}> / <span className="amt v-num">{formatPesos(take)}</span></span></div>
           </div>
         </div>
@@ -131,7 +99,7 @@ function Summary({ shown, fut, data, wantsAdj }: { shown: ProjectionMonth; fut: 
         </div>
       </section>
       {flag === "over" ? (
-        <div className="v-flag v-bad"><b>!</b><span>Fixed and percent lines are over take-home in {ymLabel(shown.month)}. Trim a line or move a start date.</span></div>
+        <div className="v-flag v-bad"><b>!</b><span>Fixed and percent lines are over take-home in {monthLabel(shown.month)}. Trim a line or move a start date.</span></div>
       ) : flag === "tight" ? (
         <div className="v-flag"><b>!</b><span>Tight month: only <Money value={rest} /> left after every line.</span></div>
       ) : null}
@@ -140,7 +108,7 @@ function Summary({ shown, fut, data, wantsAdj }: { shown: ProjectionMonth; fut: 
 }
 
 function Compare({ shown, without }: { shown: ProjectionMonth; without: ProjectionMonth | null }) {
-  if (!shown.expected || !without) return <div className="v-note"><b>Nothing to compare.</b> No expected raise has taken effect by {ymLabel(shown.month)}.</div>;
+  if (!shown.expected || !without) return <div className="v-note"><b>Nothing to compare.</b> No expected raise has taken effect by {monthLabel(shown.month)}.</div>;
   const tops = (m: ProjectionMonth) => sum(m.budget.lines.flatMap((l) => l.topUps.map((t) => money(t.first + t.second))));
   const rest = (m: ProjectionMonth) => money(m.budget.rest.first + m.budget.rest.second);
   const rows: [string, MoneyValue, MoneyValue][] = [
@@ -151,7 +119,7 @@ function Compare({ shown, without }: { shown: ProjectionMonth; without: Projecti
   ];
   return (
     <section className="v-card" aria-labelledby="cmph">
-      <h2 id="cmph">{ymLabel(shown.month)}, with and without your expected raises</h2>
+      <h2 id="cmph">{monthLabel(shown.month)}, with and without your expected raises</h2>
       <div className="v-scrollx">
         <table>
           <thead><tr><th>Per month</th><th>With</th><th>Without</th><th>Difference</th></tr></thead>
@@ -192,7 +160,7 @@ function FutureYears({ year, thisYear, month, run, without, cmp, link, groupsLis
               flag: flag === "over" || flag === "tight" ? flag : null,
               expected: m.expected,
               h: (m.pay.takeHome / maxTake) * 96,
-              aria: `${ymLabel(m.month)}: take-home ${formatPesos(m.pay.takeHome)}${flag ? `, ${flag === "over" ? "over budget" : "tight"}` : ""}${m.expected ? ", includes an expected raise" : ""}`,
+              aria: `${monthLabel(m.month)}: take-home ${formatPesos(m.pay.takeHome)}${flag ? `, ${flag === "over" ? "over budget" : "tight"}` : ""}${m.expected ? ", includes an expected raise" : ""}`,
             };
           })}
         />

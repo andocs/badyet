@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Round two planning
+- **Active slice / milestone:** rev-budget-cleanup: web budget page cleanup
 - **Gate:** none
-- **Next action:** New session: /orchestrate, read docs/mobile-next-session.md; start with Z Fold 3 mockups for approval
-- **User to-do now:** Test on the phone (E5 migration, E6, E7, E8-E11); tell me what real data you see or do not see; Google Wallet sample tomorrow
+- **Next action:** Cleanup web budget page, then mockups
+- **User to-do now:** Test on the phone; Wallet sample
 
 ## 3. Execution log
 
@@ -154,7 +154,7 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 
 ## Decisions & architecture
 
-- 2026-11-21 user: merged E1-E12 to main (9f958be). Next session: Z Fold 3 mockups (320x872, less text, more visual), then port the rest of the web app to the phone, capture while the app is closed, Gmail re-sign-in prompt, real data visible. Google Wallet on hold until tomorrow. Grab and foodpanda senders set (no-reply@grab.com, info@mail.foodpanda.ph). Full list: docs/mobile-next-session.md.
+2026-11-21 round two answers: (1) mockups cover screen only (~320x872), no unfolded layout (broken on the phone); approval before rebuilding screens. (2) port web app by frequency, reconcile + add account together in one slice. (3) background capture via expo-background-task approved; instant capture (new APK) only proposed. (4) Gmail reconnect = banner only, no notifications package. (5) real data: orchestrator to check for causes of empty screens, fix if wrong. (6) Wallet on hold until sample. (7) Web budget page cleanup approved, do first.
 
 ## Run & verify guide (detected by Scout, kept current)
 

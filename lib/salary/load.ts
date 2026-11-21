@@ -35,13 +35,15 @@ export interface SalaryData {
   /** The current month, Asia/Manila. */
   thisMonth: YearMonth;
   placeable: PlaceableLine[];
+  /** Day of the month each cutoff is paid. */
+  paydays: { first: number; second: number };
 }
 
 const rows = <T,>(r: { data: unknown }): T[] => (r.data ?? []) as T[];
 
 /** Everything the Salary and tax screens need, from the rehaul tables (row-level security keeps it to your own rows). */
 export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> {
-  const [events, allowances, assumptions, pay, templates, tlines, brules, bsplits, binst, binstSplits, lines, cats, groups] = await Promise.all([
+  const [events, allowances, assumptions, pay, templates, tlines, brules, bsplits, binst, binstSplits, lines, cats, groups, us] = await Promise.all([
     supabase.from("salary_events").select("id, effective_month, kind, pct_bp, new_base, allowance_id, one_off_amount, one_off_taxable, status"),
     supabase.from("allowances").select("id, payslip_cutoff, name, amount, frequency, pay_month, taxable, starts_on, ends_on").order("starts_on"),
     supabase.from("plan_assumptions").select("cip_multiplier_num, assumed_raise_on, assumed_raise_bp, assumed_raise_month").maybeSingle(),
@@ -55,7 +57,9 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
     supabase.from("budget_lines_v2").select("id, name, cutoff, rule, kind, is_draft, category_id").order("sort"),
     supabase.from("categories").select("id, group_id").is("archived_at", null),
     supabase.from("category_groups").select("id, feeds_savings"),
+    supabase.from("user_settings").select("first_payday_day, second_payday_day").maybeSingle(),
   ]);
+  const ps = us.data as { first_payday_day: number; second_payday_day: number } | null;
 
   const ruleRows = rows<BonusRuleRow>(brules);
   const instanceRows = rows<BonusInstanceRow>(binst);
@@ -68,6 +72,7 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
   return {
     thisMonth: isoDate(todayManila()).slice(0, 7) as YearMonth,
     placeable,
+    paydays: { first: ps?.first_payday_day ?? 10, second: ps?.second_payday_day ?? 25 },
     input: {
       events: rows<SalaryEventRow>(events).map(salaryEventOf),
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),

@@ -30,7 +30,7 @@ const MOVABLE = new Set(["sss", "philhealth", "pagibig", "custom"]);
  * The payslip builder: both cutoffs side by side for a month. Edit the layout (split of base and tax, where each deduction sits, your own
  * lines, amounts) and watch the take-home change; save it to apply from that month on. Allowances sit where their own setting says.
  */
-export function PayslipBuilder({ input, month, months }: { input: SalaryInput; month: YearMonth; months: { value: YearMonth; label: string }[] }) {
+export function PayslipBuilder({ input, paydays, month, months }: { input: SalaryInput; paydays: { first: number; second: number }; month: YearMonth; months: { value: YearMonth; label: string }[] }) {
   const [drafts, setDrafts] = useState<Drafts>(() => fresh(input.templates, month));
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
           {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
           {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
           {(["first", "second"] as const).map((c) => (
-            <Slip key={c} cutoff={c} slip={pay[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} />
+            <Slip key={c} cutoff={c} slip={pay[c]} payday={paydays[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} />
           ))}
         </div>
         <aside className="v-card v-pbsum2" aria-labelledby="pbs">
@@ -198,8 +198,8 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
 
 const fmt = (m: MoneyValue | number) => `₱${(Number(m) / 100).toLocaleString("en-PH", { maximumFractionDigits: 0 })}`;
 
-function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd }: {
-  cutoff: PayCutoff; slip: Payslip; drafts: Draft[]; salary: ReturnType<typeof salaryAt>; onAllowance: (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) => void;
+function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd }: {
+  cutoff: PayCutoff; slip: Payslip; payday: number; drafts: Draft[]; salary: ReturnType<typeof salaryAt>; onAllowance: (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) => void;
   onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void;
 }) {
   const [name, setName] = useState("");
@@ -256,7 +256,7 @@ function Slip({ cutoff, slip, drafts, salary, onAllowance, onChange, onMove, onR
     <details className="v-slip" open>
       <summary className="v-pbsum">
         <span className="v-pill v-ok">{cutoff === "first" ? "1st" : "2nd"}</span>
-        <span className="v-grow"><span className="v-lbl" style={{ display: "block" }}>{cutoff === "first" ? "Paid on the 10th" : "Paid on the 25th"}</span><b className="v-disp" style={{ fontSize: 20 }}>{name2}</b></span>
+        <span className="v-grow"><span className="v-lbl" style={{ display: "block" }}>Paid on day {payday}</span><b className="v-disp" style={{ fontSize: 20 }}>{name2}</b></span>
         <span className="v-pbtk"><span className="v-lbl" style={{ display: "block" }}>Take-home pay</span><b className="v-num"><Money value={slip.takeHome} /></b></span>
       </summary>
       <div className="v-pl">
