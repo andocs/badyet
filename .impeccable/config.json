@@ -91,6 +91,60 @@
         ],
         "createdAt": "2026-11-20T08:28:24.706Z",
         "reason": "Pip mascot's smile is a rounded bottom border on a 22px mouth shape, not a card border; agent-decided"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/forecast.html"
+        ],
+        "createdAt": "2026-11-21T10:30:25.549Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/bonuses.html"
+        ],
+        "createdAt": "2026-11-21T10:30:25.639Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/budget.html"
+        ],
+        "createdAt": "2026-11-21T10:30:25.721Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/accounts.html"
+        ],
+        "createdAt": "2026-11-21T10:30:25.838Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/inbox.html"
+        ],
+        "createdAt": "2026-11-21T10:30:25.930Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          "docs/mockups/phone/now.html"
+        ],
+        "createdAt": "2026-11-21T10:30:26.026Z",
+        "reason": "mockups mirror the app's own 11-13px sublabel sizes; user asked not to increase font sizes"
       }
     ]
   }
