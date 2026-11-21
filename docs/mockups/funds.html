@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Funds mockup</title><style>:root{--bg:#0a1320;--surface:#101c2e;--soft:#17263b;--ink:#e8eef7;--muted:#93a5bd;--line:#223349;--accent:#34d399;--on:#04281c;--at:#5ee6b4;--tint:#0f3a33;--a2:#7fa8ff;--gold:#f6c453;--err:#ff8a8a}
+*{box-sizing:border-box;margin:0}body{background:#05090f;display:flex;justify-content:center;padding:24px;font-family:"Atkinson Hyperlegible Next","Segoe UI",system-ui,sans-serif;font-weight:600;color:var(--ink)}
+.phone{width:320px;height:872px;background:var(--bg);border-radius:22px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden}
+.scroll{flex:1;overflow:auto;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px}
+h1{font:800 22px Gabarito,system-ui;letter-spacing:-.01em}
+.lbl{font-size:12px;color:var(--muted);font-weight:700}.num{font-variant-numeric:tabular-nums}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.hero{background:linear-gradient(135deg,#10294a,#0b5a4e);border-radius:16px;padding:16px}
+.big{font:800 44px/1 Gabarito,system-ui}.mid{font:800 28px/1 Gabarito,system-ui}.sm{font:800 18px Gabarito,system-ui}
+.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}.grow{flex:1;min-width:0}
+.ico{width:36px;height:36px;border-radius:12px;background:var(--soft);display:grid;place-items:center;flex:none;color:var(--at)}
+svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ico svg{width:20px;height:20px}
+.btn{background:var(--accent);color:var(--on);border-radius:999px;padding:12px 16px;font-weight:800;text-align:center;font-size:15px;min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn.g{background:var(--soft);color:var(--ink)}.pill{background:var(--soft);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;min-height:36px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.pill.on{background:var(--tint);color:var(--at);outline:1px solid var(--accent)}
+.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.warn>i{background:var(--gold)}
+details{background:var(--surface);border:1px solid var(--line);border-radius:14px}summary{list-style:none;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;min-height:56px}
+summary::-webkit-details-marker{display:none}summary .chev{margin-left:auto;color:var(--muted);transition:transform .15s;display:flex}details[open] summary .chev{transform:rotate(90deg)}
+.more{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px;color:var(--muted)}.more b{color:var(--ink)}
+.tabs{display:flex;background:var(--surface);border-top:1px solid var(--line);min-height:64px}.tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:800;color:var(--muted)}
+.tabs a.on{color:var(--at)}.tabs svg{width:24px;height:24px}
+.note{position:fixed;left:24px;top:24px;width:200px;font-size:12px;color:var(--muted)}@media(max-width:700px){.note{display:none}}
+.badge{background:var(--err);color:#2a0b0b;border-radius:99px;font-size:11px;font-weight:800;padding:1px 6px}
+.back{color:var(--at);font-size:14px;font-weight:800}</style></head><body><div class="note">Funds<br>Cover screen 320 x 872. Tap rows to expand. Sample numbers only.<br><br>Drag handle reorders. Create, edit and reorder move to the phone.</div><div class="phone"><div class="scroll">
+<div><div class="back">‹ Plan</div><h1>Funds</h1></div>
+<div class="lbl">Savings fill from the top down</div>
+<div class="card"><div class="row"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg><span class="grow"><b>Emergency</b><br><span class="lbl">₱40k of ₱50k</span></span><span class="sm num">80%</span></div><div style="margin-top:10px"><div class="bar "><i style="width:80%"></i></div></div></div><div class="card"><div class="row"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg><span class="grow"><b>Holiday</b><br><span class="lbl">₱7k of ₱20k</span></span><span class="sm num">35%</span></div><div style="margin-top:10px"><div class="bar "><i style="width:35%"></i></div></div></div><div class="card"><div class="row"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01"/></svg><span class="grow"><b>Gadget</b><br><span class="lbl">₱3k of ₱30k</span></span><span class="sm num">10%</span></div><div style="margin-top:10px"><div class="bar "><i style="width:10%"></i></div></div></div>
+<div class="btn g"><svg viewBox="0 0 24 24" style="width:20px;height:20px"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg> New fund</div></div><nav class="tabs"><a class=""><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Now</a><a class=""><svg viewBox="0 0 24 24"><path d="M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5"/></svg>Inbox</a><a class=""><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add</a><a class=""><svg viewBox="0 0 24 24"><path d="M3 7h16a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l2-3h12M16 14h2"/></svg>Accounts</a><a class="on"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>Plan</a></nav></div></body></html>

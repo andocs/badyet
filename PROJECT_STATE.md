@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions (Expo round two)
 - **Active slice / milestone:** Mockups (cover screen)
-- **Gate:** none
-- **Next action:** Build Z Fold 3 cover-screen mockups in docs/mockups/ for approval
-- **User to-do now:** Test on the phone; Wallet sample tomorrow
+- **Gate:** waiting
+- **Next action:** On approval: slice R1 port Reconcile + Add account (one slice) to the approved Accounts mockup
+- **User to-do now:** Open docs/mockups/index.html and approve or comment per screen; test on the phone; Wallet sample tomorrow
 
 ## 3. Execution log
 
@@ -37,6 +37,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:39 | slice-E11 | Tab icons, wide-screen column, mobile README; final checks: mobile 97 tests, web 332 tests, tsc, lint, expo-doctor 18/18, web build, bundle OK; Vercel success; OTA group 84a8adcc | 68d82dc
 - 2026-11-21 17:55 | handoff | Merged all slices to main; added Grab/foodpanda senders (E12, OTA 8d6b6c7a); wrote docs/mobile-next-session.md for the next session | 9f958be
 - 2026-11-21 18:04 | rev-1 | Web budget page now uses buildBudgetScreen (added compare/yearWithout); removed dead validateLine in validate.ts, hardcoded TIGHT, hardcoded pay labels (paydays from user_settings via loadSalary), stale shell comment. tsc/vitest/lint PASS, Vercel preview success. Branch rev/1-budget-cleanup, not yet merged. | 72669ec
+- 2026-11-21 18:09 | mockups | 10 cover-screen mockups (320x872) in docs/mockups/: now, inbox, add, accounts, budget, salary, bonuses, funds, forecast, settings, plus index.html. Includes Reconnect Gmail banner and background-run status in Settings. Not yet viewed on a real screen; awaiting user approval. | -
 
 ## 4. Open questions
 
