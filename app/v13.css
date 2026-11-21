@@ -726,7 +726,8 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 
 /* Salary and tax timeline: events, projected raises and allowances in one row; each item stays on a single line */
 .v13 .v-tl3{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:start}
-@media(min-width:1100px){.v13 .v-tl3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1100px){.v13 .v-tl3{grid-template-columns:minmax(0,2fr) minmax(0,2fr) minmax(0,1fr)}}
+.v13 .v-tl3>section:last-child .v-grid2{grid-template-columns:minmax(0,1fr)}
 .v13 .v-ev,.v13 .v-alw{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0}
 .v13 .v-ev .v-when{width:48px}
 .v13 .v-ev>.v-grow,.v13 .v-alw>.v-grow{flex:1 1 0;min-width:0}

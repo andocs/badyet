@@ -3,7 +3,7 @@ import { Atkinson_Hyperlegible_Next, Gabarito } from "next/font/google";
 import "./globals.css";
 
 const display = Gabarito({ subsets: ["latin"], weight: ["700", "800"], variable: "--font-display" });
-const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-body" });
+const body = Atkinson_Hyperlegible_Next({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-body", adjustFontFallback: false, fallback: ["system-ui", "arial"] });
 
 export const metadata: Metadata = {
   title: "Bad(yet)",

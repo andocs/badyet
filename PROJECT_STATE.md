@@ -10,11 +10,12 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/4-payslip-bar-tablet
-- **User to-do now:** Try rev-4 on desktop, tablet and phone; merge rev/1 to rev/4 to main
+- **Next action:** Approve or request changes on rev/5-salary-timeline-allowances
+- **User to-do now:** Try rev-5 on desktop, tablet and phone; merge rev/1 to rev/5 to main
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering design-v13
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering ops, rev-27, rev-28, rev-29, rev-30, rev-31, rev-32, rev-33, rev-34, rev-35, rev-36
 - earlier: 15 events (2026-11-20 to 2026-11-20) covering redesign, ops, rev-18, rev-19, rev-24, rev-25, rev-20, rev-21, rev-22, rev-23
@@ -22,21 +23,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-20 20:46 | design-v13 | Round 12: Now envelopes collapsible again and not stretched; Budget settle card hidden when nothing to settle (Now card follows); bonus rule edit reopens the wizard; raise wizard simplified (no assumptions step, no assumptions-only option, adds expected vs confirmed); Salary and tax gets a Projected raises card and hollow markers for expected raises. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 20:59 | design-v13 | Round 13: the three raise-planning gaps added. Budget Future years marks months that include an expected raise and has a Compare without expected raises switch; raise wizard has a Where does the extra go step (top-ups tied to the raise, tagged on Budget lines); Forecast shows a with / without expected raises total. ia.md and model.md updated. No app code touched. | -
-- 2026-11-20 21:02 | design-v13 | Round 14: both limits fixed. Raise top-ups now live in the shared budget rules (v13-data.js), so Forecast and Budget agree and the with/without views drop top-ups tied to expected raises; the raise wizard's summary text follows the extra you place. No app code touched. | -
-- 2026-11-20 21:03 | design-v13 | Design approved by the user. Slice plan, decisions and handoff written to PROJECT_STATE.md. Ready to hand over to a fresh session for slice 1. | -
-- 2026-11-20 21:19 | slice-1 | Migrations (schema + data move, rollbacks), pure engine in lib/engine (months, salary timeline, payslip builder, bonuses, budget evaluator, office days/pools, fund allocator, with/without expected runner) and tests. Tests, typecheck, lint, build pass. SQL not executed against a database. | 7f02687
-- 2026-11-20 21:19 | slice-1 | Slice 1 approved by the user. | 7f02687
-- 2026-11-20 21:30 | slice-2 | Shell (rail + 5 phone tabs), scoped Night Emerald styles, Now page from the new tables via the engine, quick add (dialog + server action, N shortcut), Inbox placeholder, balances and row mappers with tests. Old home page and dashboard removed. Committed locally, not pushed. Not opened in a browser. | 7d51077
-- 2026-11-20 21:30 | slice-2 | Slice 2 approved by the user. | 7d51077
-- 2026-11-20 21:35 | slice-3 | Accounts page (cards, calc, reconcile, add account, move money as paired transfers, private receive-QR upload with signed URL), Inbox (confirm, not mine, categories, always-rules, best guess, details sheet, desktop wide cards), storage + credit-sign migration, rules/guess/account-validation helpers with tests. Local commit, not pushed, not run in a browser. | 1ee65d5
-- 2026-11-20 21:37 | slice-3 | Slice 3 approved by the user. | 1ee65d5
-- 2026-11-20 21:44 | slice-4 | Salary and tax: timeline chart, events (confirm/remove), projected raises, allowances (cutoff, taxable), year table, payslip builder with saved layouts and tax working, five-step raise wizard with before/after payslip, five-year effect and where-the-extra-goes top-ups; row mappers for bonuses and templates; validators with tests. Local commit, not pushed, not run in a browser. | d8bccc8
-- 2026-11-20 21:53 | slice-4 | Slice 4 approved by the user. | d8bccc8
-- 2026-11-20 21:58 | slice-5 | In progress: migration + pools/rto pure libs written. | -
-- 2026-11-20 22:08 | slice-5 | Budget (lines editor, future years + compare, RTO, settle, pools, categories), Bonuses (cards with 90k cap waterfall, destinations, received history, rule editor), pools migration, pure libs and validators with tests, Now picks up pools and settle nudge. Local commit, not pushed, not run in a browser. | -
-- 2026-11-20 22:22 | slice-5 | Slice 5 approved by the user. | 96cc419
 - 2026-11-20 22:33 | slice-6 | Funds editor, Forecast (chart, ladder, month sheet, with/without expected raises), Override single and bulk with live effect, validators, forecast rows and loaders with tests. Local commit, not pushed, not run in a browser. | -
 - 2026-11-20 22:36 | slice-6 | Slice 6 approved by the user. | a8b8ad5
 - 2026-11-20 22:57 | slice-7 | Setup wizard (5 steps, live payslip), Settings, old shell/pages/libs and tests removed, exports and e2e routes updated, optional retire-old-tables.sql. Local commit, not pushed, not run in a browser. | -
@@ -47,6 +33,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 09:54 | rev-3 | Payslip builder redesigned from mockups (controls bar, collapsible cutoff cards, summary, no row icons), bottom sheets use dvh and scroll, side nav links no longer animate underline | HEAD
 - 2026-11-21 10:06 | rev-4 | Payslip builder: controls bar inside the slip column, summary beside it from the top, base pay and income tax splits for 1st and 2nd cutoff with vertical dividers, tablet summary strip | HEAD
 - 2026-11-21 10:09 | rev-4 | Removed the income tax split fields from the payslip builder bar; only base pay is split between cutoffs | HEAD
+- 2026-11-21 10:27 | rev-5 | Salary and tax: timeline cards in one row with year by year below, single-line event and allowance rows, taxable switches removed from timeline and payslip builder (chosen when adding), wizard can add an allowance that already started (up to 36 months back), income tax split text clarified | HEAD
 
 ## 4. Open questions
 
@@ -63,7 +50,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,630,984 | 7,025,728 | 307,136 | 3,273,836 | 400,869,670 | 1,882,956 |  |
+| **Cumulative** | 1,695,212 | 7,217,871 | 317,676 | 3,325,658 | 406,676,529 | 1,906,006 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -87,6 +74,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-2 | 1,233,332 | 5,150,158 | 214,872 | 2,673,180 | 322,317,032 | 1,461,845 |  |
 | rev-3 | 1,237,217 | 5,128,597 | 214,549 | 2,698,695 | 321,747,427 | 1,479,260 |  |
 | rev-4 | 1,243,561 | 5,149,458 | 215,342 | 2,698,015 | 321,941,135 | 1,481,033 |  |
+| rev-5 | 1,302,028 | 5,300,887 | 224,606 | 2,728,682 | 322,138,795 | 1,490,869 |  |
 
 <!-- END SUMMARY -->
 

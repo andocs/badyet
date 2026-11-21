@@ -110,12 +110,6 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             <div className="v-note" style={{ marginTop: 12 }}><b>Hollow marker</b> = a raise you expect but have not confirmed yet. <b>Past the last event?</b> The projected raise below takes over.</div>
           </section>
 
-          <section className="v-card" aria-labelledby="prj">
-            <h2 id="prj">Projected raises</h2>
-            <div className="v-lbl" style={{ margin: "2px 0 8px" }}>Used only after your last dated event, and drawn dashed everywhere.</div>
-            <ProjectedRaises on={a.assumedRaiseOn} pctBp={a.assumedRaiseBp} month={a.assumedRaiseMonth} />
-          </section>
-
           <section className="v-card" aria-labelledby="alh">
             <div className="v-row v-sp"><h2 id="alh">Recurring allowances</h2><Link className="v-btn v-sm" href="/pay/new?kind=allowance">+ Add</Link></div>
             <div>
@@ -132,6 +126,12 @@ function Timeline({ data }: { data: Awaited<ReturnType<typeof loadSalary>> }) {
             </div>
             <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>Taxed ones add to your taxable pay. You choose that when you add one; to change it, remove it and add it again. The cutoff you pick here is what the payslip builder uses.</p>
           </section>
+          <section className="v-card" aria-labelledby="prj">
+            <h2 id="prj">Projected raises</h2>
+            <div className="v-lbl" style={{ margin: "2px 0 8px" }}>Used only after your last dated event, and drawn dashed everywhere.</div>
+            <ProjectedRaises on={a.assumedRaiseOn} pctBp={a.assumedRaiseBp} month={a.assumedRaiseMonth} />
+          </section>
+
       </div>
 
       <section className="v-card" aria-labelledby="yh">
