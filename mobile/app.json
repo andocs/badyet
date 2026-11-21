@@ -28,7 +28,11 @@
       "expo-router",
       "expo-sqlite",
       "expo-web-browser",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store",
+      "expo-background-task",
+      "expo-image",
+      "expo-image-picker"
     ],
     "extra": {
       "router": {

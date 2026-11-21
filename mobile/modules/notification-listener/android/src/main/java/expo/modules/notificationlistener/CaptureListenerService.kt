@@ -3,24 +3,29 @@ package expo.modules.notificationlistener
 import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import org.json.JSONObject
 
-/** Hands the JS side only what the parsers need. Nothing is written to disk here. */
+/** Tells the JS side (when it is running) that the queue has something new. */
 object NotificationBridge {
   @Volatile
-  var sink: ((Map<String, Any?>) -> Unit)? = null
+  var sink: (() -> Unit)? = null
 }
 
 class CaptureListenerService : NotificationListenerService() {
   override fun onNotificationPosted(sbn: StatusBarNotification) {
+    val ctx = applicationContext
+    val pkg = sbn.packageName ?: return
+    CaptureStore.markSeen(ctx, pkg)
+    if (!CaptureStore.allowed(ctx).contains(pkg)) return
+
     val extras = sbn.notification.extras
-    NotificationBridge.sink?.invoke(
-      mapOf(
-        "package" to sbn.packageName,
-        "title" to extras.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
-        "text" to extras.getCharSequence(Notification.EXTRA_TEXT)?.toString(),
-        "bigText" to extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString(),
-        "postTime" to sbn.postTime.toDouble()
-      )
-    )
+    val item = JSONObject()
+    item.put("package", pkg)
+    item.put("title", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString())
+    item.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString())
+    item.put("bigText", extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString())
+    item.put("postTime", sbn.postTime)
+    CaptureStore.push(ctx, item)
+    NotificationBridge.sink?.invoke()
   }
 }

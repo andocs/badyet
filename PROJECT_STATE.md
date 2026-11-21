@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build (Expo)
 - **Active slice / milestone:** E2 Data layer, Accounts, Now
-- **Gate:** none
-- **Next action:** Verify E1 APK, then E2
-- **User to-do now:** E1 APK installed; E2 in progress
+- **Gate:** waiting
+- **Next action:** Approve E2 after checking Now/Accounts on the phone; then E3 Inbox
+- **User to-do now:** Install APK 6cb8b6c4, check Now/Accounts vs web (see handoff)
 
 ## 3. Execution log
 
@@ -36,6 +36,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 12:27 | slice-E1 | Expo scaffold (SDK 58, Router), Supabase PKCE Google sign-in, tab shell, local listener module, eas.json, vitest 4 tests; tsc, lint pass | 344bc34
 - 2026-11-21 12:32 | slice-E1 | E1 approved at gate; not merged to main yet | -
 - 2026-11-21 13:03 | expo-plan | User asked to include the rest of the web app: added E8-E10 (Plan screens, Settings), release moved to E11; order approved | -
+- 2026-11-21 13:55 | slice-E2 | Mobile Now + Accounts screens (reuse lib/now loadNow, balanceNow), hide amounts, Night Emerald dark/light theme and fonts, Metro/tsconfig share ../lib; 10 tests, tsc, lint, android bundle OK | 0eca0db
+- 2026-11-21 13:57 | expo-plan | Canceled build 6cb8b6c4; added native-freeze step before next build | -
 
 ## 4. Open questions
 
@@ -70,7 +72,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,014,780 | 8,014,300 | 362,663 | 3,589,371 | 433,999,070 | 2,034,934 |  |
+| **Cumulative** | 2,056,465 | 8,184,965 | 372,658 | 3,662,344 | 445,526,239 | 2,081,570 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -102,6 +104,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-11 | 1,330,338 | 5,313,958 | 229,057 | 2,562,175 | 330,096,507 | 1,490,936 |  |
 | Expo Phase 1 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | Slice E1 | 147,519 | 263,004 | 16,645 | 40,963 | 2,682,280 | 23,457 |  |
+| Slice E2 | 41,685 | 170,665 | 9,995 | 39,565 | 3,339,073 | 22,950 |  |
 
 <!-- END SUMMARY -->
 
@@ -127,13 +130,24 @@ Plan screens write straight to Supabase with RLS, so every check the web server 
 
 ## Decisions & architecture
 
-- 2026-11-21 user: bring the Plan screens (Budget, Salary, Bonuses, Funds, Forecast) and Settings to the Android app too (E8-E10). Capture work (E5-E7) goes first (user approved this order). Settings tab becomes a Plan tab with Settings inside.
+- 2026-11-21 user: no more APK builds until every native piece is in, so later changes ship over the air (eas update). Canceled build 6cb8b6c4.
+- Native freeze (slice E2b, before the next build): native capture queue in the listener module (service stores allowlisted notifications in SharedPreferences, JS drains; allowlist set from JS so package names and rules change over the air), plus native packages for later slices: expo-network, expo-secure-store, expo-background-task, expo-task-manager, react-native-svg, expo-image-picker, expo-image, expo-haptics. Anything native added later forces a new build and a runtimeVersion bump.
 
 ## Run & verify guide (detected by Scout, kept current)
 
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E2: what you do now
+1. Get the code:   git fetch && git checkout slice/E2-data-accounts-now   (E1 is included; merge to main after you approve)
+2. Install deps:   cd mobile && npm install
+3. Database:       no DB changes
+4. Config:         none new
+5. Install the APK: build 6cb8b6c4 on https://expo.dev/accounts/docoats/projects/badyet/builds (new native packages: fonts, gradient, so this needs a fresh APK, not an OTA update). Install over the old app.
+6. Check these:    (a) Now tab shows today's safe-to-spend, envelopes, bills, recent; numbers match the web Now page; (b) Accounts tab lists accounts with balances and "You own" total matching the web; (c) "Hide" button masks every peso figure with *****, stays hidden after closing the app; (d) pull down on Now or Accounts refreshes; (e) switch the phone to light mode and the app follows; (f) if Now says setup is needed, finish salary/budget on the web.
+7. Known limits:   Now and Accounts were not run against real data by me (no phone session here); only bundle, typecheck, lint and 10 unit tests. Inbox, + and Settings are stubs until E3/E4. Tab bar has text labels only, no icons yet.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E1: what you do now
 1. Get the code:   git fetch && git checkout slice/E1-expo-scaffold   (merge to main after you approve)
