@@ -67,6 +67,13 @@ describe('sourceForEmail and gmailQuery', () => {
     expect(sourceForEmail('orders@mail.foodpanda.ph', configs)).toBe('foodpanda');
     expect(sourceForEmail('someone@gmail.com', configs)).toBeNull();
   });
+  it('knows the real Grab and foodpanda senders by address, and builds the search from them', () => {
+    expect(defaultConfig('grab').senders).toEqual(['no-reply@grab.com']);
+    expect(defaultConfig('foodpanda').senders).toEqual(['info@mail.foodpanda.ph']);
+    expect(sourceForEmail('Grab <no-reply@grab.com>', configs)).toBe('grab');
+    expect(sourceForEmail('foodpanda <info@mail.foodpanda.ph>', configs)).toBe('foodpanda');
+    expect(gmailQuery(configs, 3)).toContain('info@mail.foodpanda.ph');
+  });
   it('ignores a source that is switched off', () => {
     expect(sourceForEmail('no-reply@grab.com', configs.map((c) => (c.source === 'grab' ? { ...c, enabled: false } : c)))).toBeNull();
   });

@@ -21,8 +21,8 @@ export const SOURCE_INFO: Record<SourceKey, SourceInfo> = {
   bpi: { label: 'BPI', blurb: 'Emails from BPI online banking and InstaPay.', packages: [], senders: ['onlinebanking@bpi.com.ph', 'bpiinstapay@bpi.com.ph'], domains: ['bpi.com.ph'] },
   gotyme: { label: 'GoTyme', blurb: 'App notifications: transfers in and out.', packages: [], senders: [], domains: [] },
   maribank: { label: 'MariBank', blurb: 'App notifications: transfers in and out.', packages: [], senders: [], domains: [] },
-  grab: { label: 'Grab', blurb: 'Receipts for rides and food.', packages: [], senders: [], domains: ['grab.com'] },
-  foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: [], domains: ['foodpanda.com','foodpanda.ph'] },
+  grab: { label: 'Grab', blurb: 'Receipts for rides and food.', packages: [], senders: ['no-reply@grab.com'], domains: ['grab.com'] },
+  foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: ['info@mail.foodpanda.ph'], domains: ['foodpanda.com','foodpanda.ph'] },
   gwallet: { label: 'Google Wallet', blurb: 'Tap-to-pay notifications.', packages: ['com.google.android.apps.walletnfcrel'], senders: [], domains: [] },
 };
 
