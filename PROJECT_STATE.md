@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev plan
-- **Gate:** waiting
-- **Next action:** Approve or request changes on rev/1 to rev/11
-- **User to-do now:** Try the rev branches on desktop, tablet and phone; merge rev/1 to rev/11 to main
+- **Active slice / milestone:** Web revisions done
+- **Gate:** none
+- **Next action:** Start the Android (Expo) app in a new conversation: type /orchestrate and point it at docs/expo-handoff.md (Phase 1 plan first)
+- **User to-do now:** Open a new conversation, read docs/expo-handoff.md, answer its 6 open questions, then approve the plan
 
 ## 3. Execution log
 
@@ -40,6 +40,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 11:03 | rev-9 | MonthOfYear is a popover too (projected raises, bonuses, allowances, funds), budget line sheet Goes to on its own row with Starts/Ends side by side, bonus destination tick shows a spinner and reverts on error, add-destination box and rows re-spaced for phone and tablet | HEAD
 - 2026-11-21 11:10 | rev-10 | Bonus destinations redesigned: '+ Add destination' button, choose a fund (dropdown) or something else (name), amount as flat pesos or percent of the bonus with preview, categories and tags removed, responsive form | HEAD
 - 2026-11-21 11:16 | rev-11 | Bonus hero and split bars: funds show their own colour; custom lines get a stable palette colour not used by any fund, gold, or another line | HEAD
+- 2026-11-21 11:18 | merge | Merged rev/1 to rev/11 into main in order (fast-forward) and pushed main. Wrote docs/expo-handoff.md for the Android (Expo) effort. | HEAD
 
 ## 4. Open questions
 
