@@ -30,6 +30,7 @@ const data = (over: Partial<BudgetData> = {}): BudgetData => ({
     input: { events: [startEvent], allowances: [allowance2], assumptions: noAssumptions, settings, templates: [], bonusRules: [], bonusInstances: [] },
     thisMonth: yearMonth("2027-03"),
     placeable: [],
+    paydays: { first: 10, second: 25 },
   },
   today: isoDate("2027-03-12"),
   paydays: { first: 10, second: 25 },

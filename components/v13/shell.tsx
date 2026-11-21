@@ -7,8 +7,7 @@ import { QuickAddProvider, type QuickAddAccount, type QuickAddCategory } from ".
 
 /**
  * The rehaul shell: a 216px rail on desktop, five tabs on a phone (Now, Inbox, + quick add, Accounts, Plan).
- * Destinations whose pages land in later slices either point at the existing page (Salary, Budget, Bonuses, Funds, Accounts,
- * Settings) or show as unavailable (Forecast). Quick add is the + tab on a phone and the N key on desktop.
+ * Every destination has its own page. Quick add is the + tab on a phone and the N key on desktop.
  */
 export function V13Shell({ children, pending, accounts, categories }: { children: React.ReactNode; pending: number; accounts: QuickAddAccount[]; categories: QuickAddCategory[] }) {
   const today: NavItem[] = [

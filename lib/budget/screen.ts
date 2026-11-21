@@ -18,6 +18,8 @@ export interface BudgetScreen {
   nowRun: ProjectionMonth | null;
   /** All twelve months of the year in Future years view. */
   yearRun: ProjectionMonth[] | null;
+  /** The same year with no expected raises, only when `compare` is asked for. */
+  yearWithout: ProjectionMonth[] | null;
   shown: ProjectionMonth | null;
   /** Pool money moved to or from Wants this cutoff. */
   wantsAdj: Money;
@@ -36,9 +38,9 @@ export const monthLabel = (m: string): string => `${MON[Number(m.slice(5)) - 1]}
 
 /**
  * What the Budget screen shows: this cutoff, or a future month with the rules re-run against projected take-home.
- * Same assembly the web page does, kept here so the phone gets the same numbers.
+ * One assembly for the web page and the phone, so both show the same numbers.
  */
-export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?: string | null }): BudgetScreen {
+export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?: string | null; compare?: boolean }): BudgetScreen {
   const thisMonth = data.salary.thisMonth;
   const hasStart = data.salary.input.events.some((e) => e.kind === "start");
   const fut = opts.fut;
@@ -50,6 +52,7 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   });
   const nowRun = hasStart ? runProjection(input(data.period.month, 1), { includeExpected: false })[0]! : null;
   const yearRun = fut && hasStart ? runProjection(input(`${year}-01` as YearMonth, 12), { includeExpected: true }) : null;
+  const yearWithout = fut && opts.compare && hasStart ? runProjection(input(`${year}-01` as YearMonth, 12), { includeExpected: false }) : null;
   const shown: ProjectionMonth | null = fut ? (yearRun?.find((m) => m.month === month) ?? null) : nowRun;
 
   const periodEntries = data.pools.flatMap((p) => p.entries.filter((e) => e.occurredOn >= data.period.start && e.occurredOn <= data.period.end));
@@ -76,5 +79,5 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const eventLabel = new Map(data.salary.input.events.map((e) => [e.id, `${monthLabel(e.effectiveMonth)} raise`]));
   const topUpRaises = [...new Set(groups.flatMap((g) => g.lines.flatMap((l) => l.topUps.map((t) => eventLabel.get(t.eventId) ?? "a raise"))))];
 
-  return { hasStart, fut, month, year, nowRun, yearRun, shown, wantsAdj, groups, rest, takeHome, fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises };
+  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises };
 }
