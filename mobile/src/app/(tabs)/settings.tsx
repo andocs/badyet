@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text } from 'react-native';
+import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet, Text } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
@@ -11,10 +11,21 @@ export default function Settings() {
   const c = useTheme();
   const { session } = useSession();
   const [granted, setGranted] = useState(false);
+  const [postOk, setPostOk] = useState(true);
+  const needsPostPermission = Platform.OS === 'android' && Number(Platform.Version) >= 33;
+
+  async function allowNotifications() {
+    const r = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+    if (r === PermissionsAndroid.RESULTS.GRANTED) setPostOk(true);
+    else void Linking.openSettings();
+  }
 
   useFocusEffect(
     useCallback(() => {
-      const check = () => setGranted(isAccessGranted());
+      const check = () => {
+        setGranted(isAccessGranted());
+        if (needsPostPermission) void PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS).then(setPostOk);
+      };
       check();
       const sub = AppState.addEventListener('change', (s) => s === 'active' && check());
       return () => sub.remove();
@@ -27,6 +38,15 @@ export default function Settings() {
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>
       </Card>
+      {!postOk ? (
+        <Card>
+          <Label>App notifications</Label>
+          <Body>Off. Android needs this on before it lets you turn on notification access below.</Body>
+          <Pressable style={[s.btn, { backgroundColor: c.accent }]} onPress={allowNotifications} accessibilityRole="button">
+            <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Allow notifications</Text>
+          </Pressable>
+        </Card>
+      ) : null}
       <Card>
         <Label>Notification access</Label>
         <Body>{granted ? 'On. Bad(yet) can read bank notifications.' : 'Off. Turn it on so Bad(yet) can read bank notifications.'}</Body>

@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 2 Build (Expo)
 - **Active slice / milestone:** E3 Inbox
-- **Gate:** none
-- **Next action:** Build E3 Inbox
-- **User to-do now:** E2 approved; E3 in progress
+- **Gate:** paused
+- **Next action:** User paused after E3. When ready: test Inbox on the phone, then reply Approve or Request changes; E4 Quick add is next
+- **User to-do now:** Open app twice to get E3 over the air; check Inbox (see handoff). Pending rows need testing data
 
 ## 3. Execution log
 
@@ -41,6 +41,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 14:56 | slice-E2 | Native-freeze APK built (build 3a080187, commit 79058c1); Kotlin compiled; includes capture queue and native packages for later slices | 79058c1
 - 2026-11-21 15:34 | slice-E2 | Branded APK (build aaf160c6, Pip icon/splash); Accounts coloured cards + detail sheet with balance math; first OTA update published (group a7db7e8f, channel preview, runtime 1.0.0); 11 tests, tsc, lint pass | 70a792f
 - 2026-11-21 15:35 | slice-E2 | E2 approved at gate; not merged to main yet | -
+- 2026-11-21 15:39 | slice-E3 | Inbox: pending list, suggestions (rule then history via lib/inbox/rules), confirm (note, rule, transfer legs), not mine, All activity; 21 tests, tsc, lint, android bundle OK; OTA group 8a9a6463 | f605bc5
+- 2026-11-21 15:49 | slice-E3 | User paused at E3 gate | -
 
 ## 4. Open questions
 
@@ -75,7 +77,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,056,465 | 8,184,965 | 372,658 | 3,662,344 | 445,526,239 | 2,081,570 |  |
+| **Cumulative** | 2,085,312 | 8,295,852 | 377,973 | 3,746,313 | 461,872,627 | 2,142,838 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -108,6 +110,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Expo Phase 1 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | Slice E1 | 147,519 | 263,004 | 16,645 | 40,963 | 2,682,280 | 23,457 |  |
 | Slice E2 | 41,685 | 170,665 | 9,995 | 39,565 | 3,339,073 | 22,950 |  |
+| Slice E3 | 28,847 | 110,887 | 5,315 | 26,843 | 2,605,927 | 19,209 |  |
 
 <!-- END SUMMARY -->
 
@@ -141,6 +144,16 @@ Plan screens write straight to Supabase with RLS, so every check the web server 
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E3: what you do now
+1. Get the code:   git fetch && git checkout slice/E3-inbox   (E1, E2 included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Get the update: no new APK. Open Bad(yet), close it fully and open it again (the update downloads on the first open, applies on the second). Published as update group 8a9a6463 on channel preview.
+6. Check these:    (a) Inbox tab shows "To check (n)" with your pending rows (if none, "All caught up"); (b) a pending row shows account, time, source and category chips, with a suggested category preselected when a rule or history matches; (c) Confirm stays disabled until a category is picked, then moves the row out and the Accounts balance and Now spending update (pull down to refresh); (d) "Always put X under Y" creates a rule that preselects next time; (e) "Not mine" removes the row for good; (f) All activity lists recent rows with their status; (g) a transfer row shows both accounts and confirms without a category; (h) compare against the web Inbox.
+7. Known limits:   needs signal (offline confirm comes with E4's queue); pending rows only appear once capture (E6/E7) or Quick add (E4) creates them, so to test now add a pending row on the web or in the database; not run against real data by me.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E2: what you do now
 1. Get the code:   git fetch && git checkout slice/E2-data-accounts-now   (E1 is included; merge to main after you approve)
