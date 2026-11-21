@@ -1,14 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { destColors, destKey } from '@/lib/bonuses/colors';
 import { loadBonuses } from '@/lib/bonuses/load';
 import { bonusCards, yearSummary, type BonusCard } from '@/lib/bonuses/view';
 import { money } from '@/lib/domain/money';
+import type { BonusRule } from '@/lib/engine/types';
 import { EXEMPTION_CAP } from '@/lib/windfall/compute';
+import { EditBonusSheet, ReceivedSheet, RuleSheet } from '~/components/BonusSheets';
 import { Amount, Body, Card, Chip, Notice, Screen } from '~/components/ui';
-import { saveInstance } from '~/lib/bonusesWrite';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
 import { supabase } from '~/lib/supabase';
@@ -32,20 +33,18 @@ function Row({ left, right, hint, strong }: { left: string; right: React.ReactNo
 }
 
 function CardView({
-  card, colors, baseMultiplier, onSave,
+  card, colors, onEdit, onReceived,
 }: {
   card: BonusCard;
   colors: Record<string, string>;
-  baseMultiplier: number;
-  onSave: (card: BonusCard, patch: { multiplierNum?: number | null; doneIndex?: number }) => void;
+  onEdit: () => void;
+  onReceived: () => void;
 }) {
   const c = useTheme();
   const { hide } = useHide();
   const [open, setOpen] = useState(card.status !== 'received');
   const received = card.status === 'received';
   const usedBefore = EXEMPTION_CAP - card.roomBefore + card.exempt;
-  const mult = card.multiplierNum ?? baseMultiplier;
-  const picks = [['Low ×0.5', 0.5], ['Base ×1.0', 1], ['High ×1.5', 1.5]] as const;
   const placed = card.dests.reduce((t, d) => t + d.amount, 0);
   const left = card.net - placed;
   const allPlaced = Math.abs(left) < 50;
@@ -67,23 +66,10 @@ function CardView({
 
       {open ? (
         <>
-          {card.kind === 'cip' && !received ? (
-            <View style={{ gap: 6 }}>
-              <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>MULTIPLIER</Text>
-              <View style={s.chips}>
-                {picks.map(([label, f]) => {
-                  const value = Math.max(1, Math.round(baseMultiplier * f));
-                  return <Chip key={label} label={label} on={mult === value} onPress={() => onSave(card, { multiplierNum: value })} />;
-                })}
-              </View>
-            </View>
-          ) : null}
-
-          <Row left="Gross" hint={card.kind === 'cip' ? 'Eligible earnings × your component × the multiplier' : card.kind === 'thirteenth' ? '1 month of base' : 'As planned'} right={<Amount value={card.gross} />} />
-          <Row left="De minimis" hint={card.kind === 'thirteenth' ? 'None for the 13th month' : 'Tax-free slice for this bonus'} right={<Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>− {peso(card.deMinimis, hide)}</Text>} />
+          <Row left="Gross" right={<Amount value={card.gross} />} />
+          <Row left="De minimis" right={<Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>− {peso(card.deMinimis, hide)}</Text>} />
           <Row
             left="Counts toward the cap"
-            hint={`Room before this one: ${peso(card.roomBefore, hide)} of ${peso(money(EXEMPTION_CAP), hide)}`}
             right={<Amount value={card.exempt} />}
           />
           <View style={[s.track, { backgroundColor: c.soft }]}>
@@ -91,7 +77,7 @@ function CardView({
           </View>
           <Row
             left="Over the cap, taxed"
-            hint={card.over > 0 ? `${peso(card.over, hide)} goes past the cap` : 'Nothing goes past the cap'}
+           
             right={<Text style={{ color: card.tax ? c.gold : c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>− {peso(card.tax, hide)}</Text>}
           />
           <View style={[s.between, { borderTopWidth: 1, borderTopColor: c.line, paddingTop: 8 }]}>
@@ -110,7 +96,7 @@ function CardView({
             <Pressable
               key={`${destKey(d)}-${i}`}
               disabled={received}
-              onPress={() => onSave(card, { doneIndex: i })}
+              onPress={onEdit}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: d.done, disabled: received }}
               accessibilityLabel={`Mark ${d.name} done`}
@@ -132,7 +118,16 @@ function CardView({
               <Text style={{ color: allPlaced ? c.accentText : c.gold, fontFamily: fonts.bodyBold, fontSize: 14 }}>{peso(money(Math.round(left)), hide)}</Text>
             </View>
           ) : null}
-          {!received ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Adding or changing destinations, and marking a bonus received, are on the web for now.</Text> : null}
+          <View style={s.row}>
+            <Pressable onPress={onEdit} accessibilityRole="button" style={[s.btn, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>Edit</Text>
+            </Pressable>
+            {!received ? (
+              <Pressable onPress={onReceived} accessibilityRole="button" style={[s.btn, { flex: 1, backgroundColor: c.accent }]}>
+                <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 14 }}>Mark received</Text>
+              </Pressable>
+            ) : null}
+          </View>
         </>
       ) : null}
     </Card>
@@ -145,7 +140,6 @@ export default function Bonuses() {
   const { hide } = useHide();
   const { data, error, refreshing, reload } = useLoad(() => loadBonuses(supabase));
   const [year, setYear] = useState<number | null>(null);
-  const [problem, setProblem] = useState<string | null>(null);
 
   const input = data?.salary.input;
   const hasStart = !!input?.events.some((e) => e.kind === 'start');
@@ -158,33 +152,26 @@ export default function Bonuses() {
   const total = Math.max(1, sum.net);
   const colors = data ? destColors(data.funds, cards.flatMap((x) => x.dests)) : {};
 
-  /** Ticks one destination, or sets the CIP multiplier. Sends the whole year's choices for that bonus, like the web does. */
-  async function save(card: BonusCard, patch: { multiplierNum?: number | null; doneIndex?: number }) {
-    setProblem(null);
-    const r = await saveInstance(supabase, {
-      ruleId: card.ruleId,
-      year: card.year,
-      multiplierNum: patch.multiplierNum !== undefined ? patch.multiplierNum : card.multiplierNum,
-      splits: card.dests.map((d, i) => ({ kind: d.kind, targetId: d.targetId, label: d.kind === 'fund' ? null : (d.label ?? d.name), amount: d.amount, done: i === patch.doneIndex ? !d.done : d.done })),
-      received: null,
-    });
-    if ('error' in r) setProblem(r.error);
-    else await reload();
-  }
+  const [edit, setEdit] = useState<{ k: 'edit' | 'received'; card: BonusCard } | null>(null);
+  const [rule, setRule] = useState<{ rule: BonusRule | null } | null>(null);
+  const done = () => {
+    setEdit(null);
+    setRule(null);
+    void reload();
+  };
 
   return (
     <Screen title="Bonuses" refreshing={refreshing} onRefresh={reload}>
       {error ? <Notice tone="error">{error}</Notice> : null}
-      {problem ? <Notice tone="error">{problem}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
 
       {data ? (
         <>
-          <View style={s.chips}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
             {years.map((y) => (
               <Chip key={y} label={`${y}${y === data.thisYear ? ' · this year' : ''}`} on={y === shownYear} onPress={() => setYear(y)} />
             ))}
-          </View>
+          </ScrollView>
 
           {!hasStart ? (
             <Notice>No salary on file yet. Bonuses follow your pay, so add your salary under Salary and tax first.</Notice>
@@ -192,11 +179,7 @@ export default function Bonuses() {
             <>
               <LinearGradient colors={[c.heroA, c.heroB]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
                 <Text style={[s.heroLabel, { fontFamily: fonts.bodyBold }]}>BONUS MONEY IN {shownYear}, AFTER TAX</Text>
-                <Amount value={sum.net} style={{ color: '#fff', fontFamily: fonts.display, fontSize: 38, lineHeight: 44 }} />
-                <Text style={{ color: '#d3efe6', fontFamily: fonts.body, fontSize: 14 }}>
-                  {peso(sum.gross, hide)} gross · {peso(sum.tax, hide)} tax · {sum.count} bonus{sum.count === 1 ? '' : 'es'}
-                  {prev ? ` · ${peso(money(sum.net - prev.net), hide)} vs ${shownYear - 1}` : ''}
-                </Text>
+                <Amount value={sum.net} style={{ color: '#fff', fontFamily: fonts.display, fontSize: 30, lineHeight: 36 }} />
                 {sum.net > 0 ? (
                   <>
                     <View style={s.stack}>
@@ -227,30 +210,35 @@ export default function Bonuses() {
                 ) : null}
               </LinearGradient>
 
-              {cards.length === 0 ? <Notice>No bonuses land in {shownYear}. Add a yearly rule or a one-off on the web.</Notice> : null}
+              {cards.length === 0 ? <Notice>No bonuses land in {shownYear}. Add a rule below.</Notice> : null}
               {cards.map((card) => (
-                <CardView key={`${card.key}-${card.status}-${card.net}-${card.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(',')}`} card={card} colors={colors} baseMultiplier={input!.assumptions.cipMultiplierNum} onSave={save} />
+                <CardView key={`${card.key}-${card.status}-${card.net}-${card.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(',')}`} card={card} colors={colors} onEdit={() => setEdit({ k: 'edit', card })} onReceived={() => setEdit({ k: 'received', card })} />
               ))}
 
               <Card>
-                <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 16 }}>Rules</Text>
+                <View style={s.between}>
+                  <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 16 }}>Rules</Text>
+                  <Pressable onPress={() => setRule({ rule: null })} accessibilityRole="button" style={[s.btn, { backgroundColor: c.accent, minHeight: 36, paddingHorizontal: 14 }]}>
+                    <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 13 }}>+ Add</Text>
+                  </Pressable>
+                </View>
                 {input!.bonusRules.length === 0 ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>No bonus rules yet.</Text> : null}
                 {input!.bonusRules.map((r) => (
-                  <View key={r.id} style={s.between}>
+                  <Pressable key={r.id} onPress={() => setRule({ rule: r })} accessibilityRole="button" style={[s.between, { minHeight: 48 }]}>
                     <Body bold>{r.name}</Body>
                     <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
-                      {r.recurrence === 'once' ? 'one-off' : `yearly, ${MON[r.payMonth - 1]}`} · {r.payslipCutoff === 'first' ? '1st' : '2nd'} cutoff
+                      {r.recurrence === 'once' ? 'one-off' : `yearly, ${MON[r.payMonth - 1]}`} ›
                     </Text>
-                  </View>
+                  </Pressable>
                 ))}
-                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
-                  Shared ₱90,000 cap: the part of each bonus left after its de minimis counts toward one cap per year. Past it, the excess is taxed. Adding and editing rules is on the web for now.
-                </Text>
               </Card>
             </>
           )}
         </>
       ) : null}
+      {data && edit?.k === 'edit' ? <EditBonusSheet card={edit.card} funds={data.funds.map((f) => ({ id: f.id, name: f.name }))} baseMultiplier={input!.assumptions.cipMultiplierNum} onClose={() => setEdit(null)} onSaved={done} /> : null}
+      {edit?.k === 'received' ? <ReceivedSheet card={edit.card} onClose={() => setEdit(null)} onSaved={done} /> : null}
+      {rule ? <RuleSheet rule={rule.rule} onClose={() => setRule(null)} onSaved={done} /> : null}
     </Screen>
   );
 }
@@ -261,6 +249,7 @@ const s = StyleSheet.create({
   stack: { flexDirection: 'row', height: 10, borderRadius: 5, overflow: 'hidden', backgroundColor: 'rgba(255,255,255,0.15)', marginTop: 6 },
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  btn: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },

@@ -8,6 +8,7 @@ import { runProjection } from '@/lib/engine/projection';
 import { forecastInput, forecastRows, savedThisMonth, totalBalance, yearEnds, type ForecastRow } from '@/lib/funds/forecast';
 import { loadFunds, type FundsData } from '@/lib/funds/load';
 import { ForecastChart, type FundMeta } from '~/components/ForecastChart';
+import { BulkSheet, OverrideSheet } from '~/components/FundSheets';
 import { Amount, Body, Card, Chip, Notice, Screen } from '~/components/ui';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
@@ -21,7 +22,7 @@ const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const WHY = (r: string) =>
   r.startsWith('priority') ? `Priority ${r.slice(9)}` : r === 'cap hit' ? 'Cap reached' : r === 'pool ran out' ? 'Pool ran out' : r === 'takes the rest' ? 'Takes the rest' : r === 'pinned' ? 'Pinned' : r === 'skipped' ? 'Skipped' : r;
 
-function MonthSheet({ row, funds, onClose }: { row: ForecastRow; funds: FundMeta[]; onClose: () => void }) {
+function MonthSheet({ row, funds, onClose, onChange }: { row: ForecastRow; funds: FundMeta[]; onClose: () => void; onChange: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const insets = useSafeAreaInsets();
@@ -68,7 +69,9 @@ function MonthSheet({ row, funds, onClose }: { row: ForecastRow; funds: FundMeta
                 <Amount value={row.unplaced} />
               </View>
             ) : null}
-          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Changing the order for a month, pinning amounts and resetting a month are on the web for now.</Text>
+          <Pressable onPress={onChange} accessibilityRole="button" style={[s.btn, { backgroundColor: c.accent }]}>
+            <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Change this month</Text>
+          </Pressable>
           <Pressable onPress={onClose} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft }]}>
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Close</Text>
           </Pressable>
@@ -109,6 +112,8 @@ export default function Forecast() {
   const [vis, setVis] = useState<Set<string> | null>(null);
   const [year, setYear] = useState<number | null>(null);
   const [sel, setSel] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [bulk, setBulk] = useState(false);
 
   const hasStart = !!data?.budget.salary.input.events.some((e) => e.kind === 'start');
   const ready = !!data && hasStart && data.funds.length > 0;
@@ -188,7 +193,8 @@ export default function Forecast() {
                 ))}
               </View>
               <ForecastChart rows={rows} funds={shown} stacked={stacked} onPick={setSel} sel={sel} />
-              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>▼ marks a month with an override. Tap anywhere on the chart to open that month.</Text>
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>▼ marks a month with an override.</Text>
+              
             </Card>
           ) : (
             <>
@@ -248,8 +254,7 @@ export default function Forecast() {
                       );
                     })}
                 </View>
-                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Each bar splits the month’s savings by fund. * or assumed = assumed raises.</Text>
-              </Card>
+                </Card>
               <View style={s.chips}>
                 {years.map((y) => (
                   <Chip key={y} label={String(y)} on={y === shownYear} onPress={() => setYear(y)} />
@@ -259,7 +264,12 @@ export default function Forecast() {
           )}
 
           <Card>
-            <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Months that differ</Text>
+            <View style={s.between}>
+              <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Months that differ</Text>
+              <Pressable onPress={() => setBulk(true)} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft, minHeight: 36, paddingHorizontal: 14 }]}>
+                <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Change many</Text>
+              </Pressable>
+            </View>
             <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Months you changed from the default order.</Text>
             {data!.overrides.length === 0 ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>None. Every month follows the default.</Text> : null}
             {[...data!.overrides].sort((a, b) => a.month.localeCompare(b.month)).map((o) => {
@@ -283,7 +293,34 @@ export default function Forecast() {
         </>
       ) : null}
 
-      {row ? <MonthSheet row={row} funds={funds} onClose={() => setSel(null)} /> : null}
+      {row && !editing ? <MonthSheet row={row} funds={funds} onClose={() => setSel(null)} onChange={() => setEditing(row.month)} /> : null}
+      {data && editing && rows.find((r) => r.month === editing) ? (
+        <OverrideSheet
+          row={rows.find((r) => r.month === editing)!}
+          funds={data.funds.map((f) => ({ id: f.id, name: f.name }))}
+          order={data.overrides.find((o) => o.month === editing)?.order ?? null}
+          pins={Object.fromEntries(Object.entries(data.overrides.find((o) => o.month === editing)?.pins ?? {}).map(([k, v]) => [k, v as number]))}
+          skips={data.overrides.find((o) => o.month === editing)?.skips ?? []}
+          note={data.notes.get(editing) ?? ''}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            setSel(null);
+            void reload();
+          }}
+        />
+      ) : null}
+      {data && bulk ? (
+        <BulkSheet
+          months={rows.filter((r) => r.year === shownYear).map((r) => r.month)}
+          funds={data.funds.map((f) => ({ id: f.id, name: f.name }))}
+          onClose={() => setBulk(false)}
+          onSaved={() => {
+            setBulk(false);
+            void reload();
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }
