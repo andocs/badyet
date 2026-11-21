@@ -11,17 +11,19 @@ interface SourceInfo {
   packages: string[];
   /** Email senders for the Gmail side. */
   senders: string[];
+  /** Email domains recognised even when no sender is listed (best guess). */
+  domains: string[];
 }
 
 export const SOURCE_INFO: Record<SourceKey, SourceInfo> = {
-  gcash: { label: 'GCash', blurb: 'App notifications: money in and out.', packages: ['com.globe.gcash.android'], senders: [] },
-  maya: { label: 'Maya', blurb: 'App notifications: money in and out.', packages: ['com.paymaya'], senders: [] },
-  bpi: { label: 'BPI', blurb: 'Emails from BPI online banking and InstaPay.', packages: [], senders: ['onlinebanking@bpi.com.ph', 'bpiinstapay@bpi.com.ph'] },
-  gotyme: { label: 'GoTyme', blurb: 'App notifications: transfers in and out.', packages: [], senders: [] },
-  maribank: { label: 'MariBank', blurb: 'App notifications: transfers in and out.', packages: [], senders: [] },
-  grab: { label: 'Grab', blurb: 'Receipts for rides and food.', packages: [], senders: [] },
-  foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: [] },
-  gwallet: { label: 'Google Wallet', blurb: 'Tap-to-pay notifications.', packages: ['com.google.android.apps.walletnfcrel'], senders: [] },
+  gcash: { label: 'GCash', blurb: 'App notifications: money in and out.', packages: ['com.globe.gcash.android'], senders: [], domains: [] },
+  maya: { label: 'Maya', blurb: 'App notifications: money in and out.', packages: ['com.paymaya'], senders: [], domains: [] },
+  bpi: { label: 'BPI', blurb: 'Emails from BPI online banking and InstaPay.', packages: [], senders: ['onlinebanking@bpi.com.ph', 'bpiinstapay@bpi.com.ph'], domains: ['bpi.com.ph'] },
+  gotyme: { label: 'GoTyme', blurb: 'App notifications: transfers in and out.', packages: [], senders: [], domains: [] },
+  maribank: { label: 'MariBank', blurb: 'App notifications: transfers in and out.', packages: [], senders: [], domains: [] },
+  grab: { label: 'Grab', blurb: 'Receipts for rides and food.', packages: [], senders: [], domains: ['grab.com'] },
+  foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: [], domains: ['foodpanda.com','foodpanda.ph'] },
+  gwallet: { label: 'Google Wallet', blurb: 'Tap-to-pay notifications.', packages: ['com.google.android.apps.walletnfcrel'], senders: [], domains: [] },
 };
 
 /** How one source is handled. A source with no saved row uses these defaults. */

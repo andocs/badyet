@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E6 Notification capture
+- **Active slice / milestone:** E7 Gmail capture
 - **Gate:** none
-- **Next action:** Build E6: parsers, pipeline, dedupe, transfer pairing
-- **User to-do now:** Apply capture migration; E6 in progress
+- **Next action:** E7: decide Google sign-in approach, build parsers and pipeline
+- **User to-do now:** E7 in progress
 
 ## 3. Execution log
 
@@ -39,6 +39,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 16:32 | slice-E4b | E4b approved at gate; Accounts write features deferred (user did not choose), E5 next | -
 - 2026-11-21 16:39 | slice-E5 | Capture rules: migration 20261207000000 (capture_sources, capture_rules, RLS, rollback), shared lib/capture (decide, validate, sources) with 30 tests, web Settings Capture section + server actions, phone Capture rules screen with seen-apps picker, listener allowlist sync; mobile 47 tests, web 274 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 81d4c1f6 | 60658f9
 - 2026-11-21 16:47 | slice-E5 | E5 approved at gate | -
+- 2026-11-21 16:53 | slice-E6 | Notification capture: parsers for GCash, Maya, GoTyme, MariBank, BPI push (19 tests on real samples), decide/row/dedupe/account resolution, transfer pairing (shared lib/capture, 66 tests), phone pipeline with held captures, safe drain, send queue handles duplicates, runner on launch/foreground/new notification; mobile 59 tests, web 310 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c4234731 | 8c3f80e
+- 2026-11-21 16:55 | slice-E6 | E6 approved at gate (not yet tested on real notifications) | -
+- 2026-11-21 16:57 | slice-E7 | Approach chosen: google-signin library, Gmail now; Android custom-scheme OAuth is unsupported by Google | -
 
 ## 4. Open questions
 
@@ -73,7 +76,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,144,206 | 8,508,100 | 394,099 | 3,888,878 | 492,739,469 | 2,253,371 |  |
+| **Cumulative** | 2,144,206 | 8,508,100 | 394,099 | 3,938,206 | 501,339,493 | 2,298,287 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -110,6 +113,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E4 | 24,134 | 85,191 | 5,961 | 24,914 | 4,120,774 | 17,102 |  |
 | Slice E4b | 0 | 0 | 0 | 31,602 | 3,000,641 | 23,294 |  |
 | Slice E5 | 34,760 | 127,057 | 10,165 | 56,170 | 9,020,239 | 41,456 |  |
+| Slice E6 | 0 | 0 | 0 | 47,276 | 8,147,375 | 38,297 |  |
 
 <!-- END SUMMARY -->
 
@@ -137,13 +141,23 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 
 ## Decisions & architecture
 
-- 2026-11-21 user: whenever the app is updated, make sure the Vercel preview build for the web app does not fail. Cause found: the root tsconfig included mobile/**; fixed by excluding mobile in tsconfig.json and eslint.config.mjs (commit 98fa297). After each push to a slice branch, check the Vercel status (gh api repos/{owner}/{repo}/commits/<sha>/status) and run `npm run build` at the repo root if mobile/ or lib/ changed.
+- 2026-11-21 user: Gmail access via @react-native-google-signin/google-signin (free version), built now (E7). Google does not support custom-scheme sign-in for Android clients, so this needs a native module, a new APK, and Google Cloud setup by the user (Gmail API, test user, Android OAuth client with the app's SHA-1, Web client id). Refresh tokens for a Testing-mode app expire after 7 days (re-sign-in about weekly).
 
 ## Run & verify guide (detected by Scout, kept current)
 
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E6 (notification capture): what you do now
+1. Get the code:   git fetch && git checkout slice/E6-notification-capture   (E1-E5 included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       none new. Saving capture settings needs the E5 migration (supabase/migrations/20261207000000_capture_rules.sql) applied in Supabase if you have not yet. Capture itself works with the defaults without it.
+4. Config:         none
+5. Get the update: use the APK with the permission fix (https://expo.dev/artifacts/eas/RD1KmHqP2wFlP7Mzwo6gOV4UKl1sj-xoatg33i8s784.apk) and turn on notification access in Settings (Allow notifications first). Then open the app twice (or Settings > Check for updates) for update group c4234731.
+6. Check these:    (a) Settings > Capture rules: GCash and Maya already list their apps; for GoTyme and MariBank open the editor, tap their app in "Apps that have posted notifications on this phone", Save; (b) make a small payment or transfer (even P1) so GCash, Maya, GoTyme or MariBank posts a notification, then open Bad(yet): a pending row appears in Inbox with the right amount, direction and merchant; (c) the same notification does not appear twice, and a promo or OTP never shows; (d) each row sits in the right account (an account named like the source, or the usual account you chose; if none, Capture rules shows "N captures waiting for an account"); (e) a keyword rule "ignore" on a word in the notification keeps it out; (f) a move between two of your own captured accounts (for example Maya to GoTyme) shows as one transfer with both legs in Inbox; (g) turn on "Confirm without asking" with an account and category set for one source and see its next capture arrive already confirmed.
+7. Known limits:   NOT tested by me on a real notification (parsers are tested on your real sample texts). Captures are turned into Inbox items when the app is open or the next time you open it; notifications that arrive while it is closed wait safely and are picked up on the next open (no background run yet). Not done: Google Wallet (no sample), Grab, foodpanda and BPI emails (E7). BPI push is parsed but your BPI alerts do not fire. Maya "You paid" payments and GCash wording for other transactions are guesses until you send real examples; anything unrecognised is ignored, not guessed. If a notification's wording differs from the samples it is silently skipped, so send me any that never appear.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E5 (capture rules): what you do now
 1. Get the code:   git fetch && git checkout slice/E5-capture-rules   (E1-E4b included; merge to main after you approve)

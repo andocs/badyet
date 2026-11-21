@@ -15,6 +15,8 @@ export interface Parsed {
   accountHint: string | null;
   /** The app's reference number, when it has one. Best key for spotting a repeat. */
   ref: string | null;
+  /** Your own account's nickname, when the message shows it (BPI emails do). */
+  accountName: string | null;
 }
 
 /** The pieces of an Android notification the parsers read. */
@@ -28,7 +30,7 @@ const CUR = String.raw`(?:PHP|P|₱)?\s?`;
 const AMT = String.raw`([\d,]+(?:\.\d{1,2})?)`;
 
 /** "1,250.50" -> 125050, or null. */
-function centavos(text: string | undefined): number | null {
+export function centavos(text: string | undefined): number | null {
   if (!text) return null;
   const m = parsePesos(text.replace(/,/g, '').replace(/\.$/, ''));
   return m === undefined || m <= 0 ? null : m;
@@ -51,7 +53,7 @@ function clean(counterparty: string | undefined): string | null {
 const ref = (t: string): string | null => /Ref\.?\s*No\.?\s*:?\s*([A-Za-z0-9]+)/i.exec(t)?.[1] ?? null;
 
 type Parser = (title: string, body: string) => Parsed | null;
-const make = (p: Omit<Parsed, 'counterpartyLast4' | 'accountHint' | 'ref'> & Partial<Parsed>): Parsed => ({ counterpartyLast4: null, accountHint: null, ref: null, ...p });
+const make = (p: Omit<Parsed, 'counterpartyLast4' | 'accountHint' | 'ref' | 'accountName'> & Partial<Parsed>): Parsed => ({ counterpartyLast4: null, accountHint: null, ref: null, accountName: null, ...p });
 
 /**
  * GCash. Money in: "You have received 900.00 of GCash from BPI / VYBE by BPI with account ending in 8167."

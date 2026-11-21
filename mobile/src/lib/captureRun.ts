@@ -18,6 +18,8 @@ export interface Held {
   postTime: number;
   decision: Extract<Decision, { keep: true }>;
   hash: string;
+  /** Where it came from: a phone notification (default) or an email. */
+  origin?: 'notification' | 'import';
 }
 
 export interface RunContext {
@@ -37,6 +39,8 @@ export interface RunDeps {
   enqueue: (row: TxnInsert) => Promise<void>;
   hash: (text: string) => Promise<string>;
   newId: () => string;
+  /** True when the same money movement is already recorded (for example the same transfer seen in a notification and an email). */
+  isDuplicate?: (row: TxnInsert) => Promise<boolean>;
 }
 
 export interface RunSummary {
@@ -67,7 +71,13 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
     const cfg = cfgOf(h.parsed.source);
     const accountId = cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null;
     if (!accountId) return false;
-    await d.enqueue(buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash }));
+    const row = buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
+    // Emails usually arrive after the phone alert for the same event. Only emails are checked, so two real purchases of the same amount in a row are both kept.
+    if (h.origin === 'import' && d.isDuplicate && (await d.isDuplicate(row))) {
+      sum.skipped += 1;
+      return true;
+    }
+    await d.enqueue(row);
     sum.added += 1;
     return true;
   };

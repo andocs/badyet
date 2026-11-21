@@ -55,7 +55,8 @@
             "image": "./assets/splash-icon.png"
           }
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "router": {

@@ -3,6 +3,7 @@ import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet,
 import { useFocusEffect, useRouter } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
+import { GmailCard } from '~/components/GmailCard';
 import { UpdatesCard } from '~/components/UpdatesCard';
 import { useSession } from '~/lib/session';
 import { supabase } from '~/lib/supabase';
@@ -64,6 +65,7 @@ export default function Settings() {
           <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Capture rules</Text>
         </Pressable>
       </Card>
+      <GmailCard />
       <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => supabase.auth.signOut()} accessibilityRole="button">
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Sign out</Text>
       </Pressable>

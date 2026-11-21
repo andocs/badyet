@@ -5,7 +5,7 @@ import { accountWords, buildRow, dedupeKey, resolveAccount, type AccountLite } f
 import { defaultConfig } from './sources';
 
 const parsed = (over: Partial<Parsed> = {}): Parsed => ({
-  source: 'gcash', direction: 'out', amount: 11_500, counterparty: 'NEW POWER', counterpartyLast4: null, accountHint: null, ref: null, ...over,
+  source: 'gcash', direction: 'out', amount: 11_500, counterparty: 'NEW POWER', counterpartyLast4: null, accountHint: null, ref: null, accountName: null, ...over,
 });
 const T = Date.parse('2026-11-21T01:30:20Z');
 

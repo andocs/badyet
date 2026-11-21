@@ -13,7 +13,7 @@ describe('GCash', () => {
   it('money in with the full text: sender, their account digits and the reference', () => {
     const body = 'You have received 900.00 of GCash from BPI / VYBE by BPI with account ending in 8167. Your new balance is 1032.41 11-10-26 07:19 AM. Ref. No. 20261110BOPIPHMMXXXB000071916652428. Use now to buy load.';
     expect(parseNotification('gcash', n('GCash Funds Received', body))).toEqual({
-      source: 'gcash', direction: 'in', amount: 90_000, counterparty: 'BPI / VYBE by BPI', counterpartyLast4: '8167', accountHint: null, ref: '20261110BOPIPHMMXXXB000071916652428',
+      source: 'gcash', direction: 'in', amount: 90_000, counterparty: 'BPI / VYBE by BPI', counterpartyLast4: '8167', accountHint: null, ref: '20261110BOPIPHMMXXXB000071916652428', accountName: null,
     });
   });
   it('a payment includes the convenience fee, since that left the wallet too', () => {

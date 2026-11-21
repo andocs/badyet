@@ -12,7 +12,7 @@ export interface TxnInsert {
   merchant: string | null;
   kind: 'expense' | 'income';
   category_id: string | null;
-  source: 'manual' | 'notification';
+  source: 'manual' | 'notification' | 'import';
   status: 'pending' | 'confirmed';
   confirmed_at: string | null;
   /** Spots a repeat of the same notification. Unique per user in the database. */
@@ -55,6 +55,11 @@ export function resolveAccount(config: SourceConfig, p: Parsed, accounts: readon
     const byDigits = accounts.filter((a) => a.last4 && (a.last4.endsWith(p.accountHint!) || p.accountHint!.endsWith(a.last4)));
     if (byDigits.length === 1) return byDigits[0]!.id;
   }
+  if (p.accountName) {
+    const nick = accountWords({ name: p.accountName, institution: null });
+    const byNick = accounts.filter((a) => nick.some((w) => accountWords(a).includes(w)));
+    if (byNick.length === 1) return byNick[0]!.id;
+  }
   const words = SOURCE_INFO[config.source].label.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
   const byName = accounts.filter((a) => words.some((w) => accountWords(a).includes(w)));
   return byName.length === 1 ? byName[0]!.id : null;
@@ -68,6 +73,8 @@ export function buildRow(args: {
   accountId: string;
   postTime: number;
   hash: string;
+  /** 'notification' for phone alerts, 'import' for emails. */
+  source?: 'notification' | 'import';
 }): TxnInsert {
   const { parsed: p, decision: d } = args;
   const at = new Date(args.postTime).toISOString();
@@ -80,7 +87,7 @@ export function buildRow(args: {
     merchant: p.counterparty,
     kind: p.direction === 'out' ? 'expense' : 'income',
     category_id: d.categoryId,
-    source: 'notification',
+    source: args.source ?? 'notification',
     status: d.status,
     confirmed_at: confirmed ? at : null,
     dedupe_hash: args.hash,

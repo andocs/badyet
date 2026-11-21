@@ -87,6 +87,30 @@ describe('runCapture', () => {
     expect(second.held()).toEqual([]);
   });
 
+  it('places an email capture as an import, and skips it when the same money is already recorded', async () => {
+    const held: Held = {
+      parsed: { source: 'gcash', direction: 'out', amount: 5_000, counterparty: 'X', counterpartyLast4: null, accountHint: null, ref: 'R1', accountName: null },
+      postTime: T,
+      decision: { keep: true, status: 'pending', accountId: null, categoryId: null, ruleId: null },
+      hash: 'h-email',
+      origin: 'import',
+    };
+    const fresh = setup({ held: [held] });
+    expect(await runCapture(fresh.deps)).toMatchObject({ added: 1 });
+    expect(fresh.rows[0]).toMatchObject({ source: 'import', amount: -5_000, dedupe_hash: 'h-email' });
+
+    const dup = setup({ held: [held] });
+    dup.deps.isDuplicate = async () => true;
+    expect(await runCapture(dup.deps)).toMatchObject({ added: 0, skipped: 1 });
+    expect(dup.rows).toHaveLength(0);
+  });
+
+  it('does not run the duplicate check on phone notifications, so two real purchases in a row are both kept', async () => {
+    const t = setup({ queue: [GCASH_PAID, { ...GCASH_PAID, text: GCASH_PAID.text!.replace('111913449', '222222222'), postTime: T + 60_000 }] });
+    t.deps.isDuplicate = async () => true;
+    expect(await runCapture(t.deps)).toMatchObject({ added: 2 });
+  });
+
   it('leaves the queue alone when settings cannot be loaded, so nothing is lost', async () => {
     const t = setup({ ctx: null, queue: [GCASH_PAID] });
     await runCapture(t.deps);
