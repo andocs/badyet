@@ -60,11 +60,12 @@ export function Body({ children, style, bold }: { children: ReactNode; style?: T
 }
 
 /** A peso figure that respects hide-amounts. */
-export function Amount({ value, style, symbol }: { value: Money; style?: TextStyle; symbol?: boolean }) {
+export function Amount({ value, style, symbol, signed }: { value: Money; style?: TextStyle; symbol?: boolean; signed?: boolean }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
     <Text style={[{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15, fontVariant: ['tabular-nums'] }, style]}>
+      {signed && !hide && value > 0 ? '+' : ''}
       {peso(value, hide, { symbol })}
     </Text>
   );
