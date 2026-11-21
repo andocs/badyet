@@ -10,7 +10,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions (Expo round two)
 - **Active slice / milestone:** Round two built; awaiting device test
 - **Gate:** none
-- **Next action:** User reports whether loading after a while is fixed; if not, get the exact message shown
+- **Next action:** Tomorrow: answer the open questions T1, T3, T4, T5; then start T1 and T2 (no questions needed for T2); Google Wallet when the sample arrives
 - **User to-do now:** Test More pages and Now after the update; capture with app closed; send Wallet sample
 
 ## 3. Execution log
@@ -41,6 +41,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 4. Open questions
 
+- [ ] Q24: T1: what are your own figures for one payslip (base, allowances, SSS, PhilHealth, Pag-IBIG, tax withheld, take-home) and which one differs from the app?
+- [ ] Q25: T4: which line is in both cutoffs with different values, and what does each cutoff show in the app versus what you expect?
+- [ ] Q26: T5: do reimbursements arrive on your payslip (taxed or not), as a separate deposit, or both? Is the utility reimbursement a fixed monthly amount, and which cutoff does each land in?
+- [ ] Q27: T3: are installments card plans (a purchase split over months with a monthly charge) or loans, and do you want them to reduce Wants or sit as their own budget lines?
 - [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
 - [x] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates. -> User 2026-11-20: paydays are the 10th and 25th. Cutoffs are payday-to-payday (old spec: P1 = days 11-24, P2 = 25 to 10 next month), so the calendar split by one start day cannot model it. Building as rev-24 (assumption: first = paid 10th covering 11-24, second = paid 25th covering 25 to 10; a period belongs to the month it starts in).
 - [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
@@ -134,6 +138,16 @@ Round two (2026-11-21). E1 to E12 are merged; rev-1, rev-2, rev-3 and the approv
 | G4 | R5-R7 | Bonuses (rules, destinations, mark received), Funds (create, edit, reorder), Forecast overrides (single, bulk, reset) | no | planned |
 | G5 | R10 | Settings: paydays and office days editors, CSV export, setup wizard, final polish | no | planned |
 On hold: Google Wallet capture (needs a real notification sample). Dropped: compare-without-raises on phone. Not a slice: real-data check (needs the user's screenshots). Every phone slice: check Vercel after any push touching lib/.
+
+
+Round three (lined up 2026-11-22, to start next session; nothing built yet):
+| # | Item | First step | Status |
+|---|---|---|---|
+| T1 | Income tax mismatch: explain how the app works it out (annualised monthly taxable pay on the 2023 TRAIN table, divided by 12, less SSS, PhilHealth, Pag-IBIG; one-time taxable amounts at the marginal rate) and find the gap against the user's own working | Get the user's payslip figures (base, allowances, SSS, PhilHealth, Pag-IBIG, tax withheld) and compare line by line; scout lib/engine/payslip.ts, lib/pay/* | planned |
+| T2 | Accounts: tapping a card is slow, and screens have few loading indicators | Scout the tap path (Detail modal, reload after save, loadAccounts); add a shared loading state (skeleton or spinner) to useLoad, pull-to-refresh and sheet saves | planned |
+| T3 | Installments: track and add them (web and phone) | Scout what /installments already does on the web; decide how a plan (total, months, start, account) feeds the budget and Now | planned |
+| T4 | A line that applies to both cutoffs but differs in value between them | Get an example line; scout lib/engine/budget.ts for how pct, fixed and rest lines split across cutoffs | planned |
+| T5 | Reimbursements: (a) you pay a bill and the company pays you back; (b) a fixed reimbursement you get whether or not you pay, and the extra can go to Wants | Settle the questions below, then model it (income type, link to a budget line, which cutoff, effect on Wants) | planned |
 
 ## Decisions & architecture
 
