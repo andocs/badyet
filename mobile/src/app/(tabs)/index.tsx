@@ -8,6 +8,7 @@ import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayNam
 import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { AccountTile } from '~/components/AccountTile';
+import { GmailBanner } from '~/components/GmailBanner';
 import { Runway } from '~/components/Runway';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { resolveColor } from '~/lib/color';
@@ -53,6 +54,7 @@ export default function Now() {
       refreshing={refreshing}
       onRefresh={reload}
     >
+      <GmailBanner />
       <Hero view={view} today={today} />
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />

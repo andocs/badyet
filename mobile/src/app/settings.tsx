@@ -3,6 +3,8 @@ import { AppState, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet,
 import { useFocusEffect, useRouter } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
+import { BackgroundCard } from '~/components/BackgroundCard';
+import { GmailBanner } from '~/components/GmailBanner';
 import { GmailCard } from '~/components/GmailCard';
 import { PaydaysCard } from '~/components/PaydaysCard';
 import { UpdatesCard } from '~/components/UpdatesCard';
@@ -45,6 +47,7 @@ export default function Settings() {
       <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
       </Pressable>
+      <GmailBanner />
       <Card>
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>
@@ -79,6 +82,7 @@ export default function Settings() {
           <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Capture rules</Text>
         </Pressable>
       </Card>
+      <BackgroundCard />
       <GmailCard />
       <Card>
         <Label>Tax and contributions</Label>
