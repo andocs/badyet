@@ -1,17 +1,9 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { colors } from '@/lib/theme';
+import { Notice, Screen } from '~/components/ui';
 
-export default function Screen() {
+export default function Screen_() {
   return (
-    <View style={s.wrap}>
-      <Text style={s.title}>Inbox</Text>
-      <Text style={s.sub}>Coming in a later slice.</Text>
-    </View>
+    <Screen title="Inbox">
+      <Notice>Pending captures land here. Coming in E3.</Notice>
+    </Screen>
   );
 }
-
-const s = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.bg, justifyContent: 'center', padding: 24 },
-  title: { color: colors.text, fontSize: 28, fontWeight: '800' },
-  sub: { color: colors.muted, marginTop: 8 },
-});

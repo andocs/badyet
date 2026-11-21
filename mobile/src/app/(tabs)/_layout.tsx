@@ -1,14 +1,19 @@
 import { Tabs } from 'expo-router';
-import { colors } from '@/lib/theme';
+import { fonts, useTheme } from '~/lib/theme';
 
 export default function TabsLayout() {
+  const c = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.surface },
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.muted,
+        tabBarStyle: { backgroundColor: c.surface, borderTopColor: c.line, minHeight: 64 },
+        tabBarActiveTintColor: c.accentText,
+        tabBarInactiveTintColor: c.muted,
+        tabBarLabelStyle: { fontFamily: fonts.bodyBold, fontSize: 12 },
+        tabBarIcon: () => null,
+        tabBarIconStyle: { display: 'none' },
+        tabBarLabelPosition: 'beside-icon',
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Now' }} />

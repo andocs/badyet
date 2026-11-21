@@ -11,7 +11,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Active slice / milestone:** E2 Data layer, Accounts, Now
 - **Gate:** none
 - **Next action:** Verify E1 APK, then E2
-- **User to-do now:** E1 APK build 45d0ab40 in progress; then verify sign-in
+- **User to-do now:** E1 APK installed; E2 in progress
 
 ## 3. Execution log
 
