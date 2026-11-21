@@ -105,12 +105,23 @@ export function MonthPicker({ value, onChange, min, max, label, name, clearable,
   );
 }
 
-/** A month of the year (Jan to Dec) as twelve buttons, for things that repeat every year. */
+/** A month of the year (Jan to Dec) in the same popover as the month picker, for things that repeat every year. */
 export function MonthOfYear({ value, onChange, label, disabled }: { value: number; onChange: (m: number) => void; label: string; disabled?: boolean }) {
+  const btn = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
   return (
-    <div className="v-moy" role="group" aria-label={label}>
-      {MON.map((m, i) => <button key={m} type="button" disabled={disabled} aria-pressed={value === i + 1} onClick={() => onChange(i + 1)}>{m}</button>)}
-    </div>
+    <>
+      <button ref={btn} type="button" className="v-pickbtn" disabled={disabled} aria-haspopup="dialog" aria-expanded={open} aria-label={`${label}: ${MON[value - 1]}. Change`} onClick={() => setOpen(true)}>
+        <span>{MON[value - 1]}</span>
+      </button>
+      <Popover anchor={btn} open={open} onClose={close} label={label}>
+        <div className="v-pophd"><b>{label}</b></div>
+        <div className="v-pg v-months3" role="group" aria-label={label}>
+          {MON.map((m, i) => <button key={m} type="button" aria-pressed={value === i + 1} onClick={() => { onChange(i + 1); close(); }}>{m}</button>)}
+        </div>
+      </Popover>
+    </>
   );
 }
 

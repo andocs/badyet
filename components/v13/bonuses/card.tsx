@@ -23,6 +23,8 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
   const [custom, setCustom] = useState({ name: "", amount: "", kind: "gift" as DestKind });
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
+  // The row being ticked off, so its check shows a spinner until the server has it.
+  const [pending, setPending] = useState<number | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const [rec, setRec] = useState({ gross: "", dm: "", net: "" });
 
@@ -33,11 +35,12 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
     splits: list.map((r) => ({ kind: r.kind, targetId: r.targetId, label: r.kind === "fund" ? null : r.label ?? r.name, amount: parsePesos(r.amount) ?? 0, done: r.done })),
     received: extra.received ?? null,
   });
-  const run = (list: Row[], extra: Parameters<typeof toInput>[1], after?: () => void) => {
+  const run = (list: Row[], extra: Parameters<typeof toInput>[1], after?: () => void, undo?: () => void) => {
     setError(null);
     start(async () => {
       const r = await saveInstance(toInput(list, extra));
-      if (r.error) setError(r.error);
+      setPending(null);
+      if (r.error) { setError(r.error); undo?.(); }
       else after?.();
     });
   };
@@ -111,7 +114,7 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
           {rows.length === 0 ? <p className="v-muted v-sm">Nothing placed yet. Add a destination.</p> : null}
           {rows.map((r, i) => (
             <div key={i} className={`v-sr-row ${r.done ? "v-done" : ""}${editing ? " v-ed" : ""}`}>
-              <button type="button" className="v-chk" role="checkbox" aria-checked={r.done} aria-label={`Mark ${r.name} done`} disabled={busy || editing} onClick={() => { const next = rows.map((x, j) => (j === i ? { ...x, done: !x.done } : x)); setRows(next); run(next, {}); }}><V13Icon name="check" /></button>
+              <button type="button" className="v-chk" role="checkbox" aria-checked={r.done} aria-busy={pending === i} aria-label={`Mark ${r.name} done`} disabled={busy || editing} onClick={() => { const before = rows; const next = rows.map((x, j) => (j === i ? { ...x, done: !x.done } : x)); setRows(next); setPending(i); run(next, {}, undefined, () => setRows(before)); }}>{pending === i ? <span className="v-spin" aria-hidden="true" /> : <V13Icon name="check" />}</button>
               <span className="v-grow v-nm"><b>{r.name}</b> <span className="v-tkn">{KIND_LABEL[r.kind]}</span></span>
               {editing ? (
                 <>
@@ -128,10 +131,10 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
           {editing ? (
             <div className="v-addbox">
               <div className="v-lbl" style={{ marginBottom: 6 }}>Add a destination</div>
-              <div className="v-row v-wrap" style={{ gap: 8 }}>
-                <input className="v-lbl-in" value={custom.name} placeholder="Name it, e.g. Mom's birthday gift" aria-label="Name of the new destination" style={{ flex: 1, minWidth: 160 }} onChange={(e) => setCustom({ ...custom, name: e.target.value })} />
+              <div className="v-addgrid">
+                <input className="v-lbl-in" value={custom.name} placeholder="Name it, e.g. Mom's birthday gift" aria-label="Name of the new destination" onChange={(e) => setCustom({ ...custom, name: e.target.value })} />
                 <select className="v-lbl-in" value={custom.kind} aria-label="Type" onChange={(e) => setCustom({ ...custom, kind: e.target.value as DestKind })}>{(["gift", "purchase", "debt", "wants"] as const).map((k) => <option key={k} value={k}>{KIND_LABEL[k]}</option>)}</select>
-                <input className="v-lbl-in" value={custom.amount} inputMode="decimal" placeholder="₱ amount" aria-label="Amount in pesos" style={{ width: 110 }} onChange={(e) => setCustom({ ...custom, amount: e.target.value })} />
+                <input className="v-lbl-in" value={custom.amount} inputMode="decimal" placeholder="₱ amount" aria-label="Amount in pesos" onChange={(e) => setCustom({ ...custom, amount: e.target.value })} />
                 <button type="button" className="v-btn v-sm v-pri" onClick={() => { if (!custom.name.trim()) return; setRows((x) => [...x, { kind: custom.kind, targetId: null, label: custom.name.trim(), name: custom.name.trim(), amount: custom.amount || "0", done: false }]); setCustom({ name: "", amount: "", kind: "gift" }); }}>Add</button>
               </div>
               {funds.filter((f) => !rows.some((r) => r.targetId === f.id)).length > 0 ? (

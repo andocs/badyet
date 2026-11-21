@@ -197,14 +197,12 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                   </div>
                 </div>
               </div>
-              <div className="v-grid2">
-                <label className="v-field">Goes to (optional)
+              <label className="v-field">Goes to (optional)
                   <select value={draft.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Nowhere, just a limit</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
                 </label>
-                <div className="v-grid2" style={{ gap: 8 }}>
-                  <div className="v-field">Starts<MonthPicker label="Starts" value={draft.startsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No start" onChange={(v) => set({ startsOn: v })} /></div>
-                  <div className="v-field">Ends<MonthPicker label="Ends" value={draft.endsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No end" onChange={(v) => set({ endsOn: v })} /></div>
-                </div>
+              <div className="v-grid2 v-keep2">
+                <div className="v-field">Starts<MonthPicker label="Starts" value={draft.startsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No start" onChange={(v) => set({ startsOn: v })} /></div>
+                <div className="v-field">Ends<MonthPicker label="Ends" value={draft.endsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No end" onChange={(v) => set({ endsOn: v })} /></div>
               </div>
               <fieldset style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "12px 14px", margin: 0 }}>
                 <legend className="v-lbl" style={{ padding: "0 6px" }}>Counts toward</legend>
