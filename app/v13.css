@@ -63,8 +63,8 @@
 .v-chk[aria-checked=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .v-chk .v-i{width:16px;height:16px;stroke-width:3}
 .v-field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
-.v-field input,.v-field select{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
-.v-field input:focus,.v-field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.v-field input,.v-field select,.v-field textarea{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.v-field input:focus,.v-field select:focus,.v-field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .v-field input[type=range]{padding:0;accent-color:var(--accent)}
 .v-sw{position:relative;width:46px;height:28px;border-radius:999px;background:var(--soft);border:1px solid var(--line);cursor:pointer;flex:none;padding:0}
 .v-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .15s}
@@ -190,8 +190,8 @@ details.v-env .v-tx{padding:2px 16px 6px}
 .v13 .v-frm .v-two{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:559px){.v13 .v-frm .v-two{grid-template-columns:1fr}}
 .v13 .v-field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
-.v13 .v-field input,.v13 .v-field select{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
-.v13 .v-field input:focus,.v13 .v-field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.v13 .v-field input,.v13 .v-field select,.v13 .v-field textarea{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.v13 .v-field input:focus,.v13 .v-field select:focus,.v13 .v-field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
 .v13 .v-btn:disabled{opacity:.6;cursor:progress}
 @media(min-width:760px){.v13 .v-dlg{margin:0 0 0 auto;height:100vh;max-height:100vh}.v13 .v-qa{height:100%;border-radius:0;border-width:0 0 0 1px}.v13 .v-grab{display:none}}
 @media(prefers-reduced-motion:reduce){.v13 *{animation:none!important;transition:none!important}}
@@ -807,3 +807,14 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
  .v13 .v-sr-row.v-ed>input{width:96px!important}
 }
 @media(prefers-reduced-motion:reduce){.v13 .v-spin{animation:none;border-right-color:currentColor;opacity:.6}}
+
+/* Capture rules */
+.v-field textarea{resize:vertical;line-height:1.4;min-height:64px}
+.v-capsrc{display:flex;flex-direction:column;gap:10px}
+details.v-env.v-capitem summary{padding:12px 14px}
+details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:column;gap:12px}
+.v-caprules{display:flex;flex-direction:column;gap:8px}
+.v-caprule{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+.v-cappanel{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+.v-cappanel .v-field input,.v-cappanel .v-field select{background:var(--surface)}
+.v-capsec{font:800 16px var(--font-display);margin:0}

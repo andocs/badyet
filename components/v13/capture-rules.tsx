@@ -25,8 +25,8 @@ function SourceRow({ cfg, accounts, categories }: { cfg: SourceConfig; accounts:
       `${info.label} saved.`,
     );
   return (
-    <details className="v-env" style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-      <summary className="v-row v-sp" style={{ cursor: "pointer" }}>
+    <details className="v-env v-capitem">
+      <summary className="v-row v-sp">
         <span><b>{info.label}</b><span className="v-xs v-muted"> · {info.blurb}</span></span>
         <button
           type="button"
@@ -38,7 +38,7 @@ function SourceRow({ cfg, accounts, categories }: { cfg: SourceConfig; accounts:
           onClick={(e) => { e.preventDefault(); const next = !enabled; setEnabled(next); save({ enabled: next }); }}
         />
       </summary>
-      <div className="v-stack" style={{ paddingTop: 10 }}>
+      <div className="v-capbody">
         <label className="v-field">Apps on the phone (one per line)<textarea rows={2} value={packages} onChange={(e) => setPackages(e.target.value)} placeholder="com.example.app" /></label>
         <label className="v-field">Email senders (one per line)<textarea rows={2} value={senders} onChange={(e) => setSenders(e.target.value)} placeholder="name@bank.com" /></label>
         <div className="v-grid2">
@@ -91,13 +91,13 @@ export function CaptureCard({ sources, rules: rulesIn, accounts, categories, mis
     <section className="v-card v-stack" aria-labelledby="cp">
       <h2 id="cp">Capture rules</h2>
       <p className="v-xs v-muted" style={{ margin: 0 }}>How the phone turns bank, wallet and shop notifications and emails into pending items. The same settings show on the phone.</p>
-      <div>{SOURCES.map((k) => <SourceRow key={k} cfg={sources.find((c) => c.source === k)!} accounts={accounts} categories={categories} />)}</div>
+      <div className="v-capsrc">{SOURCES.map((k) => <SourceRow key={k} cfg={sources.find((c) => c.source === k)!} accounts={accounts} categories={categories} />)}</div>
 
-      <div>
-        <b>Keyword rules</b>
-        <div className="v-xs v-muted" style={{ marginBottom: 6 }}>When a notification or email contains these words, do this. Ignore rules win over the rest.</div>
-        {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No keyword rules yet.</p> : rules.map((r) => (
-          <div key={r.id} className="v-row v-sp" style={{ padding: "6px 0", borderBottom: "1px solid var(--line)" }}>
+      <div className="v-stack">
+        <h3 className="v-capsec">Keyword rules</h3>
+        <div className="v-xs v-muted">When a notification or email contains these words, do this. Ignore rules win over the rest.</div>
+        {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No keyword rules yet.</p> : <div className="v-caprules">{rules.map((r) => (
+          <div key={r.id} className="v-caprule">
             <span>
               <b>&quot;{r.matchText}&quot;</b> in {r.source ? SOURCE_INFO[r.source].label : "any source"} → {ACTION_LABEL[r.action].toLowerCase()}
               {r.action === "set_category" ? `: ${catName.get(r.categoryId ?? "") ?? "a category"}` : ""}
@@ -108,10 +108,11 @@ export function CaptureCard({ sources, rules: rulesIn, accounts, categories, mis
               }
             }}>Delete</button>
           </div>
-        ))}
+        ))}</div>}
       </div>
 
-      <div className="v-stack">
+      <div className="v-cappanel">
+        <h3 className="v-capsec">Add a rule</h3>
         <div className="v-grid2">
           <label className="v-field">Words to look for<input value={words} maxLength={80} onChange={(e) => setWords(e.target.value)} placeholder="cashback" /></label>
           <label className="v-field">In
