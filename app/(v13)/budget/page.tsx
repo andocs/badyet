@@ -29,7 +29,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
   const thisMonth = data.salary.thisMonth;
   const cmp = sp.cmp === "1";
   const screen = buildBudgetScreen(data, { fut: sp.v === "fut", month: sp.m, compare: cmp });
-  const { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, topUpRaises } = screen;
+  const { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, groups, topUpRaises } = screen;
   const cutoffKey = data.period.which === 1 ? "first" : "second";
   const colors = PALETTE;
 

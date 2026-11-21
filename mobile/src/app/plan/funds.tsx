@@ -26,7 +26,7 @@ export default function Funds() {
   const accounts = new Map((data?.budget.accounts ?? []).map((a) => [a.id, a.name]));
 
   return (
-    <Screen title="Savings funds" subtitle="Where the savings pool goes each month, first come first served." refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Savings funds" refreshing={refreshing} onRefresh={reload}>
       <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
       </Pressable>

@@ -23,7 +23,7 @@ export default function Plan() {
   const c = useTheme();
   const router = useRouter();
   return (
-    <Screen title="Plan" subtitle="Everything about money lives here.">
+    <Screen title="Plan">
       <Card style={{ padding: 4 }}>
         {ITEMS.map((i, n) => (
           <Pressable

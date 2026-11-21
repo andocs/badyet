@@ -38,7 +38,7 @@ export default function Salary() {
   const hasStart = !!input?.events.some((e) => e.kind === 'start');
 
   return (
-    <Screen title="Salary and tax" subtitle="Your pay timeline and allowances. The budget and forecast read from here." refreshing={refreshing} onRefresh={reload}>
+    <Screen title="Salary and tax" refreshing={refreshing} onRefresh={reload}>
       <Pressable onPress={() => router.back()} accessibilityRole="link" style={{ minHeight: 44, justifyContent: 'center' }}>
         <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 14 }}>‹ Plan</Text>
       </Pressable>
