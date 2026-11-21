@@ -4,7 +4,9 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { isAccessGranted, openAccessSettings } from '@modules/notification-listener';
 import { Body, Card, Label, Screen } from '~/components/ui';
 import { GmailCard } from '~/components/GmailCard';
+import { PaydaysCard } from '~/components/PaydaysCard';
 import { UpdatesCard } from '~/components/UpdatesCard';
+import { useHide } from '~/lib/hide';
 import { useSession } from '~/lib/session';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
@@ -16,6 +18,7 @@ export default function Settings() {
   const c = useTheme();
   const router = useRouter();
   const { session } = useSession();
+  const { hide, toggle } = useHide();
   const [granted, setGranted] = useState(false);
   const [postOk, setPostOk] = useState(true);
 
@@ -46,6 +49,14 @@ export default function Settings() {
         <Label>Account</Label>
         <Body>{session?.user.email ?? 'unknown'}</Body>
       </Card>
+      <PaydaysCard />
+      <Card>
+        <Label>Looks</Label>
+        <Body>The app follows your phone’s light or dark setting.</Body>
+        <Pressable style={[s.btn, { backgroundColor: hide ? c.accent : c.soft }]} onPress={toggle} accessibilityRole="switch" accessibilityState={{ checked: hide }}>
+          <Text style={{ color: hide ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>{hide ? 'Amounts hidden: show them' : 'Hide amounts'}</Text>
+        </Pressable>
+      </Card>
       <UpdatesCard />
       {!postOk ? (
         <Card>
@@ -69,6 +80,14 @@ export default function Settings() {
         </Pressable>
       </Card>
       <GmailCard />
+      <Card>
+        <Label>Tax and contributions</Label>
+        <Body>Income tax uses the 2023 TRAIN schedule. SSS and Pag-IBIG are the amounts you type in the payslip builder. PhilHealth is 2.5% of base, between ₱10,000 and ₱100,000.</Body>
+      </Card>
+      <Card>
+        <Label>Setup wizard and your data</Label>
+        <Body>Running the setup wizard again, and downloading your data as CSV files, are on the web app.</Body>
+      </Card>
       <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => supabase.auth.signOut()} accessibilityRole="button">
         <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Sign out</Text>
       </Pressable>

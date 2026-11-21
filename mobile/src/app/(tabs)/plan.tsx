@@ -15,7 +15,7 @@ const ITEMS: Item[] = [
   { title: 'Budget', blurb: 'What the rules say each cutoff, and what has gone out.', href: '/plan/budget' },
   { title: 'Bonuses', blurb: '13th month and other bonuses.', href: '/plan/bonuses' },
   { title: 'Funds', blurb: 'Money you set aside for goals.', href: '/plan/funds' },
-  { title: 'Forecast', blurb: 'Where the next months and years lead.' },
+  { title: 'Forecast', blurb: 'Where the next months and years lead.', href: '/plan/forecast' },
   { title: 'Settings', blurb: 'Paydays, notifications, capture rules, Gmail.', href: '/settings' },
 ];
 

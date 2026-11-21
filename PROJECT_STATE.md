@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E9 Plan: Bonuses and Funds
+- **Active slice / milestone:** E10 Plan: Forecast and Settings
 - **Gate:** none
-- **Next action:** Build E9 (user asked to continue through E11; E7 and E8 checks pending on phone)
-- **User to-do now:** E7 Gmail test (APK e5f5bd62) and E8 Plan check pending; E9 in progress
+- **Next action:** Build E10
+- **User to-do now:** E7 and E8 and E9 checks pending on phone
 
 ## 3. Execution log
 
@@ -46,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 17:20 | slice-E7 | E7 awaiting user test (APK e5f5bd62, Google Cloud setup done by user, web client id set, OTA 0c3a2b79). User asked to proceed with E8-E11 meanwhile | -
 - 2026-11-21 17:22 | slice-E7 | Gmail APK finished: build e5f5bd62, https://expo.dev/artifacts/eas/34GCgyG4EtnV_VjM5vLCBTf5H9g_h5T7li5ilIsk6pg.apk | d201f21
 - 2026-11-21 17:28 | slice-E8 | Plan tab (Settings moved inside); Budget screen (shared lib/budget/screen.ts with 8 tests, groups, line editor, future years) and Salary screen (chart, events, allowances, projected raises, year table) with ported write actions tested; mobile 88 tests, web 332 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group c15b540c | a177ea0
+- 2026-11-21 17:31 | slice-E9 | Plan: Bonuses (year chips, hero, cards with waterfall, destination ticks, CIP multiplier, rules) and Funds (priority list with progress); ported saveInstance with tests; mobile 93 tests, web 332 tests, tsc, lint, web build, bundle OK; OTA published; Vercel checked | 1ecdfbac1f1c5f96c2976371b30fae80675a0ccb
 
 ## 4. Open questions
 
@@ -80,7 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,086,451 | 532,423,964 | 2,400,105 |  |
+| **Cumulative** | 2,274,724 | 9,188,425 | 424,415 | 4,125,147 | 538,474,423 | 2,417,034 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -120,6 +121,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E6 | 0 | 0 | 0 | 47,276 | 8,147,375 | 38,297 |  |
 | Slice E7 | 51,326 | 176,057 | 11,965 | 62,827 | 12,471,116 | 46,107 |  |
 | Slice E8 | 79,192 | 504,268 | 18,351 | 77,312 | 15,256,078 | 44,347 |  |
+| Slice E9 | 2,274,724 | 9,188,425 | 424,415 | 4,125,147 | 538,474,423 | 2,417,034 | no mark 'slice-E9': all-time |
 
 <!-- END SUMMARY -->
 
@@ -154,6 +156,14 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E9 (Plan: Bonuses and Funds): what you do now
+1. Get the code:   git fetch && git checkout slice/E9-plan-bonuses-funds
+2. Install deps / Database / Config: none
+3. Get the update: open the app twice (or Settings > Check for updates): no new APK.
+4. Check these:    Plan > Bonuses: year chips; hero (bonus money after tax, gross/tax/count, vs last year, stacked bar by destination); a card per bonus with gross, de minimis, cap bar, over-cap tax, net, and where it goes (tap a destination to tick it done; CIP has Low/Base/High). Received bonuses are collapsed. Rules list. Plan > Funds: funds in priority order with balance, progress to target, rule and what it does, tranches, limits.
+5. Known limits:   viewing and ticking only: adding or editing bonus rules, destinations, "mark received", and creating, editing or reordering funds are on the web. Not run against your real data by me.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E8 (Plan: Budget and Salary): what you do now
 1. Get the code:   git fetch && git checkout slice/E8-plan-budget-salary
