@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev plan
 - **Gate:** waiting
-- **Next action:** Approve or request changes on rev/3-payslip-sheet-links
-- **User to-do now:** Try rev-3 on phone and desktop; merge rev/1, rev/2, rev/3 to main
+- **Next action:** Approve or request changes on rev/4-payslip-bar-tablet
+- **User to-do now:** Try rev-4 on desktop, tablet and phone; merge rev/1 to rev/4 to main
 
 ## 3. Execution log
 
@@ -45,6 +45,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 09:00 | rev-1 | Revision batch: budget hero left/take-home, cutoff circle collision fix (.v-bc), bonuses skeleton + parallel loads, budget load parallel, 22 colors, login restyle, phone More sheet, inbox header, runway narrow chart, half-year strip | 632b83f
 - 2026-11-21 09:31 | rev-2 | Second revision batch (login, instant tabs via prefetch, hide-amounts coverage, file inputs, bonus row, fund colors, link underline, RTO inferred from RTO lines, tablet/phone charts, payslip builder + wizard mobile) | HEAD
 - 2026-11-21 09:54 | rev-3 | Payslip builder redesigned from mockups (controls bar, collapsible cutoff cards, summary, no row icons), bottom sheets use dvh and scroll, side nav links no longer animate underline | HEAD
+- 2026-11-21 10:06 | rev-4 | Payslip builder: controls bar inside the slip column, summary beside it from the top, base pay and income tax splits for 1st and 2nd cutoff with vertical dividers, tablet summary strip | HEAD
+- 2026-11-21 10:09 | rev-4 | Removed the income tax split fields from the payslip builder bar; only base pay is split between cutoffs | HEAD
 
 ## 4. Open questions
 
@@ -61,7 +63,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 1,624,640 | 7,004,867 | 306,343 | 3,262,397 | 398,856,130 | 1,874,297 |  |
+| **Cumulative** | 1,630,984 | 7,025,728 | 307,136 | 3,273,836 | 400,869,670 | 1,882,956 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -84,6 +86,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
 | rev-2 | 1,233,332 | 5,150,158 | 214,872 | 2,673,180 | 322,317,032 | 1,461,845 |  |
 | rev-3 | 1,237,217 | 5,128,597 | 214,549 | 2,698,695 | 321,747,427 | 1,479,260 |  |
+| rev-4 | 1,243,561 | 5,149,458 | 215,342 | 2,698,015 | 321,941,135 | 1,481,033 |  |
 
 <!-- END SUMMARY -->
 

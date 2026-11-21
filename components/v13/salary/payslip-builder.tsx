@@ -133,7 +133,7 @@ export function PayslipBuilder({ input, month, months }: { input: SalaryInput; m
               </div>
             </div>
             <div className="v-pbgroups">
-              {([["base_share", "Base pay"], ["income_tax", "Income tax"]] as const).map(([source, name]) => (
+              {([["base_share", "Base pay"]] as const).map(([source, name]) => (
                 <div key={source} className="v-pbgrp">
                   {(["first", "second"] as const).map((c) => {
                     const ord = c === "first" ? "1st" : "2nd";

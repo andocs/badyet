@@ -709,10 +709,6 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v13 .v-pbf{display:flex;flex-direction:column;gap:6px;padding:0 14px}
 .v13 .v-pbf:first-child{padding-left:0}
 .v13 .v-pbf+.v-pbf{border-left:1px solid var(--line)}
-@container (min-width:620px){
- .v13 .v-pbgroups{grid-template-columns:repeat(2,minmax(0,1fr))}
- .v13 .v-pbgrp+.v-pbgrp{border-left:1px solid var(--line);padding-left:14px}
-}
 @container (max-width:419px){
  .v13 .v-pbact{width:100%}
  .v13 .v-pbact .v-btn{flex:1 1 100%}
