@@ -9,6 +9,7 @@ import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { AccountTile } from '~/components/AccountTile';
 import { GmailBanner } from '~/components/GmailBanner';
+import { HeldNotice } from '~/components/HeldNotice';
 import { Runway } from '~/components/Runway';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { resolveColor } from '~/lib/color';
@@ -56,6 +57,7 @@ export default function Now() {
       onRefresh={reload}
     >
       <GmailBanner />
+      <HeldNotice />
       <Hero view={view} today={today} />
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />

@@ -38,6 +38,9 @@ describe('Maya', () => {
   it('money out and money in', () => {
     expect(parseNotification('maya', n('Money transferred', 'Success! You transferred ₱50.00 to BPI / VYBE by BPI.'))).toMatchObject({ direction: 'out', amount: 5_000, counterparty: 'BPI / VYBE by BPI' });
     expect(parseNotification('maya', n('Money received', 'You received ₱1.00 from Maya Savings'))).toMatchObject({ direction: 'in', amount: 100, counterparty: 'Maya Savings' });
+    expect(parseNotification('maya', n('Money received', 'You received 100 in your wallet via InstaPay'))).toMatchObject({ direction: 'in', amount: 10_000, counterparty: 'InstaPay' });
+    expect(parseNotification('maya', n('Money received', 'You received ₱1,250.50 in your wallet via InstaPay.'))).toMatchObject({ direction: 'in', amount: 125_050, counterparty: 'InstaPay' });
+    expect(parseNotification('maya', n('Money received', 'You received 100 in your wallet'))).toMatchObject({ direction: 'in', amount: 10_000, counterparty: null });
   });
 });
 
