@@ -8,7 +8,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Mockups v2 (cover screen)
+- **Active slice / milestone:** Mockups v3 (cover screen)
 - **Gate:** waiting
 - **Next action:** On approval start slice R1: Reconcile + Add account
 - **User to-do now:** Review docs/mockups/phone/index.html; test on the phone; Wallet sample tomorrow
@@ -39,6 +39,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 18:04 | rev-1 | Web budget page now uses buildBudgetScreen (added compare/yearWithout); removed dead validateLine in validate.ts, hardcoded TIGHT, hardcoded pay labels (paydays from user_settings via loadSalary), stale shell comment. tsc/vitest/lint PASS, Vercel preview success. Branch rev/1-budget-cleanup, not yet merged. | 72669ec
 - 2026-11-21 18:09 | mockups | 10 cover-screen mockups (320x872) in docs/mockups/: now, inbox, add, accounts, budget, salary, bonuses, funds, forecast, settings, plus index.html. Includes Reconnect Gmail banner and background-run status in Settings. Not yet viewed on a real screen; awaiting user approval. | -
 - 2026-11-21 18:12 | mockups-v2 | User rejected v1 as ugly. Rebuilt 10 mockups in docs/mockups/phone/ from the real app styles (theme.ts, ui.tsx, AccountTile): Gabarito + Atkinson Hyperlegible Next, same cards/hero/tiles/chips/tab bar, less text, folded detail. v1 removed. Awaiting approval. | -
+- 2026-11-21 18:30 | mockups-v3 | Mockups reworked per user notes: smaller type, More tab with sheet, eye toggle, Now hero/balance/tiles fixed, Inbox/Add/Accounts/Forecast kept as existing, Budget/Salary/Bonuses/Funds/Settings trimmed with edit affordances, yearly slider. In docs/mockups/phone/. Awaiting approval. | -
 
 ## 4. Open questions
 
