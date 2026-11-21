@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E5 Capture rules
+- **Active slice / milestone:** E6 Notification capture
 - **Gate:** none
-- **Next action:** Build E5
-- **User to-do now:** E5 in progress
+- **Next action:** Build E6: parsers, pipeline, dedupe, transfer pairing
+- **User to-do now:** Apply capture migration; E6 in progress
 
 ## 3. Execution log
 
@@ -37,6 +37,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 16:28 | slice-E4b | User paused at E4b gate | -
 - 2026-11-21 16:31 | vercel | Fixed failing Vercel preview: mobile/ excluded from root tsc and eslint; local npm run build passes | 98fa297
 - 2026-11-21 16:32 | slice-E4b | E4b approved at gate; Accounts write features deferred (user did not choose), E5 next | -
+- 2026-11-21 16:39 | slice-E5 | Capture rules: migration 20261207000000 (capture_sources, capture_rules, RLS, rollback), shared lib/capture (decide, validate, sources) with 30 tests, web Settings Capture section + server actions, phone Capture rules screen with seen-apps picker, listener allowlist sync; mobile 47 tests, web 274 tests, tsc, lint, web build, bundle OK; Vercel success; OTA group 81d4c1f6 | 60658f9
+- 2026-11-21 16:47 | slice-E5 | E5 approved at gate | -
 
 ## 4. Open questions
 
@@ -71,7 +73,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,109,446 | 8,381,043 | 383,934 | 3,824,115 | 478,226,711 | 2,204,419 |  |
+| **Cumulative** | 2,144,206 | 8,508,100 | 394,099 | 3,888,878 | 492,739,469 | 2,253,371 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -107,6 +109,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E3 | 28,847 | 110,887 | 5,315 | 26,843 | 2,605,927 | 19,209 |  |
 | Slice E4 | 24,134 | 85,191 | 5,961 | 24,914 | 4,120,774 | 17,102 |  |
 | Slice E4b | 0 | 0 | 0 | 31,602 | 3,000,641 | 23,294 |  |
+| Slice E5 | 34,760 | 127,057 | 10,165 | 56,170 | 9,020,239 | 41,456 |  |
 
 <!-- END SUMMARY -->
 
@@ -141,6 +144,16 @@ Every slice from E4b on ends with a short "check against the web screen" step.
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER SLICE E5 (capture rules): what you do now
+1. Get the code:   git fetch && git checkout slice/E5-capture-rules   (E1-E4b included; merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       ADDS two new tables (capture_sources, capture_rules); changes nothing existing, so no backup needed. Apply supabase/migrations/20261207000000_capture_rules.sql: open the Supabase dashboard > SQL editor, paste the whole file, Run (or `supabase db push` if you use the CLI). Rollback: the last lines of the file (drop table capture_rules; drop table capture_sources;). Until it is applied, Settings on the web and the phone say so instead of breaking.
+4. Config:         none
+5. Get the update: open the app twice (or Settings > Check for updates) for update group 81d4c1f6. The web updates when this branch is merged and deployed; the Vercel preview for this branch passed.
+6. Check these:    (a) after the SQL: web Settings > "Capture rules" lists GCash, Maya, BPI, GoTyme, MariBank, Grab, foodpanda, Google Wallet, each expandable; (b) on the web turn one off, set a usual account and category, a minimum amount, save; (c) on the phone Settings > Capture rules shows the same choices; (d) edit one on the phone, reload the web page: it matches; (e) in a source's editor the "Apps that have posted notifications on this phone" list shows real apps (post a GCash or Maya notification first); tap one to add it; (f) add a keyword rule "cashback" > ignore on one side and see it on the other; delete it; (g) bad input shows a clear message (app id like com.example.app, email like name@bank.com, minimum in pesos).
+7. Known limits:   these settings only take effect when notification capture arrives in E6 and Gmail in E7 (the rules logic is built and tested but nothing feeds it yet); app ids for GCash, Maya, Grab, foodpanda and Google Wallet are best guesses, GoTyme and MariBank are empty on purpose: add them from the "apps seen on this phone" list; BPI/Grab/foodpanda email senders (other than BPI's two) are blank until you send a sample; the phone listener's allowlist updates when you open the app.
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E4b (parity pass): what you do now
 1. Get the code:   git fetch && git checkout slice/E4b-parity   (E1-E4 included; merge to main after you approve)

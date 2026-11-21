@@ -1,0 +1,103 @@
+import { describe, expect, it } from 'vitest';
+import type { AccountLite, TxnInsert } from '@/lib/capture/row';
+import { defaultConfig, SOURCES, type CaptureRule, type SourceConfig } from '@/lib/capture/sources';
+import { runCapture, type CapturedNotification, type Held, type RunContext, type RunDeps } from './captureRun';
+
+const ACC: AccountLite[] = [
+  { id: 'a-gcash', name: 'GCash', institution: null, last4: null },
+  { id: 'a-maya', name: 'Maya', institution: null, last4: null },
+];
+const CAT = '33333333-3333-4333-8333-333333333333';
+const T = Date.parse('2026-11-21T03:55:00Z');
+
+const note = (pkg: string, title: string, text: string, over: Partial<CapturedNotification> = {}): CapturedNotification => ({ package: pkg, title, text, bigText: null, postTime: T, ...over });
+const GCASH_PAID = note('com.globe.gcash.android', 'Your Buy Load Transaction Update', 'You have paid P112.00 of GCash to purchase NEW POWER with a convenience fee of P3.00 for 0969 on 09-23-26 08:55 AM. Ref. No. 111913449.');
+
+function setup(over: { ctx?: Partial<RunContext> | null; queue?: CapturedNotification[]; held?: Held[] } = {}) {
+  const rows: TxnInsert[] = [];
+  let held: Held[] = over.held ?? [];
+  let drained = 0;
+  let n = 0;
+  const configs: SourceConfig[] = SOURCES.map(defaultConfig);
+  const deps: RunDeps = {
+    loadContext: async () => (over.ctx === null ? null : { configs, rules: [], accounts: ACC, ...over.ctx }),
+    drain: () => {
+      drained += 1;
+      return over.queue ?? [];
+    },
+    readHeld: () => held,
+    writeHeld: (h) => void (held = h),
+    enqueue: async (r) => void rows.push(r),
+    hash: async (s) => `h(${s})`,
+    newId: () => `id-${++n}`,
+  };
+  return { deps, rows, held: () => held, drained: () => drained, configs };
+}
+
+describe('runCapture', () => {
+  it('turns a GCash payment into a pending expense in the GCash account, fee included', async () => {
+    const t = setup({ queue: [GCASH_PAID] });
+    expect(await runCapture(t.deps)).toEqual({ added: 1, held: 0, skipped: 0, ignored: 0 });
+    expect(t.rows).toEqual([
+      {
+        id: 'id-1', account_id: 'a-gcash', occurred_at: new Date(T).toISOString(), amount: -11_500, merchant: 'NEW POWER', kind: 'expense',
+        category_id: null, source: 'notification', status: 'pending', confirmed_at: null, dedupe_hash: 'h(gcash|ref|111913449)',
+      },
+    ]);
+  });
+
+  it('ignores apps it does not listen to and notifications that are not money', async () => {
+    const t = setup({ queue: [note('com.some.game', 'Win!', 'You won P1000'), note('com.globe.gcash.android', 'Promo', 'Invite a friend and win P1,000!')] });
+    expect(await runCapture(t.deps)).toMatchObject({ added: 0, ignored: 2 });
+  });
+
+  it('skips a source that is off and anything an ignore rule matches', async () => {
+    const off = setup({ queue: [GCASH_PAID] });
+    off.configs.find((c) => c.source === 'gcash')!.enabled = false;
+    expect(await runCapture(off.deps)).toMatchObject({ added: 0, skipped: 1 });
+
+    const rule: CaptureRule = { id: 'r', source: null, matchText: 'new power', action: 'ignore', categoryId: null };
+    const ign = setup({ queue: [GCASH_PAID], ctx: { rules: [rule] } });
+    expect(await runCapture(ign.deps)).toMatchObject({ added: 0, skipped: 1 });
+  });
+
+  it('drops a repeat of the same notification in one batch', async () => {
+    const t = setup({ queue: [GCASH_PAID, { ...GCASH_PAID, postTime: T + 5_000 }] });
+    expect(await runCapture(t.deps)).toMatchObject({ added: 1, skipped: 1 });
+    expect(t.rows).toHaveLength(1);
+  });
+
+  it('confirms by itself only when you allowed it and the account and category are set', async () => {
+    const t = setup({ queue: [GCASH_PAID] });
+    Object.assign(t.configs.find((c) => c.source === 'gcash')!, { autoConfirm: true, categoryId: CAT, accountId: 'a-gcash' });
+    await runCapture(t.deps);
+    expect(t.rows[0]).toMatchObject({ status: 'confirmed', category_id: CAT, confirmed_at: new Date(T).toISOString() });
+  });
+
+  it('holds a capture with no known account, without its text, and places it once an account is known', async () => {
+    const maya = note('com.paymaya', 'Money received', 'You received ₱1.00 from Maya Savings');
+    const first = setup({ queue: [maya], ctx: { accounts: [ACC[0]!] } });
+    expect(await runCapture(first.deps)).toMatchObject({ added: 0, held: 1 });
+    expect(JSON.stringify(first.held())).not.toContain('You received');
+    expect(first.drained()).toBe(1);
+
+    const second = setup({ held: first.held() });
+    expect(await runCapture(second.deps)).toMatchObject({ added: 1, held: 0 });
+    expect(second.rows[0]).toMatchObject({ account_id: 'a-maya', amount: 100, kind: 'income', merchant: 'Maya Savings' });
+    expect(second.held()).toEqual([]);
+  });
+
+  it('leaves the queue alone when settings cannot be loaded, so nothing is lost', async () => {
+    const t = setup({ ctx: null, queue: [GCASH_PAID] });
+    await runCapture(t.deps);
+    expect(t.drained()).toBe(0);
+    expect(t.rows).toHaveLength(0);
+  });
+
+  it('does not place the same held capture twice', async () => {
+    const first = setup({ queue: [GCASH_PAID], ctx: { accounts: [] } });
+    await runCapture(first.deps);
+    const again = setup({ held: first.held(), queue: [GCASH_PAID], ctx: { accounts: [] } });
+    expect(await runCapture(again.deps)).toMatchObject({ held: 1, skipped: 1 });
+  });
+});

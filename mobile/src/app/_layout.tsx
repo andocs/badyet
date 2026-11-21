@@ -5,7 +5,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { AllowlistSync } from '~/lib/allowlist';
+import { CaptureRunner } from '~/lib/CaptureRunner';
 import { HideProvider } from '~/lib/hide';
 import { SessionProvider, useSession } from '~/lib/session';
 import { SyncProvider } from '~/lib/sync';
@@ -41,7 +41,7 @@ export default function RootLayout() {
         <HideProvider>
           <SyncProvider>
             <StatusBar style="auto" />
-            <AllowlistSync />
+            <CaptureRunner />
             <Gate />
           </SyncProvider>
         </HideProvider>

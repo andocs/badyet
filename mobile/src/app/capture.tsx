@@ -10,6 +10,7 @@ import {
 import { formatPesos, money } from '@/lib/domain/money';
 import { Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { applyAllowlist } from '~/lib/allowlist';
+import { useHeldCount } from '~/lib/CaptureRunner';
 import { addRule, loadCapture, removeRule, saveSource } from '~/lib/capture';
 import { loadPickers } from '~/lib/pickers';
 import { useSession } from '~/lib/session';
@@ -166,6 +167,7 @@ export default function Capture() {
     const [capture, pickers] = await Promise.all([loadCapture(supabase), loadPickers(supabase)]);
     return { ...capture, accounts: pickers.accounts, categories: pickers.categories };
   });
+  const held = useHeldCount();
   const [editing, setEditing] = useState<SourceKey | null>(null);
   const [source, setSource] = useState<'' | SourceKey>('');
   const [words, setWords] = useState('');
@@ -203,6 +205,11 @@ export default function Capture() {
       </Pressable>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
+      {held > 0 ? (
+        <Notice>
+          {held} capture{held === 1 ? ' is' : 's are'} waiting for an account. Choose a usual account for the source below, or name an account like the source (for example “GCash”).
+        </Notice>
+      ) : null}
       {data?.missing ? <Notice>The capture settings need a database update first: apply supabase/migrations/20261207000000_capture_rules.sql, then pull down to refresh.</Notice> : null}
 
       {data && !data.missing ? (

@@ -114,6 +114,13 @@ describe('flushQueue', () => {
     expect(store.items[0]).toMatchObject({ tries: 1, lastError: 'amount out of range' });
   });
 
+  it('treats a duplicate notification (unique dedupe hash) as already captured and drops it', async () => {
+    const store = memoryStore([rowOf(1), rowOf(2)]);
+    const { client } = upsertClient([{ code: '23505', message: 'duplicate key value violates unique constraint' }, null]);
+    expect(await flushQueue(store, client)).toEqual({ sent: 1, left: 0 });
+    expect(store.items).toHaveLength(0);
+  });
+
   it('sending the same row twice sends the same id both times, so the server can ignore the repeat', async () => {
     const store = memoryStore([rowOf(1)]);
     const first = upsertClient([{ message: 'Network request failed' }]);

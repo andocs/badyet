@@ -1,22 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { TxnInsert } from '@/lib/capture/row';
 import { parsePesos } from '@/lib/domain/money';
 
 const MAX_CENTAVOS = 100_000_000_000; // same limit as the database check
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** The row a quick-add expense becomes. Same shape the web action inserts. */
-export interface ExpenseRow {
-  id: string;
-  account_id: string;
-  occurred_at: string;
-  amount: number;
-  merchant: string | null;
-  kind: 'expense';
-  category_id: string | null;
-  source: 'manual';
-  status: 'confirmed';
-  confirmed_at: string;
-}
+/** A transaction waiting to be sent: a quick-add expense, or something captured from a notification. Same columns the web inserts. */
+export type ExpenseRow = TxnInsert;
 
 export interface Queued {
   row: ExpenseRow;
@@ -77,6 +67,9 @@ export async function flushQueue(store: QueueStore, supabase: SupabaseClient): P
     if (!error) {
       await store.remove(item.row.id);
       sent += 1;
+    } else if (error.code === '23505') {
+      // The same notification was already captured (its dedupe hash exists): nothing more to send.
+      await store.remove(item.row.id);
     } else if (isPermanent(error)) {
       await store.fail(item.row.id, error.message);
     } else {
