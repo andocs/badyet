@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 2 Build (Expo)
-- **Active slice / milestone:** E3 Inbox
-- **Gate:** paused
-- **Next action:** User paused after E3. When ready: test Inbox on the phone, then reply Approve or Request changes; E4 Quick add is next
-- **User to-do now:** Install APK d6ed2977 when ready (declares notification permission); then Settings > Allow notifications > turn on notification access. E3 Inbox gate still paused
+- **Active slice / milestone:** E4 Quick add + offline queue
+- **Gate:** none
+- **Next action:** Build E4
+- **User to-do now:** APK d6ed2977 (notification permission fix) building; E4 in progress
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 15:39 | slice-E3 | Inbox: pending list, suggestions (rule then history via lib/inbox/rules), confirm (note, rule, transfer legs), not mine, All activity; 21 tests, tsc, lint, android bundle OK; OTA group 8a9a6463 | f605bc5
 - 2026-11-21 15:49 | slice-E3 | User paused at E3 gate | -
 - 2026-11-21 16:09 | slice-E3 | APK build d6ed2977: declares POST_NOTIFICATIONS, blocks unused permissions (mic, camera, overlay, storage); Settings asks for notifications. Fixes greyed-out notification access | -
+- 2026-11-21 16:18 | expo-plan | User approved E3 and asked to proceed; added E4b parity pass after E4; later slices include a web parity check | -
 
 ## 4. Open questions
 
@@ -121,19 +122,21 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | # | Slice | Depends on | Run | Status | Branch |
 |---|---|---|---|---|---|
-| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates, Google sign-in (Needed) | none | seq | built, APK build in progress | slice/E1-expo-scaffold |
-| E2 | Supabase data layer, Accounts, Now (shared lib/now), hide amounts, Night Emerald theme (Needed) | E1 | seq | planned | |
-| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | planned | |
-| E4 | Quick add + offline queue and sync (Needed) | E2 | seq | planned | |
-| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E3 | seq | planned | |
+| E1 | Scaffold mobile/, EAS preview APK, listener module + expo-updates, Google sign-in (Needed) | none | seq | approved | slice/E1-expo-scaffold |
+| E2 | Supabase data layer, Accounts cards + detail, Now, hide amounts, Night Emerald theme, Pip icon/splash (Needed) | E1 | seq | approved | slice/E2-data-accounts-now |
+| E3 | Inbox: confirm or ignore pending, merchant rules (Needed) | E2 | seq | approved by user 2026-11-21 | slice/E3-inbox |
+| E4 | Quick add + offline queue and sync (Needed) | E3 | seq | in progress | |
+| E4b | Parity pass: compare Now, Accounts, Inbox, Quick add with the web look and behaviour, fix gaps (Now: spending chart, office days, pay info, account strip), refine shared components (Needed, added by user 2026-11-21) | E4 | seq | planned | |
+| E5 | Capture rules: migration, shared matcher in lib/, editors on phone and web Settings (Needed) | E4b | seq | planned | |
 | E6 | Notification capture: GCash, Maya, BPI, GoTyme, MariBank, Grab, foodpanda, Google Wallet; dedupe; transfer pairing; offline queue; permission onboarding (Needed) | E4, E5 | seq | planned | |
 | E7 | Gmail API capture: on-device OAuth, parsers, rules, dedupe (Needed) | E6 | seq | planned | |
-| E8 | Plan: Budget and Salary screens (Needed, added by user 2026-11-21) | E2 | seq | planned | |
-| E9 | Plan: Bonuses and Funds screens (Needed) | E8 | seq | planned | |
-| E10 | Plan: Forecast, plus full Settings (paydays, office days, timezone, hide amounts) (Needed) | E9 | seq | planned | |
-| E11 | Release APK, OTA channel check, polish, Z Fold layout (Needed) | E10 | seq | planned | |
+| E8 | Plan: Budget and Salary screens + parity check vs web (Needed) | E4b | seq | planned | |
+| E9 | Plan: Bonuses and Funds screens + parity check vs web (Needed) | E8 | seq | planned | |
+| E10 | Plan: Forecast, plus full Settings (paydays, office days, timezone, hide amounts) + parity check vs web (Needed) | E9 | seq | planned | |
+| E11 | Release APK, OTA channel check, final polish, Z Fold layout (Needed) | E10 | seq | planned | |
+Accounts follow-up (reconcile with real balance, receive-QR upload): not scheduled yet; proposed with E4b or E8.
 Nice-to-have (cut): web data export on phone, widgets, push notifications.
-Plan screens write straight to Supabase with RLS, so every check the web server actions do must run on the phone via shared lib/ validation. Scout the web Plan pages before E8.
+Every slice from E4b on ends with a short "check against the web screen" step.
 
 ## Decisions & architecture
 

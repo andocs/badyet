@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { HideProvider } from '~/lib/hide';
 import { SessionProvider, useSession } from '~/lib/session';
+import { SyncProvider } from '~/lib/sync';
 import { useTheme } from '~/lib/theme';
 
 function Gate() {
@@ -37,8 +38,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <HideProvider>
-          <StatusBar style="auto" />
-          <Gate />
+          <SyncProvider>
+            <StatusBar style="auto" />
+            <Gate />
+          </SyncProvider>
         </HideProvider>
       </SessionProvider>
     </SafeAreaProvider>

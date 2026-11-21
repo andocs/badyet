@@ -19,6 +19,7 @@ export function Screen(props: {
   return (
     <ScrollView
       style={{ backgroundColor: c.bg }}
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ padding: 16, paddingTop: insets.top + 12, paddingBottom: 32, gap: 12 }}
       refreshControl={
         props.onRefresh ? <RefreshControl refreshing={!!props.refreshing} onRefresh={props.onRefresh} tintColor={c.accent} /> : undefined
