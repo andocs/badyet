@@ -7,12 +7,14 @@ import { useSession } from '~/lib/session';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
+// Android 13+ keeps app notifications off until the app asks.
+const needsPostPermission = Platform.OS === 'android' && Number(Platform.Version) >= 33;
+
 export default function Settings() {
   const c = useTheme();
   const { session } = useSession();
   const [granted, setGranted] = useState(false);
   const [postOk, setPostOk] = useState(true);
-  const needsPostPermission = Platform.OS === 'android' && Number(Platform.Version) >= 33;
 
   async function allowNotifications() {
     const r = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
