@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { archiveFund, reorderFunds, saveFund } from "@/app/(v13)/funds/actions";
 import { money, parsePesos } from "@/lib/domain/money";
+import { FUND_COLORS as COLORS } from "@/lib/bonuses/colors";
 import { useConfirm } from "../feedback";
 import { Money } from "../money";
 import { MonthOfYear } from "../pickers";
@@ -23,11 +24,6 @@ export interface FundCard {
   balance: number;
 }
 
-const COLORS = [
-  "#34D399", "#7FA8FF", "#F6C453", "#C4A0FF", "#5CD0E6", "#F28BC8",
-  "#10B981", "#3B82F6", "#F59E0B", "#8B5CF6", "#06B6D4", "#EC4899",
-  "#EF4444", "#F97316", "#84CC16", "#14B8A6", "#6366F1", "#A8A29E",
-];
 const RULES: ["steps" | "cap" | "reset" | "fixed", string, string][] = [
   ["steps", "Fill in steps", "One tranche at a time (like an emergency fund)"],
   ["cap", "Fill to cap", "Keep going until the target is full"],

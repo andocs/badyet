@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import { saveInstance } from "@/app/(v13)/bonuses/actions";
+import { destColors, destKey } from "@/lib/bonuses/colors";
 import { money, parsePesos } from "@/lib/domain/money";
 import type { BonusCard, DestKind, DestView } from "@/lib/bonuses/view";
 import { EXEMPTION_CAP } from "@/lib/windfall/compute";
@@ -10,13 +11,12 @@ import { V13Icon } from "../icons";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ymLabel = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
-export const DEST_COLOR: Record<DestKind, string> = { fund: "var(--accent)", gift: "var(--pink)", purchase: "var(--teal)", debt: "var(--red)", wants: "var(--muted)", account: "var(--blue)" };
 
 interface Row { kind: DestKind; targetId: string | null; label: string | null; name: string; amount: string; done: boolean }
 const rowOf = (d: DestView): Row => ({ kind: d.kind, targetId: d.targetId, label: d.label, name: d.name, amount: (d.amount / 100).toFixed(2), done: d.done });
 
 /** One bonus for one year: gross to net, then where each peso goes (tick them off as you do it). */
-export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard; funds: { id: string; name: string }[]; baseMultiplier: number }) {
+export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: BonusCard; funds: { id: string; name: string; color: string | null }[]; colors: Record<string, string>; baseMultiplier: number }) {
   const [editing, setEditing] = useState(false);
   const [rows, setRows] = useState<Row[]>(() => card.dests.map(rowOf));
   const [add, setAdd] = useState({ mode: (funds.length > 0 ? "fund" : "custom") as "fund" | "custom", fundId: "", name: "", value: "", unit: "peso" as "peso" | "pct" });
@@ -44,6 +44,9 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
     });
   };
 
+  // The page's colours, plus a free one for any line added here that is not saved yet.
+  const palette = useMemo(() => destColors(funds, [...card.dests, ...rows], colors), [funds, card.dests, rows, colors]);
+  const dot = (d: { kind: DestKind; targetId: string | null; name: string }) => palette[destKey(d)] ?? "var(--muted)";
   const placed = rows.reduce((t, r) => t + (parsePesos(r.amount) ?? 0), 0);
   const left = card.net - placed;
   // The add form: a fund or a custom line, as a flat amount or a percent of this bonus.
@@ -99,7 +102,7 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
           {waterfall}
           {card.plannedNet !== null ? <div className={`v-vs ${d >= 0 ? "v-pos" : "v-warnt"}`}>Planned <Money value={card.plannedNet} /> · got <Money value={card.net} /> (<Money value={money(d)} signed />)</div> : null}
           <h3 style={{ margin: "14px 0 4px" }}>Where it went</h3>
-          {card.dests.map((d2, i) => <div key={i} className="v-sr-row"><span className="v-chk" aria-checked={true} role="img" aria-label="done" style={{ cursor: "default" }}><V13Icon name="check" /></span><span className="v-grow v-nm"><i className="v-dot" style={{ background: DEST_COLOR[d2.kind] }} /><b>{d2.name}</b></span><span className="v-num"><Money value={d2.amount} /></span></div>)}
+          {card.dests.map((d2, i) => <div key={i} className="v-sr-row"><span className="v-chk" aria-checked={true} role="img" aria-label="done" style={{ cursor: "default" }}><V13Icon name="check" /></span><span className="v-grow v-nm"><i className="v-dot" style={{ background: dot(d2) }} /><b>{d2.name}</b></span><span className="v-num"><Money value={d2.amount} /></span></div>)}
         </div>
       </details>
     );
@@ -139,12 +142,12 @@ export function BonusCardView({ card, funds, baseMultiplier }: { card: BonusCard
               <button type="button" className="v-btn v-sm" onClick={() => { setRec({ gross: (card.gross / 100).toFixed(2), dm: (card.deMinimis / 100).toFixed(2), net: (card.net / 100).toFixed(2) }); dialog.current?.showModal(); }}>Mark received</button>
             </span>
           </div>
-          <div className="v-mini" role="img" aria-label="Split">{rows.map((r, i) => <i key={i} style={{ width: `${card.net > 0 ? Math.max(0, (parsePesos(r.amount) ?? 0) / card.net) * 100 : 0}%`, background: DEST_COLOR[r.kind] }} />)}</div>
+          <div className="v-mini" role="img" aria-label="Split">{rows.map((r, i) => <i key={i} style={{ width: `${card.net > 0 ? Math.max(0, (parsePesos(r.amount) ?? 0) / card.net) * 100 : 0}%`, background: dot(r) }} />)}</div>
           {rows.length === 0 ? <p className="v-muted v-sm">Nothing placed yet. Add a destination.</p> : null}
           {rows.map((r, i) => (
             <div key={i} className={`v-sr-row ${r.done ? "v-done" : ""}${editing ? " v-ed" : ""}`}>
               <button type="button" className="v-chk" role="checkbox" aria-checked={r.done} aria-busy={pending === i} aria-label={`Mark ${r.name} done`} disabled={busy || editing} onClick={() => { const before = rows; const next = rows.map((x, j) => (j === i ? { ...x, done: !x.done } : x)); setRows(next); setPending(i); run(next, {}, undefined, () => setRows(before)); }}>{pending === i ? <span className="v-spin" aria-hidden="true" /> : <V13Icon name="check" />}</button>
-              <span className="v-grow v-nm"><i className="v-dot" style={{ background: DEST_COLOR[r.kind] }} /><b>{r.name}</b></span>
+              <span className="v-grow v-nm"><i className="v-dot" style={{ background: dot(r) }} /><b>{r.name}</b></span>
               {editing ? (
                 <>
                   <input className="v-lbl-in" value={r.amount} inputMode="decimal" style={{ width: 110, textAlign: "right", minHeight: 40 }} aria-label={`Amount for ${r.name}`} onChange={(e) => setRows((x) => x.map((y, j) => (j === i ? { ...y, amount: e.target.value } : y)))} />

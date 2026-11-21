@@ -8,7 +8,7 @@ export interface BonusData {
   thisYear: number;
   /** Saved destinations by `ruleId|year`. */
   saved: Map<string, SavedSplit[]>;
-  funds: { id: string; name: string }[];
+  funds: { id: string; name: string; color: string | null }[];
 }
 
 const rows = <T,>(r: { data: unknown }): T[] => (r.data ?? []) as T[];
@@ -18,7 +18,7 @@ export async function loadBonuses(supabase: SupabaseClient): Promise<BonusData> 
     loadSalary(supabase),
     supabase.from("bonus_instances").select("id, rule_id, year"),
     supabase.from("bonus_instance_splits").select("instance_id, target_kind, target_id, label, amount, done"),
-    supabase.from("funds").select("id, name").is("archived_at", null).order("priority"),
+    supabase.from("funds").select("id, name, color").is("archived_at", null).order("priority"),
   ]);
   const keyOf = new Map(rows<{ id: string; rule_id: string; year: number }>(inst).map((i) => [i.id, `${i.rule_id}|${i.year}`]));
   const saved = new Map<string, SavedSplit[]>();
@@ -27,5 +27,5 @@ export async function loadBonuses(supabase: SupabaseClient): Promise<BonusData> 
     if (!key) continue;
     saved.set(key, [...(saved.get(key) ?? []), { kind: s.target_kind, targetId: s.target_id, label: s.label, amount: money(s.amount), done: s.done }]);
   }
-  return { salary, thisYear: Number(salary.thisMonth.slice(0, 4)), saved, funds: rows<{ id: string; name: string }>(funds) };
+  return { salary, thisYear: Number(salary.thisMonth.slice(0, 4)), saved, funds: rows<{ id: string; name: string; color: string | null }>(funds) };
 }

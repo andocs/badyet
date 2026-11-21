@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { loadBonuses } from "@/lib/bonuses/load";
+import { destColors } from "@/lib/bonuses/colors";
 import { bonusCards, yearSummary } from "@/lib/bonuses/view";
 import { formatPesos, money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
-import { BonusCardView, DEST_COLOR } from "@/components/v13/bonuses/card";
+import { BonusCardView } from "@/components/v13/bonuses/card";
 import { RulesPanel } from "@/components/v13/bonuses/rules";
 import { Money } from "@/components/v13/money";
 
@@ -24,6 +25,8 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
   const sum = yearSummary(cards);
   const prev = hasStart && year > data.thisYear ? yearSummary(bonusCards(year - 1, input, data.saved, funds)) : null;
   const total = Math.max(1, sum.net);
+  // Funds keep their own colour; every other line gets one no fund uses, so no two bars share a colour.
+  const colors = destColors(data.funds, cards.flatMap((c) => c.dests));
 
   return (
     <main className="v-main">
@@ -56,11 +59,11 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
                   {sum.net > 0 ? (
                     <>
                       <div className="v-stk" style={{ marginTop: 16 }} role="img" aria-label="Where the year's bonus money goes">
-                        {sum.byDest.map((d) => <i key={d.key} style={{ width: `${(d.amount / total) * 100}%`, background: DEST_COLOR[d.kind] }} />)}
+                        {sum.byDest.map((d) => <i key={d.key} style={{ width: `${(d.amount / total) * 100}%`, background: colors[d.key] }} />)}
                         {sum.unplaced > 50 ? <i style={{ width: `${(sum.unplaced / total) * 100}%`, background: "var(--gold)" }} /> : null}
                       </div>
                       <div className="v-dl">
-                        {sum.byDest.map((d) => <div key={d.key}><i className="v-dot" style={{ background: DEST_COLOR[d.kind] }} />{d.name}<b><Money value={d.amount} /></b></div>)}
+                        {sum.byDest.map((d) => <div key={d.key}><i className="v-dot" style={{ background: colors[d.key] }} />{d.name}<b><Money value={d.amount} /></b></div>)}
                         {sum.unplaced > 50 ? <div><i className="v-dot" style={{ background: "var(--gold)" }} />Not placed yet<b><Money value={sum.unplaced} /></b></div> : null}
                       </div>
                     </>
@@ -68,7 +71,7 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
                 </section>
                 {cards.length === 0 ? <div className="v-note">No bonuses land in {year}. Add a yearly rule or a one-off on the right.</div> : null}
                 {cards.map((c) => (
-                  <BonusCardView key={`${c.key}-${c.status}-${c.net}-${c.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(",")}`} card={c} funds={data.funds} baseMultiplier={input.assumptions.cipMultiplierNum} />
+                  <BonusCardView key={`${c.key}-${c.status}-${c.net}-${c.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(",")}`} card={c} funds={data.funds} colors={colors} baseMultiplier={input.assumptions.cipMultiplierNum} />
                 ))}
               </>
             )}
