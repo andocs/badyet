@@ -44,10 +44,10 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 .snap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -14px;padding:0 14px;scrollbar-width:none}.snap>.yc{min-width:100%;scroll-snap-align:center;background:var(--soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .dots{display:flex;gap:6px;justify-content:center}.dots i{width:6px;height:6px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--accent)}
 .note{position:fixed;left:24px;top:24px;width:230px;font-size:12px;color:var(--muted);line-height:1.5}@media(max-width:760px){.note{display:none}}
-.banner{background:#3a2f12;border:1px solid var(--gold);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}</style></head><body><div class="note"><b>Rules</b><br>Dedicated page, opened from Settings > Rules (replaces the Capture rules sheet). Two tabs: Capture rules and Duplicate rules.<br><br>Tap a rule to edit, + to add, switch to pause. Listen on = Notifications, Emails or Both. Sample data, 320 x 872.<br><br>Direct links: #edit, #new, #dup, #dupedit, #apps, #senders, #more (add to the URL).<br><br>Rules is its own page in More, listed before Settings. In a rule, tap + App or + Sender to pick.</div>
+.banner{background:#3a2f12;border:1px solid var(--gold);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}</style></head><body><div class="note"><b>Rules</b><br>Dedicated page, opened from Settings > Rules (replaces the Capture rules sheet). Two tabs: Capture rules and Duplicate rules.<br><br>Tap a rule to edit, + to add, switch to pause. Listen on = Notifications, Emails or Both. Sample data, 320 x 872.<br><br>Direct links: #edit, #new, #dup, #dupedit, #apps, #senders, #more, #transfer (add to the URL). #edit is the payment rule, #transfer the transfer rule.<br><br>Rules is its own page in More, listed before Settings. In a rule, tap + App or + Sender to pick.</div>
 <div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
 <div class="scroll">
-<div class="head"><div class="ib" style="margin-right:-4px"><ion-icon name="chevron-back-outline"></ion-icon></div><div><h1>Rules</h1><div class="sub">What the app listens for</div></div><div class="ib" data-sheet="new" style="background:var(--accent);color:var(--on)"><ion-icon name="add-outline"></ion-icon></div></div>
+<div class="head"><div><h1>Rules</h1><div class="sub">What the app listens for</div></div><div class="ib" data-sheet="new" style="background:var(--accent);color:var(--on)"><ion-icon name="add-outline"></ion-icon></div></div>
 <div class="seg"><div class="on" data-tab="cap">Capture</div><div data-tab="dup">Duplicates</div></div>
 
 <div id="tab-cap" class="stack" style="display:flex;flex-direction:column;gap:12px">
@@ -56,9 +56,9 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 <div class="card" data-sheet="edit"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div>
 <div class="row"><span class="pill">Notifications + Emails</span><span class="s12 mut">Maya · BPI</span></div>
 <div class="chips"><span class="pill" style="background:var(--soft);color:var(--ink)">payment received</span><span class="pill" style="background:var(--soft);color:var(--ink)">card payment</span><span class="pill" style="background:var(--soft);color:var(--ink)">+2</span></div>
-<div class="s12 mut">Counts as a payment to Maya Black. Lowers what you owe. Confirms automatically.</div></div>
+<div class="s12 mut">Payment to Maya Black. Lowers what you owe. Confirms automatically.</div></div>
 
-<div class="card" data-sheet="edit"><div class="between"><div class="b">Maya transfers</div><div class="sw on"></div></div>
+<div class="card" data-sheet="transfer"><div class="between"><div class="b">Maya transfers</div><div class="sw on"></div></div>
 <div class="row"><span class="pill">Notifications</span><span class="s12 mut">Maya</span></div>
 <div class="chips"><span class="pill" style="background:var(--soft);color:var(--ink)">sent you</span><span class="pill" style="background:var(--soft);color:var(--ink)">you sent</span></div>
 <div class="s12 mut">Transfer between my accounts. Asks me to confirm.</div></div>
@@ -106,7 +106,7 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 <div class="fld"><div class="lab">Must also contain (optional)</div><div class="chips"><span class="chip">+ Word</span></div></div>
 <div class="fld"><div class="lab">Skip it if it contains</div><div class="chips"><span class="chip on" style="background:var(--errt);color:var(--err)">refund ✕</span><span class="chip">+ Word</span></div></div>
 <div class="fld"><div class="lab">What it is</div><div class="seg"><div>Spending</div><div>Income</div><div>Transfer</div><div class="on">Card payment</div></div></div>
-<div class="fld"><div class="lab">Card being paid</div><div class="input">Maya Black</div></div>
+<div class="fld"><div class="lab">Paying to</div><div class="input">Maya Black · credit card</div></div>
 <div class="fld"><div class="lab">Paid from</div><div class="input">Read from the message, ask if unclear</div></div>
 <div class="between" style="margin-bottom:6px"><span>Confirm automatically</span><div class="sw on"></div></div>
 <div class="s12 mut" style="margin-bottom:8px">Both sides are recorded, so the card balance drops and the paying account goes down.</div>
@@ -133,11 +133,28 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 
 <div class="sheet" id="sh-more"><div class="grab"></div><div class="mrow"><ion-icon name="cash-outline"></ion-icon>Salary and tax<span class="go">›</span></div><div class="mrow"><ion-icon name="pie-chart-outline"></ion-icon>Budget<span class="go">›</span></div><div class="mrow"><ion-icon name="gift-outline"></ion-icon>Bonuses<span class="go">›</span></div><div class="mrow"><ion-icon name="flag-outline"></ion-icon>Funds<span class="go">›</span></div><div class="mrow"><ion-icon name="trending-up-outline"></ion-icon>Forecast<span class="go">›</span></div><div class="mrow" style="background:var(--tint);border-radius:10px;padding:0 8px"><ion-icon name="funnel-outline"></ion-icon>Rules<span class="pill" style="margin-left:6px">new</span><span class="go">›</span></div><div class="mrow"><ion-icon name="settings-outline"></ion-icon>Settings<span class="go">›</span></div></div>
 
+<div class="sheet" id="sh-transfer"><div class="grab"></div><h2>Edit transfer rule</h2>
+<div class="fld"><div class="lab">What is it for</div><div class="input">Maya transfers</div></div>
+<div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notifications</div><div>Emails</div><div>Both</div></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya</span><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
+<div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip on">sent you ✕</span><span class="chip on">you sent ✕</span><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">What it is</div><div class="seg"><div>Spending</div><div>Income</div><div class="on">Transfer</div><div>Payment</div></div></div>
+<div class="fld"><div class="lab">Money leaves</div><div class="input">Maya wallet</div></div>
+<div class="fld"><div class="lab">Money arrives in</div><div class="input">BPI savings</div></div>
+<div class="s12 mut" style="margin-bottom:8px">Leave an account blank to read it from the message. If it can't be read, the Inbox asks you.</div>
+<div class="between" style="margin-bottom:6px"><span>Record both sides</span><div class="sw on"></div></div>
+<div class="between" style="margin-bottom:6px"><span>Confirm automatically</span><div class="sw"></div></div>
+<div class="s12 mut" style="margin-bottom:8px">One transfer, two linked entries. The same movement from an alert and an email is still one item.</div>
+<div class="card" style="background:var(--soft);margin-bottom:8px"><div class="lab">Test it</div><div class="s12">"You sent ₱1.00 to BPI Savings via Maya"</div><div class="row"><span class="pill">Matches</span><span class="s12 mut">Transfer · Maya wallet → BPI savings · ₱1.00</span></div></div>
+<div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Save</div></div>
+<div class="btn out" style="margin-top:8px;color:var(--err)">Delete rule</div></div>
+
 <div class="sheet" id="sh-new"><div class="grab"></div><h2>New rule</h2>
 <div class="fld"><div class="lab">What is it for</div><div class="input">e.g. Gym, Salary, Netflix</div></div>
 <div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notifications</div><div>Emails</div><div class="on">Both</div></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
 <div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip">+ Word</span></div></div>
-<div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">Spending</div><div>Income</div><div>Transfer</div><div>Card payment</div></div></div>
+<div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">Spending</div><div>Income</div><div>Transfer</div><div>Payment</div></div></div>
 <div class="fld"><div class="lab">Category</div><div class="input">Pick one</div></div>
 <div class="between" style="margin-bottom:8px"><span>Confirm automatically</span><div class="sw"></div></div>
 <div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Add rule</div></div></div>
@@ -162,4 +179,4 @@ const tb=e.target.closest("[data-tab]");if(tb){tab(tb.dataset.tab);return}
 if(e.target.closest("[data-close],.scrim,.mrow")){shut();return}
 const ck=e.target.closest(".chk");if(ck){const on=ck.classList.toggle("on");ck.textContent=on?"✓":"";return}const sw=e.target.closest(".sw");if(sw){sw.classList.toggle("on");return}
 const m=e.target.closest("[data-more]");if(m){open("more");return}const t=e.target.closest("[data-sheet]");if(t){open(t.dataset.sheet)}});
-const h=location.hash.slice(1);if(h==="dup"||h==="dupedit")tab("dup");if(h==="card"||h==="edit")open("edit");else if(h==="apps"||h==="senders"||h==="more")open(h);else if(h==="new"||h==="dupedit")open(h);</script></body></html>
+const h=location.hash.slice(1);if(h==="dup"||h==="dupedit")tab("dup");if(h==="card"||h==="edit")open("edit");else if(["apps","senders","more","transfer"].includes(h))open(h);else if(h==="new"||h==="dupedit")open(h);</script></body></html>

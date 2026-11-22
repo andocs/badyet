@@ -47,6 +47,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 15:27 | ota | Phone update published to preview, runtime 1.1.0, group 218c775d-0494-4578-8dae-fc8f5933d50e (commit 5187735): rev-27. rev-27 merged to main. | -
 - 2026-11-22 21:53 | rev-28 | Rules page mockups: web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on, keywords, card payment type) + editable duplicate rules. | 6c9889a
 - 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
+- 2026-11-22 22:18 | rev-28 | Mockups revised: phone back button removed; New rule sheet has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes) | -
 
 ## 4. Open questions
 
