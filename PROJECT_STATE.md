@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-27 merged and published
-- **Gate:** none
-- **Next action:** User: open phone app twice for update 218c775d, test BPI push + email gives one item. Gmail push plan postponed. Open: C1 Google Wallet sample, C2 device checks, remove diagnostics when stable.
-- **User to-do now:** Open phone app twice for the update; check BPI push + email gives one item
+- **Active slice / milestone:** rev-28..31 planned
+- **Gate:** waiting
+- **Next action:** User re-approves rev-28..31 (now incl. editable duplicate rules); then build rev-28 mockups
+- **User to-do now:** Re-approve slicing
 
 ## 3. Execution log
 
@@ -144,8 +144,12 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Gmail push (watch + Pub/Sub + edge function + Expo push) POSTPONED by user 2026-11-22. Design saved in git history of this file: phone calls users.watch, edge function gmail-push wakes phone, needs expo-notifications, FCM, new APK.
-- rev-27 [Needed, S, OTA-able]: email/notification dedupe. Emails skipped when same source+direction+amount within window already exists (DB any status, outbox, held), not account-bound; notifications check the same; Gmail pass runs after outbox send. Files: mobile/src/lib/captureEngine.ts, captureRun.ts, gmailRun.ts, lib/capture, tests.
+Revision batch 3 (changes requested 2026-11-22, awaiting re-approval)
+- rev-28 (Needed): Mockups only, no app code. Dedicated Rules page, web + phone, docs/mockups. Two sections: (1) Capture rules: name/subject, listen on Notifications / Emails / Both, keyword lists (any / must include / ignore), optional account, category, auto-confirm; add, edit, pause, delete, test against a sample. (2) Duplicate rules (user-editable): match fields (amount, direction, source, counterparty), time window in minutes, same-source only vs across sources, action (merge / keep both), on/off, test against two sample items. Replaces the Capture card in Settings. Gate on mockups before any build.
+- rev-29 (Needed): Cross-source dedupe (Maya alert + BPI email = one item) using defaults that match the editable duplicate rules; DB-stored, not localStorage. Cause: lib/capture/recent.ts:24 and captureEngine.ts:116-127 only match same source/account.
+- rev-30 (Needed): Credit card payment. User report: transfer item showed, confirmed, Maya Black balance did not drop. Investigate with real data first (confirmed leg sign/account/date vs card anchor, balances.ts:21-26, held.ts:82-102); fix so the card leg is an 'in' and reduces owed.
+- rev-31 (Needed): Build Rules page + editable duplicate rules from approved mockups; migrate capture_rules (channel, keywords) and add dedupe_rules table. Depends on rev-28 approval; rev-29 reads these rules once rev-31 lands (rev-29 ships with hard-coded defaults first).
+Cut (Nice-to-have): rule import/export, hit-count history, removing dead apply_transfer_marks SQL.
 
 ## Decisions & architecture
 
