@@ -43,6 +43,7 @@
       "expo-background-task",
       "expo-image",
       "expo-image-picker",
+      "./plugins/withNetworkKeepAlive",
       [
         "expo-splash-screen",
         {

@@ -37,12 +37,12 @@ function Tile({ a, onPress }: { a: AccountCard; onPress: () => void }) {
 function Grouped({ list, onOpen }: { list: AccountCard[]; onOpen: (id: string) => void }) {
   const c = useTheme();
   return (
-    <>
+    <View style={{ gap: 24 }}>
       {KIND_ORDER.map((k) => {
         const inKind = list.filter((a) => a.kind === k);
         if (inKind.length === 0) return null;
         return (
-          <View key={k} style={{ gap: 8 }}>
+          <View key={k} style={{ gap: 10 }}>
             <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.5 }}>
               {(KIND_LABEL[k] ?? k).toUpperCase()} · {inKind.length}
             </Text>
@@ -54,7 +54,7 @@ function Grouped({ list, onOpen }: { list: AccountCard[]; onOpen: (id: string) =
           </View>
         );
       })}
-    </>
+    </View>
   );
 }
 
@@ -207,14 +207,14 @@ export default function Accounts() {
           </Card>
 
           {data.spending.length > 0 ? (
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 12 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Spending accounts</Text>
               <Grouped list={data.spending} onOpen={setOpenId} />
             </View>
           ) : null}
 
           {data.funds.length > 0 ? (
-            <View style={{ gap: 8 }}>
+            <View style={{ gap: 12 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Fund accounts</Text>
               <Body style={{ color: c.muted, fontSize: 13 }}>Linked to a fund, so the fund balance updates itself.</Body>
               <Grouped list={data.funds} onOpen={setOpenId} />
@@ -237,7 +237,7 @@ export default function Accounts() {
 }
 
 const s = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 14 },
   actions: { flexDirection: 'row', gap: 10 },
   scrim: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: { maxHeight: '85%', borderTopLeftRadius: 20, borderTopRightRadius: 20, borderWidth: 1, padding: 16, gap: 12 },
