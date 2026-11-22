@@ -1,5 +1,5 @@
 import type { YearMonth } from "@/lib/domain/dates";
-import { findBracket, type TaxRow } from "@/lib/domain/pay";
+import { findBracket, taxPerCutoff, type TaxRow } from "@/lib/domain/pay";
 import { divRound, fromRatio, money, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
 import { philhealthMonthly } from "@/lib/pay/philhealth";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
@@ -10,7 +10,7 @@ import type { PayCutoff, PaySettings } from "./types";
 export interface PayslipLineSpec {
   kind: "earning" | "deduction";
   label: string;
-  source: "base_share" | "income_tax" | "sss" | "philhealth" | "pagibig" | "custom";
+  source: "base_share" | "income_tax" | "sss" | "philhealth" | "pagibig" | "penboost" | "custom";
   /** base_share and income_tax: share of the month's base or tax, basis points. */
   shareBp?: number | null;
   /** Replaces the computed amount (and is the amount for `custom`). */
@@ -44,11 +44,16 @@ export interface MonthPay {
   sss: Money;
   philhealth: Money;
   pagibig: Money;
-  /** Income tax for the month, before it is split across the two cutoffs. */
+  /** Income tax for the month: the two cutoffs' own tax added together. */
   tax: Money;
   /** The taxable pay behind that tax: regular monthly taxable pay (after contributions) and one-time taxable amounts landing this month. */
   regularTaxable: Money;
   oneTimeTaxable: Money;
+  taxFirst: Money;
+  taxSecond: Money;
+  /** Each cutoff's taxable pay (after the contributions taken in it); the tax is worked on this x 24. */
+  taxableFirst: Money;
+  taxableSecond: Money;
   first: Payslip;
   second: Payslip;
   takeHome: Money;
@@ -72,15 +77,29 @@ export function defaultTemplate(cutoff: PayCutoff): PayslipTemplate {
           { kind: "deduction", label: "SSS", source: "sss" },
           { kind: "deduction", label: "PhilHealth", source: "philhealth" },
           { kind: "deduction", label: "Pag-IBIG", source: "pagibig" },
+          { kind: "deduction", label: "SSS PenBoost", source: "penboost" },
         ];
   return { cutoff, effectiveMonth: "0000-01" as YearMonth, lines };
 }
 
-export function templateFor(templates: readonly PayslipTemplate[], cutoff: PayCutoff, month: YearMonth): PayslipTemplate {
-  const found = templates
+const latest = (templates: readonly PayslipTemplate[], cutoff: PayCutoff, month: YearMonth) =>
+  templates
     .filter((t) => t.cutoff === cutoff && t.effectiveMonth <= month)
     .sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth))[0];
-  return found ?? defaultTemplate(cutoff);
+
+/**
+ * The template in force for a cutoff. A template saved before SSS PenBoost existed has no line for it on either cutoff, so the
+ * second cutoff gets one at zero, ready for the amount to be typed on it.
+ */
+export function templateFor(templates: readonly PayslipTemplate[], cutoff: PayCutoff, month: YearMonth): PayslipTemplate {
+  const found = latest(templates, cutoff, month);
+  if (!found) return defaultTemplate(cutoff);
+  if (cutoff === "second") {
+    const first = latest(templates, "first", month) ?? defaultTemplate("first");
+    const has = (t: PayslipTemplate) => t.lines.some((l) => l.source === "penboost");
+    if (!has(found) && !has(first)) return { ...found, lines: [...found.lines, { kind: "deduction", label: "SSS PenBoost", source: "penboost" }] };
+  }
+  return found;
 }
 
 /** Tax numerator over 10,000 (annual tax scaled by 10,000) for an annual taxable income. */
@@ -91,15 +110,22 @@ function taxScaled(rows: readonly TaxRow[], annualTaxable: Money): bigint {
 }
 
 /**
- * Income tax for one month. Regular taxable pay (base plus monthly taxable allowances, less SSS, PhilHealth and Pag-IBIG) is
- * annualized by 12 and taxed on the bracket table, then divided by 12. One-time taxable amounts (yearly taxable allowances, taxable
- * one-offs) are taxed at the marginal rate on top of the regular year and land in this month. Rounded once.
+ * Income tax for one cutoff, the way the payslip works it: the cutoff's taxable pay (after the contributions taken in that cutoff)
+ * is annualized by 24, found on the bracket table, and the yearly tax is divided by 24. Rounded once.
  */
-export function monthlyIncomeTax(rows: readonly TaxRow[], regularMonthlyTaxable: Money, oneTimeTaxable: Money): Money {
-  const annual = (regularMonthlyTaxable * 12) as Money;
-  const withExtra = (annual + oneTimeTaxable) as Money;
-  const numerator = 12n * taxScaled(rows, withExtra) - 11n * taxScaled(rows, annual);
-  return fromRatio(numerator, 120_000n);
+export function cutoffIncomeTax(rows: readonly TaxRow[], cutoffTaxable: Money): Money {
+  return cutoffTaxable <= 0 ? ZERO : taxPerCutoff(rows, money(cutoffTaxable * 24));
+}
+
+/**
+ * Extra tax on one-time taxable amounts (yearly taxable allowances, taxable one-offs): taxed at the marginal rate on top of the
+ * regular year (regular monthly taxable x 12) and landing in the month they are paid.
+ */
+export function oneTimeIncomeTax(rows: readonly TaxRow[], regularMonthlyTaxable: Money, oneTimeTaxable: Money): Money {
+  if (oneTimeTaxable <= 0) return ZERO;
+  const annual = money(Math.max(0, regularMonthlyTaxable) * 12);
+  const withExtra = money(annual + oneTimeTaxable);
+  return fromRatio(taxScaled(rows, withExtra) - taxScaled(rows, annual), 10_000n);
 }
 
 function slip(cutoff: PayCutoff, lines: PayslipLine[]): Payslip {
@@ -123,17 +149,40 @@ export function buildMonthPay(
   const sss = settings.sssOverride ?? ZERO;
   const pagibig = settings.pagibigOverride ?? ZERO;
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
-  const mandatory = sum([sss, philhealth, pagibig]);
 
-  const regularTaxable = sub(
-    sum([base, ...salary.allowances.filter((a) => a.allowance.taxable && a.allowance.frequency === "monthly").map((a) => a.amount)]),
-    mandatory,
-  );
+  // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
+  // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
+  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost: ZERO };
+  const mandatoryIn = (cutoff: PayCutoff): Money =>
+    sum(
+      templateFor(templates, cutoff, salary.month)
+        .lines.filter((l) => l.kind === "deduction" && l.source in sourceAmount)
+        .map((l) => l.amountOverride ?? sourceAmount[l.source]!),
+    );
+  const baseIn = (cutoff: PayCutoff): Money =>
+    mulBp(base, templateFor(templates, cutoff, salary.month).lines.find((l) => l.source === "base_share")?.shareBp ?? 5000);
+  const taxableIn = (cutoff: PayCutoff): Money =>
+    sub(
+      sum([
+        baseIn(cutoff),
+        ...salary.allowances
+          .filter((a) => a.allowance.taxable && a.allowance.frequency === "monthly" && a.allowance.payslipCutoff === cutoff)
+          .map((a) => a.amount),
+      ]),
+      mandatoryIn(cutoff),
+    );
+
+  const taxableFirst = taxableIn("first");
+  const taxableSecond = taxableIn("second");
+  const regularTaxable = (taxableFirst + taxableSecond) as Money;
   const oneTime = sum([
     ...salary.allowances.filter((a) => a.allowance.taxable && a.allowance.frequency === "yearly").map((a) => a.amount),
     ...salary.oneOffs.filter((o) => o.taxable).map((o) => o.amount),
   ]);
-  const tax = monthlyIncomeTax(rows, regularTaxable, oneTime);
+  const taxFirst = cutoffIncomeTax(rows, taxableFirst);
+  // The one-time tax lands in the second cutoff, with the one-offs.
+  const taxSecond = (cutoffIncomeTax(rows, taxableSecond) + oneTimeIncomeTax(rows, regularTaxable, oneTime)) as Money;
+  const tax = (taxFirst + taxSecond) as Money;
 
   const build = (cutoff: PayCutoff): Payslip => {
     const template = templateFor(templates, cutoff, salary.month);
@@ -142,7 +191,7 @@ export function buildMonthPay(
       let amount: Money;
       if (spec.amountOverride != null) amount = spec.amountOverride;
       else if (spec.source === "base_share") amount = mulBp(base, spec.shareBp ?? 5000);
-      else if (spec.source === "income_tax") amount = taxShare(tax, cutoff, templates, salary.month, spec.shareBp ?? 5000);
+      else if (spec.source === "income_tax") amount = cutoff === "first" ? taxFirst : taxSecond;
       else if (spec.source === "sss") amount = sss;
       else if (spec.source === "philhealth") amount = philhealth;
       else if (spec.source === "pagibig") amount = pagibig;
@@ -173,16 +222,7 @@ export function buildMonthPay(
 
   const first = build("first");
   const second = build("second");
-  return { month: salary.month, sss, philhealth, pagibig, tax, regularTaxable, oneTimeTaxable: oneTime, first, second, takeHome: (first.takeHome + second.takeHome) as Money };
-}
-
-/** The first cutoff gets its share rounded; when the two shares add to 100% the second gets the remainder, so the month's tax never leaks a centavo. */
-function taxShare(tax: Money, cutoff: PayCutoff, templates: readonly PayslipTemplate[], month: YearMonth, shareBp: number): Money {
-  const firstShare = templateFor(templates, "first", month).lines.find((l) => l.source === "income_tax")?.shareBp ?? 5000;
-  const secondShare = templateFor(templates, "second", month).lines.find((l) => l.source === "income_tax")?.shareBp ?? 5000;
-  const firstTax = mulBp(tax, firstShare);
-  if (cutoff === "first") return firstTax;
-  return firstShare + secondShare === 10000 ? sub(tax, firstTax) : mulBp(tax, shareBp);
+  return { month: salary.month, sss, philhealth, pagibig, tax, taxFirst, taxSecond, taxableFirst, taxableSecond, regularTaxable, oneTimeTaxable: oneTime, first, second, takeHome: (first.takeHome + second.takeHome) as Money };
 }
 
 export interface BracketStep {

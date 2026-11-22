@@ -96,7 +96,7 @@ export function validateRaise(input: unknown): Valid<RaisePayload> {
 export interface TemplateLineInput {
   kind: "earning" | "deduction";
   label: string;
-  source: "base_share" | "income_tax" | "sss" | "philhealth" | "pagibig" | "custom";
+  source: "base_share" | "income_tax" | "sss" | "philhealth" | "pagibig" | "penboost" | "custom";
   shareBp?: number | null;
   amountOverride?: number | null;
 }
@@ -106,7 +106,7 @@ export interface TemplatesInput {
   second: TemplateLineInput[];
 }
 
-const SOURCES = ["base_share", "income_tax", "sss", "philhealth", "pagibig", "custom"] as const;
+const SOURCES = ["base_share", "income_tax", "sss", "philhealth", "pagibig", "penboost", "custom"] as const;
 
 /** Checks the payslip layout the builder saves: a month and the lines of both cutoffs. */
 export function validateTemplates(input: unknown): Valid<TemplatesInput> {

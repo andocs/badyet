@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { money } from "@/lib/domain/money";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
-import { buildMonthPay, defaultTemplate, monthlyIncomeTax, templateFor, type PayslipTemplate } from "./payslip";
+import { buildMonthPay, defaultTemplate, cutoffIncomeTax, oneTimeIncomeTax, templateFor, type PayslipTemplate } from "./payslip";
 import { resolveSalaryTimeline } from "./salary";
 import { allowance2, noAssumptions, p, settings, startEvent, ym } from "./fixtures";
 import type { Allowance } from "./types";
@@ -10,49 +10,66 @@ import type { BonusPayment } from "./bonus";
 const salaryFor = (allowances: Allowance[] = [allowance2], month = "2027-03") =>
   resolveSalaryTimeline([startEvent], allowances, noAssumptions, [ym(month)], { includeExpected: true })[0]!;
 
-// Hand-worked (base 50,000; SSS 1,750; PhilHealth 2.5% of 50,000 = 1,250; Pag-IBIG 200; mandatory 3,200):
-// regular taxable 46,800 -> annual 561,600 -> bracket 400k-800k: 22,500 + 161,600 x 20% = 54,820 -> /12 = 4,568.33 a month.
-// First cutoff tax 2,284.17 (half, rounded), second 2,284.16 (the remainder).
+// Hand-worked (base 50,000; SSS 1,750; PhilHealth 2.5% of 50,000 = 1,250; Pag-IBIG 200), tax per cutoff on that cutoff's taxable pay x 24:
+// first cutoff taxable 25,000 -> 600,000 -> 22,500 + 200,000 x 20% = 62,500 -> /24 = 2,604.17.
+// second cutoff taxable 25,000 - 3,200 = 21,800 -> 523,200 -> 22,500 + 123,200 x 20% = 47,140 -> /24 = 1,964.17.
 describe("payslip builder", () => {
-  it("works out monthly tax from the annualized regular pay", () => {
-    expect(monthlyIncomeTax(TAX_ROWS, p(46_800), money(0))).toBe(p(4_568.33));
-    expect(monthlyIncomeTax(TAX_ROWS, p(0), money(0))).toBe(0);
+  it("works out a cutoff's tax from its own taxable pay, annualized by 24", () => {
+    expect(cutoffIncomeTax(TAX_ROWS, p(25_000))).toBe(p(2_604.17));
+    expect(cutoffIncomeTax(TAX_ROWS, p(21_800))).toBe(p(1_964.17));
+    expect(cutoffIncomeTax(TAX_ROWS, p(0))).toBe(0);
   });
 
   it("taxes a one-time taxable amount at the marginal rate on top of the regular year", () => {
-    // +10,000 one-time: annual 571,600 -> tax 56,820, so 2,000 more tax lands in that month.
-    expect(monthlyIncomeTax(TAX_ROWS, p(46_800), p(10_000))).toBe(p(6_568.33));
+    // +10,000 one-time on regular 46,800 a month: annual 571,600 -> tax 56,820 against 54,820, so 2,000 more.
+    expect(oneTimeIncomeTax(TAX_ROWS, p(46_800), p(10_000))).toBe(p(2_000));
+    expect(oneTimeIncomeTax(TAX_ROWS, p(46_800), money(0))).toBe(0);
   });
 
-  it("splits tax across both cutoffs and puts contributions and the allowance on the second", () => {
+  it("works each cutoff's tax on its own pay and puts contributions and the allowance on the second", () => {
     const pay = buildMonthPay(salaryFor(), settings, []);
-    expect(pay.tax).toBe(p(4_568.33));
-    expect(pay.first.takeHome).toBe(p(22_715.83)); // 25,000 - 2,284.17
-    expect(pay.second.takeHome).toBe(p(21_515.84)); // 25,000 + 2,000 - 2,284.16 - 1,750 - 1,250 - 200
-    expect(pay.second.lines.map((l) => l.label)).toEqual(["Basic pay", "Income tax", "SSS", "PhilHealth", "Pag-IBIG", "Allowance"]);
+    expect(pay.taxFirst).toBe(p(2_604.17));
+    expect(pay.taxSecond).toBe(p(1_964.17));
+    expect(pay.tax).toBe(p(4_568.34));
+    expect(pay.first.takeHome).toBe(p(22_395.83)); // 25,000 - 2,604.17
+    expect(pay.second.takeHome).toBe(p(21_835.83)); // 25,000 + 2,000 - 1,964.17 - 1,750 - 1,250 - 200
+    expect(pay.second.lines.map((l) => l.label)).toEqual(["Basic pay", "Income tax", "SSS", "PhilHealth", "Pag-IBIG", "SSS PenBoost", "Allowance"]);
     expect(pay.first.lines.map((l) => l.label)).toEqual(["Basic pay", "Income tax"]);
-    // Whole month: base + allowance - contributions - tax.
-    expect(pay.takeHome).toBe(p(50_000 + 2_000 - 3_200 - 4_568.33));
+    expect(pay.takeHome).toBe(p(50_000 + 2_000 - 3_200 - 4_568.34));
     expect(pay.first.takeHome + pay.second.takeHome).toBe(pay.takeHome);
+  });
+
+  it("takes SSS PenBoost before tax, at the amount typed on its line", () => {
+    const t: PayslipTemplate = { ...defaultTemplate("second"), effectiveMonth: ym("2026-01"), lines: defaultTemplate("second").lines.map((l) => (l.source === "penboost" ? { ...l, amountOverride: p(750) } : l)) };
+    const pay = buildMonthPay(salaryFor(), settings, [], [t]);
+    // second taxable 21,800 - 750 = 21,050 -> 505,200 -> 22,500 + 105,200 x 20% = 43,540 -> /24 = 1,814.17
+    expect(pay.taxSecond).toBe(p(1_814.17));
+    expect(pay.second.takeHome).toBe(p(27_000 - 1_814.17 - 3_200 - 750));
+  });
+
+  it("gives a template saved before PenBoost a zero PenBoost line on the second cutoff only", () => {
+    const old: PayslipTemplate = { cutoff: "second", effectiveMonth: ym("2026-01"), lines: [{ kind: "deduction", label: "SSS", source: "sss" }] };
+    expect(templateFor([old], "second", ym("2027-03")).lines.map((l) => l.source)).toEqual(["sss", "penboost"]);
   });
 
   it("lets a tax override replace that cutoff's tax line", () => {
     const pay = buildMonthPay(salaryFor(), { ...settings, taxOverrideFirst: p(2_000) }, []);
     expect(pay.first.takeHome).toBe(p(23_000));
-    expect(pay.second.takeHome).toBe(p(21_515.84)); // second is unchanged
+    expect(pay.second.takeHome).toBe(p(21_835.83)); // second is unchanged
   });
 
   it("takes the savings plan and other deduction from every cutoff", () => {
     const pay = buildMonthPay(salaryFor([]), { ...settings, savingsPlanBp: 600, otherDeduction: p(300) }, []);
     // Plan: 6% of 25,000 = 1,500 per cutoff.
-    expect(pay.first.takeHome).toBe(p(25_000 - 2_284.17 - 1_500 - 300));
+    expect(pay.first.takeHome).toBe(p(25_000 - 2_604.17 - 1_500 - 300));
   });
 
   it("includes a taxable monthly allowance in taxable income", () => {
     const taxable: Allowance = { ...allowance2, id: "t", taxable: true, amount: p(5_000) };
     const pay = buildMonthPay(salaryFor([taxable]), settings, []);
-    // taxable 51,800 -> annual 621,600 -> 22,500 + 221,600 x 20% = 66,820 -> /12 = 5,568.33
-    expect(pay.tax).toBe(p(5_568.33));
+    // second taxable 25,000 + 5,000 - 3,200 = 26,800 -> 643,200 -> 22,500 + 243,200 x 20% = 71,140 -> /24 = 2,964.17
+    expect(pay.taxSecond).toBe(p(2_964.17));
+    expect(pay.tax).toBe(p(2_604.17 + 2_964.17));
   });
 
   it("places a bonus and its tax on the cutoff its rule names", () => {
@@ -79,8 +96,8 @@ describe("payslip builder", () => {
     expect(templateFor([custom], "first", ym("2027-05"))).toEqual(defaultTemplate("first"));
     expect(templateFor([custom], "first", ym("2027-06"))).toBe(custom);
     const pay = buildMonthPay(salaryFor([], "2027-06"), settings, [], [custom]);
-    // 60% of 50,000 = 30,000 earned; 40% of tax 4,568.33 = 1,827.33.
-    expect(pay.first.takeHome).toBe(p(30_000 - 1_827.33));
+    // 60% of 50,000 = 30,000 earned and taxed on its own: 720,000 -> 86,500 -> /24 = 3,604.17.
+    expect(pay.first.takeHome).toBe(p(30_000 - 3_604.17));
   });
 
   it("a per-line amount override wins", () => {
