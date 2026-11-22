@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Round three handed over (nothing built)
+- **Active slice / milestone:** rev-12 T1 per-cutoff tax (round three sliced: rev-12..18)
 - **Gate:** none
-- **Next action:** Next session: /model sonnet. Start T1 (per-cutoff tax, read the TRAIN table and payslip code) and T2 (loading states). Then W1-W3, N1-N2, I1-I2, A1-A2, B1, M1, S1, T3-T5. Confirm the 13th month and CIP tax method before changing bonuses.
+- **Next action:** Build rev-12 (T1): scout TRAIN table and payslip code, confirm 13th month and CIP tax method, then implement. Then rev-13 T2+A1+A2, rev-14 W1-W3, rev-15 N1+N2+M1, rev-16 I1+I2+S1, rev-17 T4+T5+B1, rev-18 T3.
 - **User to-do now:** Open round three list; check the real-data and device items (C2); Google Wallet sample when it arrives
 
 ## 3. Execution log
@@ -38,6 +38,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 19:56 | rev-9 | Fixed More pages redirecting to Now (hidden tabs cannot be focused in this expo-router; pages are now tabs with no button). Trimmed Now text. Edit account added on web (editAccount action + dialog) and phone (shared parseAccountEdit with tests). Merged 4c17f59, Vercel green, OTA published. | 4c17f59
 - 2026-11-21 23:50 | rev-10 | Background capture confirmed working by user. Reported: app does not load or refresh after some time. Fix: supabase auto-refresh start/stop on AppState, useLoad reloads when a screen returns to the front after 20 s and retries once after refreshSession on a JWT or expired error. Merged, OTA published. Cause not confirmed on device. | -
 - 2026-11-22 00:02 | rev-11 | Maya parser now reads 'You received 100 in your wallet via InstaPay' (tests added). New notice on Now and Inbox when captures wait for an account (held). Merged, Vercel green, OTA published. BPI email side for the same transfer not confirmed: if it was held for no matching account it would show in the notice. | -
+- 2026-11-22 10:46 | plan | Round three sliced into rev-12..rev-18, approved | -
 
 ## 4. Open questions
 

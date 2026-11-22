@@ -24,7 +24,7 @@ const fresh = (templates: readonly PayslipTemplate[], month: YearMonth): Drafts 
   first: draftsFrom(templateFor(templates, "first", month)),
   second: draftsFrom(templateFor(templates, "second", month)),
 });
-const MOVABLE = new Set(["sss", "philhealth", "pagibig", "custom"]);
+const MOVABLE = new Set(["sss", "philhealth", "pagibig", "penboost", "custom"]);
 
 /**
  * The payslip builder: both cutoffs side by side for a month. Edit the layout (split of base and tax, where each deduction sits, your own
@@ -57,7 +57,11 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
   const salary = useMemo(() => salaryAt(eff, month), [eff, month]);
   const bonuses = useMemo(() => planBonuses(eff.bonusRules, eff.bonusInstances, (m) => salaryAt(eff, m), eff.settings, eff.assumptions, [month]), [eff, month]);
   const pay = useMemo(() => buildMonthPay(salary, input.settings, bonuses, templates), [salary, input.settings, bonuses, templates]);
-  const working = useMemo(() => taxBreakdown(TAX_ROWS, money((pay.regularTaxable * 12 + pay.oneTimeTaxable) as number)), [pay]);
+  // Each cutoff's tax is worked on its own taxable pay x 24.
+  const working = useMemo(
+    () => (["first", "second"] as const).map((c) => ({ cutoff: c, taxable: c === "first" ? pay.taxableFirst : pay.taxableSecond, ...taxBreakdown(TAX_ROWS, money(((c === "first" ? pay.taxableFirst : pay.taxableSecond) * 24) as number)) })),
+    [pay],
+  );
 
   const update = (cutoff: PayCutoff, key: string, change: Partial<PayslipLineSpec>) =>
     setDrafts((d) => ({ ...d, [cutoff]: d[cutoff].map((x) => (x.key === key ? { ...x, spec: { ...x.spec, ...change } } : x)) }));
@@ -169,27 +173,33 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
       <details className="v-card">
         <summary style={{ cursor: "pointer", fontWeight: 800, fontFamily: "var(--font-display)", fontSize: 18, minHeight: 32 }}>Income tax working</summary>
         <div style={{ marginTop: 10 }}>
-          <div className="v-row v-sp v-sm" style={{ padding: "4px 0" }}>
-            <span>Taxable pay per year <span className="v-xs v-muted">(base <span className="amt">{fmt(salary.base)}</span> − contributions <span className="amt">{fmt(money((pay.sss + pay.philhealth + pay.pagibig) as number))}</span> + taxable allowances) × 12 + one-time</span></span>
-            <b><Money value={money((pay.regularTaxable * 12 + pay.oneTimeTaxable) as number)} /></b>
-          </div>
-          <div className="v-scrollx">
-            <table className="v-br">
-              <thead><tr><th>Bracket</th><th>Amount in it</th><th>Rate</th><th>Tax</th></tr></thead>
-              <tbody>
-                {working.steps.map((s) => (
-                  <tr key={s.lower} className={s.hit ? "v-hit" : ""} style={s.amountIn === 0 ? { color: "var(--muted)" } : undefined}>
-                    <td>{fmt(s.lower)} to {s.upper === null ? "and above" : fmt(s.upper)}</td>
-                    <td className="v-num">{s.amountIn === 0 ? "—" : <Money value={s.amountIn} />}</td>
-                    <td className="v-num">{s.rateBp / 100}%</td>
-                    <td className="v-num">{s.amountIn === 0 ? "—" : <Money value={s.tax} />}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="v-row v-sp v-sm" style={{ padding: "6px 0" }}><span>Tax for the year</span><b><Money value={working.annualTax} /></b></div>
-          <div className="v-row v-sp v-sm"><span>Withheld this month (a twelfth, plus one-time tax), split across both cutoffs</span><b><Money value={pay.tax} /></b></div>
+          <p className="v-xs v-muted" style={{ margin: "0 0 8px" }}>Each cutoff is taxed on its own pay: taxable pay (base and taxable allowances, less the SSS, PhilHealth, Pag-IBIG and PenBoost taken in that cutoff) × 24, then the year&apos;s tax ÷ 24.</p>
+          {working.map((w) => (
+            <div key={w.cutoff} style={{ marginBottom: 12 }}>
+              <div className="v-row v-sp v-sm" style={{ padding: "4px 0" }}>
+                <b>{w.cutoff === "first" ? "1st" : "2nd"} cutoff: taxable pay <span className="amt">{fmt(w.taxable)}</span> × 24</b>
+                <b><Money value={money((w.taxable * 24) as number)} /></b>
+              </div>
+              <div className="v-scrollx">
+                <table className="v-br">
+                  <thead><tr><th>Bracket</th><th>Amount in it</th><th>Rate</th><th>Tax</th></tr></thead>
+                  <tbody>
+                    {w.steps.map((st) => (
+                      <tr key={st.lower} className={st.hit ? "v-hit" : ""} style={st.amountIn === 0 ? { color: "var(--muted)" } : undefined}>
+                        <td>{fmt(st.lower)} to {st.upper === null ? "and above" : fmt(st.upper)}</td>
+                        <td className="v-num">{st.amountIn === 0 ? "—" : <Money value={st.amountIn} />}</td>
+                        <td className="v-num">{st.rateBp / 100}%</td>
+                        <td className="v-num">{st.amountIn === 0 ? "—" : <Money value={st.tax} />}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="v-row v-sp v-sm" style={{ padding: "6px 0" }}><span>Tax for the year ÷ 24 = withheld this cutoff</span><b><Money value={w.cutoff === "first" ? pay.taxFirst : pay.taxSecond} /></b></div>
+            </div>
+          ))}
+          {pay.oneTimeTaxable > 0 ? <p className="v-xs v-muted" style={{ margin: 0 }}>The 2nd cutoff also carries tax on {fmt(pay.oneTimeTaxable)} of one-time taxable pay, at the marginal rate.</p> : null}
+          <div className="v-row v-sp v-sm"><span>Withheld this month</span><b><Money value={pay.tax} /></b></div>
         </div>
       </details>
     </div>
@@ -219,7 +229,7 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
         <div key={d.key} className="v-plr">
           <div className="v-grow v-nm"><b>{line.label}</b>
             <small>
-              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? `${(d.spec.shareBp ?? 5000) === 5000 ? "Half" : `${(d.spec.shareBp ?? 5000) / 100}%`} of the month's tax, split across both cutoffs` : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
+              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
             </small>
           </div>
           <div className="v-pla">
