@@ -2,6 +2,7 @@ import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
+import { isRepeat, remember, type Recent } from '@/lib/capture/recent';
 import type { CaptureRule, SourceConfig, SourceKey } from '@/lib/capture/sources';
 
 /** One notification as the Android listener queued it. */
@@ -44,6 +45,9 @@ export interface RunDeps {
   newId: () => string;
   /** True when the same money movement is already recorded (for example the same transfer seen in a notification and an email). */
   isDuplicate?: (row: TxnInsert) => Promise<boolean>;
+  /** What notifications and emails saw recently, so an alert is not added when its email came first. */
+  readRecent?: () => Recent[];
+  writeRecent?: (recent: Recent[]) => void;
 }
 
 export interface RunSummary {
@@ -69,6 +73,7 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
 
   const sum: RunSummary = { added: 0, held: 0, skipped: 0, ignored: 0 };
   const seen = new Set<string>();
+  let recent = d.readRecent?.() ?? [];
   const cfgOf = (s: SourceKey) => ctx.configs.find((c) => c.source === s);
   const place = async (h: Held): Promise<boolean> => {
     const cfg = cfgOf(h.parsed.source);
@@ -117,11 +122,18 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
       sum.skipped += 1;
       continue;
     }
+    // An email already described this movement (placed, held or dropped), so this alert adds nothing.
+    if (isRepeat(recent, 'notification', parsed, n.postTime)) {
+      sum.skipped += 1;
+      continue;
+    }
     seen.add(hash);
+    recent = remember(recent, 'notification', parsed, n.postTime);
     const held: Held = { parsed, postTime: n.postTime, decision, hash };
     if (!(await place(held))) stillHeld.push(held);
   }
 
+  d.writeRecent?.(recent);
   const kept = stillHeld.slice(-MAX_HELD);
   d.writeHeld(kept);
   sum.held = kept.length;

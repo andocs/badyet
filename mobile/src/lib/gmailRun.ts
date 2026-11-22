@@ -1,5 +1,6 @@
 import { decide } from '@/lib/capture/decide';
 import { canParseEmail, gmailQuery, parseEmail, readEmail, sourceForEmail, type GmailMessage } from '@/lib/capture/email';
+import { isRepeat, remember, type Recent } from '@/lib/capture/recent';
 import { dedupeKey } from '@/lib/capture/row';
 import type { Held, RunContext } from './captureRun';
 
@@ -15,6 +16,9 @@ export interface GmailDeps {
   readHeld: () => Held[];
   writeHeld: (held: Held[]) => void;
   hash: (text: string) => Promise<string>;
+  /** What notifications and emails saw recently, to tell an email from a phone alert for the same movement. */
+  readRecent?: () => Recent[];
+  writeRecent?: (recent: Recent[]) => void;
 }
 
 export type GmailResult =
@@ -43,6 +47,7 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
   const ids = (await d.list(token, query)).filter((id) => !seen.has(id)).slice(0, MAX_PER_RUN);
   const held = d.readHeld();
   const known = new Set(held.map((h) => h.hash));
+  let recent = d.readRecent?.() ?? [];
   const out = { checked: ids.length, found: 0, ignored: 0, skipped: 0 };
 
   for (const id of ids) {
@@ -67,8 +72,12 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
       continue;
     }
     const hash = await d.hash(dedupeKey(parsed, email.postTime));
-    if (!known.has(hash)) {
+    // The phone alert for the same movement already came (placed, held or dropped), so this email adds nothing.
+    if (isRepeat(recent, 'import', parsed, email.postTime)) {
+      out.skipped += 1;
+    } else if (!known.has(hash)) {
       known.add(hash);
+      recent = remember(recent, 'import', parsed, email.postTime);
       held.push({ parsed, postTime: email.postTime, decision, hash, origin: 'import' });
       out.found += 1;
     } else {
@@ -77,6 +86,7 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
     seen.add(id);
   }
 
+  d.writeRecent?.(recent);
   d.writeHeld(held.slice(-MAX_HELD));
   d.writeSeen([...seen].slice(-MAX_SEEN));
   return { status: 'ok', ...out };

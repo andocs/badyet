@@ -3,6 +3,7 @@ import * as Crypto from 'expo-crypto';
 import 'expo-sqlite/localStorage/install';
 import { useSyncExternalStore } from 'react';
 import { confirmedRow } from '@/lib/capture/held';
+import type { Recent } from '@/lib/capture/recent';
 import { buildRow, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import { ensureTransferCategory } from '@/lib/capture/transfer-category';
 import { applyAllowlist } from './allowlist';
@@ -25,6 +26,7 @@ const CTX_KEY = 'capture_ctx';
 const HELD_KEY = 'capture_held';
 const HELD_SYNCED_KEY = 'capture_held_synced';
 const SEEN_KEY = 'gmail_seen';
+const RECENT_KEY = 'capture_recent';
 const GMAIL_LAST_KEY = 'gmail_last';
 const GMAIL_ON_KEY = 'gmail_on';
 const RECONNECT_KEY = 'gmail_reconnect';
@@ -171,6 +173,8 @@ const captureDeps: RunDeps = {
   hash,
   newId: () => Crypto.randomUUID(),
   isDuplicate,
+  readRecent: () => read<Recent[]>(RECENT_KEY, []),
+  writeRecent: (r) => write(RECENT_KEY, r),
 };
 
 async function checkGmail(): Promise<void> {
@@ -185,6 +189,8 @@ async function checkGmail(): Promise<void> {
       readHeld: captureDeps.readHeld,
       writeHeld: captureDeps.writeHeld,
       hash,
+      readRecent: captureDeps.readRecent,
+      writeRecent: captureDeps.writeRecent,
     });
     // "Not connected" after it was connected means the weekly sign-in ran out.
     if (r.status === 'ok') {

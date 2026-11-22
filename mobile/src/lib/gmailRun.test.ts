@@ -3,6 +3,7 @@ import type { GmailMessage } from '@/lib/capture/email';
 import { defaultConfig, SOURCES, type CaptureRule } from '@/lib/capture/sources';
 import type { Held, RunContext } from './captureRun';
 import { getMessage, GmailAuthError, listMessageIds } from './gmail';
+import { remember, type Recent } from '@/lib/capture/recent';
 import { runGmail, type GmailDeps } from './gmailRun';
 
 const b64url = (s: string) => Buffer.from(s, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -16,10 +17,11 @@ const mail = (id: string, from: string, subject: string, html: string): GmailMes
 const BPI_IN = `<table>${rows([['Reference Number', 'REF-1'], ['Transfer To', 'XXXXXXXXXX8167'], ['Bank Name', 'Maya Philippines, Inc.'], ['Transfer Amount', 'PHP 50.00']])}</table>`;
 const incoming = (id = 'm1') => mail(id, 'bpiinstapay@bpi.com.ph', 'Incoming Interbank Funds Transfer Confirmation', BPI_IN);
 
-function setup(over: { messages?: GmailMessage[]; token?: string | null; ctx?: Partial<RunContext> | null; seen?: string[]; held?: Held[]; listError?: Error } = {}) {
+function setup(over: { messages?: GmailMessage[]; token?: string | null; ctx?: Partial<RunContext> | null; seen?: string[]; held?: Held[]; recent?: Recent[]; listError?: Error } = {}) {
   const messages = over.messages ?? [incoming()];
   let seen = over.seen ?? [];
   let held = over.held ?? [];
+  let recent = over.recent ?? [];
   const calls = { list: 0, get: 0 };
   const deps: GmailDeps = {
     loadContext: async () => (over.ctx === null ? null : { configs: SOURCES.map(defaultConfig), rules: [], accounts: [], ...over.ctx }),
@@ -38,11 +40,24 @@ function setup(over: { messages?: GmailMessage[]; token?: string | null; ctx?: P
     readHeld: () => held,
     writeHeld: (h) => void (held = h),
     hash: async (s) => `h(${s})`,
+    readRecent: () => recent,
+    writeRecent: (r) => void (recent = r),
   };
-  return { deps, calls, seen: () => seen, held: () => held };
+  return { deps, calls, seen: () => seen, held: () => held, recent: () => recent };
 }
 
 describe('runGmail', () => {
+  it('skips an email whose phone alert was already seen (even one you dropped) and notes a new email', async () => {
+    const alert = { source: 'bpi', direction: 'in', amount: 5_000 } as never;
+    const seenFirst = setup({ recent: remember([], 'notification', alert, 1795233316000 - 120_000) });
+    expect(await runGmail(seenFirst.deps)).toMatchObject({ status: 'ok', found: 0, skipped: 1 });
+    expect(seenFirst.held()).toHaveLength(0);
+
+    const fresh = setup();
+    await runGmail(fresh.deps);
+    expect(fresh.recent()).toMatchObject([{ origin: 'import', source: 'bpi', direction: 'in', amount: 5_000 }]);
+  });
+
   it('turns a BPI email into a held capture marked as an import, and remembers the message', async () => {
     const t = setup();
     expect(await runGmail(t.deps)).toEqual({ status: 'ok', checked: 1, found: 1, ignored: 0, skipped: 0 });
