@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-27 capture dedupe
-- **Gate:** waiting
-- **Next action:** User approves rev-27; then merge and publish OTA
-- **User to-do now:** Approve rev-27; after OTA open phone app twice; test BPI push + email gives one item
+- **Active slice / milestone:** rev-27 merged and published
+- **Gate:** none
+- **Next action:** User: open phone app twice for update 218c775d, test BPI push + email gives one item. Gmail push plan postponed. Open: C1 Google Wallet sample, C2 device checks, remove diagnostics when stable.
+- **User to-do now:** Open phone app twice for the update; check BPI push + email gives one item
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 14:53 | ota | Phone update published to preview, runtime 1.1.0, group 68c48784-3797-4afa-b126-e87acb9dde7c (commit 254fe34): rev-26. rev-26 merged to main. | -
 - 2026-11-22 15:15 | rev-27..29 | Gmail push plan drafted (phone watches, edge function wakes phone via Expo push). User paused at the plan gate. | -
 - 2026-11-22 15:24 | rev-27 | Capture dedupe: a small recent-captures memory (source, direction, amount, time; no text) lets an email skip when the phone alert for the same movement was already seen (placed, held or dropped) and the reverse. 10 min window, other-kind only so real repeat purchases stay. Gmail push postponed. | 6d60ace
+- 2026-11-22 15:27 | ota | Phone update published to preview, runtime 1.1.0, group 218c775d-0494-4578-8dae-fc8f5933d50e (commit 5187735): rev-27. rev-27 merged to main. | -
 
 ## 4. Open questions
 
