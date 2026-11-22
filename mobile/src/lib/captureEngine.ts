@@ -190,6 +190,9 @@ async function checkGmail(): Promise<void> {
 }
 
 let running = false;
+let runningSince = 0;
+/** A cycle that has not finished in this long is stuck on something that never answered; the next call may start fresh. */
+const STUCK_CYCLE_MS = 3 * 60_000;
 let again = false;
 let againForce = false;
 
@@ -198,12 +201,14 @@ let againForce = false;
  * Safe to call from anywhere at any time: if a cycle is already running it asks for one more pass and returns.
  */
 export async function requestCapture(opts: { forceGmail: boolean; source: RunSource; send: () => Promise<void> }): Promise<void> {
+  if (running && Date.now() - runningSince > STUCK_CYCLE_MS) running = false;
   if (running) {
     again = true;
     againForce = againForce || opts.forceGmail;
     return;
   }
   running = true;
+  runningSince = Date.now();
   let added = 0;
   try {
     let force = opts.forceGmail;

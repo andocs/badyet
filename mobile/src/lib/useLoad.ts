@@ -1,6 +1,7 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import { reloadApp } from './resume';
 import { supabase } from './supabase';
 
 /** A screen that has been in front again after this long loads fresh data. */
@@ -65,6 +66,8 @@ export function useLoad<T>(load: () => Promise<T>) {
           return;
         } catch (second) {
           if (mine === latest.current) setError(message(second) || 'Could not load');
+          // Still stuck after a second try on a fresh connection: the app itself is wedged, so start it over (at most once in two minutes).
+          if (stuck(second) || second instanceof TimedOut) void reloadApp();
           return;
         }
       }
