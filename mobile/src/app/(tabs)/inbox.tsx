@@ -148,11 +148,15 @@ export default function Inbox() {
   const c = useTheme();
   const { data, error, refreshing, reload } = useLoad(() => loadInbox(supabase));
   const [view, setView] = useState<'check' | 'all'>('check');
-  const [gone, setGone] = useState<Set<string>>(new Set());
+  // Rows you just ignored leave at once; rows you just confirmed turn confirmed at once. Both clear when the fresh data arrives.
+  const [ignored, setIgnored] = useState<Set<string>>(new Set());
+  const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [problem, setProblem] = useState<string | null>(null);
   const today = useMemo(() => isoDate(todayManila()), []);
 
-  const txns = (data?.txns ?? []).filter((t) => !gone.has(t.id));
+  const txns = (data?.txns ?? [])
+    .filter((t) => !ignored.has(t.id))
+    .map((t) => (confirmed.has(t.id) ? { ...t, status: 'confirmed' as const } : t));
   const pending = txns.filter((t) => t.status === 'pending');
   // Captures no account has claimed sit in the same list, among the others by time, and ask which account they belong to.
   const held = useHeldItems();
@@ -166,20 +170,24 @@ export default function Inbox() {
     ...(heldAccounts ? held.map((h) => ({ at: h.postTime, t: null as null, h })) : []),
   ].sort((a, b) => b.at - a.at);
 
-  // The row leaves the moment you tap; if the save fails it comes back with the reason.
-  async function act(t: InboxTxn, run: () => Promise<{ ok: true } | { error: string }>) {
+  // The row changes the moment you tap (leaves To check, and shows as confirmed in All activity); if the save fails it changes back
+  // with the reason, and once it has saved the fresh data replaces it.
+  async function act(t: InboxTxn, kind: 'confirm' | 'ignore', run: () => Promise<{ ok: true } | { error: string }>) {
+    const set = kind === 'confirm' ? setConfirmed : setIgnored;
+    const without = (cur: Set<string>) => {
+      const n = new Set(cur);
+      n.delete(t.id);
+      return n;
+    };
     setProblem(null);
-    setGone((g) => new Set(g).add(t.id));
+    set((cur) => new Set(cur).add(t.id));
     const r = await run();
     if ('error' in r) {
-      setGone((g) => {
-        const n = new Set(g);
-        n.delete(t.id);
-        return n;
-      });
+      set(without);
       setProblem(r.error);
     } else {
-      void reload();
+      await reload();
+      set(without);
     }
   }
 
@@ -221,7 +229,7 @@ export default function Inbox() {
         ) : (
           toCheck.map((item) =>
             item.h ? (
-              <HeldCard key={item.h.hash} h={item.h} accounts={heldAccounts ?? []} today={today} />
+              <HeldCard key={item.h.hash} h={item.h} accounts={heldAccounts ?? []} categories={data.categories} today={today} />
             ) : (
               <PendingCard
                 key={item.t!.id}
@@ -229,7 +237,7 @@ export default function Inbox() {
                 categories={data.categories}
                 today={today}
                 onConfirm={(row, categoryId, rule, note) =>
-                  act(row, () =>
+                  act(row, 'confirm', () =>
                     confirmTransaction(supabase, {
                       id: row.id,
                       categoryId,
@@ -238,7 +246,7 @@ export default function Inbox() {
                     }),
                   )
                 }
-                onIgnore={(row) => act(row, () => ignoreTransaction(supabase, row.id))}
+                onIgnore={(row) => act(row, 'ignore', () => ignoreTransaction(supabase, row.id))}
               />
             ),
           )

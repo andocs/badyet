@@ -91,6 +91,12 @@ const latest = (templates: readonly PayslipTemplate[], cutoff: PayCutoff, month:
  * The template in force for a cutoff. A template saved before SSS PenBoost existed has no line for it on either cutoff, so the
  * second cutoff gets one at zero, ready for the amount to be typed on it.
  */
+/** What the payroll savings plan takes each cutoff: a fixed amount if one is set, otherwise a percent of half the monthly basic. */
+export function savingsPlanPerCutoff(settings: Pick<PaySettings, "savingsPlanBp" | "savingsPlanAmount">, base: Money): Money {
+  if (settings.savingsPlanAmount != null && settings.savingsPlanAmount > 0) return settings.savingsPlanAmount;
+  return settings.savingsPlanBp > 0 ? mulBp(divRound(base, 2), settings.savingsPlanBp) : ZERO;
+}
+
 export function templateFor(templates: readonly PayslipTemplate[], cutoff: PayCutoff, month: YearMonth): PayslipTemplate {
   const found = latest(templates, cutoff, month);
   if (!found) return defaultTemplate(cutoff);
@@ -208,9 +214,8 @@ export function buildMonthPay(
     if (cutoff === "second") {
       for (const o of salary.oneOffs) lines.push({ kind: "earning", label: "One-off adjustment", source: "one_off", amount: o.amount });
     }
-    if (settings.savingsPlanBp > 0) {
-      lines.push({ kind: "deduction", label: "Savings plan", source: "savings_plan", amount: mulBp(divRound(base, 2), settings.savingsPlanBp) });
-    }
+    const plan = savingsPlanPerCutoff(settings, base);
+    if (plan > 0) lines.push({ kind: "deduction", label: "Savings plan", source: "savings_plan", amount: plan });
     if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
     for (const b of bonuses) {
       if (b.cutoff !== cutoff) continue;

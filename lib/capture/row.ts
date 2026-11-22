@@ -10,7 +10,7 @@ export interface TxnInsert {
   /** Centavos, negative = money out. */
   amount: number;
   merchant: string | null;
-  kind: 'expense' | 'income';
+  kind: 'expense' | 'income' | 'transfer';
   category_id: string | null;
   source: 'manual' | 'notification' | 'import';
   status: 'pending' | 'confirmed';

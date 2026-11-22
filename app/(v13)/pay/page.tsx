@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthRange } from "@/lib/engine/months";
 import { loadSalary } from "@/lib/salary/load";
-import { eventRows, regularRange, yearRows, yearOf } from "@/lib/salary/view";
+import { eventRows, regularRange, salaryAt, yearRows, yearOf } from "@/lib/salary/view";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { AllowanceControls, EventActions, ExpectedPill, OptimisticItem, ProjectedRaises } from "@/components/v13/salary/controls";
 import { PayslipBuilder } from "@/components/v13/salary/payslip-builder";
+import { SavingsPlanCard } from "@/components/v13/salary/savings-plan";
 
 export const metadata = { title: "Salary and tax · Bad(yet)" };
 
@@ -22,6 +23,9 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
   const data = await loadSalary(supabase);
   const { input, thisMonth } = data;
   const hasStart = input.events.some((e) => e.kind === "start");
+  const fundsRes = await supabase.from("funds").select("id, name").is("archived_at", null).order("priority");
+  const funds = (fundsRes.data ?? []) as { id: string; name: string }[];
+  const plan = { bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null };
 
   const months = monthRange(thisMonth, 60);
   const month = (months as string[]).includes(monthParam ?? "") ? (monthParam as YearMonth) : thisMonth;
@@ -51,7 +55,10 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
             {isPayslip ? (
               <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
             ) : (
-              <Timeline data={data} />
+              <>
+                <SavingsPlanCard plan={plan} funds={funds} base={salaryAt(input, thisMonth).base} />
+                <Timeline data={data} />
+              </>
             )}
           </>
         )}

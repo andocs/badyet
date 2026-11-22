@@ -2,7 +2,9 @@ import { drainQueue } from '@modules/notification-listener';
 import * as Crypto from 'expo-crypto';
 import 'expo-sqlite/localStorage/install';
 import { useSyncExternalStore } from 'react';
+import { confirmedRow } from '@/lib/capture/held';
 import { buildRow, type AccountLite, type TxnInsert } from '@/lib/capture/row';
+import { ensureTransferCategory } from '@/lib/capture/transfer-category';
 import { applyAllowlist } from './allowlist';
 import { loadCapture } from './capture';
 import { runCapture, type Held, type RunContext, type RunDeps } from './captureRun';
@@ -127,15 +129,25 @@ async function isDuplicate(row: TxnInsert): Promise<boolean> {
  * side is also yours, which one. It joins the Inbox as a pending row (naming the other account when there is one, so the pairing can
  * make it a transfer) and stops being held. Drop it with `accountId: null`.
  */
-export async function resolveHeld(args: { hash: string; accountId: string | null; other?: { name: string } | null; send?: () => Promise<void> | void }): Promise<void> {
+export async function resolveHeld(args: {
+  hash: string;
+  accountId: string | null;
+  other?: { name: string } | null;
+  categoryId?: string | null;
+  send?: () => Promise<void> | void;
+}): Promise<void> {
   const all = read<Held[]>(HELD_KEY, []);
   const h = all.find((x) => x.hash === args.hash);
   if (!h) return;
   if (args.accountId) {
     const parsed = args.other ? { ...h.parsed, counterparty: args.other.name } : h.parsed;
     const decision = { ...h.decision, status: 'pending' as const, accountId: args.accountId };
-    const row = buildRow({ id: Crypto.randomUUID(), parsed, decision, accountId: args.accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
-    await outbox.add(row);
+    const base = buildRow({ id: Crypto.randomUUID(), parsed, decision, accountId: args.accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
+    // Answered here, so it is confirmed at once: a transfer when the other side is also yours, otherwise under the chosen category.
+    const transfer = !!args.other;
+    if (!transfer && !args.categoryId) return;
+    const transferCategoryId = transfer ? await ensureTransferCategory(supabase).catch(() => null) : null;
+    await outbox.add(confirmedRow(base, { transfer, categoryId: args.categoryId ?? null, transferCategoryId, at: new Date().toISOString() }));
   }
   const rest = all.filter((x) => x.hash !== args.hash);
   write(HELD_KEY, rest);

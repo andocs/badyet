@@ -10,6 +10,7 @@ import {
   allowanceOf,
   assumptionsOf,
   paySettingsOf,
+  withPlanExtra,
   raiseAllocationOf,
   salaryEventOf,
   type AllowanceRow,
@@ -90,6 +91,9 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     supabase.from("pool_entries").select("kind, amount, occurred_on").gte("occurred_on", period.start).lte("occurred_on", period.end),
     supabase.from("office_day_overrides").select("day, in_office").gte("day", period.start).lte("day", period.end),
   ]);
+  // The savings plan's amount and fund are asked for on their own, so a database without that update still loads.
+  const planExtra = await supabase.from("pay_settings").select("savings_plan_amount, savings_plan_fund_id").maybeSingle();
+
 
   const salaryEvents = rows<SalaryEventRow>(events).map(salaryEventOf);
   if (!salaryEvents.some((e) => e.kind === "start")) return { kind: "setup", reason: "no-salary" };
@@ -126,7 +130,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       events: salaryEvents,
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
       assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
-      settings: paySettingsOf((pay.data as PaySettingsRow | null) ?? null),
+      settings: paySettingsOf(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra)),
       bonusRules: [],
       bonusInstances: [],
       lines,

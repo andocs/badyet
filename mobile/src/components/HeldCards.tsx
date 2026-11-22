@@ -29,18 +29,31 @@ export function useHeldAccounts() {
 
 /**
  * A capture the app understood but no account claimed, shown as an ordinary Inbox card (same layout as every other one to check). It
- * asks which of your accounts it belongs to and where the money went or came from; once answered it becomes a normal pending card.
+ * asks which of your accounts it belongs to, where the money went or came from, and the category; Confirm then settles it in one step
+ * (a move between your own accounts needs no category and is confirmed as a transfer).
  */
-export function HeldCard({ h, accounts, today }: { h: Held; accounts: HeldAccount[]; today: ReturnType<typeof isoDate> }) {
+export function HeldCard({
+  h,
+  accounts,
+  categories,
+  today,
+}: {
+  h: Held;
+  accounts: HeldAccount[];
+  categories: { id: string; name: string }[];
+  today: ReturnType<typeof isoDate>;
+}) {
   const c = useTheme();
   const { syncNow } = useSync();
   const [mine, setMine] = useState<string | null>(null);
   const [other, setOther] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const p = h.parsed;
   const out = p.direction === 'out';
   const iso = new Date(h.postTime).toISOString();
   const otherAcct = accounts.find((a) => a.id === other);
+  const canConfirm = !!mine && (!!otherAcct || categoryId !== null);
 
   const finish = async (accountId: string | null) => {
     setBusy(true);
@@ -48,6 +61,7 @@ export function HeldCard({ h, accounts, today }: { h: Held; accounts: HeldAccoun
       hash: h.hash,
       accountId,
       other: otherAcct ? { name: otherAcct.name } : null,
+      categoryId: otherAcct ? null : categoryId,
       send: syncNow,
     });
     setBusy(false);
@@ -96,27 +110,34 @@ export function HeldCard({ h, accounts, today }: { h: Held; accounts: HeldAccoun
           ))}
       </View>
       {otherAcct ? (
-        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
-          It will be matched with the {otherAcct.name} notification as a transfer between your accounts.
-        </Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>A move between your accounts: it is confirmed as a transfer and needs no category.</Text>
+      ) : mine ? (
+        <>
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Category</Text>
+          <View style={s.chips}>
+            {categories.map((x) => (
+              <Chip key={x.id} label={x.name} on={categoryId === x.id} onPress={() => setCategoryId(x.id)} />
+            ))}
+          </View>
+        </>
       ) : null}
 
       <View style={s.row}>
         <Pressable
           onPress={() => void finish(mine)}
-          disabled={!mine || busy}
+          disabled={!canConfirm || busy}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !mine || busy }}
-          style={[s.btn, { flex: 1, backgroundColor: mine && !busy ? c.accent : c.soft }]}
+          accessibilityState={{ disabled: !canConfirm || busy }}
+          style={[s.btn, { flex: 1, backgroundColor: canConfirm && !busy ? c.accent : c.soft }]}
         >
           <Text
             style={{
-              color: mine && !busy ? c.onAccent : c.muted,
+              color: canConfirm && !busy ? c.onAccent : c.muted,
               fontFamily: fonts.bodyBold,
               fontSize: 15,
             }}
           >
-            {busy ? 'Adding…' : mine ? 'Use this account' : 'Pick an account'}
+            {busy ? 'Confirming…' : !mine ? 'Pick an account' : otherAcct ? 'Confirm transfer' : categoryId ? 'Confirm' : 'Pick a category'}
           </Text>
         </Pressable>
         <Pressable

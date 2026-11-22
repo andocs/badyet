@@ -20,14 +20,16 @@ export interface HeldCapture {
 }
 
 interface Account { id: string; name: string }
+interface Category { id: string; name: string }
 
 /**
  * A capture the phone understood but no account claimed, shown in To check like any other item. It asks which account it belongs to
  * and where the money went or came from; once answered it becomes a normal pending item to categorise.
  */
-export function HeldCaptureCard({ h, accounts, today }: { h: HeldCapture; accounts: Account[]; today: IsoDate }) {
+export function HeldCaptureCard({ h, accounts, categories, today }: { h: HeldCapture; accounts: Account[]; categories: Category[]; today: IsoDate }) {
   const [mine, setMine] = useState<string | null>(null);
   const [other, setOther] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [gone, setGone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
@@ -38,7 +40,7 @@ export function HeldCaptureCard({ h, accounts, today }: { h: HeldCapture; accoun
   const answer = (accountId: string | null) => {
     setError(null);
     start(async () => {
-      const r = await resolveHeldCapture({ hash: h.hash, accountId, otherAccountId: other });
+      const r = await resolveHeldCapture({ hash: h.hash, accountId, otherAccountId: other, categoryId: other ? null : categoryId });
       if (r.error) setError(r.error);
       else setGone(true);
     });
@@ -71,11 +73,22 @@ export function HeldCaptureCard({ h, accounts, today }: { h: HeldCapture; accoun
           <button key={a.id} type="button" aria-pressed={other === a.id} onClick={() => setOther(a.id)}>My {a.name}</button>
         ))}
       </div>
-      {other ? <div className="v-guess v-muted">It will be matched with the {accounts.find((a) => a.id === other)?.name} notification as a transfer between your accounts.</div> : null}
+      {other ? (
+        <div className="v-guess v-muted">A move between your accounts: it is confirmed as a transfer and needs no category.</div>
+      ) : mine ? (
+        <>
+          <div className="v-lbl" style={{ marginTop: 10 }}>Category</div>
+          <div className="v-cats" role="group" aria-label="Category">
+            {categories.map((c) => (
+              <button key={c.id} type="button" aria-pressed={categoryId === c.id} onClick={() => setCategoryId(c.id)}>{c.name}</button>
+            ))}
+          </div>
+        </>
+      ) : null}
       {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
 
       <div className="v-ta">
-        <button type="button" className="v-btn v-pri" disabled={!mine || busy} onClick={() => answer(mine)}>{busy ? "Adding…" : mine ? "Use this account" : "Pick an account"}</button>
+        <button type="button" className="v-btn v-pri" disabled={!mine || (!other && !categoryId) || busy} onClick={() => answer(mine)}>{busy ? "Confirming…" : !mine ? "Pick an account" : other ? "Confirm transfer" : categoryId ? "Confirm" : "Pick a category"}</button>
         <button type="button" className="v-btn" disabled={busy} onClick={() => answer(null)} aria-label={`Not mine: ${who}`}>Not mine</button>
       </div>
     </article>
