@@ -34,7 +34,7 @@ async function addLines(supabase: SupabaseClient, lines: SetupLine[]): Promise<s
     if (cat.error) return "Could not save a budget category. Try again.";
     const { error } = await supabase.from("budget_lines_v2").insert({
       category_id: cat.data.id, name: l.name, rule: l.rule, amount: l.rule === "fixed" ? l.amount : null, pct_bp: l.rule === "pct" ? l.pctBp : null,
-      cutoff: "both", counts_to_daily: l.group === "Wants", kind: "normal", sort: i,
+      cutoff: l.cutoff, counts_to_daily: l.group === "Wants", kind: "normal", sort: i,
     });
     if (error) return "Could not save a budget line. Try again.";
   }

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { moveInOrder } from "@/lib/accounts/order";
 import { anchorAmount, parseAccountEdit, parseNewAccount } from "@/lib/accounts/v13";
 import { requireAuthed } from "@/lib/auth/require";
 import { parsePesos } from "@/lib/domain/money";
@@ -168,4 +169,20 @@ export async function removeQr(_prev: FormState, fd: FormData): Promise<FormStat
   if (upd.error) return { error: "Could not remove the image." };
   refresh();
   return { ok: true };
+}
+
+/** Moves an account one place earlier or later. Positions are renumbered from the current order, so accounts that never had one get one. */
+export async function moveAccount(fd: FormData): Promise<void> {
+  const supabase = await requireAuthed();
+  const id = String(fd.get("account") ?? "");
+  const dir = fd.get("dir") === "earlier" ? "earlier" : "later";
+  if (!UUID.test(id)) return;
+  const { data } = await supabase.from("accounts").select("id").is("archived_at", null).order("sort").order("created_at");
+  const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
+  const next = moveInOrder(ids, id, dir);
+  if (!next) return;
+  for (const [i, accountId] of next.entries()) {
+    await supabase.from("accounts").update({ sort: i }).eq("id", accountId);
+  }
+  refresh();
 }

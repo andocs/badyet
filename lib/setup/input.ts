@@ -2,6 +2,8 @@ export interface SetupLine {
   name: string;
   group: "Essentials" | "Wants" | "Savings";
   rule: "fixed" | "pct";
+  /** Which cutoff the line is taken from: "both" takes its amount (or percent) from each cutoff. */
+  cutoff: "both" | "first" | "second";
   /** Centavos, for a fixed line. */
   amount: number | null;
   /** Basis points, for a percent line. */
@@ -21,6 +23,7 @@ export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
 
 const MAX = 100_000_000_000;
 const int = (n: unknown, min: number, max: number): n is number => typeof n === "number" && Number.isInteger(n) && n >= min && n <= max;
+const CUTOFFS = ["both", "first", "second"] as const;
 const GROUPS = ["Essentials", "Wants", "Savings"] as const;
 
 /**
@@ -40,10 +43,16 @@ export function validateSetup(input: unknown): Checked<SetupPayload> {
   const accounts = Array.isArray(p.accounts) ? p.accounts : [];
   if (accounts.length > 20) return { ok: false, error: "That is a lot of accounts. Add up to 20 now and the rest later." };
   const accountRows: Record<string, string>[] = [];
+  const seen = new Set<string>();
   for (const a of accounts) {
     if (typeof a !== "object" || a === null) return { ok: false, error: "Check the accounts." };
     const row: Record<string, string> = {};
     for (const [k, v] of Object.entries(a as Record<string, unknown>)) if (typeof v === "string") row[k] = v;
+    const key = (row.name ?? "").trim().toLowerCase();
+    if (key !== "") {
+      if (seen.has(key)) return { ok: false, error: `You have two accounts called ${row.name!.trim()}.` };
+      seen.add(key);
+    }
     accountRows.push(row);
   }
 
@@ -77,12 +86,14 @@ export function validateSetup(input: unknown): Checked<SetupPayload> {
       const name = typeof l.name === "string" ? l.name.trim() : "";
       if (name.length < 1 || name.length > 60) return { ok: false, error: "Every budget line needs a name of up to 60 characters." };
       if (!(GROUPS as readonly unknown[]).includes(l.group)) return { ok: false, error: "Pick a group for each line." };
+      const cutoff = (CUTOFFS as readonly unknown[]).includes(l.cutoff) ? (l.cutoff as SetupLine["cutoff"]) : "both";
+      if (lines.some((x) => x.name.toLowerCase() === name.toLowerCase())) return { ok: false, error: `You have two budget lines called ${name}.` };
       if (l.rule === "fixed") {
         if (!int(l.amount, 0, 10_000_000_000)) return { ok: false, error: `Enter an amount for ${name}.` };
-        lines.push({ name, group: l.group as SetupLine["group"], rule: "fixed", amount: l.amount, pctBp: null });
+        lines.push({ name, group: l.group as SetupLine["group"], rule: "fixed", cutoff, amount: l.amount, pctBp: null });
       } else if (l.rule === "pct") {
         if (!int(l.pctBp, 0, 10_000)) return { ok: false, error: `A percent for ${name} takes 0 to 100%.` };
-        lines.push({ name, group: l.group as SetupLine["group"], rule: "pct", amount: null, pctBp: l.pctBp });
+        lines.push({ name, group: l.group as SetupLine["group"], rule: "pct", cutoff, amount: null, pctBp: l.pctBp });
       } else return { ok: false, error: `Pick a rule for ${name}.` };
     }
     const pct = lines.reduce((t, l) => t + (l.pctBp ?? 0), 0);

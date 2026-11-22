@@ -57,4 +57,12 @@ describe("validateSetup", () => {
     expect(r).toMatchObject({ ok: true, value: { accounts: [{ name: "A", kind: "cash", color: "#fff" }] } });
     expect(err({ accounts: [null] })).toMatch(/accounts/);
   });
+  it("takes each line's cutoff, each cutoff by default", () => {
+    const r = validateSetup({ lines: [{ name: "A", group: "Wants", rule: "fixed", amount: 1, cutoff: "second" }, { name: "B", group: "Wants", rule: "fixed", amount: 1 }] });
+    expect(r).toMatchObject({ ok: true, value: { lines: [{ cutoff: "second" }, { cutoff: "both" }] } });
+  });
+  it("rejects two accounts or two budget lines with the same name", () => {
+    expect(err({ accounts: [{ name: "Maya" }, { name: " maya " }] })).toMatch(/two accounts called/);
+    expect(err({ lines: [{ name: "Rent", group: "Wants", rule: "fixed", amount: 1 }, { name: "rent", group: "Wants", rule: "fixed", amount: 1 }] })).toMatch(/two budget lines called/);
+  });
 });

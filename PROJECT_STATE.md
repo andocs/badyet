@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-12 T1 per-cutoff tax (awaiting approval)
+- **Active slice / milestone:** rev-13 UI group (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval: merge rev/12-per-cutoff-tax, apply migration 20261208000000_penboost.sql, then rev-13 (T2 loading states, A1 bigger cards, A2 reorder accounts).
-- **User to-do now:** Apply supabase migration 20261208000000_penboost.sql; open Salary > payslip builder, type 750 on the SSS PenBoost line (2nd cutoff) and compare each cutoff's tax and take-home with your payslip; send the payslip figures if any still differ (Q24).
+- **Next action:** On approval: merge rev/13-ui-group, then rev-14 (I1 transfer detection, I2 usual-account prompt, S1 custom capture rules), rev-15 (T4, T5, B1), rev-16 (T3 installments).
+- **User to-do now:** Check on web and phone: setup wizard (re-run it), Now accounts scroller, Accounts cards and Earlier/Later, Budget office day chips.
 
 ## 3. Execution log
 
@@ -40,6 +40,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 00:02 | rev-11 | Maya parser now reads 'You received 100 in your wallet via InstaPay' (tests added). New notice on Now and Inbox when captures wait for an account (held). Merged, Vercel green, OTA published. BPI email side for the same transfer not confirmed: if it was held for no matching account it would show in the notice. | -
 - 2026-11-22 10:46 | plan | Round three sliced into rev-12..rev-18, approved | -
 - 2026-11-22 10:53 | rev-12 | T1: income tax now worked per cutoff (taxable pay x 24, year tax / 24) in lib/engine/payslip.ts; SSS PenBoost added as a pre-tax payslip line (2nd cutoff, amount typed on the line; migration 20261208000000 widens the payslip_lines source check, NOT yet applied); tax working panel shows both cutoffs; 333 tests pass, build ok. Bonus tax (13th month, CIP) already used the x24 cutoff method with the shared 90,000 cap; unchanged. | b473880
+- 2026-11-22 11:00 | rev-13 | UI group: W1 duplicate-name checks (accounts, budget lines, funds; server too), W2 per-line cutoff (each/1st/2nd) with monthly total note, W3 no starter budget lines; N1 hidden scrollbar + prev/next buttons; N2 envelopes max 3 per row; A1 account cards ~3 per row, taller (web+phone); A2 reorder accounts (Earlier/Later, web+phone, lib/accounts/order.ts); T2 accounts loading.tsx, link-pending shimmer, phone skeleton tiles; M1 weekday names on office day chips (phone). 338 tests, lint, build ok. | -
 
 ## 4. Open questions
 
@@ -78,7 +79,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,309,355 | 12,055,661 | 526,041 | 5,925,836 | 645,817,269 | 2,778,371 |  |
+| **Cumulative** | 3,366,047 | 12,445,429 | 541,522 | 5,998,814 | 651,229,225 | 2,810,306 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -124,6 +125,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-1 | 61,948 | 271,167 | 10,438 | 39,709 | 1,647,594 | 11,679 |  |
 | G1-G5 | 411,056 | 1,885,707 | 85,638 | 479,934 | 51,413,137 | 251,551 |  |
 | rev-12 | 41,259 | 242,973 | 8,891 | 66,222 | 2,682,272 | 28,242 |  |
+| rev-13 | 56,692 | 389,768 | 15,481 | 69,970 | 4,802,032 | 29,017 |  |
 
 <!-- END SUMMARY -->
 

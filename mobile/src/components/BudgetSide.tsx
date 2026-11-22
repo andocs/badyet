@@ -8,7 +8,7 @@ import { money, parsePesos, type Money } from '@/lib/domain/money';
 import { rtoDayBudget } from '@/lib/engine/budget';
 import { cutoffSettingsFromPaydays, usualOfficeDays } from '@/lib/engine/months';
 import type { ProjectionMonth } from '@/lib/engine/projection';
-import { shortDate } from '@/lib/now/format';
+import { shortDate, weekdayName } from '@/lib/now/format';
 import { Amount, Card, Chip } from '~/components/ui';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import { archiveCategory, createPool, saveCategory, setOfficeDay, setUsualOfficeDays, settleDay, takeFromPool, undoSettle } from '~/lib/budgetOps';
@@ -96,7 +96,7 @@ export function BudgetSide({ data, nowRun, onChanged }: { data: BudgetData; nowR
           <Text style={h2}>Settle office days</Text>
           {rows.map((r) => {
             const where = settled.get(r.date);
-            const wd = days.find((d) => d.date === r.date)?.weekday ?? '';
+            const wd = weekdayName(r.date);
             return (
               <Row key={r.date} onPress={where ? undefined : () => setOpen({ k: 'settle', date: r.date, under: r.diff >= 0, diff: Math.abs(r.diff) })} label={`Settle ${r.date}`}>
                 <View style={{ flex: 1 }}>
@@ -133,7 +133,7 @@ export function BudgetSide({ data, nowRun, onChanged }: { data: BudgetData; nowR
           {days.map((d) => (
             <Chip
               key={d.date}
-              label={`${d.weekday} ${d.date.slice(8)}`}
+              label={`${weekdayName(d.date)} ${Number(d.date.slice(8))}`}
               on={d.office}
               onPress={() => act(() => setOfficeDay(supabase, { date: d.date, office: !d.office, usual: d.usual, dayBudget }))}
             />

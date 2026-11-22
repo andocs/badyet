@@ -35,21 +35,30 @@ export function AccountTile({ name, kind, color, balanceText, sub, fund, width, 
         ) : null}
       </View>
       <Text style={[s.kind, { fontFamily: fonts.bodyBold }]}>{kind}</Text>
-      <Text style={[s.bal, { fontFamily: fonts.display }]}>{balanceText}</Text>
-      <Text style={[s.sub, { fontFamily: fonts.bodyBold }]}>{sub}</Text>
+      <Text style={[s.bal, { fontFamily: fonts.display }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
+        {balanceText}
+      </Text>
+      <Text style={[s.sub, { fontFamily: fonts.bodyBold }]} numberOfLines={2}>
+        {sub}
+      </Text>
     </Pressable>
   );
 }
 
+/** A grey placeholder the size of a tile, shown while the accounts load. */
+export function TileSkeleton({ color }: { color: string }) {
+  return <View accessibilityElementsHidden importantForAccessibility='no-hide-descendants' style={[s.tile, { backgroundColor: color, opacity: 0.6 }]} />;
+}
+
 const s = StyleSheet.create({
-  tile: { flexGrow: 1, flexBasis: '46%', minWidth: 150, minHeight: 118, borderRadius: 12, padding: 14, overflow: 'hidden', gap: 2 },
+  tile: { flexGrow: 1, flexBasis: '30%', minWidth: 104, minHeight: 140, borderRadius: 12, padding: 12, overflow: 'hidden', gap: 2 },
   circleA: { position: 'absolute', right: -30, top: -34, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.09)' },
   circleB: { position: 'absolute', right: 30, bottom: -60, width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.06)' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  name: { color: '#fff', fontSize: 15, flexShrink: 1 },
+  name: { color: '#fff', fontSize: 14, flexShrink: 1 },
   tag: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 1 },
   tagText: { color: '#fff', fontSize: 11 },
   kind: { color: 'rgba(255,255,255,0.92)', fontSize: 12 },
-  bal: { color: '#fff', fontSize: 22, marginTop: 'auto', paddingTop: 10 },
+  bal: { color: '#fff', fontSize: 20, marginTop: 'auto', paddingTop: 10 },
   sub: { color: 'rgba(255,255,255,0.92)', fontSize: 12 },
 });
