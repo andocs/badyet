@@ -1,3 +1,4 @@
+import { withLimit } from './http';
 const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
 
 /** The Web client id from Google Cloud (a public identifier, not a secret). Without it Gmail cannot be connected. */
@@ -74,13 +75,21 @@ export async function gmailAccount(): Promise<string | null> {
 export async function gmailToken(): Promise<string | null> {
   const g = ready();
   if (!g || !webClientId) return null;
-  try {
-    const r = await g.GoogleSignin.signInSilently();
-    if (r.type !== 'success') return null;
-    return (await g.GoogleSignin.getTokens()).accessToken;
-  } catch {
-    return null;
-  }
+  // Google's silent sign-in is a native call with no limit of its own; run in the background it can wait for ever.
+  const got = await withLimit(
+    (async () => {
+      try {
+        const r = await g.GoogleSignin.signInSilently();
+        if (r.type !== 'success') return null;
+        return (await g.GoogleSignin.getTokens()).accessToken;
+      } catch {
+        return null;
+      }
+    })(),
+    10_000,
+    'gmail-token',
+  );
+  return got ?? null;
 }
 
 /** Forget a rejected token so the next request gets a new one. */

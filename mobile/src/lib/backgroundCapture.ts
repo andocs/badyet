@@ -2,6 +2,8 @@ import * as BackgroundTask from 'expo-background-task';
 import * as TaskManager from 'expo-task-manager';
 import { AppRegistry } from 'react-native';
 import { requestCapture, type RunSource } from './captureEngine';
+import { diag } from './diag';
+import './diagApp';
 import { flushQueue } from './expense';
 import { outbox } from './outboxStore';
 import { supabase } from './supabase';
@@ -16,6 +18,7 @@ const CLOSED_RUN_LIMIT_MS = 45_000;
 
 async function runClosed(source: RunSource): Promise<void> {
   let timer: ReturnType<typeof setTimeout> | undefined;
+  diag('bg-start', { src: source });
   try {
     await Promise.race([
       runClosedWork(source),
@@ -25,6 +28,7 @@ async function runClosed(source: RunSource): Promise<void> {
     ]);
   } finally {
     if (timer) clearTimeout(timer);
+    diag('bg-end', { src: source });
   }
 }
 

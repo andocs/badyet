@@ -10,6 +10,9 @@ import { getMessage, GmailAuthError, listMessageIds } from './gmail';
 import { dropGmailToken, gmailToken } from './googleAuth';
 import { runGmail, type GmailResult } from './gmailRun';
 import { outbox } from './outboxStore';
+import { diag } from './diag';
+import { uploadDiag } from './diagUpload';
+import { withLimit } from './http';
 import { syncHeld } from './heldSync';
 import { pairRecent } from './pairing';
 import { supabase } from './supabase';
@@ -209,6 +212,7 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
   }
   running = true;
   runningSince = Date.now();
+  diag('capture-start', { src: opts.source });
   let added = 0;
   try {
     let force = opts.forceGmail;
@@ -216,9 +220,11 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
       again = false;
       if (force || Date.now() - read<number>(GMAIL_LAST_KEY, 0) > GMAIL_EVERY_MS) {
         write(GMAIL_LAST_KEY, Date.now());
-        await checkGmail();
+        const gAt = Date.now();
+        await withLimit(checkGmail(), 45_000, 'gmail');
+        diag('gmail-done', { ms: Date.now() - gAt });
       }
-      const s = await runCapture(captureDeps);
+      const s = (await withLimit(runCapture(captureDeps), 60_000, 'run-capture')) ?? { added: 0, held: read<Held[]>(HELD_KEY, []).length, skipped: 0, ignored: 0 };
       // The web shows held captures too, so keep the table and this list in line (answered on the web leaves here; new ones go up).
       try {
         await syncHeld(supabase, { read: () => read<Held[]>(HELD_KEY, []), write: (h) => write(HELD_KEY, h), readSynced: () => read<string[]>(HELD_SYNCED_KEY, []), writeSynced: (x) => write(HELD_SYNCED_KEY, x) });
@@ -227,8 +233,8 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
       setStatus({ held: heldNow.length, heldItems: heldNow });
       added += s.added;
       if (s.added > 0) {
-        await opts.send();
-        await pairRecent(supabase);
+        await withLimit(opts.send(), 30_000, 'send');
+        await withLimit(pairRecent(supabase), 30_000, 'pair');
       }
       force = againForce;
       againForce = false;
@@ -237,6 +243,8 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
   } catch {
     // Anything unexpected: the queue and held items are untouched, so the next trigger retries.
   } finally {
+    diag('capture-end', { src: opts.source, ms: Date.now() - runningSince, added });
     running = false;
+    void uploadDiag(supabase);
   }
 }
