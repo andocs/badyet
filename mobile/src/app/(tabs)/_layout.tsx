@@ -3,6 +3,7 @@ import { Tabs, useRouter, useSegments, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useInboxCount } from '~/lib/inboxCount';
 import { fonts, useTheme } from '~/lib/theme';
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -57,6 +58,7 @@ const HIDDEN = { tabBarItemStyle: { display: 'none' as const } };
 
 export default function TabsLayout() {
   const c = useTheme();
+  const inboxCount = useInboxCount();
   const segments = useSegments() as string[];
   const [open, setOpen] = useState(false);
   // More stays highlighted while you are on one of its pages.
@@ -73,7 +75,15 @@ export default function TabsLayout() {
         }}
       >
         <Tabs.Screen name="index" options={{ title: 'Now', tabBarIcon: icon('home-outline', 'home') }} />
-        <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarIcon: icon('file-tray-outline', 'file-tray') }} />
+        <Tabs.Screen
+          name="inbox"
+          options={{
+            title: 'Inbox',
+            tabBarIcon: icon('file-tray-outline', 'file-tray'),
+            tabBarBadge: inboxCount > 0 ? inboxCount : undefined,
+            tabBarBadgeStyle: { backgroundColor: c.gold, color: c.bg, fontFamily: fonts.bodyBold, fontSize: 11 },
+          }}
+        />
         <Tabs.Screen name="add" options={{ title: 'Add', tabBarIcon: icon('add-circle-outline', 'add-circle') }} />
         <Tabs.Screen name="accounts" options={{ title: 'Accounts', tabBarIcon: icon('wallet-outline', 'wallet') }} />
         <Tabs.Screen
