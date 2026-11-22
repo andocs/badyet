@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-24 inbox count (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval: merge rev/24-inbox-count and publish phone update (OTA; no native change).
-- **User to-do now:** After publishing, send a test notification with the app closed and read Settings > Diagnostics: capture-end should now show held/skipped/ignored
+- **Active slice / milestone:** rev-24 merged and published
+- **Gate:** none
+- **Next action:** User: open the phone app twice for update 38685a80, send a test notification with the app closed, then paste Settings > Diagnostics (capture-end now shows held/skipped/ignored). Open: savings plan in forecast, C1 Google Wallet, C2 device checks, remove diagnostics when stable.
+- **User to-do now:** Open the phone app twice for the update; test notification with the app closed; paste Diagnostics; answer savings plan question
 
 ## 3. Execution log
 
@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 13:27 | rev-23 | Native keep-alive. Confirmed in React Native source that its OkHttp client has no timeouts by default (connect/read/write 0) and keeps idle connections, so a connection that dies while the phone idles hangs every request for ever (cleared only by a process restart). Config plugin mobile/plugins/withNetworkKeepAlive.js adds KeepAliveOkHttpClientFactory (15s connect, 30s read/write, no idle connection reuse, 15s HTTP/2 ping) and registers it in MainApplication; verified by a local expo prebuild. Also phone accounts: one card per row (max 340 wide), more space between kind groups. Needs a new APK. | -
 - 2026-11-22 13:45 | build | Android APK built OK from rev-23 (build e19f045c-f9a4-4dbc-b2c9-154232e828ca), artifact https://expo.dev/artifacts/eas/cUeQp38EjgrsZoCpvq3R6z5z3ZCtL2eQqWLxc5R4BDw.apk . rev-23 merged to main. | -
 - 2026-11-22 14:17 | rev-24 | Log check: notification-started headless runs work (bg-start src notification at 14:02:56 and 14:13:07, ~1.8s, capture ran) but both show added 0, which cannot say if the capture was held, ignored by the parser, or skipped. Inbox number: web nav badge counted only pending transactions (not held_captures) and was server-rendered so never refreshed; phone had no Inbox tab badge at all. Fixed: web badge includes held captures plus AutoRefresh (focus + every 60s); phone Inbox tab badge = pending + held, refreshed on focus, after capture, after queue sends, each minute. capture-end now logs held/skipped/ignored counts. 379 web + 161 phone tests, lint, build ok. | -
+- 2026-11-22 14:20 | ota | Phone update published to preview, runtime 1.1.0, group 38685a80-27ca-4866-a5e5-a821fdfba33f (commit db76f1b): rev-24. rev-24 merged to main. | -
 
 ## 4. Open questions
 
