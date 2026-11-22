@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-30 card payment
-- **Gate:** none
-- **Next action:** Investigate card payment with real data (balances.ts:21-26, held.ts:82-102); card leg = in
-- **User to-do now:** Apply migration 20261214000000; new phone build; Vercel preview
+- **Gate:** waiting
+- **Next action:** User reviews rev-30; on approval merge, then rev-31 (Rules page build)
+- **User to-do now:** Apply migrations 20261214000000 and 20261215000000; rebuild phone app; check Vercel preview
 
 ## 3. Execution log
 
@@ -52,6 +52,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:47 | rev-28 | Rules mockups approved by user and merged to main (local, not pushed) | d8b5c7b
 - 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
 - 2026-11-22 23:27 | rev-29 | Approved by user; merged to main (local) | -
+- 2026-11-22 23:30 | rev-30 | Held transfer now inserts counter leg on other account (card gets +amount) and a DB trigger backlinks peers; web + mobile; tests green | -
 
 ## 4. Open questions
 
@@ -90,7 +91,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,834,148 | 15,045,706 | 633,887 | 6,826,984 | 777,150,107 | 3,221,565 |  |
+| **Cumulative** | 3,914,369 | 15,539,760 | 652,709 | 6,853,622 | 778,662,723 | 3,231,719 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -108,7 +109,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
 | rev-28 | 0 | 0 | 0 | 24,387 | 577,568 | 13,975 |  |
 | rev-29 | 62,363 | 234,316 | 8,925 | 40,207 | 1,316,760 | 16,161 |  |
-| rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
+| rev-30 | 80,221 | 494,054 | 18,822 | 25,098 | 1,219,151 | 8,992 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
 | rev-2 | 143,075 | 519,295 | 24,072 | 199,133 | 10,426,336 | 94,410 |  |
@@ -167,6 +168,13 @@ Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, batte
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+Review rev-30 on branch rev/30-card-payment-leg.
+1. Apply migration 20261215000000_transfer_peer_backlink.sql to Supabase (links the two halves of a transfer both ways).
+2. Cause found from the code, not from your real data: answering a held capture as a move to one of your own accounts saved only the paying side, so the card never got its "in" leg. It now saves both. Test: pay Maya Black from a wallet, answer the held item with Maya Black as the other account, and check the card balance drops by the amount.
+3. Already-answered payments are NOT fixed retroactively; tell me if you want a one-off fix for the missing card legs.
+4. Not covered: the Maya parser may not read "payment received on your Maya Black" alerts at all (no parser wording for it). Say if you want that added.
+5. Check the Vercel preview passes and rebuild the phone app.
 
 Review rev-29 on branch rev/29-dedupe-boot (cut from main, which now includes the local rev-28 merge).
 1. Apply migration 20261214000000_dedupe_rules.sql to Supabase. Until then the defaults apply, so nothing breaks.
