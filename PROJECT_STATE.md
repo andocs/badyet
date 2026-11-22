@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-12 T1 per-cutoff tax (round three sliced: rev-12..18)
-- **Gate:** none
-- **Next action:** Build rev-12 (T1): scout TRAIN table and payslip code, confirm 13th month and CIP tax method, then implement. Then rev-13 T2+A1+A2, rev-14 W1-W3, rev-15 N1+N2+M1, rev-16 I1+I2+S1, rev-17 T4+T5+B1, rev-18 T3.
-- **User to-do now:** Open round three list; check the real-data and device items (C2); Google Wallet sample when it arrives
+- **Active slice / milestone:** rev-12 T1 per-cutoff tax (awaiting approval)
+- **Gate:** waiting
+- **Next action:** On approval: merge rev/12-per-cutoff-tax, apply migration 20261208000000_penboost.sql, then rev-13 (T2 loading states, A1 bigger cards, A2 reorder accounts).
+- **User to-do now:** Apply supabase migration 20261208000000_penboost.sql; open Salary > payslip builder, type 750 on the SSS PenBoost line (2nd cutoff) and compare each cutoff's tax and take-home with your payslip; send the payslip figures if any still differ (Q24).
 
 ## 3. Execution log
 
@@ -39,6 +39,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-21 23:50 | rev-10 | Background capture confirmed working by user. Reported: app does not load or refresh after some time. Fix: supabase auto-refresh start/stop on AppState, useLoad reloads when a screen returns to the front after 20 s and retries once after refreshSession on a JWT or expired error. Merged, OTA published. Cause not confirmed on device. | -
 - 2026-11-22 00:02 | rev-11 | Maya parser now reads 'You received 100 in your wallet via InstaPay' (tests added). New notice on Now and Inbox when captures wait for an account (held). Merged, Vercel green, OTA published. BPI email side for the same transfer not confirmed: if it was held for no matching account it would show in the notice. | -
 - 2026-11-22 10:46 | plan | Round three sliced into rev-12..rev-18, approved | -
+- 2026-11-22 10:53 | rev-12 | T1: income tax now worked per cutoff (taxable pay x 24, year tax / 24) in lib/engine/payslip.ts; SSS PenBoost added as a pre-tax payslip line (2nd cutoff, amount typed on the line; migration 20261208000000 widens the payslip_lines source check, NOT yet applied); tax working panel shows both cutoffs; 333 tests pass, build ok. Bonus tax (13th month, CIP) already used the x24 cutoff method with the shared 90,000 cap; unchanged. | b473880
 
 ## 4. Open questions
 
@@ -77,7 +78,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 2,703,624 | 11,148,055 | 510,616 | 4,682,164 | 611,706,666 | 2,708,319 |  |
+| **Cumulative** | 3,309,355 | 12,055,661 | 526,041 | 5,925,836 | 645,817,269 | 2,778,371 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -122,6 +123,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Slice E11 | 2,274,724 | 9,188,425 | 424,415 | 4,166,681 | 551,353,775 | 2,443,325 | no mark 'slice-E11': all-time |
 | rev-1 | 61,948 | 271,167 | 10,438 | 39,709 | 1,647,594 | 11,679 |  |
 | G1-G5 | 411,056 | 1,885,707 | 85,638 | 479,934 | 51,413,137 | 251,551 |  |
+| rev-12 | 41,259 | 242,973 | 8,891 | 66,222 | 2,682,272 | 28,242 |  |
 
 <!-- END SUMMARY -->
 
