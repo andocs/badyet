@@ -2,7 +2,7 @@ import { drainQueue } from '@modules/notification-listener';
 import * as Crypto from 'expo-crypto';
 import 'expo-sqlite/localStorage/install';
 import { useSyncExternalStore } from 'react';
-import { confirmedRow } from '@/lib/capture/held';
+import { confirmedRow, counterLeg } from '@/lib/capture/held';
 import type { Recent } from '@/lib/capture/recent';
 import { buildRow, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import { ensureTransferCategory } from '@/lib/capture/transfer-category';
@@ -134,7 +134,7 @@ async function isDuplicate(row: TxnInsert): Promise<boolean> {
 export async function resolveHeld(args: {
   hash: string;
   accountId: string | null;
-  other?: { name: string } | null;
+  other?: { id: string; name: string } | null;
   categoryId?: string | null;
   send?: () => Promise<void> | void;
 }): Promise<void> {
@@ -148,8 +148,12 @@ export async function resolveHeld(args: {
     // Answered here, so it is confirmed at once: a transfer when the other side is also yours, otherwise under the chosen category.
     const transfer = !!args.other;
     if (!transfer && !args.categoryId) return;
+    if (args.other && args.other.id === args.accountId) return;
     const transferCategoryId = transfer ? await ensureTransferCategory(supabase).catch(() => null) : null;
-    await outbox.add(confirmedRow(base, { transfer, categoryId: args.categoryId ?? null, transferCategoryId, at: new Date().toISOString() }));
+    const row = confirmedRow(base, { transfer, categoryId: args.categoryId ?? null, transferCategoryId, at: new Date().toISOString() });
+    await outbox.add(row);
+    // The other account gets its half too (sent after the first, in order), so a card payment lowers what the card owes.
+    if (args.other) await outbox.add(counterLeg(row, args.other.id, Crypto.randomUUID()));
   }
   const rest = all.filter((x) => x.hash !== args.hash);
   write(HELD_KEY, rest);

@@ -62,7 +62,7 @@ export async function resolveHeldCapture(input: { hash: string; accountId: strin
     otherName = (o.data?.name as string | undefined) ?? null;
   }
   if (input.categoryId !== null && !UUID.test(input.categoryId)) return { error: "Pick a category from the list." };
-  const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName, categoryId: input.categoryId });
+  const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName, otherAccountId: otherName ? input.otherAccountId : null, categoryId: input.categoryId });
   if ("error" in r) return { error: r.error };
   refresh();
   return { ok: true };

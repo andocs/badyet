@@ -55,7 +55,29 @@ export function confirmedRow(base: TxnInsert, how: { transfer: boolean; category
   };
 }
 
-export type Result = { ok: true; note?: string } | { error: string };
+/**
+ * The other half of a confirmed transfer: the same money on the other account, with the opposite sign. Paying a card from a wallet
+ * takes the amount out of the wallet and puts it on the card (a positive amount lowers what is owed). It points back at `first`,
+ * which must be saved before it; the database links `first` to this row.
+ */
+export function counterLeg(first: TxnInsert, otherAccountId: string, id: string): TxnInsert {
+  return {
+    id,
+    account_id: otherAccountId,
+    occurred_at: first.occurred_at,
+    amount: -first.amount,
+    merchant: null,
+    kind: 'transfer',
+    category_id: first.category_id,
+    source: first.source,
+    status: 'confirmed',
+    confirmed_at: first.confirmed_at,
+    dedupe_hash: null,
+    transfer_peer_id: first.id,
+  };
+}
+
+export type Result ={ ok: true; note?: string } | { error: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -66,7 +88,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  */
 export async function resolveHeldRow(
   supabase: SupabaseClient,
-  input: { hash: string; accountId: string | null; otherName?: string | null; categoryId?: string | null },
+  input: { hash: string; accountId: string | null; otherName?: string | null; otherAccountId?: string | null; categoryId?: string | null },
 ): Promise<Result> {
   const found = await supabase.from('held_captures').select(HELD_COLUMNS).eq('hash', input.hash).maybeSingle();
   if (found.error) return { error: 'Could not read that capture. Try again.' };
@@ -80,6 +102,7 @@ export async function resolveHeldRow(
     const parsed = parsedOf(held);
     if (!parsed) return { error: 'That capture is from a source this app does not know.' };
     const transfer = !!input.otherName;
+    if (transfer && input.otherAccountId === input.accountId) return { error: 'Pick two different accounts.' };
     let transferCategoryId: string | null = null;
     if (transfer) transferCategoryId = await ensureTransferCategory(supabase);
     else {
@@ -98,6 +121,14 @@ export async function resolveHeldRow(
     const ins = await supabase.from('transactions').insert(row);
     // A row with this hash already exists: it was added from the other device. Just clear the held one.
     if (ins.error && ins.error.code !== '23505') return { error: 'Could not add that. Try again.' };
+    // The other account gets its half too, or a card payment would leave the card still owing the full amount.
+    if (!ins.error && transfer && input.otherAccountId) {
+      const leg = await supabase.from('transactions').insert(counterLeg(row, input.otherAccountId, crypto.randomUUID()));
+      if (leg.error) {
+        await supabase.from('transactions').delete().eq('id', row.id);
+        return { error: 'Could not add that. Try again.' };
+      }
+    }
     await supabase.from('held_captures').delete().eq('hash', held.hash);
     if (!ins.error && !transfer) await pairRecent(supabase, postTime + 15 * 60_000);
     return { ok: true };

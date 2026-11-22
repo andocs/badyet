@@ -17,6 +17,8 @@ export interface TxnInsert {
   confirmed_at: string | null;
   /** Spots a repeat of the same notification. Unique per user in the database. */
   dedupe_hash?: string | null;
+  /** The other side of a transfer. The database links the earlier row back to this one. */
+  transfer_peer_id?: string | null;
 }
 
 export interface AccountLite {

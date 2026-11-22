@@ -60,7 +60,7 @@ export function HeldCard({
     await resolveHeld({
       hash: h.hash,
       accountId,
-      other: otherAcct ? { name: otherAcct.name } : null,
+      other: otherAcct ? { id: otherAcct.id, name: otherAcct.name } : null,
       categoryId: otherAcct ? null : categoryId,
       send: syncNow,
     });
