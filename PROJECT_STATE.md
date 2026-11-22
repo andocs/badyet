@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-26 merged and published
-- **Gate:** none
-- **Next action:** User: apply migration 20261213000000_savings_plan.sql, open the phone app twice for update 68c48784, set the savings plan on Salary and tax (web or phone), check Inbox confirm in All activity and the held card Confirm. Open: C1 Google Wallet sample, C2 device checks, remove diagnostics when stable.
-- **User to-do now:** Apply migration 20261213000000_savings_plan.sql; open phone app twice for the update; set the savings plan; try the held card Confirm
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-27 capture dedupe
+- **Gate:** waiting
+- **Next action:** User approves rev-27; then merge and publish OTA
+- **User to-do now:** Approve rev-27; after OTA open phone app twice; test BPI push + email gives one item
 
 ## 3. Execution log
 
@@ -42,6 +42,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 14:48 | rev-26 | Payroll savings plan. User: payroll deducts it. Added a Payroll savings plan card (web Salary and tax > Timeline, phone Salary): none / percent of basic / fixed amount per cutoff, plus the fund the forecast counts it into. It stays a payslip deduction (lowers take-home) and credits the chosen fund directly in the forecast without touching the budget. Shared logic lib/pay/savings-plan.ts; migration 20261213000000 (savings_plan_amount, savings_plan_fund_id) NOT applied; loaders ask for the new columns separately so an unapplied migration cannot break pages. Forecast fund credit label changed from bonus to credited. | -
 - 2026-11-22 14:52 | rev-26 | Added to the savings plan update: (1) phone Inbox All activity no longer loses a confirmed row (the 'gone' set hid confirmed rows for good after the reload; now ignored and confirmed are tracked separately and cleared when fresh data arrives); (2) held capture cards (phone and web) now Confirm in one step: pick account, where it went/came from, and a category (not needed when the other side is your own account, which confirms as a transfer in the Transfer category), instead of creating another Inbox item. Shared confirmedRow in lib/capture/held.ts; TxnInsert.kind may be transfer. 394 web + 161 phone tests, lint, build ok. Own-account legs are confirmed as unpaired transfers. | -
 - 2026-11-22 14:53 | ota | Phone update published to preview, runtime 1.1.0, group 68c48784-3797-4afa-b126-e87acb9dde7c (commit 254fe34): rev-26. rev-26 merged to main. | -
+- 2026-11-22 15:15 | rev-27..29 | Gmail push plan drafted (phone watches, edge function wakes phone via Expo push). User paused at the plan gate. | -
+- 2026-11-22 15:24 | rev-27 | Capture dedupe: a small recent-captures memory (source, direction, amount, time; no text) lets an email skip when the phone alert for the same movement was already seen (placed, held or dropped) and the reverse. 10 min window, other-kind only so real repeat purchases stay. Gmail push postponed. | 6d60ace
 
 ## 4. Open questions
 
@@ -80,7 +82,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,470,128 | 12,914,030 | 567,260 | 6,349,346 | 711,445,717 | 3,009,353 |  |
+| **Cumulative** | 3,601,706 | 13,376,649 | 596,845 | 6,602,174 | 771,746,717 | 3,161,835 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -133,6 +135,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-17 | 25,781 | 143,108 | 7,133 | 46,045 | 4,580,190 | 33,276 |  |
 | rev-18 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-20 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| rev-27 | 14,676 | 7,699 | 1,712 | 30,678 | 925,520 | 13,359 |  |
 
 <!-- END SUMMARY -->
 
@@ -140,29 +143,8 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Round three (set 2026-11-22, handed to the next session; nothing built yet). Answers from the user are in Decisions.
-
-| # | Item | Notes from the user | Status |
-|---|---|---|---|
-| T1 | Income tax per cutoff | Order: take total non-taxable pay, deduct SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750); the remainder is the cutoff taxable income. Yearly = cutoff taxable x 24. Find the bracket on the 2023 TRAIN table; tax = (yearly - bracket lower) x rate + fixed; cutoff tax = yearly tax / 24. Verify the table values. Also verify how 13th month and CIP bonuses are taxed. Current app works per month (annualised by 12), so the mismatch is partly method. | planned |
-| T2 | Accounts: slow card tap, few loading indicators | Shared loading state (skeleton or spinner) for account cards, sheets and reloads. | planned |
-| T3 | Installments (web and phone) | Mostly card plans, also loans. Each sits as its own budget line. Existing web page /installments to be checked first. | planned |
-| T4 | Line in both cutoffs with different values | Example: personal savings is 15,000 a month, 5,000 in the 1st cutoff and 10,000 in the 2nd. The app must show each cutoff's own value. | planned |
-| T5 | Reimbursements (separate deposit) | Utility is a fixed monthly amount, deposited on a separate date, usually the 17th. Wifi case: pay 2,099 and get it back. Reallocate the value. The extra can go to Wants. | planned |
-| W1 | Wizard: duplicate account names | Inline check that an account with the same name does not already exist. Apply to steps 4 and 5 as well. | planned |
-| W2 | Wizard step 4 (budget top-ups) | Show clearly whether the amount added is for one cutoff or both. | planned |
-| W3 | Wizard: starter categories | Do not create starter categories from step 4 line values. | planned |
-| N1 | Now web: account scrollbar | Hide the horizontal scrollbar; add custom slider or navigation buttons. | planned |
-| N2 | Now web: planned vs spent | Max 3 items per row. | planned |
-| I1 | Inbox: transfer detection | Detect transfers between own accounts and add a Transfer category. | planned |
-| I2 | Usual account prompt | The app can read notifications while open, but asks for the usual account even though it says the Inbox decides. Fix the prompt. | planned |
-| A1 | Accounts: bigger cards | About 3 per row (web and phone). | planned |
-| A2 | Accounts: rearrange | Let the user reorder accounts (web and phone). | planned |
-| B1 | Bonuses: edit previous allocations | Edit how earlier bonuses were allocated (web and phone). | planned |
-| M1 | Mobile Budget: office days panel | Chips show numbers (e.g. 3 11, 4 12) instead of weekday names. Show the weekday name with the day. | planned |
-| S1 | Settings: full custom rules | No hardcoded rules. The user creates and edits every capture rule (senders, apps, keywords, actions). Replace built-in defaults with user-defined rules. | planned |
-| C1 | Google Wallet capture | On hold until a real notification sample arrives. | on hold |
-| C2 | Carried over from round two | Real-data check (user reports empty screens). Phone testing of G1 to G5 and rev-9 to rev-11 on APK 1.1.0. Reopen-after-idle loading fix (rev-10) not yet confirmed. BPI email for the Maya InstaPay transfer not confirmed. Accounts Edit account on web and phone. | open |
+Gmail push (watch + Pub/Sub + edge function + Expo push) POSTPONED by user 2026-11-22. Design saved in git history of this file: phone calls users.watch, edge function gmail-push wakes phone, needs expo-notifications, FCM, new APK.
+- rev-27 [Needed, S, OTA-able]: email/notification dedupe. Emails skipped when same source+direction+amount within window already exists (DB any status, outbox, held), not account-bound; notifications check the same; Gmail pass runs after outbox send. Files: mobile/src/lib/captureEngine.ts, captureRun.ts, gmailRun.ts, lib/capture, tests.
 
 ## Decisions & architecture
 
@@ -173,6 +155,16 @@ Round three (set 2026-11-22, handed to the next session; nothing built yet). Ans
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER rev-27: what you do now
+1. Get the code:   git fetch && git checkout rev/27-capture-dedupe   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Phone:          after merge I publish an OTA update; open the app twice to receive it
+6. Check these:    a BPI push then its email (or the other way round) within 10 min gives ONE inbox item; drop or answer the push first, the email still adds nothing; two real same-amount BPI pushes are both kept
+7. Known limits:   matches by bank, direction and amount within 10 min (not account); only BPI has both an email and a push parser; items sent while offline and older than the current check are still covered by the old DB check only; mobile lint is not configured in this repo
+Reply: Approve / Request changes / Pause
 
 AFTER SLICE E11 (release and polish): what you do now
 1. Get the code:   git fetch && git checkout slice/E11-release-polish (it contains E1-E11; each slice branch builds on the one before)

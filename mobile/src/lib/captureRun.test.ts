@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { AccountLite, TxnInsert } from '@/lib/capture/row';
 import { defaultConfig, SOURCES, type CaptureRule, type SourceConfig } from '@/lib/capture/sources';
+import { remember, type Recent } from '@/lib/capture/recent';
 import { runCapture, type CapturedNotification, type Held, type RunContext, type RunDeps } from './captureRun';
 
 const ACC: AccountLite[] = [
@@ -109,6 +110,21 @@ describe('runCapture', () => {
     const t = setup({ queue: [GCASH_PAID, { ...GCASH_PAID, text: GCASH_PAID.text!.replace('111913449', '222222222'), postTime: T + 60_000 }] });
     t.deps.isDuplicate = async () => true;
     expect(await runCapture(t.deps)).toMatchObject({ added: 2 });
+  });
+
+  it('skips a phone alert when its email was already seen, and notes alerts it keeps', async () => {
+    let recent: Recent[] = remember([], 'import', { source: 'gcash', direction: 'out', amount: 11_500 } as never, T + 60_000);
+    const t = setup({ queue: [GCASH_PAID] });
+    t.deps.readRecent = () => recent;
+    t.deps.writeRecent = (r) => void (recent = r);
+    expect(await runCapture(t.deps)).toMatchObject({ added: 0, skipped: 1 });
+
+    recent = [];
+    const u = setup({ queue: [GCASH_PAID] });
+    u.deps.readRecent = () => recent;
+    u.deps.writeRecent = (r) => void (recent = r);
+    expect(await runCapture(u.deps)).toMatchObject({ added: 1 });
+    expect(recent).toMatchObject([{ origin: 'notification', source: 'gcash', direction: 'out', amount: 11_500 }]);
   });
 
   it('leaves the queue alone when settings cannot be loaded, so nothing is lost', async () => {
