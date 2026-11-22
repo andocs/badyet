@@ -158,7 +158,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
             ) : (
               <div className="v-stack v-pgrid">
                 {toCheck.map((entry) => {
-                  if (entry.h) return <HeldCaptureCard key={entry.h.hash} h={entry.h} accounts={accounts} today={today} />;
+                  if (entry.h) return <HeldCaptureCard key={entry.h.hash} h={entry.h} accounts={accounts} categories={categories} today={today} />;
                   const t = entry.t!;
                   return (
                   <article

@@ -51,8 +51,8 @@ export async function confirmTransaction(input: { id: string; categoryId: string
   return { ok: true };
 }
 
-/** Answers a capture the phone held because no account claimed it: which account it belongs to, and whether the other side is also yours. */
-export async function resolveHeldCapture(input: { hash: string; accountId: string | null; otherAccountId: string | null }): Promise<FormState> {
+/** Answers a capture the phone held because no account claimed it: which account, where the money went or came from, and the category. It is confirmed at once. */
+export async function resolveHeldCapture(input: { hash: string; accountId: string | null; otherAccountId: string | null; categoryId: string | null }): Promise<FormState> {
   const supabase = await requireAuthed();
   if (typeof input.hash !== "string" || input.hash.length < 8 || input.hash.length > 128) return { error: "That capture was not found." };
   if (input.otherAccountId !== null && !UUID.test(input.otherAccountId)) return { error: "Pick an account from the list." };
@@ -61,7 +61,8 @@ export async function resolveHeldCapture(input: { hash: string; accountId: strin
     const o = await supabase.from("accounts").select("name").eq("id", input.otherAccountId).is("archived_at", null).maybeSingle();
     otherName = (o.data?.name as string | undefined) ?? null;
   }
-  const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName });
+  if (input.categoryId !== null && !UUID.test(input.categoryId)) return { error: "Pick a category from the list." };
+  const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName, categoryId: input.categoryId });
   if ("error" in r) return { error: r.error };
   refresh();
   return { ok: true };
