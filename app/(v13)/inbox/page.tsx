@@ -1,8 +1,12 @@
+import { HELD_COLUMNS, type HeldRow } from "@/lib/capture/held";
+import { SOURCE_INFO, isSource } from "@/lib/capture/sources";
+import { ensureTransferCategory } from "@/lib/capture/transfer-category";
 import { isoDate } from "@/lib/domain/dates";
 import { bestGuess, matchRule, type MerchantRule } from "@/lib/inbox/rules";
 import { todayManila } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
 import { InboxView, type InboxTxn } from "@/components/v13/inbox";
+import type { HeldCapture } from "@/components/v13/held-capture-card";
 
 export const metadata = { title: "Inbox · Bad(yet)" };
 
@@ -16,15 +20,24 @@ export default async function Inbox() {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
 
+  // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
+  await ensureTransferCategory(supabase);
+
   const cols = "id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, dedupe_hash, note";
-  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes] = await Promise.all([
+  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts] = await Promise.all([
     supabase.from("categories").select("id, name").is("archived_at", null).order("sort"),
     supabase.from("accounts").select("id, name"),
     supabase.from("merchant_rules").select("id, pattern, category_id, account_id, priority"),
     supabase.from("transactions").select(cols).eq("status", "pending").order("occurred_at", { ascending: false }),
     supabase.from("transactions").select(cols).neq("status", "ignored").order("occurred_at", { ascending: false }).limit(60),
     supabase.from("transactions").select("merchant, category_id").eq("status", "confirmed").not("category_id", "is", null).order("occurred_at", { ascending: false }).limit(500),
+    supabase.from("held_captures").select(HELD_COLUMNS).order("post_time", { ascending: false }),
+    supabase.from("accounts").select("id, name").is("archived_at", null).order("sort").order("created_at"),
   ]);
+  // Captures the phone could not place in an account (the table comes from a newer migration; without it there are none).
+  const held: HeldCapture[] = heldRes.error ? [] : ((heldRes.data ?? []) as HeldRow[]).filter((h) => isSource(h.source)).map((h) => ({
+    hash: h.hash, sourceLabel: SOURCE_INFO[h.source as keyof typeof SOURCE_INFO].label, direction: h.direction, amount: h.amount, counterparty: h.counterparty, postTime: h.post_time,
+  }));
   const categories = (cats.data ?? []) as { id: string; name: string }[];
   const catName = new Map(categories.map((c) => [c.id, c.name]));
   const accountName = new Map(((acct.data ?? []) as { id: string; name: string }[]).map((a) => [a.id, a.name]));
@@ -69,5 +82,5 @@ export default async function Inbox() {
       };
     });
 
-  return <InboxView txns={txns} categories={categories} today={isoDate(todayManila())} />;
+  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} />;
 }

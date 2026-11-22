@@ -1,44 +1,22 @@
-import { useMemo, useState } from "react";
-import {
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { isoDate } from "@/lib/domain/dates";
-import { money } from "@/lib/domain/money";
-import { relativeDay, timeLabel } from "@/lib/now/format";
-import { manilaDate } from "@/lib/now/summary";
-import { todayManila } from "@/lib/plans/validate";
-import { GmailBanner } from "~/components/GmailBanner";
-import { HeldCard, useHeldAccounts } from "~/components/HeldCards";
-import { Amount, Body, Card, Label, Notice, Screen } from "~/components/ui";
-import { useHeldItems } from "~/lib/CaptureRunner";
-import {
-  confirmTransaction,
-  ignoreTransaction,
-  loadInbox,
-  type Category,
-  type InboxTxn,
-} from "~/lib/inbox";
-import { supabase } from "~/lib/supabase";
-import { fonts, useTheme } from "~/lib/theme";
-import { useLoad } from "~/lib/useLoad";
+import { useMemo, useState } from 'react';
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { isoDate } from '@/lib/domain/dates';
+import { money } from '@/lib/domain/money';
+import { relativeDay, timeLabel } from '@/lib/now/format';
+import { manilaDate } from '@/lib/now/summary';
+import { todayManila } from '@/lib/plans/validate';
+import { GmailBanner } from '~/components/GmailBanner';
+import { HeldCard, useHeldAccounts } from '~/components/HeldCards';
+import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
+import { useHeldItems } from '~/lib/CaptureRunner';
+import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxTxn } from '~/lib/inbox';
+import { supabase } from '~/lib/supabase';
+import { fonts, useTheme } from '~/lib/theme';
+import { useLoad } from '~/lib/useLoad';
 
-const when = (iso: string, today: ReturnType<typeof isoDate>) =>
-  `${relativeDay(manilaDate(iso), today)} ${timeLabel(iso)}`;
+const when = (iso: string, today: ReturnType<typeof isoDate>) => `${relativeDay(manilaDate(iso), today)} ${timeLabel(iso)}`;
 
-function Chip({
-  label,
-  on,
-  onPress,
-}: {
-  label: string;
-  on: boolean;
-  onPress: () => void;
-}) {
+function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () => void }) {
   const c = useTheme();
   return (
     <Pressable
@@ -70,19 +48,14 @@ function PendingCard({
   t: InboxTxn;
   categories: Category[];
   today: ReturnType<typeof isoDate>;
-  onConfirm: (
-    t: InboxTxn,
-    categoryId: string | null,
-    rule: boolean,
-    note: string,
-  ) => void;
+  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string) => void;
   onIgnore: (t: InboxTxn) => void;
 }) {
   const c = useTheme();
   const [categoryId, setCategoryId] = useState<string | null>(t.categoryId);
-  const [rule, setRule] = useState(t.guess === "rule");
-  const [note, setNote] = useState(t.note ?? "");
-  const isTransfer = t.kind === "transfer";
+  const [rule, setRule] = useState(t.guess === 'rule');
+  const [note, setNote] = useState(t.note ?? '');
+  const isTransfer = t.kind === 'transfer';
   const chosen = categories.find((x) => x.id === categoryId)?.name;
   const canConfirm = isTransfer || categoryId !== null;
 
@@ -91,47 +64,28 @@ function PendingCard({
       <View style={s.row}>
         <View style={{ flex: 1 }}>
           <Body bold>{t.who}</Body>
-          <Text
-            style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}
-          >
-            {isTransfer && t.peerAccount
-              ? `${t.account} → ${t.peerAccount}`
-              : t.account}{" "}
-            · {when(t.occurredAt, today)} · {t.source}
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
+            {isTransfer && t.peerAccount ? `${t.account} → ${t.peerAccount}` : t.account} · {when(t.occurredAt, today)} · {t.source}
           </Text>
         </View>
-        <Amount
-          value={money(t.amount)}
-          signed
-          style={{ color: t.amount > 0 ? c.accentText : c.ink, fontSize: 17 }}
-        />
+        <Amount value={money(t.amount)} signed style={{ color: t.amount > 0 ? c.accentText : c.ink, fontSize: 17 }} />
       </View>
 
       {isTransfer ? (
-        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>
-          A move between your accounts. It needs no category.
-        </Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>A move between your accounts. It needs no category.</Text>
       ) : (
         <>
           <View style={s.chips}>
             {categories.map((x) => (
-              <Chip
-                key={x.id}
-                label={x.name}
-                on={x.id === categoryId}
-                onPress={() => setCategoryId(x.id)}
-              />
+              <Chip key={x.id} label={x.name} on={x.id === categoryId} onPress={() => setCategoryId(x.id)} />
             ))}
           </View>
           {t.guess && categoryId === t.categoryId ? (
-            <Text
-              style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}
-            >
-              Suggested from{" "}
-              {t.guess === "rule" ? "your rule" : "what you did before"}.
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+              Suggested from {t.guess === 'rule' ? 'your rule' : 'what you did before'}.
             </Text>
           ) : null}
-          {chosen && t.who !== "Expense" ? (
+          {chosen && t.who !== 'Expense' ? (
             <View style={s.row}>
               <Text
                 style={{
@@ -161,29 +115,16 @@ function PendingCard({
         placeholder="Note (optional)"
         placeholderTextColor={c.muted}
         maxLength={200}
-        style={[
-          s.input,
-          { color: c.ink, backgroundColor: c.soft, fontFamily: fonts.body },
-        ]}
+        style={[s.input, { color: c.ink, backgroundColor: c.soft, fontFamily: fonts.body }]}
       />
 
       <View style={s.row}>
         <Pressable
-          onPress={() =>
-            onConfirm(
-              t,
-              isTransfer ? null : categoryId,
-              rule && !isTransfer,
-              note,
-            )
-          }
+          onPress={() => onConfirm(t, isTransfer ? null : categoryId, rule && !isTransfer, note)}
           disabled={!canConfirm}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canConfirm }}
-          style={[
-            s.btn,
-            { flex: 1, backgroundColor: canConfirm ? c.accent : c.soft },
-          ]}
+          style={[s.btn, { flex: 1, backgroundColor: canConfirm ? c.accent : c.soft }]}
         >
           <Text
             style={{
@@ -192,19 +133,11 @@ function PendingCard({
               fontSize: 15,
             }}
           >
-            {canConfirm ? "Confirm" : "Pick a category"}
+            {canConfirm ? 'Confirm' : 'Pick a category'}
           </Text>
         </Pressable>
-        <Pressable
-          onPress={() => onIgnore(t)}
-          accessibilityRole="button"
-          style={[s.btn, { backgroundColor: c.soft }]}
-        >
-          <Text
-            style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}
-          >
-            Not mine
-          </Text>
+        <Pressable onPress={() => onIgnore(t)} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft }]}>
+          <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Not mine</Text>
         </Pressable>
       </View>
     </Card>
@@ -213,16 +146,14 @@ function PendingCard({
 
 export default function Inbox() {
   const c = useTheme();
-  const { data, error, refreshing, reload } = useLoad(() =>
-    loadInbox(supabase),
-  );
-  const [view, setView] = useState<"check" | "all">("check");
+  const { data, error, refreshing, reload } = useLoad(() => loadInbox(supabase));
+  const [view, setView] = useState<'check' | 'all'>('check');
   const [gone, setGone] = useState<Set<string>>(new Set());
   const [problem, setProblem] = useState<string | null>(null);
   const today = useMemo(() => isoDate(todayManila()), []);
 
   const txns = (data?.txns ?? []).filter((t) => !gone.has(t.id));
-  const pending = txns.filter((t) => t.status === "pending");
+  const pending = txns.filter((t) => t.status === 'pending');
   // Captures no account has claimed sit in the same list, among the others by time, and ask which account they belong to.
   const held = useHeldItems();
   const heldAccounts = useHeldAccounts();
@@ -232,20 +163,15 @@ export default function Inbox() {
       t,
       h: null as null,
     })),
-    ...(heldAccounts
-      ? held.map((h) => ({ at: h.postTime, t: null as null, h }))
-      : []),
+    ...(heldAccounts ? held.map((h) => ({ at: h.postTime, t: null as null, h })) : []),
   ].sort((a, b) => b.at - a.at);
 
   // The row leaves the moment you tap; if the save fails it comes back with the reason.
-  async function act(
-    t: InboxTxn,
-    run: () => Promise<{ ok: true } | { error: string }>,
-  ) {
+  async function act(t: InboxTxn, run: () => Promise<{ ok: true } | { error: string }>) {
     setProblem(null);
     setGone((g) => new Set(g).add(t.id));
     const r = await run();
-    if ("error" in r) {
+    if ('error' in r) {
       setGone((g) => {
         const n = new Set(g);
         n.delete(t.id);
@@ -261,7 +187,7 @@ export default function Inbox() {
     <Screen title="Inbox" refreshing={refreshing} onRefresh={reload}>
       <GmailBanner />
       <View style={[s.seg, { backgroundColor: c.soft }]}>
-        {(["check", "all"] as const).map((v) => (
+        {(['check', 'all'] as const).map((v) => (
           <Pressable
             key={v}
             onPress={() => setView(v)}
@@ -276,7 +202,7 @@ export default function Inbox() {
                 fontSize: 14,
               }}
             >
-              {v === "check" ? `To check (${toCheck.length})` : "All activity"}
+              {v === 'check' ? `To check (${toCheck.length})` : 'All activity'}
             </Text>
           </Pressable>
         ))}
@@ -286,25 +212,16 @@ export default function Inbox() {
       {problem ? <Notice tone="error">{problem}</Notice> : null}
       {!data && !error ? <Notice>Loading…</Notice> : null}
 
-      {data && view === "check" ? (
+      {data && view === 'check' ? (
         toCheck.length === 0 ? (
           <Card>
             <Body bold>All caught up</Body>
-            <Text
-              style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}
-            >
-              Balances are current as of now.
-            </Text>
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Balances are current as of now.</Text>
           </Card>
         ) : (
           toCheck.map((item) =>
             item.h ? (
-              <HeldCard
-                key={item.h.hash}
-                h={item.h}
-                accounts={heldAccounts ?? []}
-                today={today}
-              />
+              <HeldCard key={item.h.hash} h={item.h} accounts={heldAccounts ?? []} today={today} />
             ) : (
               <PendingCard
                 key={item.t!.id}
@@ -321,16 +238,14 @@ export default function Inbox() {
                     }),
                   )
                 }
-                onIgnore={(row) =>
-                  act(row, () => ignoreTransaction(supabase, row.id))
-                }
+                onIgnore={(row) => act(row, () => ignoreTransaction(supabase, row.id))}
               />
             ),
           )
         )
       ) : null}
 
-      {data && view === "all" ? (
+      {data && view === 'all' ? (
         txns.length === 0 ? (
           <Notice>Nothing yet. Spending you add with + shows up here.</Notice>
         ) : (
@@ -348,23 +263,14 @@ export default function Inbox() {
                     }}
                   >
                     {t.account} · {when(t.occurredAt, today)}
-                    {t.status === "pending"
-                      ? " · to check"
-                      : t.categoryName
-                        ? ` · ${t.categoryName}`
-                        : ""}
+                    {t.status === 'pending' ? ' · to check' : t.categoryName ? ` · ${t.categoryName}` : ''}
                   </Text>
                 </View>
                 <Amount
                   value={money(t.amount)}
                   signed
                   style={{
-                    color:
-                      t.status === "pending"
-                        ? c.gold
-                        : t.amount > 0
-                          ? c.accentText
-                          : c.ink,
+                    color: t.status === 'pending' ? c.gold : t.amount > 0 ? c.accentText : c.ink,
                   }}
                 />
               </View>
@@ -378,18 +284,18 @@ export default function Inbox() {
 
 const s = StyleSheet.create({
   row: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 12,
   },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     minHeight: 40,
     borderRadius: 999,
     paddingHorizontal: 14,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   input: {
     minHeight: 48,
@@ -401,15 +307,15 @@ const s = StyleSheet.create({
     minHeight: 48,
     borderRadius: 999,
     paddingHorizontal: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  seg: { flexDirection: "row", borderRadius: 999, padding: 4 },
+  seg: { flexDirection: 'row', borderRadius: 999, padding: 4 },
   segBtn: {
     flex: 1,
     minHeight: 44,
     borderRadius: 999,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

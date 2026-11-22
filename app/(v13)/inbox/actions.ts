@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
+import { resolveHeldRow } from "@/lib/capture/held";
+import { TRANSFER_CATEGORY } from "@/lib/capture/transfer-category";
 import { normalizePattern } from "@/lib/inbox/rules";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -24,17 +26,20 @@ export async function confirmTransaction(input: { id: string; categoryId: string
 
   const isTransfer = row.data.kind === "transfer";
   let categoryId: string | null = null;
+  // Picking the Transfer category says it was a move between your own accounts, so it stops counting as spending or income.
+  let becomesTransfer = false;
   if (!isTransfer) {
     if (!input.categoryId || !UUID.test(input.categoryId)) return { error: "Pick a category first." };
-    const cat = await supabase.from("categories").select("id").eq("id", input.categoryId).maybeSingle();
+    const cat = await supabase.from("categories").select("id, name").eq("id", input.categoryId).maybeSingle();
     if (!cat.data) return { error: "That category was not found." };
     categoryId = input.categoryId;
+    becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
   }
 
   const now = new Date().toISOString();
   const note = input.note.trim().slice(0, 200) || null;
   const ids = [row.data.id as string, ...(isTransfer && row.data.transfer_peer_id ? [row.data.transfer_peer_id as string] : [])];
-  const upd = await supabase.from("transactions").update({ status: "confirmed", confirmed_at: now, category_id: categoryId, note }).in("id", ids).eq("status", "pending");
+  const upd = await supabase.from("transactions").update({ status: "confirmed", confirmed_at: now, category_id: categoryId, note, ...(becomesTransfer ? { kind: "transfer" } : {}) }).in("id", ids).eq("status", "pending");
   if (upd.error) return { error: "Could not confirm that. Try again." };
 
   const pattern = normalizePattern(row.data.merchant as string | null);
@@ -42,6 +47,22 @@ export async function confirmTransaction(input: { id: string; categoryId: string
     const exists = await supabase.from("merchant_rules").select("id").ilike("pattern", pattern.replace(/[%_\\]/g, "\\$&")).eq("category_id", categoryId).maybeSingle();
     if (!exists.data) await supabase.from("merchant_rules").insert({ pattern, category_id: categoryId, priority: 0 });
   }
+  refresh();
+  return { ok: true };
+}
+
+/** Answers a capture the phone held because no account claimed it: which account it belongs to, and whether the other side is also yours. */
+export async function resolveHeldCapture(input: { hash: string; accountId: string | null; otherAccountId: string | null }): Promise<FormState> {
+  const supabase = await requireAuthed();
+  if (typeof input.hash !== "string" || input.hash.length < 8 || input.hash.length > 128) return { error: "That capture was not found." };
+  if (input.otherAccountId !== null && !UUID.test(input.otherAccountId)) return { error: "Pick an account from the list." };
+  let otherName: string | null = null;
+  if (input.accountId && input.otherAccountId) {
+    const o = await supabase.from("accounts").select("name").eq("id", input.otherAccountId).is("archived_at", null).maybeSingle();
+    otherName = (o.data?.name as string | undefined) ?? null;
+  }
+  const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName });
+  if ("error" in r) return { error: r.error };
   refresh();
   return { ok: true };
 }

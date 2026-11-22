@@ -10,6 +10,7 @@ import { getMessage, GmailAuthError, listMessageIds } from './gmail';
 import { dropGmailToken, gmailToken } from './googleAuth';
 import { runGmail, type GmailResult } from './gmailRun';
 import { outbox } from './outboxStore';
+import { syncHeld } from './heldSync';
 import { pairRecent } from './pairing';
 import { supabase } from './supabase';
 
@@ -17,6 +18,7 @@ import { supabase } from './supabase';
 
 const CTX_KEY = 'capture_ctx';
 const HELD_KEY = 'capture_held';
+const HELD_SYNCED_KEY = 'capture_held_synced';
 const SEEN_KEY = 'gmail_seen';
 const GMAIL_LAST_KEY = 'gmail_last';
 const GMAIL_ON_KEY = 'gmail_on';
@@ -135,6 +137,10 @@ export async function resolveHeld(args: { hash: string; accountId: string | null
   const rest = all.filter((x) => x.hash !== args.hash);
   write(HELD_KEY, rest);
   setStatus({ held: rest.length, heldItems: rest });
+  // Answered here: it is no longer waiting on the web either.
+  try {
+    await supabase.from('held_captures').delete().eq('hash', args.hash);
+  } catch {}
   if (args.accountId) {
     await args.send?.();
     await pairRecent(supabase);
@@ -208,7 +214,12 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
         await checkGmail();
       }
       const s = await runCapture(captureDeps);
-      setStatus({ held: s.held, heldItems: read<Held[]>(HELD_KEY, []) });
+      // The web shows held captures too, so keep the table and this list in line (answered on the web leaves here; new ones go up).
+      try {
+        await syncHeld(supabase, { read: () => read<Held[]>(HELD_KEY, []), write: (h) => write(HELD_KEY, h), readSynced: () => read<string[]>(HELD_SYNCED_KEY, []), writeSynced: (x) => write(HELD_SYNCED_KEY, x) });
+      } catch {}
+      const heldNow = read<Held[]>(HELD_KEY, []);
+      setStatus({ held: heldNow.length, heldItems: heldNow });
       added += s.added;
       if (s.added > 0) {
         await opts.send();

@@ -54,9 +54,11 @@ describe('buildAccounts', () => {
     expect(r.spending[0]!.latest).toBeNull();
   });
 
-  it('picks a colour by position when the account has none, and keeps its own otherwise', () => {
+  it('picks a colour from the account itself when it has none, so reordering never changes it, and keeps its own otherwise', () => {
     const r = buildAccounts([acct('a'), { ...acct('b'), color: '#123456' }], [], [], []);
-    expect(r.spending[0]!.color).toBe('#2F5BD7');
     expect(r.spending[1]!.color).toBe('#123456');
+    const first = r.spending[0]!.color;
+    const swapped = buildAccounts([{ ...acct('b'), color: '#123456' }, acct('a')], [], [], []);
+    expect(swapped.spending[1]!.color).toBe(first);
   });
 });
