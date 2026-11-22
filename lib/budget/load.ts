@@ -41,6 +41,7 @@ export interface BudgetData {
 
 interface LineDb {
   id: string; category_id: string; name: string; rule: "fixed" | "pct" | "rest"; amount: number | null; pct_bp: number | null;
+  amount_second: number | null; reimburse_amount: number | null; reimburse_cutoff: "first" | "second" | null; reimburse_day: number | null;
   cutoff: "first" | "second" | "both"; account_id: string | null; starts_on: string | null; ends_on: string | null; is_draft: boolean;
   sort: number; counts_to_daily: boolean; kind: "normal" | "rto" | "rto_contingency";
 }
@@ -63,7 +64,7 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
   const [groups, cats, lineRes, accts, alloc, poolRes, entryRes, overrideRes, txns] = await Promise.all([
     supabase.from("category_groups").select("id, name, feeds_savings, sort").is("archived_at", null).order("sort"),
     supabase.from("categories").select("id, name, color, group_id").is("archived_at", null).order("sort"),
-    supabase.from("budget_lines_v2").select("id, category_id, name, rule, amount, pct_bp, cutoff, account_id, starts_on, ends_on, is_draft, sort, counts_to_daily, kind").order("sort"),
+    supabase.from("budget_lines_v2").select("id, category_id, name, rule, amount, pct_bp, amount_second, reimburse_amount, reimburse_cutoff, reimburse_day, cutoff, account_id, starts_on, ends_on, is_draft, sort, counts_to_daily, kind").order("sort"),
     supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
     supabase.from("raise_allocations").select("salary_event_id, budget_line_id, mode, amount, pct_bp"),
     supabase.from("pools").select("id, name, budget_line_id, keep_up_to, created_on"),
@@ -78,6 +79,8 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
     rule: l.rule,
     amount: l.amount == null ? null : money(l.amount),
     pctBp: l.pct_bp,
+    amountSecond: l.amount_second == null ? null : money(l.amount_second),
+    reimburse: l.reimburse_amount != null && l.reimburse_cutoff ? { amount: money(l.reimburse_amount), cutoff: l.reimburse_cutoff, day: l.reimburse_day } : null,
     cutoff: l.cutoff,
     startsOn: l.starts_on ? (l.starts_on.slice(0, 7) as YearMonth) : null,
     endsOn: l.ends_on ? (l.ends_on.slice(0, 7) as YearMonth) : null,

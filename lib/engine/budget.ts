@@ -37,6 +37,8 @@ export interface BudgetMonth {
   lines: LineAmount[];
   /** Fixed and percent lines per cutoff (everything but the rest line). */
   planned: Record<PayCutoff, Money>;
+  /** Money reimbursed into each cutoff by the lines that are on this month. */
+  reimbursed: Record<PayCutoff, Money>;
   rest: Record<PayCutoff, Money>;
   /** Fixed and percent lines add up to more than the take-home. */
   over: Record<PayCutoff, boolean>;
@@ -61,7 +63,8 @@ const applies = (line: BudgetLine, cutoff: PayCutoff): boolean => line.cutoff ==
 /**
  * One month of the budget. A fixed line is its amount; a percent line is its share of that cutoff's take-home; the rest line is
  * the take-home minus every other line, floored at zero (with several rest lines the first one takes it). A line is on only
- * between its start and end months. A line with cutoff "both" applies its amount to each cutoff.
+ * between its start and end months. A line with cutoff "both" applies its amount to each cutoff, or `amountSecond` to the second.
+ * A reimbursement adds to what its cutoff has, so the rest line and the over flag see it.
  */
 export function evaluateBudget(input: BudgetInput): BudgetMonth {
   const { month, takeHome } = input;
@@ -71,13 +74,15 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
 
   const result = new Map<string, LineAmount>();
   const planned: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
+  const reimbursed: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   for (const line of lines) {
+    if (line.reimburse && line.reimburse.amount > 0) reimbursed[line.reimburse.cutoff] = (reimbursed[line.reimburse.cutoff] + line.reimburse.amount) as Money;
     const row: LineAmount = { lineId: line.id, name: line.name, first: ZERO, second: ZERO, total: ZERO, topUps: [] };
     result.set(line.id, row);
     if (line.rule === "rest") continue;
     for (const c of CUTOFFS) {
       if (!applies(line, c)) continue;
-      row[c] = line.rule === "pct" ? mulBp(takeHome[c], line.pctBp ?? 0) : (line.amount ?? ZERO);
+      row[c] = line.rule === "pct" ? mulBp(takeHome[c], line.pctBp ?? 0) : c === "second" && line.cutoff === "both" && line.amountSecond != null ? line.amountSecond : (line.amount ?? ZERO);
     }
     for (const a of input.allocations ?? []) {
       if (a.budgetLineId !== line.id) continue;
@@ -100,8 +105,9 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
   const tight: Record<PayCutoff, boolean> = { first: false, second: false };
   const restLine = lines.find((l) => l.rule === "rest");
   for (const c of CUTOFFS) {
-    over[c] = planned[c] > takeHome[c];
-    rest[c] = atLeastZero(sub(takeHome[c], planned[c]));
+    const available = (takeHome[c] + reimbursed[c]) as Money;
+    over[c] = planned[c] > available;
+    rest[c] = atLeastZero(sub(available, planned[c]));
     if (restLine && applies(restLine, c)) {
       result.get(restLine.id)![c] = rest[c];
       tight[c] = rest[c] < (input.tightBelow ?? ZERO);
@@ -115,6 +121,7 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
     month,
     lines: lines.map((l) => result.get(l.id)!),
     planned,
+    reimbursed,
     rest,
     over,
     tight,

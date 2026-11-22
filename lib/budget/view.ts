@@ -32,6 +32,12 @@ export interface LineView {
   pctBp: number | null;
   /** The fixed amount as stored (centavos), or null. */
   fixed: Money | null;
+  /** The 2nd cutoff's amount when it differs from `fixed` (a fixed line on both cutoffs). */
+  fixedSecond: Money | null;
+  /** Money that comes back to this line each month, when set. */
+  reimburse: BudgetLine["reimburse"] | null;
+  /** This month's amount in each cutoff, so a line with different values shows each. */
+  perCutoff: { first: Money; second: Money } | null;
   cutoff: BudgetLine["cutoff"];
   accountId: string | null;
   accountName: string | null;
@@ -88,6 +94,9 @@ export function buildGroups(input: {
           rule: l.rule,
           pctBp: l.pctBp ?? null,
           fixed: l.amount ?? null,
+          fixedSecond: l.amountSecond ?? null,
+          reimburse: l.reimburse ?? null,
+          perCutoff: a ? { first: a.first, second: a.second } : null,
           cutoff: l.cutoff,
           accountId: l.accountId,
           accountName: l.accountId ? (input.accounts.get(l.accountId) ?? null) : null,

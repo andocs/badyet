@@ -19,6 +19,12 @@ interface Draft {
   categoryId: string;
   rule: "fixed" | "pct" | "rest";
   value: string;
+  /** The 2nd cutoff's amount (fixed line on both cutoffs); empty = the same as the first. */
+  valueSecond: string;
+  /** Reimbursement: how much comes back each month, which cutoff it lands in, and the day. */
+  rbAmount: string;
+  rbCutoff: "first" | "second";
+  rbDay: string;
   cutoff: "first" | "second" | "both";
   accountId: string;
   startsOn: string;
@@ -28,13 +34,17 @@ interface Draft {
   tick: "none" | "rto" | "rto_contingency";
 }
 
-const blank = (categoryId: string): Draft => ({ name: "", categoryId, rule: "fixed", value: "", cutoff: "both", accountId: "", startsOn: "", endsOn: "", isDraft: false, daily: false, tick: "none" });
+const blank = (categoryId: string): Draft => ({ name: "", categoryId, rule: "fixed", value: "", valueSecond: "", rbAmount: "", rbCutoff: "first", rbDay: "", cutoff: "both", accountId: "", startsOn: "", endsOn: "", isDraft: false, daily: false, tick: "none" });
 const draftOf = (l: LineView): Draft => ({
   id: l.id,
   name: l.name,
   categoryId: l.categoryId,
   rule: l.rule,
   value: l.rule === "pct" ? String((l.pctBp ?? 0) / 100) : l.rule === "fixed" && l.fixed !== null ? (l.fixed / 100).toFixed(2) : "",
+  valueSecond: l.fixedSecond !== null ? (l.fixedSecond / 100).toFixed(2) : "",
+  rbAmount: l.reimburse ? (l.reimburse.amount / 100).toFixed(2) : "",
+  rbCutoff: l.reimburse?.cutoff ?? "first",
+  rbDay: l.reimburse?.day ? String(l.reimburse.day) : "",
   cutoff: l.cutoff,
   accountId: l.accountId ?? "",
   startsOn: l.startsOn ?? "",
@@ -67,7 +77,10 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
     if (draft.rule === "rest") return "Takes whatever the other lines leave.";
     if (draft.rule === "fixed") {
       const v = parsePesos(draft.value);
-      return v === undefined ? "Enter an amount." : "Never changes unless you edit it.";
+      if (v === undefined) return "Enter an amount.";
+      const w = draft.cutoff === "both" && draft.valueSecond.trim() !== "" ? parsePesos(draft.valueSecond) : undefined;
+      if (draft.cutoff === "both" && w !== undefined) return <><b><Money value={money(v + w)} /> a month</b>: <Money value={money(v)} /> in the 1st cutoff, <Money value={money(w)} /> in the 2nd.</>;
+      return draft.cutoff === "both" ? <><b><Money value={money(v * 2)} /> a month</b>: <Money value={money(v)} /> from each cutoff. Never changes unless you edit it.</> : "Never changes unless you edit it.";
     }
     const pct = Number(draft.value);
     return Number.isFinite(pct) ? (
@@ -84,6 +97,12 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
     const amount = parsePesos(draft.value);
     if (draft.rule === "fixed" && amount === undefined) return setError("Enter the amount per month, like 1,250.50.");
     if (draft.rule === "pct" && (!Number.isFinite(pct) || pct < 0 || pct > 100)) return setError("A percent line takes 0 to 100%.");
+    const second = draft.valueSecond.trim() === "" ? null : parsePesos(draft.valueSecond);
+    if (second === undefined) return setError("Enter the 2nd cutoff's amount, like 10,000, or leave it empty to use the same amount.");
+    const rb = draft.rbAmount.trim() === "" ? null : parsePesos(draft.rbAmount);
+    if (rb === undefined) return setError("Enter how much is reimbursed each month, like 2,099.");
+    const rbDay = draft.rbDay.trim() === "" ? null : Number(draft.rbDay);
+    if (rbDay !== null && (!Number.isInteger(rbDay) || rbDay < 1 || rbDay > 31)) return setError("The deposit day is 1 to 31.");
     start(async () => {
       const r = await saveLine({
         id: draft.id,
@@ -91,6 +110,8 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
         categoryId: draft.categoryId,
         rule: draft.rule,
         amount: draft.rule === "fixed" ? (amount ?? null) : null,
+        amountSecond: draft.rule === "fixed" && draft.cutoff === "both" ? second : null,
+        reimburse: rb !== null && rb > 0 ? { amount: rb, cutoff: draft.rbCutoff, day: rbDay } : null,
         pctBp: draft.rule === "pct" ? Math.round(pct * 100) : null,
         cutoff: draft.cutoff,
         accountId: draft.accountId || null,
@@ -152,6 +173,8 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                   </span>
                   <span className="v-ba">
                     <b className="v-num">{l.amount === null ? "—" : <Money value={l.amount} />}</b>
+                    {l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
+                    {l.reimburse ? <small>back <Money value={l.reimburse.amount} />{l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`}</small> : null}
                     {showSpent && l.spent && l.amount ? (
                       <>
                         <span className="v-bar" role="img" aria-label={`${Math.round(pc)} percent ${l.spent.word}`}><i style={{ width: `${pc}%`, background: color }} /></span>
@@ -188,7 +211,7 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                 </div>
               </fieldset>
               <div className="v-grid2">
-                <label className="v-field">{draft.rule === "pct" ? "Percent" : draft.rule === "rest" ? "Amount (not used)" : "Amount per cutoff (₱)"}
+                <label className="v-field">{draft.rule === "pct" ? "Percent" : draft.rule === "rest" ? "Amount (not used)" : draft.cutoff === "both" ? "1st cutoff amount (₱)" : "Amount (₱)"}
                   <input value={draft.value} inputMode="decimal" disabled={draft.rule === "rest"} onChange={(e) => set({ value: e.target.value })} />
                 </label>
                 <div className="v-field">Cutoff
@@ -197,9 +220,27 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                   </div>
                 </div>
               </div>
+              {draft.rule === "fixed" && draft.cutoff === "both" ? (
+                <label className="v-field">2nd cutoff amount (₱, empty = same as the 1st)
+                  <input value={draft.valueSecond} inputMode="decimal" placeholder={draft.value} onChange={(e) => set({ valueSecond: e.target.value })} />
+                </label>
+              ) : null}
               <label className="v-field">Goes to (optional)
                   <select value={draft.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Nowhere, just a limit</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
                 </label>
+              <fieldset style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "12px 14px", margin: 0 }}>
+                <legend className="v-lbl" style={{ padding: "0 6px" }}>Reimbursed (optional)</legend>
+                <div className="v-xs v-muted" style={{ marginBottom: 8 }}>For a bill that is paid back to you each month. The deposit adds to what that cutoff has, so it frees up the money.</div>
+                <div className="v-grid2">
+                  <label className="v-field">Paid back each month (₱)<input value={draft.rbAmount} inputMode="decimal" placeholder="0" onChange={(e) => set({ rbAmount: e.target.value })} /></label>
+                  <label className="v-field">Deposit day (optional)<input value={draft.rbDay} inputMode="numeric" maxLength={2} placeholder="17" onChange={(e) => set({ rbDay: e.target.value })} /></label>
+                </div>
+                <div className="v-field">Deposited in
+                  <div className="v-seg" role="group" aria-label="Reimbursement cutoff" style={{ width: "100%" }}>
+                    {([["first", "1st cutoff"], ["second", "2nd cutoff"]] as const).map(([v, l]) => <button key={v} type="button" style={{ flex: 1 }} aria-pressed={draft.rbCutoff === v} onClick={() => set({ rbCutoff: v })}>{l}</button>)}
+                  </div>
+                </div>
+              </fieldset>
               <div className="v-grid2 v-keep2">
                 <div className="v-field">Starts<MonthPicker label="Starts" value={draft.startsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No start" onChange={(v) => set({ startsOn: v })} /></div>
                 <div className="v-field">Ends<MonthPicker label="Ends" value={draft.endsOn} min={`${thisYear - 5}-01`} max={`${thisYear + 15}-12`} clearable placeholder="No end" onChange={(v) => set({ endsOn: v })} /></div>

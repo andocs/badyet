@@ -131,4 +131,30 @@ describe("office days and pools", () => {
     expect(dailySafeToSpend({ ...base, confirmedSpend: p(99_000) })).toBe(0);
     expect(dailySafeToSpend({ ...base, daysLeft: 0 })).toBe(p(12_500));
   });
+
+  it("takes a different amount in each cutoff when the line says so", () => {
+    const b = evaluateBudget({ month: ym("2027-03"), takeHome, lines: [line({ id: "save", amount: p(5_000), amountSecond: p(10_000) }), line({ id: "plain", amount: p(1_000) })] });
+    expect(amountOf(b, "save")).toMatchObject({ first: p(5_000), second: p(10_000), total: p(15_000) });
+    expect(amountOf(b, "plain")).toMatchObject({ first: p(1_000), second: p(1_000) });
+    expect(b.planned).toEqual({ first: p(6_000), second: p(11_000) });
+  });
+
+  it("ignores the second amount unless the line is on both cutoffs", () => {
+    const b = evaluateBudget({ month: ym("2027-03"), takeHome, lines: [line({ id: "x", cutoff: "second", amount: p(5_000), amountSecond: p(9_000) })] });
+    expect(amountOf(b, "x")).toMatchObject({ first: 0, second: p(5_000) });
+  });
+
+  it("adds a reimbursement to the cutoff it is deposited in", () => {
+    const wifi = line({ id: "wifi", cutoff: "first", amount: p(2_099), reimburse: { amount: p(2_099), cutoff: "first", day: 17 } });
+    const b = evaluateBudget({ month: ym("2027-03"), takeHome, lines: [wifi, line({ id: "rest", rule: "rest", feedsSavings: true })] });
+    expect(b.reimbursed).toEqual({ first: p(2_099), second: 0 });
+    // The bill is planned, the deposit gives it back, so the first cutoff has all of its take-home left.
+    expect(amountOf(b, "rest").first).toBe(p(20_000));
+    expect(b.over.first).toBe(false);
+  });
+
+  it("does not count a reimbursement from a line that is off this month", () => {
+    const wifi = line({ id: "wifi", cutoff: "first", amount: p(2_099), endsOn: ym("2027-02"), reimburse: { amount: p(2_099), cutoff: "first" } });
+    expect(evaluateBudget({ month: ym("2027-03"), takeHome, lines: [wifi] }).reimbursed).toEqual({ first: 0, second: 0 });
+  });
 });

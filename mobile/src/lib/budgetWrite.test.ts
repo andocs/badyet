@@ -48,7 +48,7 @@ describe('saveLine', () => {
     const { supabase, log } = client({ 'categories:select': { data: { id: CAT } }, 'budget_lines_v2:insert': { data: { id: LINE } } });
     expect(await saveLine(supabase, base)).toEqual({ ok: true });
     expect(find(log, 'budget_lines_v2', 'insert')?.args[0]).toEqual({
-      category_id: CAT, name: 'Groceries', rule: 'pct', amount: null, pct_bp: 1300, cutoff: 'both', account_id: null,
+      category_id: CAT, name: 'Groceries', rule: 'pct', amount: null, amount_second: null, reimburse_amount: null, reimburse_cutoff: null, reimburse_day: null, pct_bp: 1300, cutoff: 'both', account_id: null,
       starts_on: null, ends_on: null, is_draft: false, counts_to_daily: true, kind: 'normal',
     });
   });

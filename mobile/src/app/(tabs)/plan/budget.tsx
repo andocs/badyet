@@ -27,6 +27,12 @@ type Draft = {
   categoryId: string;
   rule: LineInput['rule'];
   amount: string;
+  /** The 2nd cutoff's amount (fixed line on both cutoffs); empty = the same as the first. */
+  amountSecond: string;
+  /** Reimbursement: how much is paid back each month, the cutoff it lands in, and the day. */
+  rbAmount: string;
+  rbCutoff: 'first' | 'second';
+  rbDay: string;
   percent: string;
   cutoff: LineInput['cutoff'];
   accountId: string | null;
@@ -43,6 +49,10 @@ const draftOf = (l: LineView): Draft => ({
   categoryId: l.categoryId,
   rule: l.rule,
   amount: l.fixed === null ? '' : formatPesos(l.fixed, { symbol: false }),
+  amountSecond: l.fixedSecond === null ? '' : formatPesos(l.fixedSecond, { symbol: false }),
+  rbAmount: l.reimburse ? formatPesos(l.reimburse.amount, { symbol: false }) : '',
+  rbCutoff: l.reimburse?.cutoff ?? 'first',
+  rbDay: l.reimburse?.day ? String(l.reimburse.day) : '',
   percent: l.pctBp === null ? '' : String(l.pctBp / 100),
   cutoff: l.cutoff,
   accountId: l.accountId,
@@ -54,19 +64,25 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 const blankDraft = (categoryId: string): Draft => ({
-  name: '', categoryId, rule: 'fixed', amount: '', percent: '', cutoff: 'both', accountId: null, startsOn: '', endsOn: '', isDraft: false, countsToDaily: false, kind: 'normal',
+  name: '', categoryId, rule: 'fixed', amount: '', amountSecond: '', rbAmount: '', rbCutoff: 'first', rbDay: '', percent: '', cutoff: 'both', accountId: null, startsOn: '', endsOn: '', isDraft: false, countsToDaily: false, kind: 'normal',
 });
 
 /** The editor's fields become the shape the shared validator checks. Typed pesos and percents are converted here. */
 function toInput(d: Draft): unknown {
   const pesos = d.amount.trim() === '' ? undefined : parsePesos(d.amount.trim());
   const pct = d.percent.trim() === '' ? NaN : Math.round(Number(d.percent) * 100);
+  // Typed amounts that cannot be read are passed on as text so the shared validator says what is wrong.
+  const second = d.amountSecond.trim() === '' ? null : (parsePesos(d.amountSecond.trim()) ?? 'x');
+  const rb = d.rbAmount.trim() === '' ? null : (parsePesos(d.rbAmount.trim()) ?? 'x');
+  const rbDay = d.rbDay.trim() === '' ? null : Number(d.rbDay);
   return {
     id: d.id,
     name: d.name,
     categoryId: d.categoryId,
     rule: d.rule,
     amount: d.rule === 'fixed' ? (pesos ?? null) : null,
+    amountSecond: d.rule === 'fixed' && d.cutoff === 'both' ? second : null,
+    reimburse: rb === null || rb === 0 ? null : { amount: rb, cutoff: d.rbCutoff, day: rbDay },
     pctBp: d.rule === 'pct' ? (Number.isFinite(pct) ? pct : null) : null,
     cutoff: d.cutoff,
     accountId: d.accountId,
@@ -145,7 +161,10 @@ function LineEditor({
               <Chip label="Whatever is left" on={d.rule === 'rest'} onPress={() => setD((x) => ({ ...x, rule: 'rest', kind: 'normal' }))} />
             </View>
             {d.rule === 'fixed' ? (
-              <TextInput value={d.amount} onChangeText={(v) => set('amount', v)} keyboardType="decimal-pad" placeholder="Amount per cutoff, like 1,250.50" placeholderTextColor={c.muted} style={input} />
+              <TextInput value={d.amount} onChangeText={(v) => set('amount', v)} keyboardType="decimal-pad" placeholder={d.cutoff === 'both' ? '1st cutoff amount, like 5,000' : 'Amount, like 1,250.50'} placeholderTextColor={c.muted} style={input} />
+            ) : null}
+            {d.rule === 'fixed' && d.cutoff === 'both' ? (
+              <TextInput value={d.amountSecond} onChangeText={(v) => set('amountSecond', v)} keyboardType="decimal-pad" placeholder="2nd cutoff amount (empty = same as the 1st)" placeholderTextColor={c.muted} style={input} />
             ) : null}
             {d.rule === 'pct' ? (
               <TextInput value={d.percent} onChangeText={(v) => set('percent', v)} keyboardType="decimal-pad" placeholder="Percent, like 13" placeholderTextColor={c.muted} style={input} />
@@ -158,6 +177,15 @@ function LineEditor({
               <Chip label="2nd" on={d.cutoff === 'second'} onPress={() => set('cutoff', 'second')} />
               <Chip label="Both" on={d.cutoff === 'both'} onPress={() => set('cutoff', 'both')} />
             </View>
+          </Field>
+
+          <Field label="Paid back to you each month (optional)">
+            <TextInput value={d.rbAmount} onChangeText={(v) => set('rbAmount', v)} keyboardType="decimal-pad" placeholder="Reimbursed amount, like 2,099" placeholderTextColor={c.muted} style={input} />
+            <View style={s.chips}>
+              <Chip label="Deposited in the 1st cutoff" on={d.rbCutoff === 'first'} onPress={() => set('rbCutoff', 'first')} />
+              <Chip label="Deposited in the 2nd" on={d.rbCutoff === 'second'} onPress={() => set('rbCutoff', 'second')} />
+            </View>
+            <TextInput value={d.rbDay} onChangeText={(v) => set('rbDay', v)} keyboardType="number-pad" maxLength={2} placeholder="Deposit day, like 17 (optional)" placeholderTextColor={c.muted} style={input} />
           </Field>
 
           <Field label="Goes to an account (a bill or transfer)">
@@ -244,6 +272,17 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
         {l.spent ? (
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
             {peso(l.spent.amount, hide)} {l.spent.word}
+          </Text>
+        ) : null}
+        {l.perCutoff && l.cutoff === 'both' && l.perCutoff.first !== l.perCutoff.second ? (
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+            1st {peso(l.perCutoff.first, hide)} · 2nd {peso(l.perCutoff.second, hide)}
+          </Text>
+        ) : null}
+        {l.reimburse ? (
+          <Text style={{ color: c.accentText, fontFamily: fonts.body, fontSize: 12 }}>
+            paid back {peso(l.reimburse.amount, hide)}
+            {l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === 'first' ? '1st' : '2nd'} cutoff`}
           </Text>
         ) : null}
         {l.topUps.length > 0 ? <Text style={{ color: c.accentText, fontFamily: fonts.body, fontSize: 12 }}>includes a raise top-up</Text> : null}
