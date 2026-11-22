@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions (Expo round two)
 - **Active slice / milestone:** Round three plus rev-18 merged; C1 on hold
 - **Gate:** none
-- **Next action:** User: apply four migrations (20261208000000, 20261208000100, 20261209000000, 20261210000000); publish phone update (needed for refresh fix, Inbox cards, patterns, installments); C2 device checks; Google Wallet sample for C1.
-- **User to-do now:** Apply the four supabase migrations; publish the phone update; check pull-to-refresh after idle; Google Wallet sample for C1
+- **Next action:** User: open the app twice (or Settings > Check for updates) and check C2 items, pull-to-refresh after idle, Inbox cards, patterns, installments. C1 waits for a Google Wallet sample.
+- **User to-do now:** Open the phone app twice to receive update 00cb0f75; C2 device checks; Google Wallet sample for C1
 
 ## 3. Execution log
 
@@ -50,6 +50,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:47 | rev-18 | Web: planned vs spent 3 across on desktop; account cards are bank-card proportioned (1.586:1, 230px); accounts grouped by kind (e-wallets, debit, savings, credit, cash); choosing an account is instant (all panels on the page, no server trip); drag-to-reorder within a group plus Earlier/Later buttons. Phone: cards bank-card ratio (2 per row), grouped by kind, reorder is group-aware. Phone pull-to-refresh: 20s request timeout on every Supabase call, 25s load timeout, one retry after re-reading the session, newest load wins, spinner always clears. 375 web + 145 phone tests, lint, build ok. | -
 - 2026-11-22 11:57 | rev-18 | Fixes after review: swapped cards no longer trade colours (colour from account id, not list position; web, Now and phone); Planned vs spent really max 3 across (the old percentage minimum in auto-fit let 4 fit; now explicit 1/2/3 columns); one standard account card size on Accounts and Now (--acard-w 230px, 1.586 ratio); saving indicator and shimmer on swapped cards (web), Saving order notice and disabled buttons (phone); a new account no longer vanishes after a reorder. | -
 - 2026-11-22 12:01 | rev-18 | Approved and merged to main. | -
+- 2026-11-22 12:06 | ota | Phone update published to preview channel, runtime 1.1.0, update group 00cb0f75-f995-497a-9197-689fc27885b2 (commit f80924a): rev-12 to rev-18. Four migrations applied by the user. | -
 
 ## 4. Open questions
 
