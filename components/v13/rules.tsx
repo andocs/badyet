@@ -381,7 +381,7 @@ function RuleCard({ rule, selected, first, last, enabled, busy, acct, cat, onSel
   );
 }
 
-function CaptureTab({ rules, sources, patterns, accounts, categories, apps, lastSynced, seenSenders, captureMissing }: Pick<Props, "rules" | "sources" | "patterns" | "accounts" | "categories" | "apps" | "lastSynced" | "seenSenders" | "captureMissing">) {
+function CaptureTab({ rules, sources, patterns, accounts, categories, apps, lastSynced, seenSenders, captureMissing, gmailAlert }: Pick<Props, "rules" | "sources" | "patterns" | "accounts" | "categories" | "apps" | "lastSynced" | "seenSenders" | "captureMissing" | "gmailAlert">) {
   const [sel, setSel] = useState<string | "new" | null>(rules[0]?.id ?? null);
   const [over, setOver] = useState<Record<string, boolean>>({});
   const s = useRun();
@@ -421,7 +421,7 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
               onMove={(dir) => s.run(() => moveRule(r.id, dir), "Order saved.")} />
           ))}
         </section>
-        <SourcesArea sources={sources} patterns={patterns} accounts={accounts} categories={categories} />
+        <SourcesArea gmailAlert={gmailAlert} sources={sources} patterns={patterns} accounts={accounts} categories={categories} />
       </div>
       {editing ? (
         <Editor key={sel} rule={chosen} accounts={accounts} categories={categories} apps={apps} lastSynced={lastSynced} seenSenders={seenSenders} onDone={() => setSel(null)} />
@@ -478,6 +478,7 @@ interface Props {
   dedupe: { windowMinutes: number; matchSource: boolean };
   captureMissing: boolean;
   needsUpdate: boolean;
+  gmailAlert: boolean;
 }
 
 export function RulesView(p: Props) {

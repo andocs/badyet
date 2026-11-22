@@ -11,6 +11,8 @@ export interface CaptureData {
   patterns: CapturePattern[];
   /** When a notification and an email are the same movement. */
   dedupe: DedupeRule;
+  /** Check Gmail as soon as the Gmail app shows a notification. */
+  gmailAlert: boolean;
   /** The capture tables are not in the database yet (migration not applied). */
   missing: boolean;
 }
@@ -31,20 +33,21 @@ async function selectRules(supabase: SupabaseClient) {
 }
 
 export async function loadCapture(supabase: SupabaseClient): Promise<CaptureData> {
-  const [src, rul, pat, ded] = await Promise.all([
+  const [src, rul, pat, ded, set] = await Promise.all([
     supabase.from('capture_sources').select('source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount'),
     selectRules(supabase),
     supabase.from('capture_patterns').select('id, source, template, direction').order('created_at'),
     supabase.from('dedupe_rules').select('window_minutes, match_source').maybeSingle(),
+    supabase.from('user_settings').select('gmail_alert_check').maybeSingle(),
   ]);
-  if (isMissingTable(src.error) || isMissingTable(rul.error)) return { configs: SOURCES.map(defaultConfig), rules: [], patterns: [], dedupe: DEFAULT_DEDUPE, missing: true };
+  if (isMissingTable(src.error) || isMissingTable(rul.error)) return { configs: SOURCES.map(defaultConfig), rules: [], patterns: [], dedupe: DEFAULT_DEDUPE, gmailAlert: true, missing: true };
   if (src.error) throw src.error;
   if (rul.error) throw rul.error;
   // Patterns come from a newer migration; until it is applied everything else keeps working.
   const patterns = pat.error ? [] : patternsFromRows((pat.data ?? []) as PatternRow[]);
   // Also from a newer migration: no row, or no table yet, means the defaults.
   const dedupe: DedupeRule = ded.data ? { windowMin: ded.data.window_minutes, matchSource: ded.data.match_source } : DEFAULT_DEDUPE;
-  return { configs: configsFromRows((src.data ?? []) as SourceRow[]), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, dedupe, missing: false };
+  return { configs: configsFromRows((src.data ?? []) as SourceRow[]), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, dedupe, gmailAlert: set.data?.gmail_alert_check ?? true, missing: false };
 }
 
 /** Same checks as the web: the account and category must exist and not be archived. */
@@ -144,5 +147,11 @@ export async function moveRule(supabase: SupabaseClient, ordered: readonly { id:
 export async function saveDedupeRule(supabase: SupabaseClient, userId: string, rule: DedupeRule): Promise<Result> {
   if (!Number.isInteger(rule.windowMin) || rule.windowMin < 1 || rule.windowMin > 240) return { error: 'The window is 1 minute to 4 hours.' };
   const { error } = await supabase.from('dedupe_rules').upsert({ user_id: userId, window_minutes: rule.windowMin, match_source: rule.matchSource }, { onConflict: 'user_id' });
+  return error ? { error: 'That did not save. Try again.' } : { ok: true };
+}
+
+/** Turns "check Gmail when Gmail notifies" on or off (the first save creates your settings row). */
+export async function saveGmailAlert(supabase: SupabaseClient, userId: string, on: boolean): Promise<Result> {
+  const { error } = await supabase.from('user_settings').upsert({ user_id: userId, gmail_alert_check: on, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
   return error ? { error: 'That did not save. Try again.' } : { ok: true };
 }

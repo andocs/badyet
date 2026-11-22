@@ -180,7 +180,10 @@ export function rulesFromRows(rows: readonly RuleRow[]): CaptureRule[] {
     }));
 }
 
-/** Android app ids to listen to: every enabled source's apps. */
-export const allowedPackages = (configs: readonly SourceConfig[]): string[] => [
-  ...new Set(configs.filter((c) => c.enabled).flatMap((c) => c.packages)),
+/** The Gmail app. Its notifications are not read: one arriving just means "check Gmail now". */
+export const GMAIL_APP = 'com.google.android.gm';
+
+/** Android app ids to listen to: every enabled source's apps, plus Gmail when the Gmail alert is on. */
+export const allowedPackages = (configs: readonly SourceConfig[], gmailAlert = false): string[] => [
+  ...new Set([...configs.filter((c) => c.enabled).flatMap((c) => c.packages), ...(gmailAlert ? [GMAIL_APP] : [])]),
 ];
