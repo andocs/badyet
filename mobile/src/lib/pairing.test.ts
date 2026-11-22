@@ -9,7 +9,7 @@ const accounts = [
 ];
 
 type Answer = { data?: unknown; error?: unknown };
-function client(answers: { accounts: Answer; transactions: Answer }) {
+function client(answers: { accounts: Answer; transactions: Answer; categories?: Answer }) {
   const updates: { payload: unknown; id: unknown }[] = [];
   const c = {
     from(table: string) {
@@ -19,7 +19,7 @@ function client(answers: { accounts: Answer; transactions: Answer }) {
           if (prop === 'then') {
             return (resolve: (v: unknown) => void) => {
               if (state.update !== undefined) updates.push({ payload: state.update, id: state.id });
-              resolve({ data: null, error: null, ...(state.update !== undefined ? {} : answers[table as 'accounts' | 'transactions']) });
+              resolve({ data: null, error: null, ...(state.update !== undefined ? {} : answers[table as 'accounts' | 'transactions' | 'categories']) });
             };
           }
           return (...args: unknown[]) => {
@@ -47,6 +47,19 @@ describe('pairRecent', () => {
     expect(updates).toEqual([
       { payload: { kind: 'transfer', transfer_peer_id: 'in', category_id: null }, id: 'out' },
       { payload: { kind: 'transfer', transfer_peer_id: 'out', category_id: null }, id: 'in' },
+    ]);
+  });
+
+  it('gives both legs the Transfer category when it exists', async () => {
+    const { supabase, updates } = client({
+      accounts: { data: accounts },
+      transactions: { data: [tx('out', 'maya', -5_000, 0, 'BPI / VYBE by BPI'), tx('in', 'bpi', 5_000, 16, 'Maya Philippines, Inc.')] },
+      categories: { data: { id: 'tcat' } },
+    });
+    await pairRecent(supabase, NOW);
+    expect(updates).toEqual([
+      { payload: { kind: 'transfer', transfer_peer_id: 'in', category_id: 'tcat' }, id: 'out' },
+      { payload: { kind: 'transfer', transfer_peer_id: 'out', category_id: 'tcat' }, id: 'in' },
     ]);
   });
 

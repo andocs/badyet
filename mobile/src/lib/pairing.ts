@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ensureTransferCategory } from '@/lib/capture/transfer-category';
 import { findTransferPairs, type PairCandidate } from '@/lib/capture/pair';
 import type { AccountLite } from '@/lib/capture/row';
 
@@ -19,10 +20,13 @@ export async function pairRecent(supabase: SupabaseClient, now: number = Date.no
   const candidates: PairCandidate[] = rows.map((r) => ({ id: r.id, accountId: r.account_id, amount: r.amount, at: Date.parse(r.occurred_at), counterparty: r.merchant }));
   const pairs = findTransferPairs(candidates, (acc.data ?? []) as AccountLite[]);
 
+  if (pairs.length === 0) return 0;
+  // Paired moves wear the Transfer category (made the first time), so they read as transfers everywhere and never as spending.
+  const transferCategory = await ensureTransferCategory(supabase);
   let linked = 0;
   for (const { outId, inId } of pairs) {
-    const a = await supabase.from('transactions').update({ kind: 'transfer', transfer_peer_id: inId, category_id: null }).eq('id', outId);
-    const b = await supabase.from('transactions').update({ kind: 'transfer', transfer_peer_id: outId, category_id: null }).eq('id', inId);
+    const a = await supabase.from('transactions').update({ kind: 'transfer', transfer_peer_id: inId, category_id: transferCategory }).eq('id', outId);
+    const b = await supabase.from('transactions').update({ kind: 'transfer', transfer_peer_id: outId, category_id: transferCategory }).eq('id', inId);
     if (!a.error && !b.error) linked += 1;
   }
   return linked;
