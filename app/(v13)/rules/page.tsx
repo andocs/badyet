@@ -12,7 +12,7 @@ const OLD_COLS = "id, source, match_text, action, category_id";
 export default async function Rules() {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
-  const [catRes, acctRes, srcRes, patRes, appsRes, sendersRes, dedupeRes] = await Promise.all([
+  const [catRes, acctRes, srcRes, patRes, appsRes, sendersRes, dedupeRes, setRes] = await Promise.all([
     supabase.from("categories").select("id, name").is("archived_at", null).order("sort"),
     supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
     supabase.from("capture_sources").select("source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount"),
@@ -20,6 +20,7 @@ export default async function Rules() {
     supabase.from("device_apps").select("package, label, seen, updated_at").order("label"),
     supabase.from("seen_senders").select("address, emails").order("emails", { ascending: false }),
     supabase.from("dedupe_rules").select("window_minutes, match_source").maybeSingle(),
+    supabase.from("user_settings").select("gmail_alert_check").maybeSingle(),
   ]);
   let rulesRes: { data: unknown; error: { code?: string } | null } = await supabase.from("capture_rules").select(RULE_COLS).order("position").order("created_at");
   // Until the Rules database update is applied the new columns do not exist; fall back to the old ones and say so.
@@ -49,6 +50,7 @@ export default async function Rules() {
         lastSynced={lastSynced}
         seenSenders={senders}
         dedupe={{ windowMinutes: d?.window_minutes ?? 30, matchSource: d?.match_source ?? false }}
+        gmailAlert={(setRes.data as { gmail_alert_check?: boolean } | null)?.gmail_alert_check ?? true}
         captureMissing={captureMissing}
         needsUpdate={needsUpdate}
       />

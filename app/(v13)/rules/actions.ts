@@ -85,3 +85,14 @@ export async function saveDedupeRule(input: DedupeInput): Promise<FormState> {
   refresh();
   return { ok: true };
 }
+
+/** "Check Gmail when Gmail notifies": the phone reads new bank emails as soon as the Gmail app shows a notification. */
+export async function setGmailAlertCheck(on: boolean): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const values = { gmail_alert_check: on === true, updated_at: new Date().toISOString() };
+  const existing = await supabase.from("user_settings").select("user_id").maybeSingle();
+  const { error } = existing.data ? await supabase.from("user_settings").update(values).eq("user_id", existing.data.user_id) : await supabase.from("user_settings").insert(values);
+  if (error) return { error: MISSING.includes(error.code ?? "") ? "Apply the Gmail alert database update first." : "That did not save. Try again." };
+  refresh();
+  return { ok: true };
+}

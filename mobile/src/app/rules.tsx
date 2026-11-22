@@ -8,7 +8,7 @@ import { PatternsCard } from '~/components/PatternsCard';
 import { SourceEditor } from '~/components/SourceEditor';
 import { applyAllowlist } from '~/lib/allowlist';
 import { useHeldCount } from '~/lib/CaptureRunner';
-import { loadCapture, moveRule, saveDedupeRule, setRuleEnabled } from '~/lib/capture';
+import { loadCapture, moveRule, saveDedupeRule, saveGmailAlert, setRuleEnabled } from '~/lib/capture';
 import { loadSeenSenders, readPhoneApps, syncDeviceApps, type AppInfo } from '~/lib/deviceApps';
 import { loadPickers } from '~/lib/pickers';
 import { useSession } from '~/lib/session';
@@ -58,6 +58,13 @@ export default function Rules() {
     const res = await setRuleEnabled(supabase, r.id, on);
     if ('error' in res) setProblem(res.error);
     await reload();
+  }
+  async function toggleGmailAlert(on: boolean) {
+    if (!session) return;
+    const res = await saveGmailAlert(supabase, session.user.id, on);
+    if ('error' in res) setProblem(res.error);
+    await reload();
+    void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert)).catch(() => {});
   }
   async function move(r: CaptureRule, dir: -1 | 1) {
     if (!data) return;
@@ -132,6 +139,17 @@ export default function Rules() {
           </Pressable>
 
           <Card>
+            <Label>Gmail</Label>
+            <View style={s.row}>
+              <View style={{ flex: 1 }}>
+                <Body bold>Check Gmail when Gmail notifies</Body>
+                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>When the Gmail app shows a notification, read your new bank emails right away. The notification itself is never read.</Text>
+              </View>
+              <Switch value={data.gmailAlert} onValueChange={(on) => void toggleGmailAlert(on)} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Check Gmail when Gmail notifies" />
+            </View>
+          </Card>
+
+          <Card>
             <Label>Sources</Label>
             {SOURCES.map((k) => {
               const cfg = data.configs.find((x) => x.source === k)!;
@@ -180,7 +198,7 @@ export default function Rules() {
           onClose={() => setEditingSource(null)}
           onSaved={() => {
             setEditingSource(null);
-            void loadCapture(supabase).then((d) => applyAllowlist(d.configs)).catch(() => {});
+            void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert)).catch(() => {});
             void reload();
           }}
         />

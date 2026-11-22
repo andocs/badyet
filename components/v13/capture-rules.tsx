@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { setGmailAlertCheck } from "@/app/(v13)/rules/actions";
 import { saveCaptureSource } from "@/app/(v13)/settings/actions";
 import { SOURCE_INFO, SOURCES, type SourceConfig } from "@/lib/capture/sources";
 import type { CapturePattern } from "@/lib/capture/patterns";
@@ -68,11 +69,17 @@ function SourceRow({ cfg, accounts, categories }: { cfg: SourceConfig; accounts:
 }
 
 /** Per-source settings (on or off, apps, senders, usual account and category, minimum amount) and your own notification wordings. Lives on the Rules page. */
-export function SourcesArea({ sources, patterns, accounts, categories }: { sources: SourceConfig[]; patterns: CapturePattern[]; accounts: Option[]; categories: Option[] }) {
+export function SourcesArea({ gmailAlert, sources, patterns, accounts, categories }: { gmailAlert: boolean; sources: SourceConfig[]; patterns: CapturePattern[]; accounts: Option[]; categories: Option[] }) {
+  const [alertOn, setAlertOn] = useState(gmailAlert);
+  const g = useAct();
   return (
     <section className="v-card v-stack" aria-labelledby="srcs">
       <h2 id="srcs">Sources</h2>
       <p className="v-xs v-muted" style={{ margin: 0 }}>Turn a whole source off, or set a minimum amount to skip small items. The same settings show on the phone.</p>
+      <div className="v-row v-sp">
+        <div><b>Check Gmail when Gmail notifies</b><div className="v-xs v-muted">When the Gmail app on the phone shows a notification, it reads new bank emails right away instead of waiting for its next check. The notification itself is never read.</div></div>
+        <button type="button" className="v-sw" role="switch" aria-checked={alertOn} aria-label="Check Gmail when Gmail notifies" disabled={g.busy} onClick={() => { const next = !alertOn; setAlertOn(next); g.act(() => setGmailAlertCheck(next), next ? "Gmail check on." : "Gmail check off."); }} />
+      </div>
       <div className="v-capsrc">{SOURCES.map((k) => <SourceRow key={k} cfg={sources.find((c) => c.source === k)!} accounts={accounts} categories={categories} />)}</div>
       <PatternsSection patterns={patterns} />
     </section>

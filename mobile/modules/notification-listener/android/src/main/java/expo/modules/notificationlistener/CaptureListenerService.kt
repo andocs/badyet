@@ -24,9 +24,12 @@ class CaptureListenerService : NotificationListenerService() {
     val extras = sbn.notification.extras
     val item = JSONObject()
     item.put("package", pkg)
-    item.put("title", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString())
-    item.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString())
-    item.put("bigText", extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString())
+    // The Gmail app only tells us "something arrived": keep none of its text.
+    if (pkg != "com.google.android.gm") {
+      item.put("title", extras.getCharSequence(Notification.EXTRA_TITLE)?.toString())
+      item.put("text", extras.getCharSequence(Notification.EXTRA_TEXT)?.toString())
+      item.put("bigText", extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString())
+    }
     item.put("postTime", sbn.postTime)
     CaptureStore.push(ctx, item)
 

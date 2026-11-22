@@ -85,6 +85,11 @@ describe('rows to config', () => {
     expect(pk).toContain('com.globe.gcash.android');
     expect(pk).not.toContain('com.paymaya');
   });
+  it('adds the Gmail app only when the Gmail alert is on', () => {
+    const cfgs = SOURCES.map(defaultConfig);
+    expect(allowedPackages(cfgs)).not.toContain('com.google.android.gm');
+    expect(allowedPackages(cfgs, true)).toContain('com.google.android.gm');
+  });
 });
 
 describe('validateRuleFull', () => {
