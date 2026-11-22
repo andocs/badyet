@@ -7,10 +7,25 @@ import { supabase } from './supabase';
 /** A screen that has been in front again after this long loads fresh data. */
 const STALE_MS = 20_000;
 /** A load that has not answered by now is given up on, so a stuck request cannot leave the screen (or its spinner) waiting forever. */
-const LOAD_TIMEOUT_MS = 25_000;
+const LOAD_TIMEOUT_MS = 15_000;
+/** How long the sign-in layer gets to answer a simple question before it is treated as wedged. */
+const AUTH_PROBE_MS = 4_000;
 const message = (e: unknown) => (e instanceof Error ? e.message : typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : '');
 const expired = (e: unknown) => /jwt|token|expired|401/i.test(message(e));
 const stuck = (e: unknown) => /timed out|abort|network request failed|failed to fetch|load failed/i.test(message(e));
+
+/** True when the sign-in layer answers quickly. If even this hangs, every query behind it is waiting on something that will never finish. */
+function authAnswers(): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout>;
+  const quiet = new Promise<boolean>((resolve) => {
+    timer = setTimeout(() => resolve(false), AUTH_PROBE_MS);
+  });
+  const answer = supabase.auth.getSession().then(
+    () => true,
+    () => true,
+  );
+  return Promise.race([answer, quiet]).finally(() => clearTimeout(timer));
+}
 
 class TimedOut extends Error {
   constructor() {
@@ -54,6 +69,8 @@ export function useLoad<T>(load: () => Promise<T>) {
       // An expired session, or a request left hanging while the phone was idle or a background task ran: get the session back
       // (it is read from storage, where the background task may have just renewed it) and try once more on a fresh connection.
       if (expired(first) || stuck(first) || first instanceof TimedOut) {
+        // Wedged sign-in (it will not even answer a quick question): start the app over now instead of waiting through more timeouts.
+        if (!(await authAnswers()) && (await reloadApp())) return;
         try {
           await withTimeout(supabase.auth.getSession());
           await withTimeout(supabase.auth.refreshSession());

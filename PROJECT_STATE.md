@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-20 phone idle recovery (awaiting approval)
+- **Active slice / milestone:** rev-21 fast recovery (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval: merge rev/20-idle-recovery and publish the phone update.
-- **User to-do now:** After publishing: leave the phone idle 15+ minutes, open the app, tell me if it still sticks (and what it shows)
+- **Next action:** On approval: merge rev/21-fast-recovery and publish the phone update.
+- **User to-do now:** After publishing: leave the phone idle 15+ minutes, open the app, tell me what it does
 
 ## 3. Execution log
 
@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 12:26 | rev-19 | Transfer category now exists from the first Inbox visit (web and phone) and picking it on a pending item files it as a transfer. Held captures sync to a new held_captures table (migration 20261211000000, NOT applied) and show as ordinary cards in the web Inbox; answered on either side clears both. Pairing moved to lib/capture/pairing.ts so the web can run it. Fixed a stale phone colour test (rev-18 was merged with it failing). 379 web + 150 phone tests, lint, build ok. | -
 - 2026-11-22 12:26 | rev-19 | Approved and merged to main. | -
 - 2026-11-22 12:30 | rev-20 | Phone idle recovery. Cannot reproduce on a device; likely cause is app state wedged by idling or the background capture task. Fixes: the app restarts its JavaScript on return after 10+ minutes away (max once per 2 min); a load still stuck after retry on a fresh connection restarts it too; a stuck capture cycle (3 min) no longer blocks later ones; the background task always ends within 45s. 379 web + 154 phone tests, lint ok. Not verified on a device. | -
+- 2026-11-22 12:32 | rev-21 | Fast recovery. The reported error is 'Timed out. Pull down to try again' (our own 25s limit), so timers work and the hang is in the network/sign-in layer. A stuck load now probes sign-in for 4s; if it will not answer, the app restarts itself at once (max once per 2 min). Load limit cut from 25s to 15s. Not verified on a device. | -
 
 ## 4. Open questions
 
