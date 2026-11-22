@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-26 savings plan (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval: merge rev/26-savings-plan, user applies migration 20261213000000_savings_plan.sql, publish phone update.
-- **User to-do now:** Apply migration 20261213000000_savings_plan.sql after approval; set the plan on Salary and tax
+- **Active slice / milestone:** rev-26 merged and published
+- **Gate:** none
+- **Next action:** User: apply migration 20261213000000_savings_plan.sql, open the phone app twice for update 68c48784, set the savings plan on Salary and tax (web or phone), check Inbox confirm in All activity and the held card Confirm. Open: C1 Google Wallet sample, C2 device checks, remove diagnostics when stable.
+- **User to-do now:** Apply migration 20261213000000_savings_plan.sql; open phone app twice for the update; set the savings plan; try the held card Confirm
 
 ## 3. Execution log
 
@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 14:27 | ota | Phone update published to preview, runtime 1.1.0, group 03c66111-fca2-4a26-8ef3-afceb7023cfd (commit 4d48017): rev-25. | -
 - 2026-11-22 14:48 | rev-26 | Payroll savings plan. User: payroll deducts it. Added a Payroll savings plan card (web Salary and tax > Timeline, phone Salary): none / percent of basic / fixed amount per cutoff, plus the fund the forecast counts it into. It stays a payslip deduction (lowers take-home) and credits the chosen fund directly in the forecast without touching the budget. Shared logic lib/pay/savings-plan.ts; migration 20261213000000 (savings_plan_amount, savings_plan_fund_id) NOT applied; loaders ask for the new columns separately so an unapplied migration cannot break pages. Forecast fund credit label changed from bonus to credited. | -
 - 2026-11-22 14:52 | rev-26 | Added to the savings plan update: (1) phone Inbox All activity no longer loses a confirmed row (the 'gone' set hid confirmed rows for good after the reload; now ignored and confirmed are tracked separately and cleared when fresh data arrives); (2) held capture cards (phone and web) now Confirm in one step: pick account, where it went/came from, and a category (not needed when the other side is your own account, which confirms as a transfer in the Transfer category), instead of creating another Inbox item. Shared confirmedRow in lib/capture/held.ts; TxnInsert.kind may be transfer. 394 web + 161 phone tests, lint, build ok. Own-account legs are confirmed as unpaired transfers. | -
+- 2026-11-22 14:53 | ota | Phone update published to preview, runtime 1.1.0, group 68c48784-3797-4afa-b126-e87acb9dde7c (commit 254fe34): rev-26. rev-26 merged to main. | -
 
 ## 4. Open questions
 
