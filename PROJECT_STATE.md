@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-28..31 planned
+- **Active slice / milestone:** rev-28 mockups
 - **Gate:** waiting
-- **Next action:** User re-approves rev-28..31 (now incl. editable duplicate rules); then build rev-28 mockups
-- **User to-do now:** Re-approve slicing
+- **Next action:** User reviews revised rev-28 mockups (Rules before Settings, app + sender pickers); on approval merge, then rev-29
+- **User to-do now:** Review the revised mockups; confirm 'All apps' list (QUERY_ALL_PACKAGES) is OK
 
 ## 3. Execution log
 
@@ -45,6 +45,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 15:15 | rev-27..29 | Gmail push plan drafted (phone watches, edge function wakes phone via Expo push). User paused at the plan gate. | -
 - 2026-11-22 15:24 | rev-27 | Capture dedupe: a small recent-captures memory (source, direction, amount, time; no text) lets an email skip when the phone alert for the same movement was already seen (placed, held or dropped) and the reverse. 10 min window, other-kind only so real repeat purchases stay. Gmail push postponed. | 6d60ace
 - 2026-11-22 15:27 | ota | Phone update published to preview, runtime 1.1.0, group 218c775d-0494-4578-8dae-fc8f5933d50e (commit 5187735): rev-27. rev-27 merged to main. | -
+- 2026-11-22 21:53 | rev-28 | Rules page mockups: web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on, keywords, card payment type) + editable duplicate rules. | 6c9889a
+- 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
 
 ## 4. Open questions
 
@@ -83,7 +85,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,601,706 | 13,376,649 | 596,845 | 6,602,174 | 771,746,717 | 3,161,835 |  |
+| **Cumulative** | 3,699,038 | 14,412,267 | 613,518 | 6,657,270 | 773,351,213 | 3,180,212 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -99,7 +101,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-7..10 | 39,382 | 215,399 | 8,700 | 19,459 | 1,105,451 | 8,538 |  |
 | rev-11..17 | 120,085 | 579,997 | 27,820 | 126,989 | 15,445,879 | 70,608 |  |
 | rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
-| rev-28 | 53,039 | 245,443 | 10,384 | 57,044 | 1,966,748 | 27,118 |  |
+| rev-28 | 0 | 0 | 0 | 24,387 | 577,568 | 13,975 |  |
 | rev-29 | 4,574 | 30,482 | 744 | 22,631 | 993,397 | 7,844 |  |
 | rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
@@ -144,12 +146,12 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Revision batch 3 (changes requested 2026-11-22, awaiting re-approval)
-- rev-28 (Needed): Mockups only, no app code. Dedicated Rules page, web + phone, docs/mockups. Two sections: (1) Capture rules: name/subject, listen on Notifications / Emails / Both, keyword lists (any / must include / ignore), optional account, category, auto-confirm; add, edit, pause, delete, test against a sample. (2) Duplicate rules (user-editable): match fields (amount, direction, source, counterparty), time window in minutes, same-source only vs across sources, action (merge / keep both), on/off, test against two sample items. Replaces the Capture card in Settings. Gate on mockups before any build.
-- rev-29 (Needed): Cross-source dedupe (Maya alert + BPI email = one item) using defaults that match the editable duplicate rules; DB-stored, not localStorage. Cause: lib/capture/recent.ts:24 and captureEngine.ts:116-127 only match same source/account.
-- rev-30 (Needed): Credit card payment. User report: transfer item showed, confirmed, Maya Black balance did not drop. Investigate with real data first (confirmed leg sign/account/date vs card anchor, balances.ts:21-26, held.ts:82-102); fix so the card leg is an 'in' and reduces owed.
-- rev-31 (Needed): Build Rules page + editable duplicate rules from approved mockups; migrate capture_rules (channel, keywords) and add dedupe_rules table. Depends on rev-28 approval; rev-29 reads these rules once rev-31 lands (rev-29 ships with hard-coded defaults first).
-Cut (Nice-to-have): rule import/export, hit-count history, removing dead apply_transfer_marks SQL.
+Revision batch 3 (user direction 2026-11-22; rev-28 mockups revised, awaiting approval)
+- rev-28 (Needed): Mockups only. Rules is its own page in nav/More, listed BEFORE Settings (not inside Settings). Web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on Notifications/Emails/Both, keywords any/must/skip, card payment type, test), editable Duplicate rules, App picker (Recent / All apps; web shows the phone's synced list or a typed package id), Sender picker (recent Gmail senders + typed address or @domain).
+- rev-29 (Needed): Cross-source dedupe with hard-coded defaults (30 min, amount+direction, any source), DB-stored. Plus: (1) a bank/wallet notification forces a Gmail check (skips the 5-min throttle); (2) BOOT_COMPLETED receiver so capture restarts after reboot. Battery-exemption prompt NOT included (user chose items 1 and 2 only). Gmail push stays Nice-to-have, postponed (needs Pub/Sub, server refresh token, expo-notifications; Q18 kept push out of v1).
+- rev-30 (Needed): Credit card payment. Confirmed transfer did not drop Maya Black balance. Investigate with real data first (balances.ts:21-26, held.ts:82-102); card leg = in.
+- rev-31 (Needed): Build the Rules page (own route + phone screen before Settings), editable duplicate rules (dedupe_rules table), capture_rules migration (channel, keywords), app picker (Kotlin PackageManager list, QUERY_ALL_PACKAGES, assumes personal app outside Play, plus recent-notification apps) synced to a DB table so web sees it, sender picker from recent Gmail senders. Depends on rev-28 approval.
+Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, battery prompt.
 
 ## Decisions & architecture
 
@@ -160,6 +162,8 @@ Cut (Nice-to-have): rule import/export, hit-count history, removing dead apply_t
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+Open docs/mockups/v13-rules.html (desktop) and docs/mockups/phone/rules.html (phone, use a 320px-wide window). Try both tabs: Capture and Duplicates. On the phone page tap a rule, the + button, or a duplicate rule; links #edit, #new, #dup, #dupedit open each view directly. Check: listen on Notifications / Emails / Both, the keyword lists (any / must include / skip), the Card payment type, and the Test box.
 
 AFTER rev-27: what you do now
 1. Get the code:   git fetch && git checkout rev/27-capture-dedupe   (merge to main after you approve)

@@ -44,7 +44,7 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 .snap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -14px;padding:0 14px;scrollbar-width:none}.snap>.yc{min-width:100%;scroll-snap-align:center;background:var(--soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .dots{display:flex;gap:6px;justify-content:center}.dots i{width:6px;height:6px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--accent)}
 .note{position:fixed;left:24px;top:24px;width:230px;font-size:12px;color:var(--muted);line-height:1.5}@media(max-width:760px){.note{display:none}}
-.banner{background:#3a2f12;border:1px solid var(--gold);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}</style></head><body><div class="note"><b>Rules</b><br>Dedicated page, opened from Settings > Rules (replaces the Capture rules sheet). Two tabs: Capture rules and Duplicate rules.<br><br>Tap a rule to edit, + to add, switch to pause. Listen on = Notifications, Emails or Both. Sample data, 320 x 872.<br><br>Direct links: #edit, #new, #card, #dup, #dupedit (add to the URL).</div>
+.banner{background:#3a2f12;border:1px solid var(--gold);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}</style></head><body><div class="note"><b>Rules</b><br>Dedicated page, opened from Settings > Rules (replaces the Capture rules sheet). Two tabs: Capture rules and Duplicate rules.<br><br>Tap a rule to edit, + to add, switch to pause. Listen on = Notifications, Emails or Both. Sample data, 320 x 872.<br><br>Direct links: #edit, #new, #dup, #dupedit, #apps, #senders, #more (add to the URL).<br><br>Rules is its own page in More, listed before Settings. In a rule, tap + App or + Sender to pick.</div>
 <div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
 <div class="scroll">
 <div class="head"><div class="ib" style="margin-right:-4px"><ion-icon name="chevron-back-outline"></ion-icon></div><div><h1>Rules</h1><div class="sub">What the app listens for</div></div><div class="ib" data-sheet="new" style="background:var(--accent);color:var(--on)"><ion-icon name="add-outline"></ion-icon></div></div>
@@ -95,13 +95,13 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 </div>
 </div>
 
-<nav class="tabs"><a><ion-icon name="home-outline"></ion-icon>Now</a><a><ion-icon name="file-tray-outline"></ion-icon>Inbox</a><a><ion-icon name="add-circle-outline"></ion-icon>Add</a><a><ion-icon name="wallet-outline"></ion-icon>Accounts</a><a class="on"><ion-icon name="ellipsis-vertical"></ion-icon>More</a></nav>
+<nav class="tabs"><a><ion-icon name="home-outline"></ion-icon>Now</a><a><ion-icon name="file-tray-outline"></ion-icon>Inbox</a><a><ion-icon name="add-circle-outline"></ion-icon>Add</a><a><ion-icon name="wallet-outline"></ion-icon>Accounts</a><a class="on" data-more><ion-icon name="ellipsis-vertical"></ion-icon>More</a></nav>
 <div class="scrim"></div>
 
 <div class="sheet" id="sh-edit"><div class="grab"></div><h2>Edit rule</h2>
 <div class="fld"><div class="lab">What is it for</div><div class="input">Credit card payment</div></div>
 <div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notifications</div><div>Emails</div><div class="on">Both</div></div></div>
-<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya</span><span class="chip on">BPI</span><span class="chip">GCash</span><span class="chip">+ Sender</span></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya</span><span class="chip on">BPI</span><span class="chip">GCash</span><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
 <div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip on">payment received ✕</span><span class="chip on">card payment ✕</span><span class="chip on">paid your card ✕</span><span class="chip">+ Word</span></div></div>
 <div class="fld"><div class="lab">Must also contain (optional)</div><div class="chips"><span class="chip">+ Word</span></div></div>
 <div class="fld"><div class="lab">Skip it if it contains</div><div class="chips"><span class="chip on" style="background:var(--errt);color:var(--err)">refund ✕</span><span class="chip">+ Word</span></div></div>
@@ -113,6 +113,25 @@ details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-
 <div class="card" style="background:var(--soft);margin-bottom:8px"><div class="lab">Test it</div><div class="s12">"Maya: Payment of ₱5,000.00 received on your Maya Black"</div><div class="row"><span class="pill">Matches</span><span class="s12 mut">Card payment · ₱5,000.00</span></div></div>
 <div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Save</div></div>
 <div class="btn out" style="margin-top:8px;color:var(--err)">Delete rule</div></div>
+
+<div class="sheet" id="sh-apps"><div class="grab"></div><h2>Pick apps</h2>
+<div class="input" style="margin-bottom:8px">Search apps</div>
+<div class="seg" style="margin-bottom:8px"><div class="on">Recent</div><div>All apps</div></div>
+<div class="s12 mut" style="margin-bottom:4px">Apps that sent a notification in the last 30 days. "All apps" lists everything installed on this phone.</div>
+<div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">💳</span><div class="grow"><div class="b">Maya</div><div class="s11 mut">com.paymaya</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🏦</span><div class="grow"><div class="b">BPI</div><div class="s11 mut">com.bpi.ng.app</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">💸</span><div class="grow"><div class="b">GCash</div><div class="s11 mut">com.globe.gcash.android</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🚗</span><div class="grow"><div class="b">Grab</div><div class="s11 mut">com.grabtaxi.passenger</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🛍</span><div class="grow"><div class="b">Shopee</div><div class="s11 mut">com.shopee.ph</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🏦</span><div class="grow"><div class="b">UnionBank</div><div class="s11 mut">com.unionbankph.online</div></div><div class="chk"></div></div>
+<div class="s11 mut" style="margin:8px 0">The list is saved to your account, so the web Rules page shows the same apps.</div>
+<div class="acts"><div class="btn g" data-sheet="edit">Back</div><div class="btn" data-sheet="edit">Done · 2 picked</div></div></div>
+
+<div class="sheet" id="sh-senders"><div class="grab"></div><h2>Pick senders</h2>
+<div class="input" style="margin-bottom:8px">Search senders</div>
+<div class="lab" style="margin-bottom:4px">Recent senders in your Gmail</div>
+<div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">notifications@bpi.com.ph</div><div class="s11 mut">BPI · 14 emails</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">no-reply@paymaya.com</div><div class="s11 mut">Maya · 9 emails</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">no-reply@grab.com</div><div class="s11 mut">Grab · 6 emails</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">alerts@unionbankph.com</div><div class="s11 mut">UnionBank · 2 emails</div></div><div class="chk"></div></div>
+<div class="lab" style="margin:10px 0 4px">Or type one</div>
+<div class="row"><div class="input grow">name@bank.com or @bank.com</div><div class="btn g sm">Add</div></div>
+<div class="s11 mut" style="margin:8px 0">A whole domain such as @bpi.com.ph matches every address at it.</div>
+<div class="acts"><div class="btn g" data-sheet="edit">Back</div><div class="btn" data-sheet="edit">Done · 2 picked</div></div></div>
+
+<div class="sheet" id="sh-more"><div class="grab"></div><div class="mrow"><ion-icon name="cash-outline"></ion-icon>Salary and tax<span class="go">›</span></div><div class="mrow"><ion-icon name="pie-chart-outline"></ion-icon>Budget<span class="go">›</span></div><div class="mrow"><ion-icon name="gift-outline"></ion-icon>Bonuses<span class="go">›</span></div><div class="mrow"><ion-icon name="flag-outline"></ion-icon>Funds<span class="go">›</span></div><div class="mrow"><ion-icon name="trending-up-outline"></ion-icon>Forecast<span class="go">›</span></div><div class="mrow" style="background:var(--tint);border-radius:10px;padding:0 8px"><ion-icon name="funnel-outline"></ion-icon>Rules<span class="pill" style="margin-left:6px">new</span><span class="go">›</span></div><div class="mrow"><ion-icon name="settings-outline"></ion-icon>Settings<span class="go">›</span></div></div>
 
 <div class="sheet" id="sh-new"><div class="grab"></div><h2>New rule</h2>
 <div class="fld"><div class="lab">What is it for</div><div class="input">e.g. Gym, Salary, Netflix</div></div>
@@ -140,7 +159,7 @@ const open=id=>{shut();const s=document.getElementById("sh-"+id);if(s){s.classLi
 const tab=t=>{q("#tab-cap").style.display=t==="cap"?"flex":"none";q("#tab-dup").style.display=t==="dup"?"flex":"none";document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("on",x.dataset.tab===t))};
 document.addEventListener("click",e=>{
 const tb=e.target.closest("[data-tab]");if(tb){tab(tb.dataset.tab);return}
-if(e.target.closest("[data-close],.scrim")){shut();return}
-const sw=e.target.closest(".sw");if(sw){sw.classList.toggle("on");return}
-const t=e.target.closest("[data-sheet]");if(t){open(t.dataset.sheet)}});
-const h=location.hash.slice(1);if(h==="dup"||h==="dupedit")tab("dup");if(h==="card"||h==="edit")open("edit");else if(h==="new"||h==="dupedit")open(h);</script></body></html>
+if(e.target.closest("[data-close],.scrim,.mrow")){shut();return}
+const ck=e.target.closest(".chk");if(ck){const on=ck.classList.toggle("on");ck.textContent=on?"✓":"";return}const sw=e.target.closest(".sw");if(sw){sw.classList.toggle("on");return}
+const m=e.target.closest("[data-more]");if(m){open("more");return}const t=e.target.closest("[data-sheet]");if(t){open(t.dataset.sheet)}});
+const h=location.hash.slice(1);if(h==="dup"||h==="dupedit")tab("dup");if(h==="card"||h==="edit")open("edit");else if(h==="apps"||h==="senders"||h==="more")open(h);else if(h==="new"||h==="dupedit")open(h);</script></body></html>
