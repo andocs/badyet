@@ -6,7 +6,7 @@ import type { AccountLite } from './row';
 const WINDOW_MS = 30 * 60_000;
 
 /**
- * Looks at what was captured in the half hour before `now` and links moves between your own accounts (money out of one, the same
+ * Looks at what was captured (phone notifications and emails) in the half hour before `now` and links moves between your own accounts (money out of one, the same
  * amount into another) as a transfer, so they do not count as spending plus income. Paired moves wear the Transfer category.
  * Returns how many pairs it linked. Runs on the phone after capture and on the web after a held capture is answered.
  */
@@ -14,7 +14,7 @@ export async function pairRecent(supabase: SupabaseClient, now: number = Date.no
   const since = new Date(now - WINDOW_MS).toISOString();
   const [acc, tx] = await Promise.all([
     supabase.from('accounts').select('id, name, institution, last4').is('archived_at', null),
-    supabase.from('transactions').select('id, account_id, amount, occurred_at, merchant').eq('source', 'notification').in('kind', ['expense', 'income']).neq('status', 'ignored').gte('occurred_at', since),
+    supabase.from('transactions').select('id, account_id, amount, occurred_at, merchant').in('source', ['notification', 'import']).in('kind', ['expense', 'income']).neq('status', 'ignored').gte('occurred_at', since),
   ]);
   if (acc.error || tx.error) return 0;
   const rows = (tx.data ?? []) as { id: string; account_id: string; amount: number; occurred_at: string; merchant: string | null }[];
