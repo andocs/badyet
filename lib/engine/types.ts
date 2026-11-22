@@ -113,8 +113,12 @@ export interface BudgetLine {
   name: string;
   rule: LineRule;
   amount?: Money | null;
+  /** A fixed line on both cutoffs: what the second cutoff takes, when it differs from `amount` (the first cutoff's). */
+  amountSecond?: Money | null;
   pctBp?: number | null;
   cutoff: PayCutoff | "both";
+  /** Money that comes back to this line each month, deposited in one cutoff. It adds to what that cutoff has to spend. */
+  reimburse?: { amount: Money; cutoff: PayCutoff; day?: number | null } | null;
   startsOn?: YearMonth | null;
   endsOn?: YearMonth | null;
   isDraft?: boolean;

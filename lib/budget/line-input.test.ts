@@ -21,6 +21,21 @@ describe("validateLine", () => {
     expect(err({ ...base, rule: "fixed", amount: null })).toMatch(/amount/);
     expect(err({ ...base, rule: "fixed", amount: 1.5 })).toMatch(/amount/);
   });
+  it("takes a second-cutoff amount only for a fixed line on both cutoffs", () => {
+    const fixed = { ...base, rule: "fixed", amount: 500_000, pctBp: null };
+    expect(validateLine({ ...fixed, amountSecond: 1_000_000 })).toMatchObject({ ok: true, value: { amount: 500_000, amountSecond: 1_000_000 } });
+    expect(validateLine({ ...fixed, cutoff: "first", amountSecond: 1_000_000 })).toMatchObject({ ok: true, value: { amountSecond: null } });
+    expect(validateLine({ ...base, amountSecond: 1_000_000 })).toMatchObject({ ok: true, value: { amountSecond: null } });
+    expect(err({ ...fixed, amountSecond: 1.5 })).toMatch(/second cutoff/);
+  });
+  it("checks a reimbursement", () => {
+    const ok = validateLine({ ...base, reimburse: { amount: 209_900, cutoff: "first", day: 17 } });
+    expect(ok).toMatchObject({ ok: true, value: { reimburse: { amount: 209_900, cutoff: "first", day: 17 } } });
+    expect(validateLine({ ...base, reimburse: { amount: 0, cutoff: "first" } })).toMatchObject({ ok: true, value: { reimburse: null } });
+    expect(err({ ...base, reimburse: { amount: -5, cutoff: "first" } })).toMatch(/reimbursed/);
+    expect(err({ ...base, reimburse: { amount: 100, cutoff: "both" } })).toMatch(/cutoff/);
+    expect(err({ ...base, reimburse: { amount: 100, cutoff: "second", day: 40 } })).toMatch(/1 to 31/);
+  });
   it("checks name, category, cutoff, kind and account", () => {
     expect(err({ ...base, name: "  " })).toMatch(/name/);
     expect(err({ ...base, categoryId: "x" })).toMatch(/category/i);

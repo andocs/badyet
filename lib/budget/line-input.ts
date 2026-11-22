@@ -5,9 +5,13 @@ export interface LineInput {
   rule: "fixed" | "pct" | "rest";
   /** Centavos, for a fixed line. */
   amount: number | null;
+  /** Centavos: the 2nd cutoff's amount for a fixed line on both cutoffs, or null for the same as `amount`. */
+  amountSecond: number | null;
   /** Basis points, for a percent line. */
   pctBp: number | null;
   cutoff: "first" | "second" | "both";
+  /** Money that comes back to this line each month, or null. */
+  reimburse: { amount: number; cutoff: "first" | "second"; day: number | null } | null;
   accountId: string | null;
   /** YYYY-MM or null. */
   startsOn: string | null;
@@ -43,6 +47,19 @@ export function validateLine(input: unknown): Checked<LineInput> {
     if (!int(p.pctBp, 0, 10_000)) return { ok: false, error: "A percent line takes 0 to 100%." };
     pctBp = p.pctBp;
   }
+  let amountSecond: number | null = null;
+  if (p.rule === "fixed" && p.cutoff === "both" && p.amountSecond != null && p.amountSecond !== "") {
+    if (!int(p.amountSecond, -10_000_000_000, 10_000_000_000)) return { ok: false, error: "Enter the second cutoff's amount, like 10,000, or leave it empty to use the same amount." };
+    amountSecond = p.amountSecond;
+  }
+  let reimburse: LineInput["reimburse"] = null;
+  if (p.reimburse != null) {
+    const r = p.reimburse as Record<string, unknown>;
+    if (!int(r.amount, 0, 10_000_000_000)) return { ok: false, error: "Enter how much is reimbursed each month, like 2,099." };
+    if (r.cutoff !== "first" && r.cutoff !== "second") return { ok: false, error: "Pick the cutoff the reimbursement is deposited in." };
+    if (r.day != null && !int(r.day, 1, 31)) return { ok: false, error: "The deposit day is 1 to 31." };
+    if (r.amount > 0) reimburse = { amount: r.amount, cutoff: r.cutoff, day: r.day == null ? null : (r.day as number) };
+  }
   const accountId = p.accountId == null || p.accountId === "" ? null : p.accountId;
   if (accountId !== null && (typeof accountId !== "string" || !UUID.test(accountId))) return { ok: false, error: "Pick an account from the list." };
   const month = (v: unknown): string | null | undefined => (v == null || v === "" ? null : typeof v === "string" && MONTH.test(v) ? v : undefined);
@@ -59,8 +76,10 @@ export function validateLine(input: unknown): Checked<LineInput> {
       categoryId: p.categoryId,
       rule: p.rule,
       amount,
+      amountSecond,
       pctBp,
       cutoff: p.cutoff,
+      reimburse,
       accountId: accountId as string | null,
       startsOn,
       endsOn,

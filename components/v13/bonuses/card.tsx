@@ -90,6 +90,37 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
     </div>
   );
 
+  const addBox = editing ? (
+    <div className="v-addbox">
+      <div className="v-lbl">Add a destination</div>
+      <div className="v-addform">
+        <div className="v-seg" role="group" aria-label="Where it goes">
+          <button type="button" aria-pressed={addMode === "fund"} disabled={availableFunds.length === 0} onClick={() => setAdd({ ...add, mode: "fund" })}>A fund</button>
+          <button type="button" aria-pressed={addMode === "custom"} onClick={() => setAdd({ ...add, mode: "custom" })}>Something else</button>
+        </div>
+        <div className="v-addfields">
+          {addMode === "fund" ? (
+            <select className="v-lbl-in" value={add.fundId} aria-label="Fund" onChange={(e) => setAdd({ ...add, fundId: e.target.value })}>
+              <option value="">Choose a fund…</option>
+              {availableFunds.map((fd) => <option key={fd.id} value={fd.id}>{fd.name}</option>)}
+            </select>
+          ) : (
+            <input className="v-lbl-in" value={add.name} maxLength={60} placeholder="Name it, e.g. Mom's birthday gift" aria-label="Name of the destination" onChange={(e) => setAdd({ ...add, name: e.target.value })} />
+          )}
+          <div className="v-amtrow">
+            <input className="v-lbl-in" value={add.value} inputMode="decimal" placeholder={add.unit === "pct" ? "% of this bonus" : "₱ amount"} aria-label={add.unit === "pct" ? "Percent of this bonus" : "Amount in pesos"} onChange={(e) => setAdd({ ...add, value: e.target.value })} />
+            <div className="v-seg" role="group" aria-label="Flat amount or percent">
+              <button type="button" aria-pressed={add.unit === "peso"} onClick={() => setAdd({ ...add, unit: "peso" })}>₱</button>
+              <button type="button" aria-pressed={add.unit === "pct"} onClick={() => setAdd({ ...add, unit: "pct" })}>%</button>
+            </div>
+          </div>
+        </div>
+        <div className="v-addpre v-xs v-muted" aria-live="polite">{add.unit === "pct" && addAmount !== null ? <>That is <b><Money value={money(addAmount)} /></b> of <Money value={card.net} />.</> : "Pick a fund or name a line, then how much."}</div>
+        <button type="button" className="v-btn v-pri v-addgo" disabled={!canAdd} onClick={addDestination}>Add destination</button>
+      </div>
+    </div>
+  ) : null;
+
   if (card.status === "received") {
     const d = card.plannedNet === null ? 0 : card.net - card.plannedNet;
     return (
@@ -101,8 +132,36 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
         <div className="v-in">
           {waterfall}
           {card.plannedNet !== null ? <div className={`v-vs ${d >= 0 ? "v-pos" : "v-warnt"}`}>Planned <Money value={card.plannedNet} /> · got <Money value={card.net} /> (<Money value={money(d)} signed />)</div> : null}
-          <h3 style={{ margin: "14px 0 4px" }}>Where it went</h3>
-          {card.dests.map((d2, i) => <div key={i} className="v-sr-row"><span className="v-chk" aria-checked={true} role="img" aria-label="done" style={{ cursor: "default" }}><V13Icon name="check" /></span><span className="v-grow v-nm"><i className="v-dot" style={{ background: dot(d2) }} /><b>{d2.name}</b></span><span className="v-num"><Money value={d2.amount} /></span></div>)}
+          <div className="v-row v-sp v-wrap" style={{ margin: "14px 0 4px" }}>
+            <h3 style={{ margin: 0 }}>Where it went</h3>
+            {editing ? (
+              <span className="v-row" style={{ gap: 6 }}>
+                <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => { setRows(card.dests.map(rowOf)); setEditing(false); setError(null); }}>Cancel</button>
+                <button type="button" className="v-btn v-sm v-pri" disabled={busy} onClick={() => run(rows, {}, () => setEditing(false))}>{busy ? "Saving…" : "Save"}</button>
+              </span>
+            ) : <button type="button" className="v-btn v-sm" onClick={() => setEditing(true)}>Change where it went</button>}
+          </div>
+          {rows.length === 0 ? <p className="v-muted v-sm">Nothing placed. Add a destination.</p> : null}
+          {rows.map((r, i) => (
+            <div key={i} className={`v-sr-row${editing ? " v-ed" : ""}`}>
+              <span className="v-chk" aria-checked={true} role="img" aria-label="done" style={{ cursor: "default" }}><V13Icon name="check" /></span>
+              <span className="v-grow v-nm"><i className="v-dot" style={{ background: dot(r) }} /><b>{r.name}</b></span>
+              {editing ? (
+                <>
+                  <input className="v-lbl-in" value={r.amount} inputMode="decimal" style={{ width: 110, textAlign: "right", minHeight: 40 }} aria-label={`Amount for ${r.name}`} onChange={(e) => setRows((x) => x.map((y, j) => (j === i ? { ...y, amount: e.target.value } : y)))} />
+                  <button type="button" className="v-iconbtn v-s" aria-label={`Remove ${r.name}`} onClick={() => setRows((x) => x.filter((_, j) => j !== i))}><V13Icon name="x" /></button>
+                </>
+              ) : <span className="v-num"><Money value={money(parsePesos(r.amount) ?? 0)} /></span>}
+            </div>
+          ))}
+          {editing ? (
+            <div className="v-sr-row">
+              <span className={`v-grow ${Math.abs(left) < 50 ? "v-pos" : "v-warnt"}`}><b>{Math.abs(left) < 50 ? "All placed" : left > 0 ? "Not placed yet" : "Over by"}</b></span>
+              <b className={`v-num ${Math.abs(left) < 50 ? "v-pos" : "v-warnt"}`}><Money value={money(Math.round(left))} /></b>
+            </div>
+          ) : null}
+          {addBox}
+          {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
         </div>
       </details>
     );
@@ -160,36 +219,7 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
             <span className={`v-grow ${Math.abs(left) < 50 ? "v-pos" : "v-warnt"}`}><b>{Math.abs(left) < 50 ? "All placed" : left > 0 ? "Not placed yet" : "Over by"}</b></span>
             <b className={`v-num ${Math.abs(left) < 50 ? "v-pos" : "v-warnt"}`}><Money value={money(Math.round(left))} /></b>
           </div>
-          {editing ? (
-            <div className="v-addbox">
-              <div className="v-lbl">Add a destination</div>
-              <div className="v-addform">
-                <div className="v-seg" role="group" aria-label="Where it goes">
-                  <button type="button" aria-pressed={addMode === "fund"} disabled={availableFunds.length === 0} onClick={() => setAdd({ ...add, mode: "fund" })}>A fund</button>
-                  <button type="button" aria-pressed={addMode === "custom"} onClick={() => setAdd({ ...add, mode: "custom" })}>Something else</button>
-                </div>
-                <div className="v-addfields">
-                  {addMode === "fund" ? (
-                    <select className="v-lbl-in" value={add.fundId} aria-label="Fund" onChange={(e) => setAdd({ ...add, fundId: e.target.value })}>
-                      <option value="">Choose a fund…</option>
-                      {availableFunds.map((fd) => <option key={fd.id} value={fd.id}>{fd.name}</option>)}
-                    </select>
-                  ) : (
-                    <input className="v-lbl-in" value={add.name} maxLength={60} placeholder="Name it, e.g. Mom's birthday gift" aria-label="Name of the destination" onChange={(e) => setAdd({ ...add, name: e.target.value })} />
-                  )}
-                  <div className="v-amtrow">
-                    <input className="v-lbl-in" value={add.value} inputMode="decimal" placeholder={add.unit === "pct" ? "% of this bonus" : "₱ amount"} aria-label={add.unit === "pct" ? "Percent of this bonus" : "Amount in pesos"} onChange={(e) => setAdd({ ...add, value: e.target.value })} />
-                    <div className="v-seg" role="group" aria-label="Flat amount or percent">
-                      <button type="button" aria-pressed={add.unit === "peso"} onClick={() => setAdd({ ...add, unit: "peso" })}>₱</button>
-                      <button type="button" aria-pressed={add.unit === "pct"} onClick={() => setAdd({ ...add, unit: "pct" })}>%</button>
-                    </div>
-                  </div>
-                </div>
-                <div className="v-addpre v-xs v-muted" aria-live="polite">{add.unit === "pct" && addAmount !== null ? <>That is <b><Money value={money(addAmount)} /></b> of <Money value={card.net} />.</> : "Pick a fund or name a line, then how much."}</div>
-                <button type="button" className="v-btn v-pri v-addgo" disabled={!canAdd} onClick={addDestination}>Add destination</button>
-              </div>
-            </div>
-          ) : null}
+          {addBox}
           {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
         </div>
       </div>

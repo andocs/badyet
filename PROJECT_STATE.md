@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-15 S1 custom capture patterns (awaiting approval)
+- **Active slice / milestone:** rev-16 budget group T4 T5 B1 (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval: merge rev/15-custom-patterns, then rev-16 (T4 per-cutoff line values, T5 reimbursements, B1 edit earlier bonus allocations), rev-17 (T3 installments).
-- **User to-do now:** Apply supabase migrations 20261208000000_penboost.sql and 20261208000100_capture_patterns.sql; publish phone update; try a pattern on a real notification in Capture rules.
+- **Next action:** On approval: merge rev/16-budget-group, then rev-17 T3 installments (check existing /installments page first).
+- **User to-do now:** Apply supabase migrations 20261208000000, 20261208000100 and 20261209000000; publish phone update; try a line with 5,000 / 10,000 and a reimbursed wifi line.
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:09 | plan | Round three resliced: rev-14 I1+I2, rev-15 S1 (user-written text patterns -> regex), rev-16 T4+T5+B1, rev-17 T3. Answers: Transfer = real category, keep 10 min window; usual-account prompt must be an Inbox item asking where it came from and where it went; S1 user writes keywords and/or text patterns converted to regex, no OTA needed. | -
 - 2026-11-22 11:12 | rev-14 | I1: real Transfer category (own Transfers group, created on first pairing, backfills earlier transfers), 10 min window kept (lib/capture/transfer-category.ts, mobile pairing). I2: captures no account claims now appear as cards in the phone Inbox asking which account and where it came from/went (own account => matched as transfer); Ignore drops it; notice and Capture copy point to the Inbox. 341+145 tests, lint, web build ok. S1 moved to rev-15. | -
 - 2026-11-22 11:17 | rev-15 | S1: your own notification patterns. Write wording with {amount} {name} {last4} {ref} {any}; compiled to regex on the phone (lib/capture/template.ts), tried before the built-in readers, with a try-it-on-a-sample box on phone Capture rules and web Settings. New 'Other app' source for apps with no built-in reader. Migration 20261208000100_capture_patterns.sql (NOT yet applied; app works without it). Built-in readers and default app ids stay as fallbacks; email readers unchanged. 354+145 tests, lint, build ok. | -
+- 2026-11-22 11:27 | rev-16 | T4: fixed line on both cutoffs takes its own amount per cutoff (amount_second), shown per cutoff on web+phone. T5: reimbursement on a budget line (amount, cutoff, day): adds to that cutoff's available money so the rest line and over flag see it. B1: web received bonus cards can change where the money went (phone already could). Migration 20261209000000 NOT yet applied. 360+145 tests, lint, build ok. | -
 
 ## 4. Open questions
 
@@ -82,7 +83,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,415,481 | 12,656,626 | 550,813 | 6,094,963 | 662,378,180 | 2,855,133 |  |
+| **Cumulative** | 3,444,347 | 12,770,922 | 560,127 | 6,166,028 | 673,192,490 | 2,882,906 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -131,6 +132,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-13 | 56,692 | 389,768 | 15,481 | 69,970 | 4,802,032 | 29,017 |  |
 | rev-14 | 49,434 | 211,197 | 9,291 | 43,287 | 4,373,776 | 17,856 |  |
 | rev-15 | 0 | 0 | 0 | 49,273 | 5,909,593 | 23,908 |  |
+| rev-16 | 28,866 | 114,296 | 9,314 | 68,962 | 10,234,292 | 25,714 |  |
 
 <!-- END SUMMARY -->
 
