@@ -11,7 +11,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Active slice / milestone:** rev-31 merged
 - **Gate:** none
 - **Next action:** Batch 3 (rev-28..31) done and merged locally. Push main when ready; ask for next revisions or finish
-- **User to-do now:** Push main; apply migrations 20261214..16; rebuild phone app; check Vercel preview
+- **User to-do now:** Apply migrations 20261214..16 in Supabase; rebuild/install phone app (EAS or local build); check Vercel prod deploy
 
 ## 3. Execution log
 
@@ -42,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 23:44 | rev-30 | Approved by user; merged to main (local) | -
 - 2026-11-23 00:12 | rev-31 | Rules page built (web /rules, phone rules.tsx): rules migration, channel + any/must/skip words, record rules incl. transfer/payment with both legs, ordering, duplicate rule editor, device_apps + seen_senders pickers, Kotlin installedApps. Root 400+ tests, mobile tests, tsc, eslint, next build pass | -
 - 2026-11-23 00:14 | rev-31 | Approved by user; merged to main (local, not pushed) | -
+- 2026-11-23 07:00 | rev-31 | main pushed to origin (rev-28..31 published); web deploy triggered | 6a0c909
 
 ## 4. Open questions
 
