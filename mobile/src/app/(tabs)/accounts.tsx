@@ -6,10 +6,11 @@ import { creditAvailable, creditOwed } from '@/lib/accounts/v13';
 import { money } from '@/lib/domain/money';
 import { shortDate } from '@/lib/now/format';
 import { manilaDate } from '@/lib/now/summary';
-import { AccountTile } from '~/components/AccountTile';
+import { AccountTile, TileSkeleton } from '~/components/AccountTile';
 import { AddAccountSheet, EditAccountSheet, MoveSheet, ReconcileSheet } from '~/components/AccountSheets';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { loadAccounts, type AccountCard } from '~/lib/accounts';
+import { moveAccount } from '~/lib/accountsWrite';
 import { useHide } from '~/lib/hide';
 import { MASK, peso } from '~/lib/money';
 import { supabase } from '~/lib/supabase';
@@ -69,7 +70,7 @@ function Calc({ a }: { a: AccountCard }) {
   );
 }
 
-function Detail({ a, onClose, onAction }: { a: AccountCard; onClose: () => void; onAction: (kind: 'reconcile' | 'move' | 'edit') => void }) {
+function Detail({ a, onClose, onAction, onMove }: { a: AccountCard; onClose: () => void; onAction: (kind: 'reconcile' | 'move' | 'edit') => void; onMove: (dir: 'earlier' | 'later') => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const insets = useSafeAreaInsets();
@@ -107,6 +108,14 @@ function Detail({ a, onClose, onAction }: { a: AccountCard; onClose: () => void;
               <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Move money</Text>
             </Pressable>
           </View>
+          <View style={s.actions}>
+            <Pressable onPress={() => onMove('earlier')} accessibilityRole="button" accessibilityLabel={`Move ${a.name} earlier in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>← Earlier</Text>
+            </Pressable>
+            <Pressable onPress={() => onMove('later')} accessibilityRole="button" accessibilityLabel={`Move ${a.name} later in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Later →</Text>
+            </Pressable>
+          </View>
           <Pressable onPress={() => onAction('edit')} accessibilityRole="button" style={[s.close, { backgroundColor: c.soft }]}>
             <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Edit account</Text>
           </Pressable>
@@ -124,9 +133,17 @@ export default function Accounts() {
   const router = useRouter();
   const { data, error, refreshing, reload } = useLoad(() => loadAccounts(supabase));
   const [openId, setOpenId] = useState<string | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
   const [sheet, setSheet] = useState<'reconcile' | 'move' | 'edit' | 'add' | null>(null);
   const all = data ? [...data.spending, ...data.funds] : [];
   const open = all.find((a) => a.id === openId) ?? null;
+  const move = async (dir: 'earlier' | 'later') => {
+    if (!open) return;
+    const r = await moveAccount(supabase, { accountId: open.id, dir });
+    if ('error' in r) setMoveError(r.error);
+    else setMoveError(null);
+    void reload();
+  };
   const done = () => {
     setSheet(null);
     setOpenId(null);
@@ -136,7 +153,14 @@ export default function Accounts() {
   return (
     <Screen title="Accounts" refreshing={refreshing} onRefresh={reload}>
       {error ? <Notice tone="error">{error}</Notice> : null}
-      {!data && !error ? <Notice>Loading…</Notice> : null}
+      {moveError ? <Notice tone="error">{moveError}</Notice> : null}
+      {!data && !error ? (
+        <View style={s.grid} accessibilityLabel="Loading accounts" accessibilityRole="progressbar">
+          {[0, 1, 2].map((i) => (
+            <TileSkeleton key={i} color={c.soft} />
+          ))}
+        </View>
+      ) : null}
       {data ? (
         <>
           <Card>
@@ -178,7 +202,7 @@ export default function Accounts() {
           </Pressable>
         </>
       ) : null}
-      {open && !sheet ? <Detail a={open} onClose={() => setOpenId(null)} onAction={setSheet} /> : null}
+      {open && !sheet ? <Detail a={open} onClose={() => setOpenId(null)} onAction={setSheet} onMove={move} /> : null}
       {open && sheet === 'reconcile' ? <ReconcileSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
       {open && sheet === 'move' ? <MoveSheet accounts={all} from={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
       {open && sheet === 'edit' ? <EditAccountSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}

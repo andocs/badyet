@@ -7,8 +7,9 @@ import { shortDate } from "@/lib/now/format";
 import { manilaDate } from "@/lib/now/summary";
 import { createClient } from "@/lib/supabase/server";
 import { ColorPick, FormDialog, KindFields, QrViewer } from "@/components/v13/form-dialog";
+import { LinkPending } from "@/components/v13/link-pending";
 import { Money } from "@/components/v13/money";
-import { addAccount, editAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
+import { addAccount, editAccount, moveAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
 
 export const metadata = { title: "Accounts · Bad(yet)" };
 
@@ -175,6 +176,11 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
                     <ColorPick key={selected.id} colors={ACCOUNT_COLORS} initial={selected.color} />
                     <p className="v-xs v-muted" style={{ margin: 0 }}>Only the last four digits are kept. The kind and the balance do not change here.</p>
                   </FormDialog>
+                  <form action={moveAccount} className="v-row" style={{ gap: 8 }}>
+                    <input type="hidden" name="account" value={selected.id} />
+                    <button type="submit" name="dir" value="earlier" className="v-btn v-sm" aria-label={`Move ${selected.name} earlier in the list`}>← Earlier</button>
+                    <button type="submit" name="dir" value="later" className="v-btn v-sm" aria-label={`Move ${selected.name} later in the list`}>Later →</button>
+                  </form>
                   {selected.fund ? <span className="v-pill v-ok">Linked to {selected.fund} fund</span> : null}
                 </div>
 
@@ -232,6 +238,7 @@ function Card({ v, current }: { v: View; current: boolean }) {
       <span className="v-ak">{v.kind}{v.last4 ? ` ·· ${v.last4}` : ""}</span>
       <span className="v-ab"><Money value={owed ? creditOwed(v.balance) : v.balance} />{owed ? " owed" : ""}</span>
       <span className="v-as">{sub}</span>
+      <LinkPending />
     </Link>
   );
 }

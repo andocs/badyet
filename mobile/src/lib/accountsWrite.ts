@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { moveInOrder } from '@/lib/accounts/order';
 import { anchorAmount, parseAccountEdit, parseNewAccount, type AccountKind } from '@/lib/accounts/v13';
 import { parsePesos } from '@/lib/domain/money';
 
@@ -88,5 +89,20 @@ export async function editAccount(
   const a = parsed.value;
   const { error } = await supabase.from('accounts').update({ name: a.name, institution: a.institution, last4: a.last4, color: a.color }).eq('id', input.id).is('archived_at', null);
   if (error) return { error: error.code === '23505' ? 'You already have an account with that name.' : 'Could not save the account. Try again.' };
+  return { ok: true };
+}
+
+/** Moves an account one place earlier or later in the list (same rules as the web action; positions are renumbered from the current order). */
+export async function moveAccount(supabase: SupabaseClient, input: { accountId: string; dir: 'earlier' | 'later' }): Promise<Result> {
+  if (!UUID.test(input.accountId)) return { error: 'That account was not found.' };
+  const { data, error } = await supabase.from('accounts').select('id').is('archived_at', null).order('sort').order('created_at');
+  if (error) return { error: 'Could not move the account. Try again.' };
+  const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
+  const next = moveInOrder(ids, input.accountId, input.dir);
+  if (!next) return { ok: true };
+  for (const [i, id] of next.entries()) {
+    const { error: e } = await supabase.from('accounts').update({ sort: i }).eq('id', id);
+    if (e) return { error: 'Could not move the account. Try again.' };
+  }
   return { ok: true };
 }
