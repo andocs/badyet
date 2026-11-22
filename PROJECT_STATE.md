@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-31 merged
-- **Gate:** none
-- **Next action:** Batch 3 (rev-28..31) done and merged locally. Push main when ready; ask for next revisions or finish
-- **User to-do now:** Apply migrations 20261214..16 in Supabase; rebuild/install phone app (EAS or local build); check Vercel prod deploy
+- **Active slice / milestone:** rev-32 gmail alert
+- **Gate:** waiting
+- **Next action:** User reviews rev-32; on approval merge, push, rebuild APK
+- **User to-do now:** Apply migration 20261217000000; rebuild APK; install new APK from build e953275f first if not yet
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-23 00:12 | rev-31 | Rules page built (web /rules, phone rules.tsx): rules migration, channel + any/must/skip words, record rules incl. transfer/payment with both legs, ordering, duplicate rule editor, device_apps + seen_senders pickers, Kotlin installedApps. Root 400+ tests, mobile tests, tsc, eslint, next build pass | -
 - 2026-11-23 00:14 | rev-31 | Approved by user; merged to main (local, not pushed) | -
 - 2026-11-23 07:00 | rev-31 | main pushed to origin (rev-28..31 published); web deploy triggered | 6a0c909
+- 2026-11-23 07:39 | rev-32 | Gmail app notification triggers a forced Gmail check; toggle on Rules page (web + phone), user_settings.gmail_alert_check; Kotlin skips Gmail notification text. Tests 420 + 177, tsc, eslint pass | -
 
 ## 4. Open questions
 
@@ -81,7 +82,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,967,936 | 15,753,556 | 661,739 | 7,097,419 | 785,267,279 | 3,333,889 |  |
+| **Cumulative** | 3,967,936 | 15,753,556 | 661,739 | 7,288,375 | 791,658,251 | 3,354,261 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -135,6 +136,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-18 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-20 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-27 | 14,676 | 7,699 | 1,712 | 30,678 | 925,520 | 13,359 |  |
+| rev-32 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -158,6 +160,12 @@ Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, batte
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+Review rev-32 on branch rev/32-gmail-alert-check.
+1. Apply migration 20261217000000_gmail_alert_check.sql (adds user_settings.gmail_alert_check, default on). Until then the phone treats it as on and the web toggle shows an "apply the update" error if you change it.
+2. Rules page (web and phone) has a new "Check Gmail when Gmail notifies" switch (on by default). With it on, a Gmail app notification triggers a Gmail check at once. The Gmail notification text is never read or stored.
+3. The JS part reaches the phone by update, but the text-skipping part is native, so build a new APK (eas build -p android --profile preview) for the privacy part.
+4. Gmail must be allowed to post notifications on the phone, and the listener access must stay granted.
 
 Review rev-31 on branch rev/31-rules-page.
 1. Apply migration 20261216000000_rules_page.sql to Supabase (also 20261214000000 and 20261215000000 if not yet). Until then the Rules page shows an "Apply the Rules database update" notice and old rules keep working.
