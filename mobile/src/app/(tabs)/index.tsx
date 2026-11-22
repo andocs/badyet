@@ -9,6 +9,7 @@ import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { AccountTile } from '~/components/AccountTile';
 import { GmailBanner } from '~/components/GmailBanner';
+import { stableColor } from '@/lib/accounts/order';
 import { HeldNotice } from '~/components/HeldNotice';
 import { Runway } from '~/components/Runway';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
@@ -196,7 +197,7 @@ function AccountsRow({ accounts, total }: { accounts: AccountCard[]; total: Retu
               width={240}
               name={a.name}
               kind={`${KIND[a.kind] ?? a.kind}${a.last4 ? ` ·· ${a.last4}` : ''}`}
-              color={a.color ?? CARD_COLORS[i % CARD_COLORS.length]!}
+              color={a.color ?? stableColor(a.id, CARD_COLORS)}
               balanceText={peso(a.balance, hide)}
               sub={a.confirmedOn ? `Confirmed ${shortDate(isoDate(a.confirmedOn.slice(0, 10)))}` : 'No balance set yet'}
               onPress={() => router.push('/accounts')}

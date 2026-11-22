@@ -6,6 +6,7 @@ import type { AccountCard, NowData } from "@/lib/now/load";
 import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayName } from "@/lib/now/format";
 import { manilaDate, type Envelope, type NowTxn, type NowView } from "@/lib/now/summary";
 import { V13Icon } from "./icons";
+import { stableColor } from "@/lib/accounts/order";
 import { HScroll } from "./hscroll";
 import { LinkPending } from "./link-pending";
 import { Money } from "./money";
@@ -216,7 +217,7 @@ function AccountsRow({ accounts, total }: { accounts: AccountCard[]; total: Mone
       ) : (
         <HScroll label="Accounts">
           {accounts.map((a, i) => (
-            <Link key={a.id} href={`/accounts?a=${a.id}`} className="v-acard" style={{ "--c": a.color ?? CARD_COLORS[i % CARD_COLORS.length] } as React.CSSProperties}>
+            <Link key={a.id} href={`/accounts?a=${a.id}`} className="v-acard" style={{ "--c": a.color ?? stableColor(a.id, CARD_COLORS) } as React.CSSProperties}>
               <span className="v-an"><span>{a.name}</span></span>
               <span className="v-ak">{a.kind}{a.last4 ? ` ·· ${a.last4}` : ""}</span>
               <span className="v-ab"><Money value={a.balance} /></span>

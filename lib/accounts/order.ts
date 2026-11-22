@@ -10,3 +10,46 @@ export function moveInOrder(ids: readonly string[], id: string, dir: "earlier" |
   [out[i], out[j]] = [out[j]!, out[i]!];
   return out;
 }
+
+/** The kinds of account in the order they are listed, and what each group is called. */
+export const KIND_ORDER = ["ewallet", "debit", "savings", "credit", "cash"] as const;
+export const KIND_LABEL: Record<string, string> = { ewallet: "E-wallets", debit: "Debit", savings: "Savings", credit: "Credit cards", cash: "Cash" };
+
+/**
+ * Moves an account one place within its own group (its kind): it swaps with the nearest account of the same kind, whatever sits between
+ * them in the full list. Null when it is already first or last in its group, or is not in the list.
+ */
+export function moveWithinGroup(ids: readonly string[], kindOf: (id: string) => string, id: string, dir: "earlier" | "later"): string[] | null {
+  const i = ids.indexOf(id);
+  if (i < 0) return null;
+  const step = dir === "earlier" ? -1 : 1;
+  for (let j = i + step; j >= 0 && j < ids.length; j += step) {
+    if (kindOf(ids[j]!) === kindOf(id)) {
+      const out = [...ids];
+      [out[i], out[j]] = [out[j]!, out[i]!];
+      return out;
+    }
+  }
+  return null;
+}
+
+/** Puts `id` where `before` is (dragging one card onto another): the dragged account takes the target's place and the rest shift. */
+export function dropOn(ids: readonly string[], id: string, onto: string): string[] | null {
+  const from = ids.indexOf(id);
+  const to = ids.indexOf(onto);
+  if (from < 0 || to < 0 || from === to) return null;
+  const out = ids.filter((x) => x !== id);
+  out.splice(to, 0, id);
+  return out;
+}
+
+/**
+ * A colour for an account that has none chosen, picked from its id so it never changes when accounts are reordered or added
+ * (picking by position made two swapped cards trade colours).
+ */
+export function stableColor(id: string, palette: readonly string[]): string {
+  // FNV-1a, so ids that differ in one character still spread across the palette.
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i += 1) h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0;
+  return palette[(h >>> 8) % palette.length]!;
+}

@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KIND_LABEL, KIND_ORDER } from '@/lib/accounts/order';
 import { creditAvailable, creditOwed } from '@/lib/accounts/v13';
 import { money } from '@/lib/domain/money';
 import { shortDate } from '@/lib/now/format';
@@ -30,6 +31,31 @@ function Tile({ a, onPress }: { a: AccountCard; onPress: () => void }) {
   else if (a.latest) sub = 'Confirmed ' + shortDate(manilaDate(a.latest.asOf));
   const balance = peso(owed ? creditOwed(a.balance) : a.balance, hide) + (owed && !hide ? ' owed' : '');
   return <AccountTile name={a.name} kind={kindLabel(a)} color={a.color} fund={!!a.fund} balanceText={balance} sub={sub} onPress={onPress} />;
+}
+
+/** The cards of one list, in a group for each kind of account (e-wallets, debit, savings, credit cards, cash). */
+function Grouped({ list, onOpen }: { list: AccountCard[]; onOpen: (id: string) => void }) {
+  const c = useTheme();
+  return (
+    <>
+      {KIND_ORDER.map((k) => {
+        const inKind = list.filter((a) => a.kind === k);
+        if (inKind.length === 0) return null;
+        return (
+          <View key={k} style={{ gap: 8 }}>
+            <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.5 }}>
+              {(KIND_LABEL[k] ?? k).toUpperCase()} · {inKind.length}
+            </Text>
+            <View style={s.grid}>
+              {inKind.map((a) => (
+                <Tile key={a.id} a={a} onPress={() => onOpen(a.id)} />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </>
+  );
 }
 
 /** "The sum that proves it": last confirmed balance, confirmed rows after it, balance now, pending not counted. */
@@ -70,7 +96,7 @@ function Calc({ a }: { a: AccountCard }) {
   );
 }
 
-function Detail({ a, onClose, onAction, onMove }: { a: AccountCard; onClose: () => void; onAction: (kind: 'reconcile' | 'move' | 'edit') => void; onMove: (dir: 'earlier' | 'later') => void }) {
+function Detail({ a, onClose, onAction, onMove, moving }: { a: AccountCard; onClose: () => void; onAction: (kind: 'reconcile' | 'move' | 'edit') => void; onMove: (dir: 'earlier' | 'later') => void; moving: boolean }) {
   const c = useTheme();
   const { hide } = useHide();
   const insets = useSafeAreaInsets();
@@ -109,10 +135,10 @@ function Detail({ a, onClose, onAction, onMove }: { a: AccountCard; onClose: () 
             </Pressable>
           </View>
           <View style={s.actions}>
-            <Pressable onPress={() => onMove('earlier')} accessibilityRole="button" accessibilityLabel={`Move ${a.name} earlier in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
-              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>← Earlier</Text>
+            <Pressable onPress={() => onMove('earlier')} disabled={moving} accessibilityRole="button" accessibilityLabel={`Move ${a.name} earlier in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15, opacity: moving ? 0.5 : 1 }}>{moving ? 'Saving…' : '← Earlier'}</Text>
             </Pressable>
-            <Pressable onPress={() => onMove('later')} accessibilityRole="button" accessibilityLabel={`Move ${a.name} later in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
+            <Pressable onPress={() => onMove('later')} disabled={moving} accessibilityRole="button" accessibilityLabel={`Move ${a.name} later in the list`} style={[s.close, { flex: 1, backgroundColor: c.soft }]}>
               <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Later →</Text>
             </Pressable>
           </View>
@@ -134,15 +160,21 @@ export default function Accounts() {
   const { data, error, refreshing, reload } = useLoad(() => loadAccounts(supabase));
   const [openId, setOpenId] = useState<string | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
   const [sheet, setSheet] = useState<'reconcile' | 'move' | 'edit' | 'add' | null>(null);
   const all = data ? [...data.spending, ...data.funds] : [];
   const open = all.find((a) => a.id === openId) ?? null;
   const move = async (dir: 'earlier' | 'later') => {
-    if (!open) return;
-    const r = await moveAccount(supabase, { accountId: open.id, dir });
-    if ('error' in r) setMoveError(r.error);
-    else setMoveError(null);
-    void reload();
+    if (!open || moving) return;
+    setMoving(true);
+    try {
+      const r = await moveAccount(supabase, { accountId: open.id, dir });
+      if ('error' in r) setMoveError(r.error);
+      else setMoveError(null);
+      await reload();
+    } finally {
+      setMoving(false);
+    }
   };
   const done = () => {
     setSheet(null);
@@ -154,6 +186,7 @@ export default function Accounts() {
     <Screen title="Accounts" refreshing={refreshing} onRefresh={reload}>
       {error ? <Notice tone="error">{error}</Notice> : null}
       {moveError ? <Notice tone="error">{moveError}</Notice> : null}
+      {moving ? <Notice>Saving order…</Notice> : null}
       {!data && !error ? (
         <View style={s.grid} accessibilityLabel="Loading accounts" accessibilityRole="progressbar">
           {[0, 1, 2].map((i) => (
@@ -176,11 +209,7 @@ export default function Accounts() {
           {data.spending.length > 0 ? (
             <View style={{ gap: 8 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Spending accounts</Text>
-              <View style={s.grid}>
-                {data.spending.map((a) => (
-                  <Tile key={a.id} a={a} onPress={() => setOpenId(a.id)} />
-                ))}
-              </View>
+              <Grouped list={data.spending} onOpen={setOpenId} />
             </View>
           ) : null}
 
@@ -188,11 +217,7 @@ export default function Accounts() {
             <View style={{ gap: 8 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Fund accounts</Text>
               <Body style={{ color: c.muted, fontSize: 13 }}>Linked to a fund, so the fund balance updates itself.</Body>
-              <View style={s.grid}>
-                {data.funds.map((a) => (
-                  <Tile key={a.id} a={a} onPress={() => setOpenId(a.id)} />
-                ))}
-              </View>
+              <Grouped list={data.funds} onOpen={setOpenId} />
             </View>
           ) : null}
 
@@ -202,7 +227,7 @@ export default function Accounts() {
           </Pressable>
         </>
       ) : null}
-      {open && !sheet ? <Detail a={open} onClose={() => setOpenId(null)} onAction={setSheet} onMove={move} /> : null}
+      {open && !sheet ? <Detail a={open} onClose={() => setOpenId(null)} onAction={setSheet} onMove={move} moving={moving} /> : null}
       {open && sheet === 'reconcile' ? <ReconcileSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
       {open && sheet === 'move' ? <MoveSheet accounts={all} from={open} onClose={() => setSheet(null)} onSaved={done} /> : null}
       {open && sheet === 'edit' ? <EditAccountSheet a={open} onClose={() => setSheet(null)} onSaved={done} /> : null}

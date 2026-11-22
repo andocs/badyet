@@ -8,8 +8,22 @@ if (!url || !anonKey) {
   throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY (see .env.example).');
 }
 
+/**
+ * Every request gives up after this long. After the phone has been idle or a background task was running, a request (often the
+ * session refresh) can be left waiting on a dead connection; everything behind it, including pull-to-refresh, then waits too.
+ * Cutting it off lets the next try start on a fresh connection.
+ */
+export const REQUEST_TIMEOUT_MS = 20_000;
+const fetchWithTimeout: typeof fetch = (input, init) => {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), REQUEST_TIMEOUT_MS);
+  init?.signal?.addEventListener('abort', () => ctl.abort());
+  return fetch(input, { ...init, signal: ctl.signal }).finally(() => clearTimeout(timer));
+};
+
 // The anon key is public by design; row-level security protects the data. Never ship the service role key.
 export const supabase = createClient(url, anonKey, {
+  global: { fetch: fetchWithTimeout },
   auth: {
     storage: localStorage,
     autoRefreshToken: true,

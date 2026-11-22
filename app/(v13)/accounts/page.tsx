@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { stableColor } from "@/lib/accounts/order";
 import { ACCOUNT_COLORS, ACCOUNT_KINDS, creditAvailable, creditOwed } from "@/lib/accounts/v13";
 import { isoDate } from "@/lib/domain/dates";
 import { formatPesos, money, sum, type Money as MoneyValue } from "@/lib/domain/money";
@@ -7,9 +8,9 @@ import { shortDate } from "@/lib/now/format";
 import { manilaDate } from "@/lib/now/summary";
 import { createClient } from "@/lib/supabase/server";
 import { ColorPick, FormDialog, KindFields, QrViewer } from "@/components/v13/form-dialog";
-import { LinkPending } from "@/components/v13/link-pending";
+import { AccountsBoard } from "@/components/v13/accounts/board";
 import { Money } from "@/components/v13/money";
-import { addAccount, editAccount, moveAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
+import { addAccount, editAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
 
 export const metadata = { title: "Accounts · Bad(yet)" };
 
@@ -41,7 +42,7 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
     const latest = [...mine].sort((x, y) => y.as_of.localeCompare(x.as_of))[0];
     const own = txns.filter((t) => t.account_id === a.id);
     const balance = balanceNow(mine.map((x) => ({ asOf: x.as_of, amount: money(x.amount) })), own.map((t) => ({ occurredAt: t.occurred_at, amount: money(t.amount), status: t.status })));
-    return { ...a, color: a.color ?? COLORS[i % COLORS.length]!, balance, latest, own, fund: fundOf.get(a.id) ?? null };
+    return { ...a, color: a.color ?? stableColor(a.id, COLORS), balance, latest, own, fund: fundOf.get(a.id) ?? null };
   });
   const selected = view.find((v) => v.id === selectedParam) ?? view[0] ?? null;
   const spending = view.filter((v) => !v.fund);
@@ -49,11 +50,14 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
   const owned = (list: typeof view) => sum(list.filter((v) => v.kind !== "credit").map((v) => v.balance));
   const pendingTotal = txns.filter((t) => t.status === "pending").length;
 
-  let qrUrl: string | null = null;
-  if (selected?.receive_qr_path) {
-    const signed = await supabase.storage.from("account-qr").createSignedUrl(selected.receive_qr_path, 300);
-    qrUrl = signed.data?.signedUrl ?? null;
-  }
+  // Every panel is on the page (so choosing a card is instant), so every QR gets its short-lived link.
+  const qrUrls: Record<string, string | null> = {};
+  await Promise.all(
+    view.filter((v) => v.receive_qr_path).map(async (v) => {
+      const signed = await supabase.storage.from("account-qr").createSignedUrl(v.receive_qr_path!, 300);
+      qrUrls[v.id] = signed.data?.signedUrl ?? null;
+    }),
+  );
 
   return (
     <main className="v-main">
@@ -124,21 +128,39 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
         {view.length === 0 ? (
           <div className="v-note">No accounts yet. Add your first one to start tracking balances.</div>
         ) : (
-          <div className="v-cols">
-            <div className="v-stack">
-              <section aria-labelledby="sp">
-                <h2 id="sp" style={{ marginBottom: 8 }}>Spending accounts</h2>
-                <div className="v-acards">{spending.map((v) => <Card key={v.id} v={v} current={selected?.id === v.id} />)}</div>
-              </section>
-              {funds.length > 0 ? (
-                <section aria-labelledby="fu">
-                  <h2 id="fu">Fund accounts</h2>
-                  <div className="v-lbl" style={{ margin: "2px 0 8px" }}>Linked to a fund, so the fund balance updates itself.</div>
-                  <div className="v-acards">{funds.map((v) => <Card key={v.id} v={v} current={selected?.id === v.id} />)}</div>
-                </section>
-              ) : null}
-            </div>
-            {selected ? (
+          <AccountsBoard
+            initial={selected?.id ?? null}
+            items={view.map((v) => ({ id: v.id, kind: v.kind, fund: !!v.fund, name: v.name, color: v.color, face: <CardFace v={v} />, panel: <Panel selected={v} qrUrl={qrUrls[v.id] ?? null} /> }))}
+          />
+        )}
+      </div>
+    </main>
+  );
+}
+
+type View = {
+  id: string; name: string; kind: string; institution: string | null; receive_qr_path: string | null; last4: string | null; color: string; balance: MoneyValue; credit_limit: number | null;
+  latest: AnchorRow | undefined; own: TxnRow[]; fund: string | null;
+};
+
+function CardFace({ v }: { v: View }) {
+  const owed = v.kind === "credit";
+  const avail = owed ? creditAvailable(v.balance, v.credit_limit === null ? null : money(v.credit_limit)) : null;
+  const sub: React.ReactNode = owed ? (avail !== null ? <>Available <Money value={avail} /></> : "owed") : v.latest ? `Confirmed ${shortDate(isoDate(manilaDate(v.latest.as_of)))}` : "No balance set yet";
+  return (
+    <>
+      <span className="v-an"><span>{v.name}</span>{v.fund ? <span className="v-tagx">Fund</span> : null}</span>
+      <span className="v-ak">{v.kind}{v.last4 ? ` ·· ${v.last4}` : ""}</span>
+      <span className="v-ab"><Money value={owed ? creditOwed(v.balance) : v.balance} />{owed ? " owed" : ""}</span>
+      <span className="v-as">{sub}</span>
+    </>
+  );
+}
+
+
+/** One account's detail panel: the sum that proves its balance, reconcile, edit and the receive QR. */
+function Panel({ selected, qrUrl }: { selected: View; qrUrl: string | null }) {
+  return (
               <aside className="v-card v-detail" aria-label="Account details">
                 <div className="v-row">
                   <span className="v-av" style={{ background: selected.color }} aria-hidden="true">{selected.name[0]}</span>
@@ -176,12 +198,7 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
                     <ColorPick key={selected.id} colors={ACCOUNT_COLORS} initial={selected.color} />
                     <p className="v-xs v-muted" style={{ margin: 0 }}>Only the last four digits are kept. The kind and the balance do not change here.</p>
                   </FormDialog>
-                  <form action={moveAccount} className="v-row" style={{ gap: 8 }}>
-                    <input type="hidden" name="account" value={selected.id} />
-                    <button type="submit" name="dir" value="earlier" className="v-btn v-sm" aria-label={`Move ${selected.name} earlier in the list`}>← Earlier</button>
-                    <button type="submit" name="dir" value="later" className="v-btn v-sm" aria-label={`Move ${selected.name} later in the list`}>Later →</button>
-                  </form>
-                  {selected.fund ? <span className="v-pill v-ok">Linked to {selected.fund} fund</span> : null}
+                                  {selected.fund ? <span className="v-pill v-ok">Linked to {selected.fund} fund</span> : null}
                 </div>
 
                 <div className="v-qrbox">
@@ -215,31 +232,6 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
                   </div>
                 </div>
               </aside>
-            ) : null}
-          </div>
-        )}
-      </div>
-    </main>
-  );
-}
-
-type View = {
-  id: string; name: string; kind: string; last4: string | null; color: string; balance: MoneyValue; credit_limit: number | null;
-  latest: AnchorRow | undefined; own: TxnRow[]; fund: string | null;
-};
-
-function Card({ v, current }: { v: View; current: boolean }) {
-  const owed = v.kind === "credit";
-  const avail = owed ? creditAvailable(v.balance, v.credit_limit === null ? null : money(v.credit_limit)) : null;
-  const sub: React.ReactNode = owed ? (avail !== null ? <>Available <Money value={avail} /></> : "owed") : v.latest ? `Confirmed ${shortDate(isoDate(manilaDate(v.latest.as_of)))}` : "No balance set yet";
-  return (
-    <Link href={`/accounts?a=${v.id}`} className="v-acard" style={{ "--c": v.color } as React.CSSProperties} aria-current={current ? "true" : undefined}>
-      <span className="v-an"><span>{v.name}</span>{v.fund ? <span className="v-tagx">Fund</span> : null}</span>
-      <span className="v-ak">{v.kind}{v.last4 ? ` ·· ${v.last4}` : ""}</span>
-      <span className="v-ab"><Money value={owed ? creditOwed(v.balance) : v.balance} />{owed ? " owed" : ""}</span>
-      <span className="v-as">{sub}</span>
-      <LinkPending />
-    </Link>
   );
 }
 

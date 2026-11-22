@@ -822,7 +822,6 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-acards{grid-template-columns:repeat(auto-fill,minmax(max(168px,calc((100% - 22px)/3)),1fr))}
 .v-acards .v-acard{min-height:140px;padding:16px}
 .v-acards .v-acard .v-ab{font-size:26px}
-.v-envgrid{grid-template-columns:repeat(auto-fit,minmax(max(250px,calc((100% - 30px)/3)),1fr))}
 .v-hscroll{scrollbar-width:none}.v-hscroll::-webkit-scrollbar{display:none}
 .v-hs{position:relative}
 .v-hsb{position:absolute;top:calc(50% - 6px);transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
@@ -833,3 +832,25 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-acard>.v-lpend{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none;transition:opacity .12s;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.28),rgba(255,255,255,0));background-size:200% 100%}
 .v-acard>.v-lpend.v-on{opacity:1;animation:v13shimmer 1s linear infinite}
 @media(prefers-reduced-motion:reduce){.v-acard>.v-lpend.v-on{animation:none;background:rgba(255,255,255,.22)}}
+/* rev-18: account cards are the size of a bank card (85.6 x 54 mm, about 1.586:1), a little smaller; grouped by kind; planned vs spent is three across on desktop */
+.v-acards{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),230px));justify-content:start;gap:14px}
+.v-acards .v-acard,.v-hscroll>.v-acard{aspect-ratio:1.586;min-height:0;padding:14px}
+.v-acards .v-acard .v-ab{font-size:22px;padding-top:6px}
+.v-hscroll>.v-acard{flex:0 0 230px;align-self:flex-start}
+.v-acslot{cursor:grab}.v-acslot.v-drag{opacity:.45}
+.v-acslot.v-over .v-acard{outline:3px solid var(--accent);outline-offset:3px}
+.v-acard[aria-pressed="true"]{box-shadow:0 0 0 3px var(--bg,#fff),0 0 0 6px var(--accent)}
+.v-agroup{display:grid;gap:8px}.v-agh{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0}
+.v13 .v-envgrid{grid-template-columns:minmax(0,1fr)}
+@media(min-width:640px){.v13 .v-envgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1000px){.v13 .v-envgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* the standard account card: one size everywhere (Accounts and Now) */
+.v13{--acard-w:230px}
+.v13 .v-acards{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--acard-w)),var(--acard-w)))}
+.v13 .v-acards .v-acard,.v13 .v-hscroll>.v-acard{width:var(--acard-w);max-width:100%;aspect-ratio:1.586;min-height:0;height:auto}
+.v13 .v-hscroll>.v-acard{flex:0 0 var(--acard-w)}
+.v13 .v-acslot{width:var(--acard-w);max-width:100%}
+.v-saving{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.v-agroup.v-busy .v-acslot{opacity:.7}
+.v-acslot.v-moved .v-acard{animation:v13shimmer 1s linear infinite;background-image:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0));background-size:200% 100%}
+@media(prefers-reduced-motion:reduce){.v-acslot.v-moved .v-acard{animation:none}}

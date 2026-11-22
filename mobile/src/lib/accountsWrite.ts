@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { moveInOrder } from '@/lib/accounts/order';
+import { moveWithinGroup } from '@/lib/accounts/order';
 import { anchorAmount, parseAccountEdit, parseNewAccount, type AccountKind } from '@/lib/accounts/v13';
 import { parsePesos } from '@/lib/domain/money';
 
@@ -95,10 +95,12 @@ export async function editAccount(
 /** Moves an account one place earlier or later in the list (same rules as the web action; positions are renumbered from the current order). */
 export async function moveAccount(supabase: SupabaseClient, input: { accountId: string; dir: 'earlier' | 'later' }): Promise<Result> {
   if (!UUID.test(input.accountId)) return { error: 'That account was not found.' };
-  const { data, error } = await supabase.from('accounts').select('id').is('archived_at', null).order('sort').order('created_at');
+  const { data, error } = await supabase.from('accounts').select('id, kind').is('archived_at', null).order('sort').order('created_at');
   if (error) return { error: 'Could not move the account. Try again.' };
-  const ids = ((data ?? []) as { id: string }[]).map((r) => r.id);
-  const next = moveInOrder(ids, input.accountId, input.dir);
+  const rows = (data ?? []) as { id: string; kind: string }[];
+  const ids = rows.map((r) => r.id);
+  const kinds = new Map(rows.map((r) => [r.id, r.kind]));
+  const next = moveWithinGroup(ids, (id) => kinds.get(id) ?? '', input.accountId, input.dir);
   if (!next) return { ok: true };
   for (const [i, id] of next.entries()) {
     const { error: e } = await supabase.from('accounts').update({ sort: i }).eq('id', id);

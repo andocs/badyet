@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Round three built (rev-12 to rev-17 merged); C1 on hold
-- **Gate:** none
-- **Next action:** User: apply migrations 20261208000000, 20261208000100, 20261209000000, 20261210000000; publish phone update; check items on device (C2). Then send a Google Wallet notification sample for C1, or add new revisions.
-- **User to-do now:** Apply the four supabase migrations; publish the phone update (OTA or new APK); C2 device checks; Google Wallet sample for C1
+- **Active slice / milestone:** rev-18 accounts and refresh fixes (awaiting approval)
+- **Gate:** waiting
+- **Next action:** On approval: merge rev/18-accounts-refresh. Then the open items: four migrations, phone update, C1, C2.
+- **User to-do now:** Publish the phone update (the refresh fix only reaches the phone after that); apply the four pending migrations; try pull-to-refresh after the phone has been idle.
 
 ## 3. Execution log
 
@@ -47,6 +47,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:27 | rev-16 | T4: fixed line on both cutoffs takes its own amount per cutoff (amount_second), shown per cutoff on web+phone. T5: reimbursement on a budget line (amount, cutoff, day): adds to that cutoff's available money so the rest line and over flag see it. B1: web received bonus cards can change where the money went (phone already could). Migration 20261209000000 NOT yet applied. 360+145 tests, lint, build ok. | -
 - 2026-11-22 11:32 | rev-17 | T3: installments rebuilt (the old page was retired in the rehaul). New installment_plans table; each plan owns one budget line (fixed, its cutoff, first to last due month, in an Installments category). Web /installments page and phone Plan > Installments screen add, edit, delete; shows monthly, paid of N, ends, left, interest; paid is inferred from due dates. Shared code in lib/installments. Migration 20261210000000 NOT yet applied. Last payment can differ by centavos on interest plans; the line uses the regular payment. 369+145 tests, lint, build ok. | -
 - 2026-11-22 11:36 | round-three | rev-12 to rev-17 approved and merged to main (T1-T5, W1-W3, N1-N2, I1-I2, A1-A2, B1, M1, S1). Open: C1 Google Wallet (needs sample), C2 device checks, four migrations to apply, phone update to publish. | -
+- 2026-11-22 11:47 | rev-18 | Web: planned vs spent 3 across on desktop; account cards are bank-card proportioned (1.586:1, 230px); accounts grouped by kind (e-wallets, debit, savings, credit, cash); choosing an account is instant (all panels on the page, no server trip); drag-to-reorder within a group plus Earlier/Later buttons. Phone: cards bank-card ratio (2 per row), grouped by kind, reorder is group-aware. Phone pull-to-refresh: 20s request timeout on every Supabase call, 25s load timeout, one retry after re-reading the session, newest load wins, spinner always clears. 375 web + 145 phone tests, lint, build ok. | -
+- 2026-11-22 11:57 | rev-18 | Fixes after review: swapped cards no longer trade colours (colour from account id, not list position; web, Now and phone); Planned vs spent really max 3 across (the old percentage minimum in auto-fit let 4 fit; now explicit 1/2/3 columns); one standard account card size on Accounts and Now (--acard-w 230px, 1.586 ratio); saving indicator and shimmer on swapped cards (web), Saving order notice and disabled buttons (phone); a new account no longer vanishes after a reorder. | -
 
 ## 4. Open questions
 
@@ -85,7 +87,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,470,128 | 12,914,030 | 567,260 | 6,214,293 | 678,494,924 | 2,917,900 |  |
+| **Cumulative** | 3,470,128 | 12,914,030 | 567,260 | 6,250,046 | 687,474,445 | 2,944,748 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -136,6 +138,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-15 | 0 | 0 | 0 | 49,273 | 5,909,593 | 23,908 |  |
 | rev-16 | 28,866 | 114,296 | 9,314 | 68,962 | 10,234,292 | 25,714 |  |
 | rev-17 | 25,781 | 143,108 | 7,133 | 46,045 | 4,580,190 | 33,276 |  |
+| rev-18 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
