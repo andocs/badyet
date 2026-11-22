@@ -1,0 +1,182 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@700;800&family=Atkinson+Hyperlegible+Next:wght@500;700&display=swap" rel="stylesheet"><script type="module" src="https://unpkg.com/ionicons@7.4.0/dist/ionicons/ionicons.esm.js"></script><title>Rules mockup</title><style>:root{--bg:#0a1320;--surface:#101c2e;--soft:#17263b;--ink:#e8eef7;--muted:#93a5bd;--line:#223349;--accent:#34d399;--on:#04281c;--at:#5ee6b4;--err:#ff8a8a;--errt:#3b1f26;--tint:#0f3a33;--blue:#7fa8ff;--gold:#f6c453;--violet:#c4a0ff;--teal:#5cd0e6;--pink:#f28bc8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#05090f;display:flex;justify-content:center;padding:24px;font-family:"Atkinson Hyperlegible Next",system-ui,sans-serif;font-weight:500;font-size:14px;color:var(--ink)}
+.phone{width:320px;height:872px;background:var(--bg);border-radius:22px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.scroll{flex:1;overflow:auto;padding:36px 16px 20px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.status{position:absolute;top:0;left:0;right:0;height:28px;display:flex;justify-content:space-between;padding:8px 18px;font-size:11px;color:var(--muted);z-index:2;background:var(--bg)}
+.head{display:flex;align-items:center;gap:12px;min-height:44px}.head>div:first-child{flex:1}
+h1{font:800 24px/30px Gabarito,system-ui}.sub{font-size:13px;color:var(--muted);margin-top:1px}
+.eye{width:32px;height:32px;border-radius:999px;background:var(--soft);display:grid;place-items:center;font-size:17px;cursor:pointer;color:var(--ink);flex:none}.eye.on{background:var(--accent);color:var(--on)}
+body.hide .num{filter:blur(7px)}
+h2{font:800 16px Gabarito,system-ui}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.b{font-weight:700}.mut{color:var(--muted)}.s11{font-size:11px}.s12{font-size:12px}.s13{font-size:13px}.num{font-variant-numeric:tabular-nums;font-weight:700}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px}.row{display:flex;align-items:center;gap:8px}.grow{flex:1;min-width:0}
+.link{color:var(--at);font-weight:700;font-size:13px;min-height:36px;display:flex;align-items:center}
+.hero{background:linear-gradient(135deg,#10294a,#0b5a4e);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.hl{color:#bfe9dc;font-size:11px;letter-spacing:.8px;font-weight:700}.ha{color:#fff;font:800 32px/38px Gabarito,system-ui}.hs{color:#d3efe6;font-size:13px}
+.btn{background:var(--accent);color:var(--on);min-height:44px;border-radius:999px;padding:0 16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;gap:6px}
+.btn.g{background:var(--soft);color:var(--ink)}.btn.sm{min-height:36px;padding:0 12px;font-size:13px}.btn.out{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.chip{min-height:40px;border-radius:999px;padding:0 14px;display:inline-flex;align-items:center;background:var(--soft);font-weight:700;font-size:13px;white-space:nowrap;gap:6px;flex:none}.chip.on{background:var(--accent);color:var(--on)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.hscroll{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -16px;padding:0 16px}
+.pill{border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;background:var(--tint);color:var(--at);white-space:nowrap}.pill.e{background:var(--errt);color:var(--err)}
+.track{height:8px;border-radius:4px;background:var(--soft);overflow:hidden}.track.t6{height:6px}.track i{display:block;height:100%;border-radius:inherit;background:var(--accent)}
+.env{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:14px}
+.dot{width:10px;height:10px;border-radius:5px;flex:none}
+.chk{width:22px;height:22px;border-radius:11px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none}.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.tile{border-radius:12px;padding:14px;min-height:112px;color:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:2px;flex:none}
+.tile:before{content:"";position:absolute;right:-30px;top:-34px;width:120px;height:120px;border-radius:60px;background:rgba(255,255,255,.09)}
+.tile .n{font:800 14px Gabarito}.tile .k{font-size:11px;font-weight:700;opacity:.92}.tile .bal{font:800 20px Gabarito;margin-top:auto;padding-top:8px}.tile .s{font-size:11px;font-weight:700;opacity:.92}
+details>summary{list-style:none;cursor:pointer}details>summary::-webkit-details-marker{display:none}
+.tw{color:var(--muted);font-size:13px}details[open]>summary .tw:before{content:"▴"}details:not([open])>summary .tw:before{content:"▾"}
+.tabs{display:flex;background:var(--surface);border-top:1px solid var(--line);min-height:64px}.tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}.tabs a.on{color:var(--at)}.tabs ion-icon{font-size:24px}
+.sep{border-top:1px solid var(--line);padding-top:10px}
+.input{min-height:48px;border-radius:10px;background:var(--soft);display:flex;align-items:center;padding:0 14px;color:var(--muted);font-size:14px}
+.input.big{min-height:64px;font:800 28px Gabarito}
+.seg{display:flex;background:var(--soft);border-radius:999px;padding:4px}.seg>div{flex:1;min-height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--muted)}.seg>div.on{background:var(--surface);color:var(--ink)}
+.sw{width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;flex:none}.sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--ink)}.sw.on{background:var(--accent)}.sw.on:after{left:21px}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;z-index:5}.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:12px 16px 20px;display:none;z-index:6}
+.scrim.show,.sheet.open{display:block}.sheet{max-height:85%;overflow:auto}.sheet h2{font:800 18px Gabarito;margin:4px 0 8px}.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}.fld .input{color:var(--ink)}.steps{display:flex;gap:6px;margin-bottom:10px}.steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}.steps i.on{background:var(--accent)}.acts{display:flex;gap:8px;margin-top:8px}.acts>div{flex:1}[data-sheet]{cursor:pointer}.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 8px}
+.mrow{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--line);font-weight:700;font-size:15px}.mrow:first-of-type{border-top:0}.mrow ion-icon{font-size:20px;color:var(--at)}.mrow .go{margin-left:auto;color:var(--muted)}
+.mark{position:relative;height:100%}
+.edit{display:flex;flex-direction:column;gap:8px;margin-top:10px}.ib{width:36px;height:36px;border-radius:999px;background:var(--soft);display:grid;place-items:center;font-size:17px;flex:none;color:var(--ink)}
+.snap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 -14px;padding:0 14px;scrollbar-width:none}.snap>.yc{min-width:100%;scroll-snap-align:center;background:var(--soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.dots{display:flex;gap:6px;justify-content:center}.dots i{width:6px;height:6px;border-radius:3px;background:var(--line)}.dots i.on{background:var(--accent)}
+.note{position:fixed;left:24px;top:24px;width:230px;font-size:12px;color:var(--muted);line-height:1.5}@media(max-width:760px){.note{display:none}}
+.banner{background:#3a2f12;border:1px solid var(--gold);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}</style></head><body><div class="note"><b>Rules</b><br>Dedicated page, opened from Settings > Rules (replaces the Capture rules sheet). Two tabs: Capture rules and Duplicate rules.<br><br>Tap a rule to edit, + to add, switch to pause. Listen on = Notifications, Emails or Both. Sample data, 320 x 872.<br><br>Direct links: #edit, #new, #dup, #dupedit, #apps, #senders, #more, #transfer (add to the URL). #edit is the payment rule, #transfer the transfer rule.<br><br>Rules is its own page in More, listed before Settings. In a rule, tap + App or + Sender to pick.</div>
+<div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
+<div class="scroll">
+<div class="head"><div><h1>Rules</h1><div class="sub">What the app listens for</div></div><div class="ib" data-sheet="new" style="background:var(--accent);color:var(--on)"><ion-icon name="add-outline"></ion-icon></div></div>
+<div class="seg"><div class="on" data-tab="cap">Capture</div><div data-tab="dup">Duplicates</div></div>
+
+<div id="tab-cap" class="stack" style="display:flex;flex-direction:column;gap:12px">
+<div class="s12 mut">Rules run top to bottom. The first match decides. Ignore rules always win.</div>
+
+<div class="card" data-sheet="edit"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div>
+<div class="row"><span class="pill">Notifications + Emails</span><span class="s12 mut">Maya · BPI</span></div>
+<div class="chips"><span class="pill" style="background:var(--soft);color:var(--ink)">payment received</span><span class="pill" style="background:var(--soft);color:var(--ink)">card payment</span><span class="pill" style="background:var(--soft);color:var(--ink)">+2</span></div>
+<div class="s12 mut">Payment to Maya Black. Lowers what you owe. Confirms automatically.</div></div>
+
+<div class="card" data-sheet="transfer"><div class="between"><div class="b">Maya transfers</div><div class="sw on"></div></div>
+<div class="row"><span class="pill">Notifications</span><span class="s12 mut">Maya</span></div>
+<div class="chips"><span class="pill" style="background:var(--soft);color:var(--ink)">sent you</span><span class="pill" style="background:var(--soft);color:var(--ink)">you sent</span></div>
+<div class="s12 mut">Transfer between my accounts. Asks me to confirm.</div></div>
+
+<div class="card" data-sheet="edit"><div class="between"><div class="b">Coffee</div><div class="sw on"></div></div>
+<div class="row"><span class="pill">Emails</span><span class="s12 mut">Grab · Foodpanda</span></div>
+<div class="chips"><span class="pill" style="background:var(--soft);color:var(--ink)">coffee</span><span class="pill" style="background:var(--soft);color:var(--ink)">starbucks</span></div>
+<div class="s12 mut">Category Dining. Asks me to confirm.</div></div>
+
+<div class="card" data-sheet="edit" style="opacity:.6"><div class="between"><div class="b">Promos</div><div class="sw"></div></div>
+<div class="row"><span class="pill">Notifications + Emails</span><span class="s12 mut">All sources</span></div>
+<div class="chips"><span class="pill e">ignore</span><span class="pill" style="background:var(--soft);color:var(--ink)">voucher</span><span class="pill" style="background:var(--soft);color:var(--ink)">sale</span></div>
+<div class="s12 mut">Paused. Skips matching items.</div></div>
+
+<div class="btn g" data-sheet="new">+ Add a rule</div>
+<div class="card"><div class="lab">Sources</div><div class="between"><span>Maya</span><div class="sw on"></div></div><div class="between"><span>BPI</span><div class="sw on"></div></div><div class="between"><span>GCash</span><div class="sw on"></div></div><div class="s12 mut">Switch a whole source off, or set a minimum amount, here.</div></div>
+</div>
+
+<div id="tab-dup" style="display:none;flex-direction:column;gap:12px">
+<div class="s12 mut">When the same money movement shows up twice, such as a Maya alert and a BPI email, these rules decide if it becomes one item.</div>
+<div class="card" data-sheet="dupedit"><div class="between"><div class="b">Same movement, any source</div><div class="sw on"></div></div>
+<div class="s13">Same amount and direction within <b>30 min</b></div>
+<div class="row"><span class="pill">Across sources</span><span class="pill">Merge</span></div>
+<div class="s12 mut">Keeps the item with the most detail. Newest alert fills any gaps.</div></div>
+<div class="card" data-sheet="dupedit"><div class="between"><div class="b">Same source repeat</div><div class="sw on"></div></div>
+<div class="s13">Same amount, direction and counterparty within <b>10 min</b></div>
+<div class="row"><span class="pill">Same source</span><span class="pill">Merge</span></div></div>
+<div class="card" data-sheet="dupedit" style="opacity:.6"><div class="between"><div class="b">Same amount, same day</div><div class="sw"></div></div>
+<div class="s13">Same amount within <b>24 h</b></div>
+<div class="row"><span class="pill">Across sources</span><span class="pill">Keep both</span></div>
+<div class="s12 mut">Off. Would also catch real repeat purchases.</div></div>
+<div class="btn g" data-sheet="dupedit">+ Add a duplicate rule</div>
+<div class="card"><div class="lab">Try it</div><div class="s12 mut">Pick two inbox items and see whether your rules would merge them.</div><div class="btn g sm">Test with two items</div></div>
+</div>
+</div>
+
+<nav class="tabs"><a><ion-icon name="home-outline"></ion-icon>Now</a><a><ion-icon name="file-tray-outline"></ion-icon>Inbox</a><a><ion-icon name="add-circle-outline"></ion-icon>Add</a><a><ion-icon name="wallet-outline"></ion-icon>Accounts</a><a class="on" data-more><ion-icon name="ellipsis-vertical"></ion-icon>More</a></nav>
+<div class="scrim"></div>
+
+<div class="sheet" id="sh-edit"><div class="grab"></div><h2>Edit rule</h2>
+<div class="fld"><div class="lab">What is it for</div><div class="input">Credit card payment</div></div>
+<div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notifications</div><div>Emails</div><div class="on">Both</div></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya</span><span class="chip on">BPI</span><span class="chip">GCash</span><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
+<div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip on">payment received ✕</span><span class="chip on">card payment ✕</span><span class="chip on">paid your card ✕</span><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">Must also contain (optional)</div><div class="chips"><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">Skip it if it contains</div><div class="chips"><span class="chip on" style="background:var(--errt);color:var(--err)">refund ✕</span><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">What it is</div><div class="seg"><div>Spending</div><div>Income</div><div>Transfer</div><div class="on">Payment</div></div></div>
+<div class="fld"><div class="lab">Paying to</div><div class="input">Maya Black · credit card</div></div>
+<div class="fld"><div class="lab">Paid from</div><div class="input">Read from the message, ask if unclear</div></div>
+<div class="between" style="margin-bottom:6px"><span>Confirm automatically</span><div class="sw on"></div></div>
+<div class="s12 mut" style="margin-bottom:8px">Both sides are recorded, so the card balance drops and the paying account goes down.</div>
+<div class="card" style="background:var(--soft);margin-bottom:8px"><div class="lab">Test it</div><div class="s12">"Maya: Payment of ₱5,000.00 received on your Maya Black"</div><div class="row"><span class="pill">Matches</span><span class="s12 mut">Payment · ₱5,000.00</span></div></div>
+<div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Save</div></div>
+<div class="btn out" style="margin-top:8px;color:var(--err)">Delete rule</div></div>
+
+<div class="sheet" id="sh-apps"><div class="grab"></div><h2>Pick apps</h2>
+<div class="input" style="margin-bottom:8px">Search apps</div>
+<div class="seg" style="margin-bottom:8px"><div class="on">Recent</div><div>All apps</div></div>
+<div class="s12 mut" style="margin-bottom:4px">Apps that sent a notification in the last 30 days. "All apps" lists everything installed on this phone.</div>
+<div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">💳</span><div class="grow"><div class="b">Maya</div><div class="s11 mut">com.paymaya</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🏦</span><div class="grow"><div class="b">BPI</div><div class="s11 mut">com.bpi.ng.app</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">💸</span><div class="grow"><div class="b">GCash</div><div class="s11 mut">com.globe.gcash.android</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🚗</span><div class="grow"><div class="b">Grab</div><div class="s11 mut">com.grabtaxi.passenger</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🛍</span><div class="grow"><div class="b">Shopee</div><div class="s11 mut">com.shopee.ph</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><span class="ib" style="font-size:18px">🏦</span><div class="grow"><div class="b">UnionBank</div><div class="s11 mut">com.unionbankph.online</div></div><div class="chk"></div></div>
+<div class="s11 mut" style="margin:8px 0">The list is saved to your account, so the web Rules page shows the same apps.</div>
+<div class="acts"><div class="btn g" data-sheet="edit">Back</div><div class="btn" data-sheet="edit">Done · 2 picked</div></div></div>
+
+<div class="sheet" id="sh-senders"><div class="grab"></div><h2>Pick senders</h2>
+<div class="input" style="margin-bottom:8px">Search senders</div>
+<div class="lab" style="margin-bottom:4px">Recent senders in your Gmail</div>
+<div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">notifications@bpi.com.ph</div><div class="s11 mut">BPI · 14 emails</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">no-reply@paymaya.com</div><div class="s11 mut">Maya · 9 emails</div></div><div class="chk on">✓</div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">no-reply@grab.com</div><div class="s11 mut">Grab · 6 emails</div></div><div class="chk"></div></div><div class="row" style="min-height:52px;border-top:1px solid var(--line)"><div class="grow"><div class="b">alerts@unionbankph.com</div><div class="s11 mut">UnionBank · 2 emails</div></div><div class="chk"></div></div>
+<div class="lab" style="margin:10px 0 4px">Or type one</div>
+<div class="row"><div class="input grow">name@bank.com or @bank.com</div><div class="btn g sm">Add</div></div>
+<div class="s11 mut" style="margin:8px 0">A whole domain such as @bpi.com.ph matches every address at it.</div>
+<div class="acts"><div class="btn g" data-sheet="edit">Back</div><div class="btn" data-sheet="edit">Done · 2 picked</div></div></div>
+
+<div class="sheet" id="sh-more"><div class="grab"></div><div class="mrow"><ion-icon name="cash-outline"></ion-icon>Salary and tax<span class="go">›</span></div><div class="mrow"><ion-icon name="pie-chart-outline"></ion-icon>Budget<span class="go">›</span></div><div class="mrow"><ion-icon name="gift-outline"></ion-icon>Bonuses<span class="go">›</span></div><div class="mrow"><ion-icon name="flag-outline"></ion-icon>Funds<span class="go">›</span></div><div class="mrow"><ion-icon name="trending-up-outline"></ion-icon>Forecast<span class="go">›</span></div><div class="mrow" style="background:var(--tint);border-radius:10px;padding:0 8px"><ion-icon name="funnel-outline"></ion-icon>Rules<span class="pill" style="margin-left:6px">new</span><span class="go">›</span></div><div class="mrow"><ion-icon name="settings-outline"></ion-icon>Settings<span class="go">›</span></div></div>
+
+<div class="sheet" id="sh-transfer"><div class="grab"></div><h2>Edit transfer rule</h2>
+<div class="fld"><div class="lab">What is it for</div><div class="input">Maya transfers</div></div>
+<div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notifications</div><div>Emails</div><div>Both</div></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya</span><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
+<div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip on">sent you ✕</span><span class="chip on">you sent ✕</span><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">What it is</div><div class="seg"><div>Spending</div><div>Income</div><div class="on">Transfer</div><div>Payment</div></div></div>
+<div class="fld"><div class="lab">Money leaves</div><div class="input">Maya wallet</div></div>
+<div class="fld"><div class="lab">Money arrives in</div><div class="input">BPI savings</div></div>
+<div class="s12 mut" style="margin-bottom:8px">Leave an account blank to read it from the message. If it can't be read, the Inbox asks you.</div>
+<div class="between" style="margin-bottom:6px"><span>Record both sides</span><div class="sw on"></div></div>
+<div class="between" style="margin-bottom:6px"><span>Confirm automatically</span><div class="sw"></div></div>
+<div class="s12 mut" style="margin-bottom:8px">One transfer, two linked entries. The same movement from an alert and an email is still one item.</div>
+<div class="card" style="background:var(--soft);margin-bottom:8px"><div class="lab">Test it</div><div class="s12">"You sent ₱1.00 to BPI Savings via Maya"</div><div class="row"><span class="pill">Matches</span><span class="s12 mut">Transfer · Maya wallet → BPI savings · ₱1.00</span></div></div>
+<div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Save</div></div>
+<div class="btn out" style="margin-top:8px;color:var(--err)">Delete rule</div></div>
+
+<div class="sheet" id="sh-new"><div class="grab"></div><h2>New rule</h2>
+<div class="fld"><div class="lab">What is it for</div><div class="input">e.g. Gym, Salary, Netflix</div></div>
+<div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notifications</div><div>Emails</div><div class="on">Both</div></div></div>
+<div class="fld"><div class="lab">From</div><div class="chips"><span class="chip" data-sheet="apps">+ App</span><span class="chip" data-sheet="senders">+ Sender</span></div></div>
+<div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip">+ Word</span></div></div>
+<div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">Spending</div><div>Income</div><div>Transfer</div><div>Payment</div></div></div>
+<div class="fld"><div class="lab">Category</div><div class="input">Pick one</div></div>
+<div class="between" style="margin-bottom:8px"><span>Confirm automatically</span><div class="sw"></div></div>
+<div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Add rule</div></div></div>
+
+<div class="sheet" id="sh-dupedit"><div class="grab"></div><h2>Duplicate rule</h2>
+<div class="fld"><div class="lab">Name</div><div class="input">Same movement, any source</div></div>
+<div class="fld"><div class="lab">Treat as the same when these match</div><div class="chips"><span class="chip on">Amount ✓</span><span class="chip on">Direction ✓</span><span class="chip">Counterparty</span><span class="chip">Account</span></div></div>
+<div class="fld"><div class="lab">Within</div><div class="row"><div class="input grow" style="color:var(--ink)">30</div><div class="seg" style="width:120px"><div class="on">min</div><div>hours</div></div></div></div>
+<div class="fld"><div class="lab">Between</div><div class="seg"><div>Same source</div><div class="on">Any sources</div></div></div>
+<div class="fld"><div class="lab">When it matches</div><div class="seg"><div class="on">Merge into one</div><div>Keep both</div></div></div>
+<div class="between" style="margin-bottom:8px"><span>On</span><div class="sw on"></div></div>
+<div class="card" style="background:var(--soft);margin-bottom:8px"><div class="lab">Test it</div><div class="s12">Maya alert ₱1.00 out · 10:02 + BPI email ₱1.00 out · 10:04</div><div class="row"><span class="pill">Would merge</span><span class="s12 mut">2 items → 1</span></div></div>
+<div class="acts"><div class="btn g" data-close>Cancel</div><div class="btn" data-close>Save</div></div>
+<div class="btn out" style="margin-top:8px;color:var(--err)">Delete rule</div></div>
+</div>
+<script>const q=s=>document.querySelector(s);
+const shut=()=>{document.querySelectorAll(".sheet.open").forEach(x=>x.classList.remove("open"));q(".scrim").classList.remove("show")};
+const open=id=>{shut();const s=document.getElementById("sh-"+id);if(s){s.classList.add("open");q(".scrim").classList.add("show")}};
+const tab=t=>{q("#tab-cap").style.display=t==="cap"?"flex":"none";q("#tab-dup").style.display=t==="dup"?"flex":"none";document.querySelectorAll("[data-tab]").forEach(x=>x.classList.toggle("on",x.dataset.tab===t))};
+document.addEventListener("click",e=>{
+const tb=e.target.closest("[data-tab]");if(tb){tab(tb.dataset.tab);return}
+if(e.target.closest("[data-close],.scrim,.mrow")){shut();return}
+const ck=e.target.closest(".chk");if(ck){const on=ck.classList.toggle("on");ck.textContent=on?"✓":"";return}const sw=e.target.closest(".sw");if(sw){sw.classList.toggle("on");return}
+const m=e.target.closest("[data-more]");if(m){open("more");return}const t=e.target.closest("[data-sheet]");if(t){open(t.dataset.sheet)}});
+const h=location.hash.slice(1);if(h==="dup"||h==="dupedit")tab("dup");if(h==="card"||h==="edit")open("edit");else if(["apps","senders","more","transfer"].includes(h))open(h);else if(h==="new"||h==="dupedit")open(h);</script></body></html>
