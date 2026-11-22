@@ -6,6 +6,7 @@ import type { IsoDate } from "@/lib/domain/dates";
 import { money } from "@/lib/domain/money";
 import { relativeDay, timeLabel } from "@/lib/now/format";
 import { manilaDate } from "@/lib/now/summary";
+import { HeldCaptureCard, type HeldCapture } from "./held-capture-card";
 import { V13Icon } from "./icons";
 import { Money } from "./money";
 
@@ -39,12 +40,18 @@ const when = (iso: string, today: IsoDate) => `${relativeDay(manilaDate(iso), to
  */
 type Change = { type: "confirm"; id: string; categoryId: string | null; categoryName: string | null } | { type: "ignore"; id: string };
 
-export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[]; categories: Category[]; today: IsoDate }) {
+export function InboxView({ txns: txnsIn, categories, held, accounts, today }: { txns: InboxTxn[]; categories: Category[]; held: HeldCapture[]; accounts: { id: string; name: string }[]; today: IsoDate }) {
   // A confirmed row leaves To check and an ignored row disappears the moment you tap; the server catches up in the background.
   const [txns, apply] = useOptimistic(txnsIn, (cur, c: Change) =>
     c.type === "ignore" ? cur.filter((t) => t.id !== c.id) : cur.map((t) => (t.id === c.id ? { ...t, status: "confirmed" as const, categoryId: c.categoryId, categoryName: c.categoryName } : t)),
   );
   const pending = txns.filter((t) => t.status === "pending");
+  // Captures no account has claimed sit in the same list, among the others by time.
+  const toCheck = [
+    ...pending.map((t) => ({ at: Date.parse(t.occurredAt), t, h: null as HeldCapture | null })),
+    ...held.map((h) => ({ at: Date.parse(h.postTime), t: null as InboxTxn | null, h })),
+  ].sort((a, b) => b.at - a.at);
+  const waiting = toCheck.length;
   const [view, setView] = useState<"a" | "p">("a");
   const [openId, setOpenId] = useState<string | null>(null);
   const [picks, setPicks] = useState<Record<string, string | null>>({});
@@ -125,15 +132,15 @@ export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[
             <h1>Inbox</h1>
             <div className="v-seg v-seg-wrap" role="group" aria-label="View">
               <button type="button" aria-pressed={view === "a"} onClick={() => setView("a")}>All activity</button>
-              <button type="button" aria-pressed={view === "p"} onClick={() => setView("p")}>{label(pending.length)}</button>
+              <button type="button" aria-pressed={view === "p"} onClick={() => setView("p")}>{label(waiting)}</button>
             </div>
           </div>
-          <div className="v-lbl" style={{ marginTop: 4 }}>{view === "a" ? "Everything that moved your money, newest first." : pending.length ? `${pending.length} waiting for you. One tap each.` : "Nothing waiting."}</div>
+          <div className="v-lbl" style={{ marginTop: 4 }}>{view === "a" ? "Everything that moved your money, newest first." : waiting ? `${waiting} waiting for you. One tap each.` : "Nothing waiting."}</div>
         </div>
 
-        {pending.length > 0 ? (
+        {waiting > 0 ? (
           <div className="v-alert">
-            <span>{pending.length} waiting for you. Pending spends are not counted until you confirm.</span>
+            <span>{waiting} waiting for you. Pending spends are not counted until you confirm.</span>
             <button type="button" className="v-btn v-sm v-pri" onClick={() => setView("p")}>Check them</button>
           </div>
         ) : null}
@@ -142,7 +149,7 @@ export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[
         <div className="v-dcols">
           <div className="v-stack v-colL">
             <h2 className="v-wide">To check</h2>
-            {pending.length === 0 ? (
+            {waiting === 0 ? (
               <div className="v-card v-empty">
                 <div className="v-pip" style={{ margin: "0 auto 10px" }} aria-hidden="true" />
                 <h2>All caught up</h2>
@@ -150,7 +157,10 @@ export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[
               </div>
             ) : (
               <div className="v-stack v-pgrid">
-                {pending.map((t) => (
+                {toCheck.map((entry) => {
+                  if (entry.h) return <HeldCaptureCard key={entry.h.hash} h={entry.h} accounts={accounts} today={today} />;
+                  const t = entry.t!;
+                  return (
                   <article
                     key={t.id}
                     className="v-card v-itx"
@@ -192,7 +202,8 @@ export function InboxView({ txns: txnsIn, categories, today }: { txns: InboxTxn[
                       <button type="button" className="v-btn" onClick={() => ignore(t)} aria-label={`Ignore ${t.who}`}>Not mine</button>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

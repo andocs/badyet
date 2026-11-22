@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { ensureTransferCategory, TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
 
 export interface Category { id: string; name: string }
@@ -107,6 +108,8 @@ export function buildInbox(
 const COLS = 'id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, note';
 
 export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
+  // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
+  await ensureTransferCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes] = await Promise.all([
     supabase.from('categories').select('id, name').is('archived_at', null).order('sort'),
     supabase.from('accounts').select('id, name'),
@@ -140,18 +143,21 @@ export async function confirmTransaction(
 
   const isTransfer = row.data.kind === 'transfer';
   let categoryId: string | null = null;
+  // Picking the Transfer category says it was a move between your own accounts, so it stops counting as spending or income.
+  let becomesTransfer = false;
   if (!isTransfer) {
     if (!input.categoryId || !UUID.test(input.categoryId)) return { error: 'Pick a category first.' };
-    const cat = await supabase.from('categories').select('id').eq('id', input.categoryId).is('archived_at', null).maybeSingle();
+    const cat = await supabase.from('categories').select('id, name').eq('id', input.categoryId).is('archived_at', null).maybeSingle();
     if (!cat.data) return { error: 'That category was not found.' };
     categoryId = input.categoryId;
+    becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
   }
 
   const note = input.note.trim().slice(0, 200) || null;
   const ids = [row.data.id as string, ...(isTransfer && row.data.transfer_peer_id ? [row.data.transfer_peer_id as string] : [])];
   const upd = await supabase
     .from('transactions')
-    .update({ status: 'confirmed', confirmed_at: new Date().toISOString(), category_id: categoryId, note })
+    .update({ status: 'confirmed', confirmed_at: new Date().toISOString(), category_id: categoryId, note, ...(becomesTransfer ? { kind: 'transfer' } : {}) })
     .in('id', ids)
     .eq('status', 'pending');
   if (upd.error) return { error: 'Could not confirm that. Try again.' };

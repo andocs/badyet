@@ -6,8 +6,9 @@ import { relativeDay, timeLabel } from '@/lib/now/format';
 import { manilaDate } from '@/lib/now/summary';
 import { todayManila } from '@/lib/plans/validate';
 import { GmailBanner } from '~/components/GmailBanner';
-import { HeldCards } from '~/components/HeldCards';
+import { HeldCard, useHeldAccounts } from '~/components/HeldCards';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
+import { useHeldItems } from '~/lib/CaptureRunner';
 import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxTxn } from '~/lib/inbox';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
@@ -24,13 +25,25 @@ function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () 
       accessibilityState={{ selected: on }}
       style={[s.chip, { backgroundColor: on ? c.accent : c.soft }]}
     >
-      <Text style={{ color: on ? c.onAccent : c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>{label}</Text>
+      <Text
+        style={{
+          color: on ? c.onAccent : c.ink,
+          fontFamily: fonts.bodyBold,
+          fontSize: 14,
+        }}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
 
 function PendingCard({
-  t, categories, today, onConfirm, onIgnore,
+  t,
+  categories,
+  today,
+  onConfirm,
+  onIgnore,
 }: {
   t: InboxTxn;
   categories: Category[];
@@ -74,7 +87,16 @@ function PendingCard({
           ) : null}
           {chosen && t.who !== 'Expense' ? (
             <View style={s.row}>
-              <Text style={{ color: c.ink, fontFamily: fonts.body, fontSize: 14, flex: 1 }}>Always put {t.who} under {chosen}</Text>
+              <Text
+                style={{
+                  color: c.ink,
+                  fontFamily: fonts.body,
+                  fontSize: 14,
+                  flex: 1,
+                }}
+              >
+                Always put {t.who} under {chosen}
+              </Text>
               <Switch
                 value={rule}
                 onValueChange={setRule}
@@ -104,7 +126,13 @@ function PendingCard({
           accessibilityState={{ disabled: !canConfirm }}
           style={[s.btn, { flex: 1, backgroundColor: canConfirm ? c.accent : c.soft }]}
         >
-          <Text style={{ color: canConfirm ? c.onAccent : c.muted, fontFamily: fonts.bodyBold, fontSize: 15 }}>
+          <Text
+            style={{
+              color: canConfirm ? c.onAccent : c.muted,
+              fontFamily: fonts.bodyBold,
+              fontSize: 15,
+            }}
+          >
             {canConfirm ? 'Confirm' : 'Pick a category'}
           </Text>
         </Pressable>
@@ -126,6 +154,17 @@ export default function Inbox() {
 
   const txns = (data?.txns ?? []).filter((t) => !gone.has(t.id));
   const pending = txns.filter((t) => t.status === 'pending');
+  // Captures no account has claimed sit in the same list, among the others by time, and ask which account they belong to.
+  const held = useHeldItems();
+  const heldAccounts = useHeldAccounts();
+  const toCheck = [
+    ...pending.map((t) => ({
+      at: Date.parse(t.occurredAt),
+      t,
+      h: null as null,
+    })),
+    ...(heldAccounts ? held.map((h) => ({ at: h.postTime, t: null as null, h })) : []),
+  ].sort((a, b) => b.at - a.at);
 
   // The row leaves the moment you tap; if the save fails it comes back with the reason.
   async function act(t: InboxTxn, run: () => Promise<{ ok: true } | { error: string }>) {
@@ -147,7 +186,6 @@ export default function Inbox() {
   return (
     <Screen title="Inbox" refreshing={refreshing} onRefresh={reload}>
       <GmailBanner />
-      <HeldCards />
       <View style={[s.seg, { backgroundColor: c.soft }]}>
         {(['check', 'all'] as const).map((v) => (
           <Pressable
@@ -157,8 +195,14 @@ export default function Inbox() {
             accessibilityState={{ selected: view === v }}
             style={[s.segBtn, view === v && { backgroundColor: c.surface }]}
           >
-            <Text style={{ color: view === v ? c.ink : c.muted, fontFamily: fonts.bodyBold, fontSize: 14 }}>
-              {v === 'check' ? `To check (${pending.length})` : 'All activity'}
+            <Text
+              style={{
+                color: view === v ? c.ink : c.muted,
+                fontFamily: fonts.bodyBold,
+                fontSize: 14,
+              }}
+            >
+              {v === 'check' ? `To check (${toCheck.length})` : 'All activity'}
             </Text>
           </Pressable>
         ))}
@@ -169,22 +213,35 @@ export default function Inbox() {
       {!data && !error ? <Notice>Loading…</Notice> : null}
 
       {data && view === 'check' ? (
-        pending.length === 0 ? (
+        toCheck.length === 0 ? (
           <Card>
             <Body bold>All caught up</Body>
             <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 14 }}>Balances are current as of now.</Text>
           </Card>
         ) : (
-          pending.map((t) => (
-            <PendingCard
-              key={t.id}
-              t={t}
-              categories={data.categories}
-              today={today}
-              onConfirm={(row, categoryId, rule, note) => act(row, () => confirmTransaction(supabase, { id: row.id, categoryId, rule, note }))}
-              onIgnore={(row) => act(row, () => ignoreTransaction(supabase, row.id))}
-            />
-          ))
+          toCheck.map((item) =>
+            item.h ? (
+              <HeldCard key={item.h.hash} h={item.h} accounts={heldAccounts ?? []} today={today} />
+            ) : (
+              <PendingCard
+                key={item.t!.id}
+                t={item.t!}
+                categories={data.categories}
+                today={today}
+                onConfirm={(row, categoryId, rule, note) =>
+                  act(row, () =>
+                    confirmTransaction(supabase, {
+                      id: row.id,
+                      categoryId,
+                      rule,
+                      note,
+                    }),
+                  )
+                }
+                onIgnore={(row) => act(row, () => ignoreTransaction(supabase, row.id))}
+              />
+            ),
+          )
         )
       ) : null}
 
@@ -198,12 +255,24 @@ export default function Inbox() {
               <View key={t.id} style={[s.row, { minHeight: 52 }]}>
                 <View style={{ flex: 1 }}>
                   <Body>{t.who}</Body>
-                  <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
+                  <Text
+                    style={{
+                      color: c.muted,
+                      fontFamily: fonts.body,
+                      fontSize: 13,
+                    }}
+                  >
                     {t.account} · {when(t.occurredAt, today)}
                     {t.status === 'pending' ? ' · to check' : t.categoryName ? ` · ${t.categoryName}` : ''}
                   </Text>
                 </View>
-                <Amount value={money(t.amount)} signed style={{ color: t.status === 'pending' ? c.gold : t.amount > 0 ? c.accentText : c.ink }} />
+                <Amount
+                  value={money(t.amount)}
+                  signed
+                  style={{
+                    color: t.status === 'pending' ? c.gold : t.amount > 0 ? c.accentText : c.ink,
+                  }}
+                />
               </View>
             ))}
           </Card>
@@ -214,11 +283,39 @@ export default function Inbox() {
 }
 
 const s = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { minHeight: 40, borderRadius: 999, paddingHorizontal: 14, alignItems: 'center', justifyContent: 'center' },
-  input: { minHeight: 48, borderRadius: 10, paddingHorizontal: 14, fontSize: 15 },
-  btn: { minHeight: 48, borderRadius: 999, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' },
+  chip: {
+    minHeight: 40,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  input: {
+    minHeight: 48,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    fontSize: 15,
+  },
+  btn: {
+    minHeight: 48,
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   seg: { flexDirection: 'row', borderRadius: 999, padding: 4 },
-  segBtn: { flex: 1, minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
+  segBtn: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
