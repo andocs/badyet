@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Round three plus rev-18, rev-19 merged; C1 on hold
-- **Gate:** none
-- **Next action:** User: apply migration 20261211000000_held_captures.sql, then ask me to publish the phone update. Open: savings plan in forecast (needs decision: payroll-deducted or own transfer), C1 Google Wallet sample, C2 device checks.
-- **User to-do now:** Apply migration 20261211000000_held_captures.sql; publish phone update (ask me); decide savings plan approach; Google Wallet sample for C1
+- **Active slice / milestone:** rev-20 phone idle recovery (awaiting approval)
+- **Gate:** waiting
+- **Next action:** On approval: merge rev/20-idle-recovery and publish the phone update.
+- **User to-do now:** After publishing: leave the phone idle 15+ minutes, open the app, tell me if it still sticks (and what it shows)
 
 ## 3. Execution log
 
@@ -40,6 +40,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 12:16 | rev-19 | Held captures (no account yet) now show as ordinary cards in the phone Inbox To check list, sorted by time with the others, same layout and buttons; the top panel is gone. Added account chooser and where-from/where-to chips, Use this account, Not mine. | -
 - 2026-11-22 12:26 | rev-19 | Transfer category now exists from the first Inbox visit (web and phone) and picking it on a pending item files it as a transfer. Held captures sync to a new held_captures table (migration 20261211000000, NOT applied) and show as ordinary cards in the web Inbox; answered on either side clears both. Pairing moved to lib/capture/pairing.ts so the web can run it. Fixed a stale phone colour test (rev-18 was merged with it failing). 379 web + 150 phone tests, lint, build ok. | -
 - 2026-11-22 12:26 | rev-19 | Approved and merged to main. | -
+- 2026-11-22 12:30 | rev-20 | Phone idle recovery. Cannot reproduce on a device; likely cause is app state wedged by idling or the background capture task. Fixes: the app restarts its JavaScript on return after 10+ minutes away (max once per 2 min); a load still stuck after retry on a fresh connection restarts it too; a stuck capture cycle (3 min) no longer blocks later ones; the background task always ends within 45s. 379 web + 154 phone tests, lint ok. Not verified on a device. | -
 
 ## 4. Open questions
 
@@ -78,7 +79,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,470,128 | 12,914,030 | 567,260 | 6,250,046 | 687,474,445 | 2,944,748 |  |
+| **Cumulative** | 3,470,128 | 12,914,030 | 567,260 | 6,349,346 | 711,445,717 | 3,009,353 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -130,6 +131,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-16 | 28,866 | 114,296 | 9,314 | 68,962 | 10,234,292 | 25,714 |  |
 | rev-17 | 25,781 | 143,108 | 7,133 | 46,045 | 4,580,190 | 33,276 |  |
 | rev-18 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| rev-20 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 

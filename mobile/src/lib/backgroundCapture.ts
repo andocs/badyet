@@ -11,7 +11,24 @@ import { supabase } from './supabase';
 
 const TASK = 'badyet-capture';
 
+/** The background task must always end, so Android does not keep the app in a half-awake state: give the work this long, then let go. */
+const CLOSED_RUN_LIMIT_MS = 45_000;
+
 async function runClosed(source: RunSource): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    await Promise.race([
+      runClosedWork(source),
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, CLOSED_RUN_LIMIT_MS);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+async function runClosedWork(source: RunSource): Promise<void> {
   try {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return; // signed out: the listener queue stays put until you sign in

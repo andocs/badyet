@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { CaptureRunner } from '~/lib/CaptureRunner';
 import { HideProvider } from '~/lib/hide';
+import { installResumeGuard } from '~/lib/resume';
 import { SessionProvider, useSession } from '~/lib/session';
 import { SyncProvider } from '~/lib/sync';
 import { useTheme } from '~/lib/theme';
@@ -28,6 +29,8 @@ function Gate() {
 }
 
 export default function RootLayout() {
+  // Coming back after a long absence starts the app over, so nothing left wedged by idling or background capture can keep it from loading.
+  useEffect(() => installResumeGuard(), []);
   const [loaded] = useFonts({
     Gabarito_700Bold,
     Gabarito_800ExtraBold,
