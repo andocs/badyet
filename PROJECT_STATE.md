@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** Round two built; awaiting device test
+- **Active slice / milestone:** Round three handed over (nothing built)
 - **Gate:** none
-- **Next action:** Tomorrow: answer the open questions T1, T3, T4, T5; then start T1 and T2 (no questions needed for T2); Google Wallet when the sample arrives
-- **User to-do now:** Test More pages and Now after the update; capture with app closed; send Wallet sample
+- **Next action:** Next session: /model sonnet. Start T1 (per-cutoff tax, read the TRAIN table and payslip code) and T2 (loading states). Then W1-W3, N1-N2, I1-I2, A1-A2, B1, M1, S1, T3-T5. Confirm the 13th month and CIP tax method before changing bonuses.
+- **User to-do now:** Open round three list; check the real-data and device items (C2); Google Wallet sample when it arrives
 
 ## 3. Execution log
 
@@ -41,10 +41,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 4. Open questions
 
-- [ ] Q24: T1: what are your own figures for one payslip (base, allowances, SSS, PhilHealth, Pag-IBIG, tax withheld, take-home) and which one differs from the app?
-- [ ] Q25: T4: which line is in both cutoffs with different values, and what does each cutoff show in the app versus what you expect?
-- [ ] Q26: T5: do reimbursements arrive on your payslip (taxed or not), as a separate deposit, or both? Is the utility reimbursement a fixed monthly amount, and which cutoff does each land in?
-- [ ] Q27: T3: are installments card plans (a purchase split over months with a monthly charge) or loans, and do you want them to reduce Wants or sit as their own budget lines?
 - [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
 - [x] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates. -> User 2026-11-20: paydays are the 10th and 25th. Cutoffs are payday-to-payday (old spec: P1 = days 11-24, P2 = 25 to 10 next month), so the calendar split by one start day cannot model it. Building as rev-24 (assumption: first = paid 10th covering 11-24, second = paid 25th covering 25 to 10; a period belongs to the month it starts in).
 - [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
@@ -68,6 +64,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - [x] Q21: Own-account moves (Maya to BPI, GrabPay to MariBank): detect as transfers between your accounts, or leave as income/expense for you to fix in Inbox? -> Yes: detect own-account transfers by pairing amount, opposite direction, short time window, own last4.
 - [x] Q22: foodpanda order-placed email is not a payment (no method shown): capture as pending anyway, or only Grab receipts? -> Grab and foodpanda emails are receipts; capture as pending expense.
 - [x] Q23: Add MariBank and GoTyme as capture sources (besides GCash, Maya, BPI, Grab, foodpanda, Wallet)? -> Yes: add MariBank and GoTyme as sources.
+- [x] Q24: T1: what are your own figures for one payslip (base, allowances, SSS, PhilHealth, Pag-IBIG, tax withheld, take-home) and which one differs from the app? -> Method given: per-cutoff tax as in T1. Figures not yet supplied.
+- [x] Q25: T4: which line is in both cutoffs with different values, and what does each cutoff show in the app versus what you expect? -> Example: personal savings 15,000 a month, 5,000 in the 1st cutoff, 10,000 in the 2nd.
+- [x] Q26: T5: do reimbursements arrive on your payslip (taxed or not), as a separate deposit, or both? Is the utility reimbursement a fixed monthly amount, and which cutoff does each land in? -> Separate deposit; utility fixed monthly on the 17th; wifi pay 2,099 and reimbursed; reallocation needed.
+- [x] Q27: T3: are installments card plans (a purchase split over months with a monthly charge) or loans, and do you want them to reduce Wants or sit as their own budget lines? -> Mostly card plans, also loans; each its own budget line.
 
 ## 5. Token & usage ledger
 
@@ -128,30 +128,33 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Round two (2026-11-21). E1 to E12 are merged; rev-1, rev-2, rev-3 and the approved cover-screen mockups (docs/mockups/phone/) are done.
+Round three (set 2026-11-22, handed to the next session; nothing built yet). Answers from the user are in Decisions.
 
-| # | Gate | Contents | New APK? | Status |
-|---|---|---|---|---|
-| G1 | R-APK | Instant capture (headless JS task started by the listener service), Gmail-only periodic check + "last background run" in Settings, Gmail Reconnect banner (Now, Inbox, Settings). Batch every other native need into this one build | yes | next |
-| G2 | R1+R2 | Accounts: Reconcile, Move money, Add account, Edit account sheets; restyle shell to mockups (More tab + sheet, eye icon, Now, Budget/Salary/Bonuses/Funds/Settings trims) | no | planned |
-| G3 | R3+R4 | Budget port (office days settle, pools, categories, RTO card) + Salary port (raise wizard, event, allowance, projected raises, payslip builder) | no | planned |
-| G4 | R5-R7 | Bonuses (rules, destinations, mark received), Funds (create, edit, reorder), Forecast overrides (single, bulk, reset) | no | planned |
-| G5 | R10 | Settings: paydays and office days editors, CSV export, setup wizard, final polish | no | planned |
-On hold: Google Wallet capture (needs a real notification sample). Dropped: compare-without-raises on phone. Not a slice: real-data check (needs the user's screenshots). Every phone slice: check Vercel after any push touching lib/.
-
-
-Round three (lined up 2026-11-22, to start next session; nothing built yet):
-| # | Item | First step | Status |
+| # | Item | Notes from the user | Status |
 |---|---|---|---|
-| T1 | Income tax mismatch: explain how the app works it out (annualised monthly taxable pay on the 2023 TRAIN table, divided by 12, less SSS, PhilHealth, Pag-IBIG; one-time taxable amounts at the marginal rate) and find the gap against the user's own working | Get the user's payslip figures (base, allowances, SSS, PhilHealth, Pag-IBIG, tax withheld) and compare line by line; scout lib/engine/payslip.ts, lib/pay/* | planned |
-| T2 | Accounts: tapping a card is slow, and screens have few loading indicators | Scout the tap path (Detail modal, reload after save, loadAccounts); add a shared loading state (skeleton or spinner) to useLoad, pull-to-refresh and sheet saves | planned |
-| T3 | Installments: track and add them (web and phone) | Scout what /installments already does on the web; decide how a plan (total, months, start, account) feeds the budget and Now | planned |
-| T4 | A line that applies to both cutoffs but differs in value between them | Get an example line; scout lib/engine/budget.ts for how pct, fixed and rest lines split across cutoffs | planned |
-| T5 | Reimbursements: (a) you pay a bill and the company pays you back; (b) a fixed reimbursement you get whether or not you pay, and the extra can go to Wants | Settle the questions below, then model it (income type, link to a budget line, which cutoff, effect on Wants) | planned |
+| T1 | Income tax per cutoff | Order: take total non-taxable pay, deduct SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750); the remainder is the cutoff taxable income. Yearly = cutoff taxable x 24. Find the bracket on the 2023 TRAIN table; tax = (yearly - bracket lower) x rate + fixed; cutoff tax = yearly tax / 24. Verify the table values. Also verify how 13th month and CIP bonuses are taxed. Current app works per month (annualised by 12), so the mismatch is partly method. | planned |
+| T2 | Accounts: slow card tap, few loading indicators | Shared loading state (skeleton or spinner) for account cards, sheets and reloads. | planned |
+| T3 | Installments (web and phone) | Mostly card plans, also loans. Each sits as its own budget line. Existing web page /installments to be checked first. | planned |
+| T4 | Line in both cutoffs with different values | Example: personal savings is 15,000 a month, 5,000 in the 1st cutoff and 10,000 in the 2nd. The app must show each cutoff's own value. | planned |
+| T5 | Reimbursements (separate deposit) | Utility is a fixed monthly amount, deposited on a separate date, usually the 17th. Wifi case: pay 2,099 and get it back. Reallocate the value. The extra can go to Wants. | planned |
+| W1 | Wizard: duplicate account names | Inline check that an account with the same name does not already exist. Apply to steps 4 and 5 as well. | planned |
+| W2 | Wizard step 4 (budget top-ups) | Show clearly whether the amount added is for one cutoff or both. | planned |
+| W3 | Wizard: starter categories | Do not create starter categories from step 4 line values. | planned |
+| N1 | Now web: account scrollbar | Hide the horizontal scrollbar; add custom slider or navigation buttons. | planned |
+| N2 | Now web: planned vs spent | Max 3 items per row. | planned |
+| I1 | Inbox: transfer detection | Detect transfers between own accounts and add a Transfer category. | planned |
+| I2 | Usual account prompt | The app can read notifications while open, but asks for the usual account even though it says the Inbox decides. Fix the prompt. | planned |
+| A1 | Accounts: bigger cards | About 3 per row (web and phone). | planned |
+| A2 | Accounts: rearrange | Let the user reorder accounts (web and phone). | planned |
+| B1 | Bonuses: edit previous allocations | Edit how earlier bonuses were allocated (web and phone). | planned |
+| M1 | Mobile Budget: office days panel | Chips show numbers (e.g. 3 11, 4 12) instead of weekday names. Show the weekday name with the day. | planned |
+| S1 | Settings: full custom rules | No hardcoded rules. The user creates and edits every capture rule (senders, apps, keywords, actions). Replace built-in defaults with user-defined rules. | planned |
+| C1 | Google Wallet capture | On hold until a real notification sample arrives. | on hold |
+| C2 | Carried over from round two | Real-data check (user reports empty screens). Phone testing of G1 to G5 and rev-9 to rev-11 on APK 1.1.0. Reopen-after-idle loading fix (rev-10) not yet confirmed. BPI email for the Maya InstaPay transfer not confirmed. Accounts Edit account on web and phone. | open |
 
 ## Decisions & architecture
 
-2026-11-21 round two answers: (1) mockups cover screen only (~320x872), no unfolded layout (broken on the phone); approval before rebuilding screens. (2) port web app by frequency, reconcile + add account together in one slice. (3) background capture via expo-background-task approved; instant capture (new APK) only proposed. (4) Gmail reconnect = banner only, no notifications package. (5) real data: orchestrator to check for causes of empty screens, fix if wrong. (6) Wallet on hold until sample. (7) Web budget page cleanup approved, do first.
+2026-11-22 answers for round three. Income tax: per cutoff, not per month. Deduction order: SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750), then tax on the remainder x 24 against the 2023 TRAIN bracket, divided by 24. Both-cutoff lines: a line can total 15,000 a month but be split 5,000 in the 1st cutoff and 10,000 in the 2nd. Reimbursements: a separate deposit; utility is fixed monthly, usually the 17th; wifi case is pay 2,099 then reimbursed; reallocation of the value needed. Installments: mostly card plans, also loans, each as its own budget line.
 
 ## Run & verify guide (detected by Scout, kept current)
 
