@@ -1,6 +1,7 @@
 import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
+import type { CapturePattern } from '@/lib/capture/patterns';
 import type { CaptureRule, SourceConfig, SourceKey } from '@/lib/capture/sources';
 
 /** One notification as the Android listener queued it. */
@@ -25,6 +26,8 @@ export interface Held {
 export interface RunContext {
   configs: SourceConfig[];
   rules: CaptureRule[];
+  /** Your own notification patterns. */
+  patterns?: CapturePattern[];
   accounts: AccountLite[];
 }
 
@@ -95,11 +98,11 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
   for (const n of d.drain()) {
     const source = bySource.get(n.package);
     const cfg = source ? cfgOf(source) : undefined;
-    if (!source || !cfg || !canParse(source)) {
+    if (!source || !cfg || !canParse(source, ctx.patterns)) {
       sum.ignored += 1;
       continue;
     }
-    const parsed = parseNotification(source, n);
+    const parsed = parseNotification(source, n, ctx.patterns);
     if (!parsed) {
       sum.ignored += 1;
       continue;

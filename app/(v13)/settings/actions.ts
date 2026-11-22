@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
 import { validateRule, validateSource, type RuleInput, type SourceInput } from "@/lib/capture/validate";
+import { MAX_PATTERNS, validatePattern, type PatternInput } from "@/lib/capture/patterns";
 import { validatePaydays } from "@/lib/setup/input";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -92,6 +93,28 @@ export async function addCaptureRule(input: RuleInput): Promise<FormState> {
   }
   const { error } = await supabase.from("capture_rules").insert({ source: v.value.source, match_text: v.value.matchText, action: v.value.action, category_id: v.value.categoryId });
   if (error) return { error: "Could not add that rule. Try again." };
+  refresh();
+  return { ok: true };
+}
+
+/** Adds a notification pattern you wrote: wording with {amount}, {name}, {last4}, {ref}, {any}. The phone turns it into a regex. */
+export async function addCapturePattern(input: PatternInput): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const v = validatePattern(input);
+  if (!v.ok) return { error: v.error };
+  const count = await supabase.from("capture_patterns").select("id", { count: "exact", head: true });
+  if ((count.count ?? 0) >= MAX_PATTERNS) return { error: `Up to ${MAX_PATTERNS} patterns. Delete one first.` };
+  const { error } = await supabase.from("capture_patterns").insert({ source: v.value.source, template: v.value.template, direction: v.value.direction });
+  if (error) return { error: ["42P01", "PGRST205"].includes(error.code) ? "Apply the capture_patterns database update first." : "Could not add that pattern. Try again." };
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteCapturePattern(id: string): Promise<FormState> {
+  const supabase = await requireAuthed();
+  if (!UUID.test(id)) return { error: "That pattern was not found." };
+  const { error } = await supabase.from("capture_patterns").delete().eq("id", id);
+  if (error) return { error: "Could not delete that pattern. Try again." };
   refresh();
   return { ok: true };
 }

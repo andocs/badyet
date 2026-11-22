@@ -1,4 +1,4 @@
-export const SOURCES = ['gcash', 'maya', 'bpi', 'gotyme', 'maribank', 'grab', 'foodpanda', 'gwallet'] as const;
+export const SOURCES = ['gcash', 'maya', 'bpi', 'gotyme', 'maribank', 'grab', 'foodpanda', 'gwallet', 'custom'] as const;
 export type SourceKey = (typeof SOURCES)[number];
 
 export const isSource = (v: unknown): v is SourceKey => typeof v === 'string' && (SOURCES as readonly string[]).includes(v);
@@ -23,6 +23,7 @@ export const SOURCE_INFO: Record<SourceKey, SourceInfo> = {
   maribank: { label: 'MariBank', blurb: 'App notifications: transfers in and out.', packages: [], senders: [], domains: [] },
   grab: { label: 'Grab', blurb: 'Receipts for rides and food.', packages: [], senders: ['no-reply@grab.com'], domains: ['grab.com'] },
   foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: ['info@mail.foodpanda.ph'], domains: ['foodpanda.com','foodpanda.ph'] },
+  custom: { label: 'Other app', blurb: 'Any app you set up yourself: add its app id and your own patterns.', packages: [], senders: [], domains: [] },
   gwallet: { label: 'Google Wallet', blurb: 'Tap-to-pay notifications.', packages: ['com.google.android.apps.walletnfcrel'], senders: [], domains: [] },
 };
 

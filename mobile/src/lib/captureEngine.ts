@@ -92,7 +92,7 @@ async function loadContext(): Promise<RunContext | null> {
   try {
     const [cap, acc] = await Promise.all([loadCapture(supabase), supabase.from('accounts').select('id, name, institution, last4').is('archived_at', null)]);
     if (acc.error) throw acc.error;
-    const ctx: RunContext = { configs: cap.configs, rules: cap.rules, accounts: (acc.data ?? []) as AccountLite[] };
+    const ctx: RunContext = { configs: cap.configs, rules: cap.rules, patterns: cap.patterns, accounts: (acc.data ?? []) as AccountLite[] };
     write(CTX_KEY, ctx);
     applyAllowlist(ctx.configs);
     return ctx;

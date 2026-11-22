@@ -11,6 +11,7 @@ import { formatPesos, money } from '@/lib/domain/money';
 import { Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { applyAllowlist } from '~/lib/allowlist';
 import { useHeldCount } from '~/lib/CaptureRunner';
+import { PatternsCard } from '~/components/PatternsCard';
 import { addRule, loadCapture, removeRule, saveSource } from '~/lib/capture';
 import { loadPickers } from '~/lib/pickers';
 import { useSession } from '~/lib/session';
@@ -233,6 +234,8 @@ export default function Capture() {
               );
             })}
           </Card>
+
+          <PatternsCard patterns={data.patterns} onChanged={reload} />
 
           <Card>
             <Label>Keyword rules</Label>
