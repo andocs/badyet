@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { stableColor } from '@/lib/accounts/order';
 import { money, sum, type Money } from '@/lib/domain/money';
 import { balanceNow } from '@/lib/engine/balances';
 
@@ -66,7 +67,7 @@ export function buildAccounts(accounts: AccountRow[], anchors: AnchorRow[], txns
     const pending = own.filter((t) => t.status === 'pending');
     return {
       ...a,
-      color: a.color ?? COLORS[i % COLORS.length]!,
+      color: a.color ?? stableColor(a.id, COLORS),
       balance,
       latest: latestRow ? { asOf: latestRow.as_of, amount: money(latestRow.amount) } : null,
       after,

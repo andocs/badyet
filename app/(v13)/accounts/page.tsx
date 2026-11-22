@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { stableColor } from "@/lib/accounts/order";
 import { ACCOUNT_COLORS, ACCOUNT_KINDS, creditAvailable, creditOwed } from "@/lib/accounts/v13";
 import { isoDate } from "@/lib/domain/dates";
 import { formatPesos, money, sum, type Money as MoneyValue } from "@/lib/domain/money";
@@ -41,7 +42,7 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
     const latest = [...mine].sort((x, y) => y.as_of.localeCompare(x.as_of))[0];
     const own = txns.filter((t) => t.account_id === a.id);
     const balance = balanceNow(mine.map((x) => ({ asOf: x.as_of, amount: money(x.amount) })), own.map((t) => ({ occurredAt: t.occurred_at, amount: money(t.amount), status: t.status })));
-    return { ...a, color: a.color ?? COLORS[i % COLORS.length]!, balance, latest, own, fund: fundOf.get(a.id) ?? null };
+    return { ...a, color: a.color ?? stableColor(a.id, COLORS), balance, latest, own, fund: fundOf.get(a.id) ?? null };
   });
   const selected = view.find((v) => v.id === selectedParam) ?? view[0] ?? null;
   const spending = view.filter((v) => !v.fund);

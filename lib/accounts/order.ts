@@ -42,3 +42,14 @@ export function dropOn(ids: readonly string[], id: string, onto: string): string
   out.splice(to, 0, id);
   return out;
 }
+
+/**
+ * A colour for an account that has none chosen, picked from its id so it never changes when accounts are reordered or added
+ * (picking by position made two swapped cards trade colours).
+ */
+export function stableColor(id: string, palette: readonly string[]): string {
+  // FNV-1a, so ids that differ in one character still spread across the palette.
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i += 1) h = Math.imul(h ^ id.charCodeAt(i), 16777619) >>> 0;
+  return palette[(h >>> 8) % palette.length]!;
+}

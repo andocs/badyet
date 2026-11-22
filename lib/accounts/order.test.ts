@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dropOn, moveInOrder, moveWithinGroup } from "./order";
+import { dropOn, moveInOrder, moveWithinGroup, stableColor } from "./order";
 
 describe("moveInOrder", () => {
   it("swaps an account with its neighbour", () => {
@@ -34,5 +34,13 @@ describe("moveInOrder", () => {
     expect(dropOn(["a", "b", "c"], "a", "c")).toEqual(["b", "c", "a"]);
     expect(dropOn(["a", "b", "c"], "a", "a")).toBeNull();
     expect(dropOn(["a", "b"], "a", "z")).toBeNull();
+  });
+
+  it("gives an account the same colour wherever it sits", () => {
+    const palette = ["#111111", "#222222", "#333333", "#444444"];
+    expect(stableColor("acct-1", palette)).toBe(stableColor("acct-1", palette));
+    expect(palette).toContain(stableColor("acct-2", palette));
+    const ids = ["a1", "b2", "c3", "d4", "e5", "f6"];
+    expect(new Set(ids.map((id) => stableColor(id, palette))).size).toBeGreaterThan(1);
   });
 });
