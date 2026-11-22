@@ -17,7 +17,8 @@ export function V13Shell({ children, pending, accounts, categories }: { children
   ];
   const plan: NavItem[] = [
     { label: "Salary and tax", icon: "salary", href: "/pay" },
-    { label: "Budget", icon: "budget", href: "/budget", also: ["/installments", "/subscriptions"] },
+    { label: "Budget", icon: "budget", href: "/budget", also: ["/subscriptions"] },
+    { label: "Installments", icon: "wallet", href: "/installments" },
     { label: "Bonuses", icon: "gift", href: "/bonuses" },
     { label: "Funds", icon: "fund", href: "/funds" },
     { label: "Forecast", icon: "forecast", href: "/forecast" },
