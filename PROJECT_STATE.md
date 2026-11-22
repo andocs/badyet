@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-18 accounts and refresh fixes (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval: merge rev/18-accounts-refresh. Then the open items: four migrations, phone update, C1, C2.
-- **User to-do now:** Publish the phone update (the refresh fix only reaches the phone after that); apply the four pending migrations; try pull-to-refresh after the phone has been idle.
+- **Active slice / milestone:** Round three plus rev-18 merged; C1 on hold
+- **Gate:** none
+- **Next action:** User: apply four migrations (20261208000000, 20261208000100, 20261209000000, 20261210000000); publish phone update (needed for refresh fix, Inbox cards, patterns, installments); C2 device checks; Google Wallet sample for C1.
+- **User to-do now:** Apply the four supabase migrations; publish the phone update; check pull-to-refresh after idle; Google Wallet sample for C1
 
 ## 3. Execution log
 
@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:36 | round-three | rev-12 to rev-17 approved and merged to main (T1-T5, W1-W3, N1-N2, I1-I2, A1-A2, B1, M1, S1). Open: C1 Google Wallet (needs sample), C2 device checks, four migrations to apply, phone update to publish. | -
 - 2026-11-22 11:47 | rev-18 | Web: planned vs spent 3 across on desktop; account cards are bank-card proportioned (1.586:1, 230px); accounts grouped by kind (e-wallets, debit, savings, credit, cash); choosing an account is instant (all panels on the page, no server trip); drag-to-reorder within a group plus Earlier/Later buttons. Phone: cards bank-card ratio (2 per row), grouped by kind, reorder is group-aware. Phone pull-to-refresh: 20s request timeout on every Supabase call, 25s load timeout, one retry after re-reading the session, newest load wins, spinner always clears. 375 web + 145 phone tests, lint, build ok. | -
 - 2026-11-22 11:57 | rev-18 | Fixes after review: swapped cards no longer trade colours (colour from account id, not list position; web, Now and phone); Planned vs spent really max 3 across (the old percentage minimum in auto-fit let 4 fit; now explicit 1/2/3 columns); one standard account card size on Accounts and Now (--acard-w 230px, 1.586 ratio); saving indicator and shimmer on swapped cards (web), Saving order notice and disabled buttons (phone); a new account no longer vanishes after a reorder. | -
+- 2026-11-22 12:01 | rev-18 | Approved and merged to main. | -
 
 ## 4. Open questions
 
