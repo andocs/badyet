@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-25 merged
+- **Active slice / milestone:** rev-25 merged and published
 - **Gate:** none
-- **Next action:** Phone needs an OTA publish to get rev-25 (ask me). Open: savings plan in forecast, C1 Google Wallet, C2 device checks, remove diagnostics when stable.
-- **User to-do now:** Ask me to publish the phone update for rev-25; answer savings plan question
+- **Next action:** User: open the phone app twice for update 03c66111. Open: savings plan in forecast, C1 Google Wallet, C2 device checks, remove diagnostics when stable.
+- **User to-do now:** Open the phone app twice for the update; answer savings plan question
 
 ## 3. Execution log
 
@@ -52,6 +52,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 14:20 | ota | Phone update published to preview, runtime 1.1.0, group 38685a80-27ca-4866-a5e5-a821fdfba33f (commit db76f1b): rev-24. rev-24 merged to main. | -
 - 2026-11-22 14:24 | rev-25 | Transfer pairing now includes emails (source import) as well as phone notifications, so a BPI email (out) can pair with a Maya push (in). Verified emails reach the pairing step: they pass through the held list and count in the cycle's added total, so send then pair runs. Test added. 380 web + 161 phone tests, lint ok. Phone needs an OTA to get it (pairing runs on the phone); web pairing after a held answer already uses the shared code. | -
 - 2026-11-22 14:25 | rev-25 | Approved and merged to main. | -
+- 2026-11-22 14:27 | ota | Phone update published to preview, runtime 1.1.0, group 03c66111-fca2-4a26-8ef3-afceb7023cfd (commit 4d48017): rev-25. | -
 
 ## 4. Open questions
 
