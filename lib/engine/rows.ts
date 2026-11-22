@@ -47,6 +47,9 @@ export interface PaySettingsRow {
   tax_override_second: number | null;
   other_deduction: number;
   savings_plan_bp: number;
+  /** From a newer migration; absent until it is applied. */
+  savings_plan_amount?: number | null;
+  savings_plan_fund_id?: string | null;
 }
 
 export interface RaiseAllocationRow {
@@ -108,6 +111,8 @@ export const paySettingsOf = (r: PaySettingsRow | null): PaySettings =>
         taxOverrideSecond: m(r.tax_override_second),
         otherDeduction: money(r.other_deduction),
         savingsPlanBp: r.savings_plan_bp,
+        savingsPlanAmount: m(r.savings_plan_amount ?? null),
+        savingsPlanFundId: r.savings_plan_fund_id ?? null,
       }
     : DEFAULT_PAY_SETTINGS;
 
@@ -229,3 +234,7 @@ export function templatesOf(templates: readonly TemplateRow[], lines: readonly T
       .map((l) => ({ kind: l.kind, label: l.label, source: l.source as PayslipLineSpec["source"], shareBp: l.share_bp, amountOverride: m(l.amount_override) })),
   }));
 }
+
+/** Lays the savings plan's amount and fund over the pay settings row. They come from a newer migration, so they are asked for on their own and ignored if that fails. */
+export const withPlanExtra = (row: PaySettingsRow | null, extra: { data: unknown; error: unknown }): PaySettingsRow | null =>
+  row && !extra.error && extra.data ? { ...row, ...(extra.data as Pick<PaySettingsRow, "savings_plan_amount" | "savings_plan_fund_id">) } : row;

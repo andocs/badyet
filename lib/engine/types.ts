@@ -57,6 +57,10 @@ export interface PaySettings {
   otherDeduction: Money;
   /** Payroll savings plan, percent of basic per cutoff, basis points. */
   savingsPlanBp: number;
+  /** Or a fixed amount per cutoff (wins over the percent when set). */
+  savingsPlanAmount?: Money | null;
+  /** The fund the plan feeds in the forecast; null = not counted as saved in any fund. */
+  savingsPlanFundId?: string | null;
 }
 
 export interface BonusSplit {

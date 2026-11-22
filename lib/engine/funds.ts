@@ -70,7 +70,7 @@ export interface FundMonthRow {
   fundId: string;
   /** Taken from the month's pool. */
   amount: Money;
-  /** Net bonus money credited straight to this fund this month (capped by room). */
+  /** Money credited straight to this fund this month, not taken from the pool: net bonuses and a payroll savings plan (capped by room). */
   bonus: Money;
   balanceAfter: Money;
   /** Why the fund got what it got: `priority n`, `pinned`, `skipped`, `cap hit`, `pool ran out`, `takes the rest`. */

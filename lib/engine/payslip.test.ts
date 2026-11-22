@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { money } from "@/lib/domain/money";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
-import { buildMonthPay, defaultTemplate, cutoffIncomeTax, oneTimeIncomeTax, templateFor, type PayslipTemplate } from "./payslip";
+import { buildMonthPay, defaultTemplate, cutoffIncomeTax, oneTimeIncomeTax, savingsPlanPerCutoff, templateFor, type PayslipTemplate } from "./payslip";
 import { resolveSalaryTimeline } from "./salary";
 import { allowance2, noAssumptions, p, settings, startEvent, ym } from "./fixtures";
 import type { Allowance } from "./types";
@@ -103,6 +103,18 @@ describe("payslip builder", () => {
   it("a per-line amount override wins", () => {
     const t: PayslipTemplate = { cutoff: "second", effectiveMonth: ym("2026-01"), lines: [{ kind: "deduction", label: "SSS", source: "sss", amountOverride: p(999) }] };
     expect(buildMonthPay(salaryFor([]), settings, [], [t]).second.deductions).toBe(p(999));
+  });
+});
+
+describe("payroll savings plan", () => {
+  it("takes a fixed amount a cutoff, or a percent of half the basic, and the fixed amount wins", () => {
+    expect(savingsPlanPerCutoff({ savingsPlanBp: 600, savingsPlanAmount: null }, p(50_000))).toBe(p(1_500));
+    expect(savingsPlanPerCutoff({ savingsPlanBp: 600, savingsPlanAmount: p(2_000) }, p(50_000))).toBe(p(2_000));
+    expect(savingsPlanPerCutoff({ savingsPlanBp: 0, savingsPlanAmount: null }, p(50_000))).toBe(0);
+  });
+  it("shows as a Savings plan deduction on both payslips", () => {
+    const pay = buildMonthPay(salaryFor([]), { ...settings, savingsPlanAmount: p(2_000) }, []);
+    for (const slip of [pay.first, pay.second]) expect(slip.lines.find((l) => l.source === "savings_plan")?.amount).toBe(p(2_000));
   });
 });
 

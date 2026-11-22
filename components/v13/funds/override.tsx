@@ -200,7 +200,7 @@ export function OverrideBulk({ year, years, funds, rows, firstMonths }: { year: 
                   return (
                     <td key={r.month}>
                       <button type="button" className={`v-cell ${kind} ${cell?.month === r.month && cell.fund === f.id ? "v-sel" : ""}`} aria-label={`${f.name}, ${label(r.month)}: ${((c?.amount ?? 0) / 100).toFixed(2)} pesos${kind ? (kind === "v-pin" ? ", pinned" : ", skipped") : ""}`} onClick={() => setCell({ month: r.month, fund: f.id, v: String(Math.round((c?.amount ?? 0) / 100)) })}>
-                        <span className="amt">{c && c.amount > 0 ? short(c.amount) : "0"}</span><small>{c && c.bonus > 0 ? `+${Math.round(c.bonus / 100000)}k bonus` : (c?.reasons[0] ?? "").replace("priority ", "#")}</small>
+                        <span className="amt">{c && c.amount > 0 ? short(c.amount) : "0"}</span><small>{c && c.bonus > 0 ? `+${Math.round(c.bonus / 100000)}k credited` : (c?.reasons[0] ?? "").replace("priority ", "#")}</small>
                       </button>
                     </td>
                   );

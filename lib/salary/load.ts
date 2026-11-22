@@ -6,6 +6,7 @@ import {
   bonusInstancesOf,
   bonusRulesOf,
   paySettingsOf,
+  withPlanExtra,
   salaryEventOf,
   templatesOf,
   type AllowanceRow,
@@ -59,6 +60,9 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
     supabase.from("category_groups").select("id, feeds_savings"),
     supabase.from("user_settings").select("first_payday_day, second_payday_day").maybeSingle(),
   ]);
+  // The savings plan's amount and fund are asked for on their own, so a database without that update still loads.
+  const planExtra = await supabase.from("pay_settings").select("savings_plan_amount, savings_plan_fund_id").maybeSingle();
+
   const ps = us.data as { first_payday_day: number; second_payday_day: number } | null;
 
   const ruleRows = rows<BonusRuleRow>(brules);
@@ -77,7 +81,7 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
       events: rows<SalaryEventRow>(events).map(salaryEventOf),
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
       assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
-      settings: paySettingsOf((pay.data as PaySettingsRow | null) ?? null),
+      settings: paySettingsOf(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra)),
       templates: templatesOf(rows<TemplateRow>(templates), rows<TemplateLineRow>(tlines)),
       bonusRules: bonusRulesOf(ruleRows, rows<BonusSplitRow>(bsplits), instanceRows),
       bonusInstances: bonusInstancesOf(instanceRows, rows<BonusInstanceSplitRow>(binstSplits)),

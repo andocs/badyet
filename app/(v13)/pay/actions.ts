@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
+import { saveSavingsPlan } from "@/lib/pay/savings-plan";
 import { validateRaise, validateTemplates } from "@/lib/salary/event-input";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -12,6 +13,17 @@ const refresh = () => {
   revalidatePath("/budget");
 };
 const first = (month: string) => `${month}-01`;
+
+/** Saves the payroll savings plan: what is taken each cutoff and the fund the forecast counts it into. */
+export async function saveSavingsPlanAction(input: unknown): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await saveSavingsPlan(supabase, input);
+  if ("error" in r) return { error: r.error };
+  refresh();
+  revalidatePath("/forecast");
+  revalidatePath("/funds");
+  return { ok: true };
+}
 
 /** An expected event has happened: it becomes a confirmed one. */
 export async function confirmEvent(id: string): Promise<FormState> {

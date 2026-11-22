@@ -6,6 +6,8 @@ import { eventRows, regularRange, yearOf, yearRows } from '@/lib/salary/view';
 import type { YearMonth } from '@/lib/domain/dates';
 import { PayslipSheet, AllowanceSheet, EventSheet, ProjectedSheet } from '~/components/SalarySheets';
 import { RaiseWizard, type RaiseKind } from '~/components/RaiseWizard';
+import { SavingsPlanCard } from '~/components/SavingsPlanCard';
+import { salaryAt } from '@/lib/salary/view';
 import { SalaryChart } from '~/components/SalaryChart';
 import { Amount, Card, Notice, Screen } from '~/components/ui';
 import { useHide } from '~/lib/hide';
@@ -28,7 +30,13 @@ export default function Salary() {
   const c = useTheme();
   const { hide } = useHide();
   const { width } = useWindowDimensions();
-  const { data, error, refreshing, reload } = useLoad(() => loadSalary(supabase));
+  const { data, error, refreshing, reload } = useLoad(async () => {
+    const [salary, funds] = await Promise.all([
+      loadSalary(supabase),
+      supabase.from('funds').select('id, name').is('archived_at', null).order('priority'),
+    ]);
+    return { ...salary, funds: (funds.data ?? []) as { id: string; name: string }[] };
+  });
   const [open, setOpen] = useState<Open | null>(null);
   const [yearIdx, setYearIdx] = useState(0);
 
@@ -50,6 +58,12 @@ export default function Salary() {
 
       {data && input && hasStart ? (
         <>
+          <SavingsPlanCard
+            plan={{ bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null }}
+            funds={data.funds}
+            base={salaryAt(input, data.thisMonth).base}
+            onSaved={reload}
+          />
           <Card>
             <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Take-home per cutoff</Text>
             <View style={s.legend}>

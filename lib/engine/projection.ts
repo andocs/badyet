@@ -98,6 +98,18 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
   });
 
   const credits = fundCredits(bonuses);
+  // A payroll savings plan is already out of take-home, so it does not touch the budget; it goes straight into the fund it names.
+  const planFund = input.settings.savingsPlanFundId;
+  if (planFund) {
+    for (const m of months) {
+      const pay = regularPay(m);
+      const saved = [...pay.first.lines, ...pay.second.lines].filter((l) => l.source === "savings_plan").reduce((t, l) => t + l.amount, 0);
+      if (saved <= 0) continue;
+      const row = { ...(credits.get(m) ?? {}) };
+      row[planFund] = ((row[planFund] ?? 0) + saved) as Money;
+      credits.set(m, row);
+    }
+  }
   const fundMonths = allocateFunds(
     input.funds,
     input.fundStart,
