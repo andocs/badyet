@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-32 gmail alert
-- **Gate:** waiting
-- **Next action:** User reviews rev-32; on approval merge, push, rebuild APK
-- **User to-do now:** Apply migration 20261217000000; rebuild APK; install new APK from build e953275f first if not yet
+- **Active slice / milestone:** rev-32 merged
+- **Gate:** none
+- **Next action:** Install the new APK; apply migration 20261217000000; ask for next revisions or finish
+- **User to-do now:** Apply migration 20261217000000; install new APK; check Vercel deploy
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-23 00:14 | rev-31 | Approved by user; merged to main (local, not pushed) | -
 - 2026-11-23 07:00 | rev-31 | main pushed to origin (rev-28..31 published); web deploy triggered | 6a0c909
 - 2026-11-23 07:39 | rev-32 | Gmail app notification triggers a forced Gmail check; toggle on Rules page (web + phone), user_settings.gmail_alert_check; Kotlin skips Gmail notification text. Tests 420 + 177, tsc, eslint pass | -
+- 2026-11-23 07:40 | rev-32 | Approved by user; merged to main and pushed; APK build started | -
 
 ## 4. Open questions
 
