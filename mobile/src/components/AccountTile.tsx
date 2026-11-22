@@ -51,7 +51,7 @@ export function TileSkeleton({ color }: { color: string }) {
 }
 
 const s = StyleSheet.create({
-  tile: { flexGrow: 1, flexBasis: '30%', minWidth: 104, minHeight: 140, borderRadius: 12, padding: 12, overflow: 'hidden', gap: 2 },
+  tile: { flexGrow: 0, flexBasis: '47%', maxWidth: 260, aspectRatio: 1.586, borderRadius: 12, padding: 12, overflow: 'hidden', gap: 2 },
   circleA: { position: 'absolute', right: -30, top: -34, width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.09)' },
   circleB: { position: 'absolute', right: 30, bottom: -60, width: 110, height: 110, borderRadius: 55, backgroundColor: 'rgba(255,255,255,0.06)' },
   top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 },

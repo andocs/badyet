@@ -833,3 +833,13 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-acard>.v-lpend{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none;transition:opacity .12s;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.28),rgba(255,255,255,0));background-size:200% 100%}
 .v-acard>.v-lpend.v-on{opacity:1;animation:v13shimmer 1s linear infinite}
 @media(prefers-reduced-motion:reduce){.v-acard>.v-lpend.v-on{animation:none;background:rgba(255,255,255,.22)}}
+/* rev-18: account cards are the size of a bank card (85.6 x 54 mm, about 1.586:1), a little smaller; grouped by kind; planned vs spent is three across on desktop */
+.v-acards{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),230px));justify-content:start;gap:14px}
+.v-acards .v-acard,.v-hscroll>.v-acard{aspect-ratio:1.586;min-height:0;padding:14px}
+.v-acards .v-acard .v-ab{font-size:22px;padding-top:6px}
+.v-hscroll>.v-acard{flex:0 0 230px;align-self:flex-start}
+.v-acslot{cursor:grab}.v-acslot.v-drag{opacity:.45}
+.v-acslot.v-over .v-acard{outline:3px solid var(--accent);outline-offset:3px}
+.v-acard[aria-pressed="true"]{box-shadow:0 0 0 3px var(--bg,#fff),0 0 0 6px var(--accent)}
+.v-agroup{display:grid;gap:8px}.v-agh{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0}
+@media(min-width:1100px){.v-envgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}

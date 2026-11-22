@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KIND_LABEL, KIND_ORDER } from '@/lib/accounts/order';
 import { creditAvailable, creditOwed } from '@/lib/accounts/v13';
 import { money } from '@/lib/domain/money';
 import { shortDate } from '@/lib/now/format';
@@ -30,6 +31,31 @@ function Tile({ a, onPress }: { a: AccountCard; onPress: () => void }) {
   else if (a.latest) sub = 'Confirmed ' + shortDate(manilaDate(a.latest.asOf));
   const balance = peso(owed ? creditOwed(a.balance) : a.balance, hide) + (owed && !hide ? ' owed' : '');
   return <AccountTile name={a.name} kind={kindLabel(a)} color={a.color} fund={!!a.fund} balanceText={balance} sub={sub} onPress={onPress} />;
+}
+
+/** The cards of one list, in a group for each kind of account (e-wallets, debit, savings, credit cards, cash). */
+function Grouped({ list, onOpen }: { list: AccountCard[]; onOpen: (id: string) => void }) {
+  const c = useTheme();
+  return (
+    <>
+      {KIND_ORDER.map((k) => {
+        const inKind = list.filter((a) => a.kind === k);
+        if (inKind.length === 0) return null;
+        return (
+          <View key={k} style={{ gap: 8 }}>
+            <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12, letterSpacing: 0.5 }}>
+              {(KIND_LABEL[k] ?? k).toUpperCase()} · {inKind.length}
+            </Text>
+            <View style={s.grid}>
+              {inKind.map((a) => (
+                <Tile key={a.id} a={a} onPress={() => onOpen(a.id)} />
+              ))}
+            </View>
+          </View>
+        );
+      })}
+    </>
+  );
 }
 
 /** "The sum that proves it": last confirmed balance, confirmed rows after it, balance now, pending not counted. */
@@ -176,11 +202,7 @@ export default function Accounts() {
           {data.spending.length > 0 ? (
             <View style={{ gap: 8 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Spending accounts</Text>
-              <View style={s.grid}>
-                {data.spending.map((a) => (
-                  <Tile key={a.id} a={a} onPress={() => setOpenId(a.id)} />
-                ))}
-              </View>
+              <Grouped list={data.spending} onOpen={setOpenId} />
             </View>
           ) : null}
 
@@ -188,11 +210,7 @@ export default function Accounts() {
             <View style={{ gap: 8 }}>
               <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 18 }}>Fund accounts</Text>
               <Body style={{ color: c.muted, fontSize: 13 }}>Linked to a fund, so the fund balance updates itself.</Body>
-              <View style={s.grid}>
-                {data.funds.map((a) => (
-                  <Tile key={a.id} a={a} onPress={() => setOpenId(a.id)} />
-                ))}
-              </View>
+              <Grouped list={data.funds} onOpen={setOpenId} />
             </View>
           ) : null}
 
