@@ -19,6 +19,8 @@ export interface GmailDeps {
   /** What notifications and emails saw recently, to tell an email from a phone alert for the same movement. */
   readRecent?: () => Recent[];
   writeRecent?: (recent: Recent[]) => void;
+  /** Called once at the end with how many emails each sender (lowercase address) sent in this run, for the Rules page's sender picker. */
+  noteSenders?: (counts: Record<string, number>) => void;
 }
 
 export type GmailResult =
@@ -49,9 +51,14 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
   const known = new Set(held.map((h) => h.hash));
   let recent = d.readRecent?.() ?? [];
   const out = { checked: ids.length, found: 0, ignored: 0, skipped: 0 };
+  const senders: Record<string, number> = {};
 
   for (const id of ids) {
     const email = readEmail(await d.get(token, id));
+    if (email) {
+      const address = (/<([^>]+)>/.exec(email.from)?.[1] ?? email.from).trim().toLowerCase();
+      if (address) senders[address] = (senders[address] ?? 0) + 1;
+    }
     const source = email ? sourceForEmail(email.from, ctx.configs) : null;
     const cfg = source ? ctx.configs.find((c) => c.source === source) : undefined;
     if (!email || !source || !cfg || !canParseEmail(source)) {
@@ -65,7 +72,7 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
       seen.add(id);
       continue;
     }
-    const decision = decide({ source, amount: parsed.amount, direction: parsed.direction, text: `${email.subject} ${email.text}` }, cfg, ctx.rules);
+    const decision = decide({ source, amount: parsed.amount, direction: parsed.direction, text: `${email.subject} ${email.text}`, channel: 'email', from: (/<([^>]+)>/.exec(email.from)?.[1] ?? email.from).trim() }, cfg, ctx.rules);
     if (!decision.keep) {
       out.skipped += 1;
       seen.add(id);
@@ -89,5 +96,10 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
   d.writeRecent?.(recent);
   d.writeHeld(held.slice(-MAX_HELD));
   d.writeSeen([...seen].slice(-MAX_SEEN));
+  try {
+    if (Object.keys(senders).length > 0) d.noteSenders?.(senders);
+  } catch {
+    // The sender list is a convenience; it never fails a run.
+  }
   return { status: 'ok', ...out };
 }

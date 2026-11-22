@@ -1,5 +1,6 @@
 import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
+import { counterLeg } from '@/lib/capture/held';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
 import { isRepeat, remember, type DedupeRule, type Recent } from '@/lib/capture/recent';
@@ -45,6 +46,8 @@ export interface RunDeps {
   enqueue: (row: TxnInsert) => Promise<void>;
   hash: (text: string) => Promise<string>;
   newId: () => string;
+  /** The Transfer category, for rules that record a transfer or card payment. */
+  transferCategoryId?: () => Promise<string | null>;
   /** True when the same money movement is already recorded (for example the same transfer seen in a notification and an email). */
   isDuplicate?: (row: TxnInsert) => Promise<boolean>;
   /** What notifications and emails saw recently, so an alert is not added when its email came first. */
@@ -79,15 +82,20 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
   const cfgOf = (s: SourceKey) => ctx.configs.find((c) => c.source === s);
   const place = async (h: Held): Promise<boolean> => {
     const cfg = cfgOf(h.parsed.source);
-    const accountId = cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null;
+    // A transfer or card payment rule names both accounts, so this side is already known.
+    const plan = h.decision.transfer;
+    const accountId = plan ? h.decision.accountId : cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null;
     if (!accountId) return false;
-    const row = buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
+    let row = buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
+    if (plan) row = { ...row, kind: 'transfer', category_id: (await d.transferCategoryId?.()) ?? null };
     // Emails usually arrive after the phone alert for the same event. Only emails are checked, so two real purchases of the same amount in a row are both kept.
     if (h.origin === 'import' && d.isDuplicate && (await d.isDuplicate(row))) {
       sum.skipped += 1;
       return true;
     }
     await d.enqueue(row);
+    // The other account gets its half too, sent right after (see counterLeg).
+    if (plan) await d.enqueue(counterLeg(row, row.account_id === plan.fromAccountId ? plan.toAccountId : plan.fromAccountId, d.newId()));
     sum.added += 1;
     return true;
   };
@@ -114,7 +122,7 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
       sum.ignored += 1;
       continue;
     }
-    const decision = decide({ source, amount: parsed.amount, direction: parsed.direction, text: matchText(n) }, cfg, ctx.rules);
+    const decision = decide({ source, amount: parsed.amount, direction: parsed.direction, text: matchText(n), channel: 'notification', from: n.package }, cfg, ctx.rules);
     if (!decision.keep) {
       sum.skipped += 1;
       continue;

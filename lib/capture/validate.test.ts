@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { allowedPackages, configsFromRows, defaultConfig, rulesFromRows, SOURCES } from './sources';
-import { splitList, validateRule, validateSource, type SourceInput } from './validate';
+import { ruleFullRow, splitList, validateRule, validateRuleFull, validateSource, type SourceInput } from './validate';
 
 const ACC = '22222222-2222-4222-8222-222222222222';
 const CAT = '33333333-3333-4333-8333-333333333333';
@@ -84,5 +84,28 @@ describe('rows to config', () => {
     const pk = allowedPackages(cfgs);
     expect(pk).toContain('com.globe.gcash.android');
     expect(pk).not.toContain('com.paymaya');
+  });
+});
+
+describe('validateRuleFull', () => {
+  const base = { name: ' Coffee ', enabled: true, channel: 'emails', words: ['Coffee', 'coffee', ' Starbucks '], mustWords: [], skipWords: ['refund'], sources: ['grab'], packages: [], senders: ['@bank.com'], action: 'record', kind: 'spending', categoryId: null, fromAccountId: null, toAccountId: null, autoConfirm: true };
+  it('cleans words and keeps the first as match_text', () => {
+    const r = validateRuleFull(base);
+    expect(r.ok && r.value).toMatchObject({ name: 'Coffee', words: ['coffee', 'starbucks'], channel: 'emails', autoConfirm: true });
+    expect(r.ok && ruleFullRow(r.value).match_text).toBe('coffee');
+  });
+  it('refuses no words, a bad channel, a bad sender and the same account twice', () => {
+    expect(validateRuleFull({ ...base, words: [] })).toMatchObject({ ok: false });
+    expect(validateRuleFull({ ...base, channel: 'sms' })).toMatchObject({ ok: false });
+    expect(validateRuleFull({ ...base, senders: ['bank'] })).toMatchObject({ ok: false });
+    const id = '55555555-5555-4555-8555-555555555555';
+    expect(validateRuleFull({ ...base, kind: 'payment', fromAccountId: id, toAccountId: id })).toMatchObject({ ok: false, error: 'Pick two different accounts.' });
+  });
+  it('drops accounts for spending and the category for a transfer', () => {
+    const id = '55555555-5555-4555-8555-555555555555';
+    const t = validateRuleFull({ ...base, kind: 'transfer', categoryId: id, fromAccountId: id, toAccountId: '66666666-6666-4666-8666-666666666666' });
+    expect(t.ok && t.value).toMatchObject({ categoryId: null, fromAccountId: id });
+    const s = validateRuleFull({ ...base, kind: 'spending', fromAccountId: id });
+    expect(s.ok && s.value).toMatchObject({ fromAccountId: null, toAccountId: null });
   });
 });

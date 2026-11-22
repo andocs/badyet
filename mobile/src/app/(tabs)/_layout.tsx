@@ -20,6 +20,7 @@ const MORE: { title: string; icon: IconName; href: Href }[] = [
   { title: 'Installments', icon: 'card-outline', href: '/plan/installments' },
   { title: 'Funds', icon: 'flag-outline', href: '/plan/funds' },
   { title: 'Forecast', icon: 'trending-up-outline', href: '/plan/forecast' },
+  { title: 'Rules', icon: 'git-branch-outline', href: '/rules' },
   { title: 'Settings', icon: 'settings-outline', href: '/settings' },
 ];
 
@@ -62,7 +63,7 @@ export default function TabsLayout() {
   const segments = useSegments() as string[];
   const [open, setOpen] = useState(false);
   // More stays highlighted while you are on one of its pages.
-  const onMore = segments.includes('plan') || segments.includes('settings');
+  const onMore = segments.includes('plan') || segments.includes('settings') || segments.includes('rules');
   return (
     <>
       <Tabs

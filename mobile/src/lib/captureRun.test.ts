@@ -127,6 +127,19 @@ describe('runCapture', () => {
     expect(recent).toMatchObject([{ origin: 'notification', source: 'gcash', direction: 'out', amount: 11_500 }]);
   });
 
+
+  it('records both halves of a card payment rule, the card side as money in', async () => {
+    const FROM = '11111111-1111-4111-8111-111111111111';
+    const CARD = '99999999-9999-4999-8999-999999999999';
+    const rule = { id: 'r', source: null, matchText: 'paid', action: 'record' as const, categoryId: null, kind: 'payment' as const, fromAccountId: FROM, toAccountId: CARD, autoConfirm: true };
+    const t = setup({ queue: [GCASH_PAID], ctx: { rules: [rule] } });
+    t.deps.transferCategoryId = async () => 'tcat';
+    expect(await runCapture(t.deps)).toMatchObject({ added: 1 });
+    expect(t.rows).toHaveLength(2);
+    expect(t.rows[0]).toMatchObject({ account_id: FROM, kind: 'transfer', category_id: 'tcat', status: 'confirmed' });
+    expect(t.rows[1]).toMatchObject({ account_id: CARD, amount: -t.rows[0]!.amount, kind: 'transfer', transfer_peer_id: t.rows[0]!.id, dedupe_hash: null });
+  });
+
   it('leaves the queue alone when settings cannot be loaded, so nothing is lost', async () => {
     const t = setup({ ctx: null, queue: [GCASH_PAID] });
     await runCapture(t.deps);

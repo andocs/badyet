@@ -8,13 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-30 card payment
+- **Active slice / milestone:** rev-31 Rules page
 - **Gate:** waiting
-- **Next action:** User reviews rev-30; on approval merge, then rev-31 (Rules page build)
-- **User to-do now:** Apply migrations 20261214000000 and 20261215000000; rebuild phone app; check Vercel preview
+- **Next action:** User reviews rev-31; on approval merge. Nothing queued after rev-31
+- **User to-do now:** Apply migrations 20261214..16; rebuild phone app; check Vercel preview
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-22 to 2026-11-22) covering ota, rev-22, rev-23, build, rev-24, rev-25, rev-26, rev-27..29, rev-27
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering rev-14, rev-15, rev-16, rev-17, round-three, rev-18, ota, rev-19, rev-20, rev-21
 - earlier: 15 events (2026-11-21 to 2026-11-22) covering rev-2, rev-3, G1, G2, G3, G4, G5, G1-G5-release, rev-9, rev-10, rev-11, plan, rev-12, rev-13
 - earlier: 15 events (2026-11-21 to 2026-11-21) covering slice-E6, slice-E7, slice-E8, slice-E9, slice-E10, slice-E11, handoff, rev-1, mockups, mockups-v2, mockups-v3, mockups-v4
@@ -29,21 +30,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-22 12:49 | ota | Phone update published to preview, runtime 1.1.0, group 2f1eb099-d51f-4067-8e8d-98b7048d8122 (commit 550073d): rev-21 (diagnostics, Gmail/capture limits, fast recovery); earlier group 4c46f8e9 carried rev-19 and rev-20. | -
-- 2026-11-22 13:22 | rev-22 | Diagnostics read (user log 22 Nov 13:18): background task confirmed running (bg-start/bg-end at 12:52 and 13:08, ~15 min apart, 0.4s and 2.5s). Stuck: at resume after 8 min away EVERY request to Supabase hangs (even new ones and the auth token refresh); after reload-app the same requests finish in 0.6s. So the wedge is the app's native network client (likely a dead long-lived HTTP/2 connection reused for every request), cleared by a JS restart. Old auth probe never touched the network (always answered). Fix: real network probe (health endpoint, 4s) on resume after 60s away and in the stuck-load path, restart at once if dead; unconditional idle restart raised to 30 min. Root fix needs a native build (OkHttp ping interval). Not verified on device. | -
-- 2026-11-22 13:23 | ota | Phone update published to preview, runtime 1.1.0, group 8e8ffc7f-500c-4715-9ed6-753f8656b04e (commit a7b766c): rev-22 network probe. | -
-- 2026-11-22 13:27 | rev-23 | Native keep-alive. Confirmed in React Native source that its OkHttp client has no timeouts by default (connect/read/write 0) and keeps idle connections, so a connection that dies while the phone idles hangs every request for ever (cleared only by a process restart). Config plugin mobile/plugins/withNetworkKeepAlive.js adds KeepAliveOkHttpClientFactory (15s connect, 30s read/write, no idle connection reuse, 15s HTTP/2 ping) and registers it in MainApplication; verified by a local expo prebuild. Also phone accounts: one card per row (max 340 wide), more space between kind groups. Needs a new APK. | -
-- 2026-11-22 13:45 | build | Android APK built OK from rev-23 (build e19f045c-f9a4-4dbc-b2c9-154232e828ca), artifact https://expo.dev/artifacts/eas/cUeQp38EjgrsZoCpvq3R6z5z3ZCtL2eQqWLxc5R4BDw.apk . rev-23 merged to main. | -
-- 2026-11-22 14:17 | rev-24 | Log check: notification-started headless runs work (bg-start src notification at 14:02:56 and 14:13:07, ~1.8s, capture ran) but both show added 0, which cannot say if the capture was held, ignored by the parser, or skipped. Inbox number: web nav badge counted only pending transactions (not held_captures) and was server-rendered so never refreshed; phone had no Inbox tab badge at all. Fixed: web badge includes held captures plus AutoRefresh (focus + every 60s); phone Inbox tab badge = pending + held, refreshed on focus, after capture, after queue sends, each minute. capture-end now logs held/skipped/ignored counts. 379 web + 161 phone tests, lint, build ok. | -
-- 2026-11-22 14:20 | ota | Phone update published to preview, runtime 1.1.0, group 38685a80-27ca-4866-a5e5-a821fdfba33f (commit db76f1b): rev-24. rev-24 merged to main. | -
-- 2026-11-22 14:24 | rev-25 | Transfer pairing now includes emails (source import) as well as phone notifications, so a BPI email (out) can pair with a Maya push (in). Verified emails reach the pairing step: they pass through the held list and count in the cycle's added total, so send then pair runs. Test added. 380 web + 161 phone tests, lint ok. Phone needs an OTA to get it (pairing runs on the phone); web pairing after a held answer already uses the shared code. | -
-- 2026-11-22 14:25 | rev-25 | Approved and merged to main. | -
-- 2026-11-22 14:27 | ota | Phone update published to preview, runtime 1.1.0, group 03c66111-fca2-4a26-8ef3-afceb7023cfd (commit 4d48017): rev-25. | -
-- 2026-11-22 14:48 | rev-26 | Payroll savings plan. User: payroll deducts it. Added a Payroll savings plan card (web Salary and tax > Timeline, phone Salary): none / percent of basic / fixed amount per cutoff, plus the fund the forecast counts it into. It stays a payslip deduction (lowers take-home) and credits the chosen fund directly in the forecast without touching the budget. Shared logic lib/pay/savings-plan.ts; migration 20261213000000 (savings_plan_amount, savings_plan_fund_id) NOT applied; loaders ask for the new columns separately so an unapplied migration cannot break pages. Forecast fund credit label changed from bonus to credited. | -
-- 2026-11-22 14:52 | rev-26 | Added to the savings plan update: (1) phone Inbox All activity no longer loses a confirmed row (the 'gone' set hid confirmed rows for good after the reload; now ignored and confirmed are tracked separately and cleared when fresh data arrives); (2) held capture cards (phone and web) now Confirm in one step: pick account, where it went/came from, and a category (not needed when the other side is your own account, which confirms as a transfer in the Transfer category), instead of creating another Inbox item. Shared confirmedRow in lib/capture/held.ts; TxnInsert.kind may be transfer. 394 web + 161 phone tests, lint, build ok. Own-account legs are confirmed as unpaired transfers. | -
-- 2026-11-22 14:53 | ota | Phone update published to preview, runtime 1.1.0, group 68c48784-3797-4afa-b126-e87acb9dde7c (commit 254fe34): rev-26. rev-26 merged to main. | -
-- 2026-11-22 15:15 | rev-27..29 | Gmail push plan drafted (phone watches, edge function wakes phone via Expo push). User paused at the plan gate. | -
-- 2026-11-22 15:24 | rev-27 | Capture dedupe: a small recent-captures memory (source, direction, amount, time; no text) lets an email skip when the phone alert for the same movement was already seen (placed, held or dropped) and the reverse. 10 min window, other-kind only so real repeat purchases stay. Gmail push postponed. | 6d60ace
 - 2026-11-22 15:27 | ota | Phone update published to preview, runtime 1.1.0, group 218c775d-0494-4578-8dae-fc8f5933d50e (commit 5187735): rev-27. rev-27 merged to main. | -
 - 2026-11-22 21:53 | rev-28 | Rules page mockups: web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on, keywords, card payment type) + editable duplicate rules. | 6c9889a
 - 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
@@ -53,6 +39,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
 - 2026-11-22 23:27 | rev-29 | Approved by user; merged to main (local) | -
 - 2026-11-22 23:30 | rev-30 | Held transfer now inserts counter leg on other account (card gets +amount) and a DB trigger backlinks peers; web + mobile; tests green | -
+- 2026-11-22 23:44 | rev-30 | Approved by user; merged to main (local) | -
+- 2026-11-23 00:12 | rev-31 | Rules page built (web /rules, phone rules.tsx): rules migration, channel + any/must/skip words, record rules incl. transfer/payment with both legs, ordering, duplicate rule editor, device_apps + seen_senders pickers, Kotlin installedApps. Root 400+ tests, mobile tests, tsc, eslint, next build pass | -
 
 ## 4. Open questions
 
@@ -91,7 +79,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,914,369 | 15,539,760 | 652,709 | 6,853,622 | 778,662,723 | 3,231,719 |  |
+| **Cumulative** | 3,967,936 | 15,753,556 | 661,739 | 7,097,419 | 785,267,279 | 3,333,889 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -110,7 +98,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-28 | 0 | 0 | 0 | 24,387 | 577,568 | 13,975 |  |
 | rev-29 | 62,363 | 234,316 | 8,925 | 40,207 | 1,316,760 | 16,161 |  |
 | rev-30 | 80,221 | 494,054 | 18,822 | 25,098 | 1,219,151 | 8,992 |  |
-| rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
+| rev-31 | 53,567 | 213,796 | 9,030 | 242,241 | 6,355,514 | 101,478 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
 | rev-2 | 143,075 | 519,295 | 24,072 | 199,133 | 10,426,336 | 94,410 |  |
 | rev-3 | 1,237,217 | 5,128,597 | 214,549 | 2,698,695 | 321,747,427 | 1,479,260 |  |
@@ -168,6 +156,13 @@ Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, batte
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+Review rev-31 on branch rev/31-rules-page.
+1. Apply migration 20261216000000_rules_page.sql to Supabase (also 20261214000000 and 20261215000000 if not yet). Until then the Rules page shows an "Apply the Rules database update" notice and old rules keep working.
+2. Web: npm run dev, open Rules (before Settings). Add a rule, switch it, reorder, Test it, edit the Duplicate rule tab; Settings now just links to Rules.
+3. Phone: rebuild and install (new native code: installed-apps list, QUERY_ALL_PACKAGES, boot receiver). More > Rules; open an App picker to sync the apps list, then check it shows on the web picker. Senders fill in after a Gmail check.
+4. Try a Payment rule (Maya to Maya Black, confirm automatically) with a test alert: both legs should appear and the card balance should drop. Your Maya parser may not read "payment received on your Maya Black" yet; add a custom wording if not.
+5. Check the Vercel preview passes. Mobile lint was not run (mobile eslint is not configured from the root).
 
 Review rev-30 on branch rev/30-card-payment-leg.
 1. Apply migration 20261215000000_transfer_peer_backlink.sql to Supabase (links the two halves of a transfer both ways).

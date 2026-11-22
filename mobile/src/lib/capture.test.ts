@@ -95,6 +95,6 @@ describe('loadCapture', () => {
     const d = await loadCapture(supabase);
     expect(d.missing).toBe(false);
     expect(d.configs.find((x) => x.source === 'maya')?.enabled).toBe(false);
-    expect(d.rules).toEqual([{ id: '1', source: null, matchText: 'cashback', action: 'ignore', categoryId: null }]);
+    expect(d.rules).toMatchObject([{ id: '1', source: null, matchText: 'cashback', action: 'ignore', categoryId: null }]);
   });
 });

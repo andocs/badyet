@@ -176,10 +176,26 @@ const captureDeps: RunDeps = {
   enqueue: (row) => outbox.add(row),
   hash,
   newId: () => Crypto.randomUUID(),
+  transferCategoryId: () => ensureTransferCategory(supabase).catch(() => null),
   isDuplicate,
   readRecent: () => read<Recent[]>(RECENT_KEY, []),
   writeRecent: (r) => write(RECENT_KEY, r),
 };
+
+/** Remembers which addresses sent mail, for the Rules page's sender picker (address and count only). Never fails a capture run. */
+async function noteSenders(counts: Record<string, number>): Promise<void> {
+  try {
+    const addresses = Object.keys(counts).slice(0, 50);
+    if (addresses.length === 0) return;
+    const { data } = await supabase.from('seen_senders').select('address, emails').in('address', addresses);
+    const before = new Map(((data ?? []) as { address: string; emails: number }[]).map((r) => [r.address, r.emails]));
+    const now = new Date().toISOString();
+    await supabase.from('seen_senders').upsert(
+      addresses.filter((a) => a.length >= 3 && a.length <= 200).map((address) => ({ address, emails: (before.get(address) ?? 0) + (counts[address] ?? 0), updated_at: now })),
+      { onConflict: 'user_id,address' },
+    );
+  } catch {}
+}
 
 async function checkGmail(): Promise<void> {
   try {
@@ -195,6 +211,7 @@ async function checkGmail(): Promise<void> {
       hash,
       readRecent: captureDeps.readRecent,
       writeRecent: captureDeps.writeRecent,
+      noteSenders: (counts) => void noteSenders(counts),
     });
     // "Not connected" after it was connected means the weekly sign-in ran out.
     if (r.status === 'ok') {

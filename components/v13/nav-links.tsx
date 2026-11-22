@@ -61,7 +61,7 @@ export function PhoneTabs({ inbox, plan, more }: { inbox: NavItem; plan: NavItem
         <span className="v-fab"><V13Icon name="plus" /></span>
       </QuickAddButton>
       {tab({ label: "Accounts", icon: "wallet", href: "/accounts" })}
-      <button type="button" className="v-moretab" aria-current={isCurrent(path, plan) || path === "/settings" ? "page" : undefined} aria-haspopup="dialog" onClick={() => sheet.current?.showModal()}>
+      <button type="button" className="v-moretab" aria-current={isCurrent(path, plan) || path === "/settings" || path === "/rules" ?"page" : undefined} aria-haspopup="dialog" onClick={() => sheet.current?.showModal()}>
         <V13Icon name={plan.icon} />
         More
       </button>
