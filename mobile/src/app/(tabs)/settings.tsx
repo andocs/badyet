@@ -77,8 +77,8 @@ export default function Settings() {
             <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Open notification access settings</Text>
           </Pressable>
         ) : null}
-        <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => router.push('/capture')} accessibilityRole="button">
-          <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Capture rules</Text>
+        <Pressable style={[s.btn, { backgroundColor: c.soft }]} onPress={() => router.push('/rules')} accessibilityRole="button">
+          <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Rules</Text>
         </Pressable>
       </Card>
       <BackgroundCard />

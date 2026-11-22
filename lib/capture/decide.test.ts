@@ -77,3 +77,60 @@ describe('decide', () => {
     expect(decide(cap(), cfg({ accountId: ACC, categoryId: CAT }), rules)).toEqual({ keep: false, reason: 'ignore-rule' });
   });
 });
+
+describe('decide with Rules page rules', () => {
+  const FROM = '55555555-5555-4555-8555-555555555555';
+  const TO = '66666666-6666-4666-8666-666666666666';
+  const rec = (over: Partial<CaptureRule>): CaptureRule => rule({ action: 'record', ...over });
+
+  it('limits a rule to notifications or emails', () => {
+    const r = [rec({ id: 'e', matchText: 'paid', words: ['paid'], channel: 'emails', action: 'ignore' })];
+    expect(decide(cap({ channel: 'notification' }), cfg(), r)).toMatchObject({ keep: true });
+    expect(decide(cap({ channel: 'email' }), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+  });
+
+  it('needs any word, every must-word, and no skip-word', () => {
+    const r = [rec({ id: 'w', action: 'ignore', words: ['jollibee', 'mcdo'], mustWords: ['paid'], skipWords: ['refund'] })];
+    expect(decide(cap(), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+    expect(decide(cap({ text: 'paid to mcdo' }), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+    expect(decide(cap({ text: 'received from jollibee' }), cfg(), r)).toMatchObject({ keep: true });
+    expect(decide(cap({ text: 'refund paid by jollibee' }), cfg(), r)).toMatchObject({ keep: true });
+  });
+
+  it('applies to named apps and senders as well as sources', () => {
+    const r = [rec({ id: 'p', action: 'ignore', matchText: 'paid', source: null, sources: ['maya'], packages: ['com.example.bank'], senders: ['@bank.com'] })];
+    expect(decide(cap(), cfg(), r)).toMatchObject({ keep: true });
+    expect(decide(cap({ channel: 'notification', from: 'com.example.bank' }), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+    expect(decide(cap({ channel: 'email', from: 'no-reply@bank.com' }), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+    expect(decide(cap({ source: 'maya' }), cfg(), r)).toEqual({ keep: false, reason: 'ignore-rule' });
+  });
+
+  it('skips a rule that is switched off', () => {
+    expect(decide(cap(), cfg(), [rule({ matchText: 'paid', enabled: false })])).toMatchObject({ keep: true });
+  });
+
+  it('plans both sides of a transfer or payment when both accounts are named', () => {
+    const r = [rec({ id: 't', matchText: 'paid', words: ['paid'], kind: 'payment', fromAccountId: FROM, toAccountId: TO, autoConfirm: true })];
+    expect(decide(cap(), cfg(), r)).toEqual({ keep: true, status: 'confirmed', accountId: FROM, categoryId: null, ruleId: 't', transfer: { fromAccountId: FROM, toAccountId: TO } });
+    expect(decide(cap({ direction: 'in' }), cfg(), r)).toMatchObject({ accountId: TO });
+  });
+
+  it('does not plan a transfer when an account is missing, leaving it for the Inbox', () => {
+    const r = [rec({ id: 't', matchText: 'paid', kind: 'transfer', fromAccountId: FROM, toAccountId: null })];
+    expect(decide(cap(), cfg(), r)).toMatchObject({ keep: true, status: 'pending' });
+    expect(decide(cap(), cfg(), r)).not.toHaveProperty('transfer');
+  });
+
+  it('records spending under the rule category and confirms it when asked', () => {
+    const r = [rec({ id: 's', matchText: 'jollibee', kind: 'spending', categoryId: CAT, autoConfirm: true })];
+    expect(decide(cap(), cfg({ accountId: ACC }), r)).toMatchObject({ status: 'confirmed', categoryId: CAT, ruleId: 's' });
+  });
+
+  it('keeps the order you set: the first record rule wins', () => {
+    const r = [
+      rec({ id: 'b', matchText: 'paid', kind: 'spending', categoryId: CAT2, position: 1 }),
+      rec({ id: 'a', matchText: 'paid', kind: 'spending', categoryId: CAT, position: 0 }),
+    ];
+    expect(decide(cap(), cfg(), r)).toMatchObject({ categoryId: CAT });
+  });
+});

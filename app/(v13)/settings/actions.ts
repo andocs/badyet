@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
-import { validateRule, validateSource, type RuleInput, type SourceInput } from "@/lib/capture/validate";
+import { validateSource, type SourceInput } from "@/lib/capture/validate";
 import { MAX_PATTERNS, validatePattern, type PatternInput } from "@/lib/capture/patterns";
 import { validatePaydays } from "@/lib/setup/input";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const refresh = () => {
-  for (const p of ["/", "/budget", "/forecast", "/settings", "/inbox"]) revalidatePath(p);
+  for (const p of ["/", "/budget", "/forecast", "/settings", "/rules", "/inbox"]) revalidatePath(p);
 };
 
 /** Updates your settings row (creating it the first time). */
@@ -78,21 +78,6 @@ export async function saveCaptureSource(input: SourceInput): Promise<FormState> 
     { onConflict: "user_id,source" },
   );
   if (error) return { error: "That did not save. Try again." };
-  refresh();
-  return { ok: true };
-}
-
-/** Adds a keyword rule: when a notification or email contains these words, ignore it, file it, or confirm it. */
-export async function addCaptureRule(input: RuleInput): Promise<FormState> {
-  const supabase = await requireAuthed();
-  const v = validateRule(input);
-  if (!v.ok) return { error: v.error };
-  if (v.value.categoryId) {
-    const c = await supabase.from("categories").select("id").eq("id", v.value.categoryId).is("archived_at", null).maybeSingle();
-    if (!c.data) return { error: "That category was not found." };
-  }
-  const { error } = await supabase.from("capture_rules").insert({ source: v.value.source, match_text: v.value.matchText, action: v.value.action, category_id: v.value.categoryId });
-  if (error) return { error: "Could not add that rule. Try again." };
   refresh();
   return { ok: true };
 }

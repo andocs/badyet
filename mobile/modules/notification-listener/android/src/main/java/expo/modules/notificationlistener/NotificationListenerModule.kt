@@ -47,5 +47,14 @@ class NotificationListenerModule : Module() {
     Function("seenPackages") {
       CaptureStore.seen(appCtx())
     }
+
+    // Launchable apps (the ones with an icon in the launcher), sorted by label.
+    Function("installedApps") {
+      val pm = appCtx().packageManager
+      pm.getInstalledApplications(0)
+        .filter { pm.getLaunchIntentForPackage(it.packageName) != null }
+        .map { mapOf("package" to it.packageName, "label" to it.loadLabel(pm).toString()) }
+        .sortedBy { (it["label"] ?: "").lowercase() }
+    }
   }
 }

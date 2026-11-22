@@ -70,7 +70,7 @@ export function counterLeg(first: TxnInsert, otherAccountId: string, id: string)
     kind: 'transfer',
     category_id: first.category_id,
     source: first.source,
-    status: 'confirmed',
+    status: first.status,
     confirmed_at: first.confirmed_at,
     dedupe_hash: null,
     transfer_peer_id: first.id,

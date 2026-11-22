@@ -51,16 +51,26 @@ export const defaultConfig = (source: SourceKey): SourceConfig => ({
   minAmount: 0,
 });
 
-export type RuleAction = 'ignore' | 'set_category' | 'auto_confirm';
-export const RULE_ACTIONS: readonly RuleAction[] = ['ignore', 'set_category', 'auto_confirm'];
+/** 'record' is the Rules page's rule: say what the capture is (spending, income, transfer, payment) and what to do with it. The other three are the older keyword rules. */
+export type RuleAction = 'ignore' | 'set_category' | 'auto_confirm' | 'record';
+export const RULE_ACTIONS: readonly RuleAction[] = ['ignore', 'set_category', 'auto_confirm', 'record'];
 
 export const ACTION_LABEL: Record<RuleAction, string> = {
   ignore: 'Ignore it',
   set_category: 'Put it under a category',
   auto_confirm: 'Confirm it without asking',
+  record: 'Record it',
 };
 
-/** A keyword rule: when a notification or email contains `matchText`, do `action`. */
+export type RuleChannel = 'notifications' | 'emails' | 'both';
+export const RULE_CHANNELS: readonly RuleChannel[] = ['notifications', 'emails', 'both'];
+export type RuleKind = 'spending' | 'income' | 'transfer' | 'payment';
+export const RULE_KINDS: readonly RuleKind[] = ['spending', 'income', 'transfer', 'payment'];
+
+/**
+ * A capture rule: when a notification or email matches, do `action`. A rule made on the Rules page fills the optional fields;
+ * an older keyword rule leaves them out and means "contains `matchText`, on any channel, from `source`".
+ */
 export interface CaptureRule {
   id: string;
   /** null = every source. */
@@ -68,6 +78,27 @@ export interface CaptureRule {
   matchText: string;
   action: RuleAction;
   categoryId: string | null;
+  name?: string | null;
+  /** false = switched off. */
+  enabled?: boolean;
+  channel?: RuleChannel;
+  /** Any of these words (when empty, `matchText`). */
+  words?: string[];
+  /** All of these must also appear. */
+  mustWords?: string[];
+  /** None of these may appear. */
+  skipWords?: string[];
+  /** More places it applies to: named sources, extra Android app ids, extra email senders (name@bank.com or @bank.com). Empty everywhere = all. */
+  sources?: SourceKey[];
+  packages?: string[];
+  senders?: string[];
+  kind?: RuleKind;
+  /** Transfer and payment: where the money leaves and where it arrives. */
+  fromAccountId?: string | null;
+  toAccountId?: string | null;
+  autoConfirm?: boolean;
+  /** Top to bottom; the first match decides. */
+  position?: number;
 }
 
 /** Row shapes as they come from the database. */
@@ -81,7 +112,28 @@ export interface SourceRow {
   auto_confirm: boolean;
   min_amount: number;
 }
-export interface RuleRow { id: string; source: string | null; match_text: string; action: string; category_id: string | null }
+export interface RuleRow {
+  id: string;
+  source: string | null;
+  match_text: string;
+  action: string;
+  category_id: string | null;
+  // Added by the Rules page migration; absent on a database that has not applied it.
+  name?: string | null;
+  enabled?: boolean;
+  channel?: string;
+  words?: string[];
+  must_words?: string[];
+  skip_words?: string[];
+  sources?: string[];
+  packages?: string[];
+  senders?: string[];
+  kind?: string;
+  from_account_id?: string | null;
+  to_account_id?: string | null;
+  auto_confirm?: boolean;
+  position?: number;
+}
 
 /** Every source, with saved choices laid over the defaults. Unknown rows are ignored. */
 export function configsFromRows(rows: readonly SourceRow[]): SourceConfig[] {
@@ -105,7 +157,27 @@ export function configsFromRows(rows: readonly SourceRow[]): SourceConfig[] {
 export function rulesFromRows(rows: readonly RuleRow[]): CaptureRule[] {
   return rows
     .filter((r) => (r.source === null || isSource(r.source)) && (RULE_ACTIONS as readonly string[]).includes(r.action))
-    .map((r) => ({ id: r.id, source: r.source as SourceKey | null, matchText: r.match_text, action: r.action as RuleAction, categoryId: r.category_id }));
+    .map((r) => ({
+      id: r.id,
+      source: r.source as SourceKey | null,
+      matchText: r.match_text,
+      action: r.action as RuleAction,
+      categoryId: r.category_id,
+      name: r.name ?? null,
+      enabled: r.enabled ?? true,
+      channel: (RULE_CHANNELS as readonly string[]).includes(r.channel ?? '') ? (r.channel as RuleChannel) : 'both',
+      words: r.words ?? [],
+      mustWords: r.must_words ?? [],
+      skipWords: r.skip_words ?? [],
+      sources: (r.sources ?? []).filter(isSource),
+      packages: r.packages ?? [],
+      senders: r.senders ?? [],
+      kind: (RULE_KINDS as readonly string[]).includes(r.kind ?? '') ? (r.kind as RuleKind) : 'spending',
+      fromAccountId: r.from_account_id ?? null,
+      toAccountId: r.to_account_id ?? null,
+      autoConfirm: r.auto_confirm ?? false,
+      position: r.position ?? 0,
+    }));
 }
 
 /** Android app ids to listen to: every enabled source's apps. */

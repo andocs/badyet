@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-30 card payment
-- **Gate:** waiting
-- **Next action:** User reviews rev-30; on approval merge, then rev-31 (Rules page build)
+- **Active slice / milestone:** rev-31 Rules page
+- **Gate:** none
+- **Next action:** Plan and build rev-31: Rules page (route + phone screen), dedupe_rules editor, capture_rules channel/keywords migration, app + sender pickers
 - **User to-do now:** Apply migrations 20261214000000 and 20261215000000; rebuild phone app; check Vercel preview
 
 ## 3. Execution log
@@ -53,6 +53,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
 - 2026-11-22 23:27 | rev-29 | Approved by user; merged to main (local) | -
 - 2026-11-22 23:30 | rev-30 | Held transfer now inserts counter leg on other account (card gets +amount) and a DB trigger backlinks peers; web + mobile; tests green | -
+- 2026-11-22 23:44 | rev-30 | Approved by user; merged to main (local) | -
 
 ## 4. Open questions
 

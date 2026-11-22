@@ -67,6 +67,20 @@ describe('runGmail', () => {
     expect(t.seen()).toEqual(['m1']);
   });
 
+  it('reports the sender addresses it saw, lowercase, and survives a failing callback', async () => {
+    const t = setup({ messages: [incoming('m1'), mail('m2', 'Someone <Person@Example.COM>', 'Hi', '<p>hello</p>'), incoming('m3')] });
+    let counts: Record<string, number> = {};
+    t.deps.noteSenders = (c) => void (counts = c);
+    await runGmail(t.deps);
+    expect(counts).toEqual({ 'bpiinstapay@bpi.com.ph': 2, 'person@example.com': 1 });
+
+    const bad = setup();
+    bad.deps.noteSenders = () => {
+      throw new Error('boom');
+    };
+    expect(await runGmail(bad.deps)).toMatchObject({ status: 'ok', found: 1 });
+  });
+
   it('reads a message only once', async () => {
     const t = setup({ seen: ['m1'] });
     expect(await runGmail(t.deps)).toMatchObject({ status: 'ok', checked: 0, found: 0 });

@@ -38,7 +38,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
             <div className="v-grp">Plan</div>
             <RailLinks items={plan} />
             <div className="v-foot">
-              <RailLinks items={[{ label: "Settings", icon: "settings", href: "/settings" }]} />
+              <RailLinks items={[{ label: "Rules", icon: "rules", href: "/rules" }, { label: "Settings", icon: "settings", href: "/settings" }]} />
               <div className="v-tools">
                 <ThemeToggle className="v-railbtn" />
                 <HideAmounts className="v-railbtn" withIcon />
@@ -57,7 +57,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
           plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }}
           more={
             <div className="v-more">
-              <RailLinks items={[...plan, { label: "Settings", icon: "settings", href: "/settings" }]} />
+              <RailLinks items={[...plan, { label: "Rules", icon: "rules", href: "/rules" }, { label: "Settings", icon: "settings", href: "/settings" }]} />
               <hr className="v-hr" />
               <ThemeToggle className="v-railbtn" />
               <HideAmounts className="v-railbtn" withIcon />
