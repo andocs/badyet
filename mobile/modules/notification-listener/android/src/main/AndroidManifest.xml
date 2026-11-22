@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
   <uses-permission android:name="android.permission.WAKE_LOCK" />
+  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
   <application>
     <service
       android:name="expo.modules.notificationlistener.CaptureListenerService"
@@ -13,5 +14,12 @@
     <service
       android:name="expo.modules.notificationlistener.CaptureHeadlessService"
       android:exported="false" />
+    <receiver
+      android:name="expo.modules.notificationlistener.BootReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+      </intent-filter>
+    </receiver>
   </application>
 </manifest>

@@ -2,7 +2,7 @@ import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
-import { isRepeat, remember, type Recent } from '@/lib/capture/recent';
+import { isRepeat, remember, type DedupeRule, type Recent } from '@/lib/capture/recent';
 import type { CaptureRule, SourceConfig, SourceKey } from '@/lib/capture/sources';
 
 /** One notification as the Android listener queued it. */
@@ -29,6 +29,8 @@ export interface RunContext {
   rules: CaptureRule[];
   /** Your own notification patterns. */
   patterns?: CapturePattern[];
+  /** When a notification and an email count as the same movement; the defaults apply when absent. */
+  dedupe?: DedupeRule;
   accounts: AccountLite[];
 }
 
@@ -123,7 +125,7 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
       continue;
     }
     // An email already described this movement (placed, held or dropped), so this alert adds nothing.
-    if (isRepeat(recent, 'notification', parsed, n.postTime)) {
+    if (isRepeat(recent, 'notification', parsed, n.postTime, ctx.dedupe)) {
       sum.skipped += 1;
       continue;
     }

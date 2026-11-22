@@ -73,7 +73,7 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
     }
     const hash = await d.hash(dedupeKey(parsed, email.postTime));
     // The phone alert for the same movement already came (placed, held or dropped), so this email adds nothing.
-    if (isRepeat(recent, 'import', parsed, email.postTime)) {
+    if (isRepeat(recent, 'import', parsed, email.postTime, ctx.dedupe)) {
       out.skipped += 1;
     } else if (!known.has(hash)) {
       known.add(hash);

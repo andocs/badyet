@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-28 mockups
-- **Gate:** waiting
-- **Next action:** User reviews revised rev-28 mockups (Rules before Settings, app + sender pickers); on approval merge, then rev-29
-- **User to-do now:** Review the revised mockups; confirm 'All apps' list (QUERY_ALL_PACKAGES) is OK
+- **Active slice / milestone:** rev-29 dedupe+boot
+- **Gate:** none
+- **Next action:** Build rev-29: cross-source dedupe (30 min, amount+direction, DB-stored), bank notification forces Gmail check, BOOT_COMPLETED receiver
+- **User to-do now:** Push main when ready (rev-28 merged locally)
 
 ## 3. Execution log
 
@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
 - 2026-11-22 22:18 | rev-28 | Mockups revised: phone back button removed; New rule sheet has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes) | -
 - 2026-11-22 22:18 | rev-28 | Mockups corrected: phone back button removed; New rule has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes); card payment renamed Payment | -
+- 2026-11-22 22:47 | rev-28 | Rules mockups approved by user and merged to main (local, not pushed) | d8b5c7b
 
 ## 4. Open questions
 
