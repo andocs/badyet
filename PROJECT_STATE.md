@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-22 merged and published
+- **Active slice / milestone:** rev-23 built and merged
 - **Gate:** none
-- **Next action:** User: open the phone app twice for update 8e8ffc7f, then repeat the idle test and check Settings > Diagnostics for net-probe events. Optional native keep-alive build for the root fix. Other open: savings plan in forecast (payroll-deducted or own transfer?), C1 Google Wallet sample, C2 device checks, remove diagnostics once fixed.
-- **User to-do now:** Open the phone app twice for the update; idle test 10+ min; paste Diagnostics if it still sticks; answer savings plan question; decide on native build
+- **Next action:** User: install the new APK over the current app, then repeat the idle test (10+ min) and check Settings > Diagnostics (net-probe, limit, reload-app events). If stable for a few days, remove diagnostics. Other open: savings plan in forecast (payroll-deducted or own transfer?), C1 Google Wallet sample, C2 device checks.
+- **User to-do now:** Install the APK; idle test; tell me the result; answer savings plan question
 
 ## 3. Execution log
 
@@ -47,6 +47,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 13:22 | rev-22 | Diagnostics read (user log 22 Nov 13:18): background task confirmed running (bg-start/bg-end at 12:52 and 13:08, ~15 min apart, 0.4s and 2.5s). Stuck: at resume after 8 min away EVERY request to Supabase hangs (even new ones and the auth token refresh); after reload-app the same requests finish in 0.6s. So the wedge is the app's native network client (likely a dead long-lived HTTP/2 connection reused for every request), cleared by a JS restart. Old auth probe never touched the network (always answered). Fix: real network probe (health endpoint, 4s) on resume after 60s away and in the stuck-load path, restart at once if dead; unconditional idle restart raised to 30 min. Root fix needs a native build (OkHttp ping interval). Not verified on device. | -
 - 2026-11-22 13:23 | ota | Phone update published to preview, runtime 1.1.0, group 8e8ffc7f-500c-4715-9ed6-753f8656b04e (commit a7b766c): rev-22 network probe. | -
 - 2026-11-22 13:27 | rev-23 | Native keep-alive. Confirmed in React Native source that its OkHttp client has no timeouts by default (connect/read/write 0) and keeps idle connections, so a connection that dies while the phone idles hangs every request for ever (cleared only by a process restart). Config plugin mobile/plugins/withNetworkKeepAlive.js adds KeepAliveOkHttpClientFactory (15s connect, 30s read/write, no idle connection reuse, 15s HTTP/2 ping) and registers it in MainApplication; verified by a local expo prebuild. Also phone accounts: one card per row (max 340 wide), more space between kind groups. Needs a new APK. | -
+- 2026-11-22 13:45 | build | Android APK built OK from rev-23 (build e19f045c-f9a4-4dbc-b2c9-154232e828ca), artifact https://expo.dev/artifacts/eas/cUeQp38EjgrsZoCpvq3R6z5z3ZCtL2eQqWLxc5R4BDw.apk . rev-23 merged to main. | -
 
 ## 4. Open questions
 
