@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-19 held captures inline, web held, Transfer category (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval: merge rev/19-held-inline, apply migration 20261211000000_held_captures.sql, publish the phone update. Savings plan in forecast: needs a decision (see chat).
-- **User to-do now:** Apply migration 20261211000000_held_captures.sql after approval; publish phone update; decide how the savings plan should enter the forecast
+- **Active slice / milestone:** Round three plus rev-18, rev-19 merged; C1 on hold
+- **Gate:** none
+- **Next action:** User: apply migration 20261211000000_held_captures.sql, then ask me to publish the phone update. Open: savings plan in forecast (needs decision: payroll-deducted or own transfer), C1 Google Wallet sample, C2 device checks.
+- **User to-do now:** Apply migration 20261211000000_held_captures.sql; publish phone update (ask me); decide savings plan approach; Google Wallet sample for C1
 
 ## 3. Execution log
 
@@ -39,6 +39,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 12:06 | ota | Phone update published to preview channel, runtime 1.1.0, update group 00cb0f75-f995-497a-9197-689fc27885b2 (commit f80924a): rev-12 to rev-18. Four migrations applied by the user. | -
 - 2026-11-22 12:16 | rev-19 | Held captures (no account yet) now show as ordinary cards in the phone Inbox To check list, sorted by time with the others, same layout and buttons; the top panel is gone. Added account chooser and where-from/where-to chips, Use this account, Not mine. | -
 - 2026-11-22 12:26 | rev-19 | Transfer category now exists from the first Inbox visit (web and phone) and picking it on a pending item files it as a transfer. Held captures sync to a new held_captures table (migration 20261211000000, NOT applied) and show as ordinary cards in the web Inbox; answered on either side clears both. Pairing moved to lib/capture/pairing.ts so the web can run it. Fixed a stale phone colour test (rev-18 was merged with it failing). 379 web + 150 phone tests, lint, build ok. | -
+- 2026-11-22 12:26 | rev-19 | Approved and merged to main. | -
 
 ## 4. Open questions
 
