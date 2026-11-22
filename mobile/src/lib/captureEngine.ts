@@ -2,7 +2,7 @@ import { drainQueue } from '@modules/notification-listener';
 import * as Crypto from 'expo-crypto';
 import 'expo-sqlite/localStorage/install';
 import { useSyncExternalStore } from 'react';
-import type { AccountLite, TxnInsert } from '@/lib/capture/row';
+import { buildRow, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import { applyAllowlist } from './allowlist';
 import { loadCapture } from './capture';
 import { runCapture, type Held, type RunContext, type RunDeps } from './captureRun';
@@ -50,12 +50,14 @@ export const readLastRun = (): LastRun | null => read<LastRun | null>(LAST_RUN_K
 export interface CaptureStatus {
   /** Captures waiting for an account. */
   held: number;
+  /** The same captures, so the Inbox can ask about each one. */
+  heldItems: Held[];
   /** The last Gmail check. */
   gmail: (GmailResult & { at: number }) | { status: 'error'; message: string; at: number } | null;
   /** Gmail was connected but Google wants you to sign in again (the weekly re-sign-in). */
   reconnect: boolean;
 }
-let status: CaptureStatus = { held: read<Held[]>(HELD_KEY, []).length, gmail: null, reconnect: read<boolean>(RECONNECT_KEY, false) };
+let status: CaptureStatus = { held: read<Held[]>(HELD_KEY, []).length, heldItems: read<Held[]>(HELD_KEY, []), gmail: null, reconnect: read<boolean>(RECONNECT_KEY, false) };
 const listeners = new Set<() => void>();
 const setStatus = (patch: Partial<CaptureStatus>) => {
   status = { ...status, ...patch };
@@ -67,6 +69,7 @@ const subscribe = (cb: () => void) => {
 };
 export const useCaptureStatus = () => useSyncExternalStore(subscribe, () => status);
 export const useHeldCount = () => useSyncExternalStore(subscribe, () => status.held);
+export const useHeldItems = () => useSyncExternalStore(subscribe, () => status.heldItems);
 export const useGmailReconnect = () => useSyncExternalStore(subscribe, () => status.reconnect);
 
 /** Called when Gmail is connected or disconnected, so a later expiry can be told from "never connected". */
@@ -112,6 +115,30 @@ async function isDuplicate(row: TxnInsert): Promise<boolean> {
     .lte('occurred_at', new Date(at + 180_000).toISOString())
     .limit(1);
   return (data?.length ?? 0) > 0;
+}
+
+/**
+ * You answered the Inbox's question about a capture that no account claimed: which of your accounts it belongs to and, if the other
+ * side is also yours, which one. It joins the Inbox as a pending row (naming the other account when there is one, so the pairing can
+ * make it a transfer) and stops being held. Drop it with `accountId: null`.
+ */
+export async function resolveHeld(args: { hash: string; accountId: string | null; other?: { name: string } | null; send?: () => Promise<void> | void }): Promise<void> {
+  const all = read<Held[]>(HELD_KEY, []);
+  const h = all.find((x) => x.hash === args.hash);
+  if (!h) return;
+  if (args.accountId) {
+    const parsed = args.other ? { ...h.parsed, counterparty: args.other.name } : h.parsed;
+    const decision = { ...h.decision, status: 'pending' as const, accountId: args.accountId };
+    const row = buildRow({ id: Crypto.randomUUID(), parsed, decision, accountId: args.accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
+    await outbox.add(row);
+  }
+  const rest = all.filter((x) => x.hash !== args.hash);
+  write(HELD_KEY, rest);
+  setStatus({ held: rest.length, heldItems: rest });
+  if (args.accountId) {
+    await args.send?.();
+    await pairRecent(supabase);
+  }
 }
 
 const captureDeps: RunDeps = {
@@ -181,7 +208,7 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
         await checkGmail();
       }
       const s = await runCapture(captureDeps);
-      setStatus({ held: s.held });
+      setStatus({ held: s.held, heldItems: read<Held[]>(HELD_KEY, []) });
       added += s.added;
       if (s.added > 0) {
         await opts.send();

@@ -6,7 +6,7 @@ import { requestCapture } from './captureEngine';
 import { useSession } from './session';
 import { useSync } from './sync';
 
-export { useCaptureStatus, useHeldCount, type CaptureStatus } from './captureEngine';
+export { resolveHeld, useCaptureStatus, useHeldCount, useHeldItems, type CaptureStatus } from './captureEngine';
 
 let trigger: ((forceGmail: boolean) => void) | null = null;
 /** Runs capture now. `forceGmail` checks Gmail even if it was checked a minute ago. */

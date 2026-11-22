@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-13 UI group (awaiting approval)
+- **Active slice / milestone:** rev-14 capture group I1 I2 (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval: merge rev/13-ui-group, then rev-14 (I1 transfer detection, I2 usual-account prompt, S1 custom capture rules), rev-15 (T4, T5, B1), rev-16 (T3 installments).
-- **User to-do now:** Check on web and phone: setup wizard (re-run it), Now accounts scroller, Accounts cards and Earlier/Later, Budget office day chips.
+- **Next action:** On approval: merge rev/14-transfer-held, then rev-15 S1 (user-written keywords/text patterns converted to regex, sources editable, no OTA needed), rev-16 T4+T5+B1, rev-17 T3.
+- **User to-do now:** On the phone (needs a new APK/OTA): trigger a capture with no matching account and answer the Inbox card; pair an in and out within 10 minutes and check the Transfer category appears.
 
 ## 3. Execution log
 
@@ -41,6 +41,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 10:46 | plan | Round three sliced into rev-12..rev-18, approved | -
 - 2026-11-22 10:53 | rev-12 | T1: income tax now worked per cutoff (taxable pay x 24, year tax / 24) in lib/engine/payslip.ts; SSS PenBoost added as a pre-tax payslip line (2nd cutoff, amount typed on the line; migration 20261208000000 widens the payslip_lines source check, NOT yet applied); tax working panel shows both cutoffs; 333 tests pass, build ok. Bonus tax (13th month, CIP) already used the x24 cutoff method with the shared 90,000 cap; unchanged. | b473880
 - 2026-11-22 11:00 | rev-13 | UI group: W1 duplicate-name checks (accounts, budget lines, funds; server too), W2 per-line cutoff (each/1st/2nd) with monthly total note, W3 no starter budget lines; N1 hidden scrollbar + prev/next buttons; N2 envelopes max 3 per row; A1 account cards ~3 per row, taller (web+phone); A2 reorder accounts (Earlier/Later, web+phone, lib/accounts/order.ts); T2 accounts loading.tsx, link-pending shimmer, phone skeleton tiles; M1 weekday names on office day chips (phone). 338 tests, lint, build ok. | -
+- 2026-11-22 11:09 | plan | Round three resliced: rev-14 I1+I2, rev-15 S1 (user-written text patterns -> regex), rev-16 T4+T5+B1, rev-17 T3. Answers: Transfer = real category, keep 10 min window; usual-account prompt must be an Inbox item asking where it came from and where it went; S1 user writes keywords and/or text patterns converted to regex, no OTA needed. | -
+- 2026-11-22 11:12 | rev-14 | I1: real Transfer category (own Transfers group, created on first pairing, backfills earlier transfers), 10 min window kept (lib/capture/transfer-category.ts, mobile pairing). I2: captures no account claims now appear as cards in the phone Inbox asking which account and where it came from/went (own account => matched as transfer); Ignore drops it; notice and Capture copy point to the Inbox. 341+145 tests, lint, web build ok. S1 moved to rev-15. | -
 
 ## 4. Open questions
 
@@ -79,7 +81,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,366,047 | 12,445,429 | 541,522 | 5,998,814 | 651,229,225 | 2,810,306 |  |
+| **Cumulative** | 3,415,481 | 12,656,626 | 550,813 | 6,043,929 | 655,990,662 | 2,829,995 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -126,6 +128,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | G1-G5 | 411,056 | 1,885,707 | 85,638 | 479,934 | 51,413,137 | 251,551 |  |
 | rev-12 | 41,259 | 242,973 | 8,891 | 66,222 | 2,682,272 | 28,242 |  |
 | rev-13 | 56,692 | 389,768 | 15,481 | 69,970 | 4,802,032 | 29,017 |  |
+| rev-14 | 49,434 | 211,197 | 9,291 | 43,287 | 4,373,776 | 17,856 |  |
 
 <!-- END SUMMARY -->
 

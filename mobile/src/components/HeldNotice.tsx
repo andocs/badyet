@@ -11,12 +11,12 @@ export function HeldNotice() {
   const held = useHeldCount();
   if (held === 0) return null;
   return (
-    <Pressable onPress={() => router.navigate('/capture')} accessibilityRole="button">
+    <Pressable onPress={() => router.navigate('/inbox')} accessibilityRole="button">
       <Card style={{ borderColor: c.gold }}>
         <Text style={{ color: c.gold, fontFamily: fonts.bodyBold, fontSize: 15 }}>
           {held} {held === 1 ? 'capture needs' : 'captures need'} an account ›
         </Text>
-        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Set the usual account for the source in Capture rules.</Text>
+        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Open the Inbox to say which account each one belongs to.</Text>
       </Card>
     </Pressable>
   );

@@ -207,7 +207,7 @@ export default function Capture() {
       {!data && !error ? <Notice>Loading…</Notice> : null}
       {held > 0 ? (
         <Notice>
-          {held} capture{held === 1 ? ' is' : 's are'} waiting for an account. Choose a usual account for the source below, or name an account like the source (for example “GCash”).
+          {held} capture{held === 1 ? ' is' : 's are'} waiting for an account. Open the Inbox to say which account each one belongs to. A usual account below is optional and just saves you that question.
         </Notice>
       ) : null}
       {data?.missing ? <Notice>The capture settings need a database update first: apply supabase/migrations/20261207000000_capture_rules.sql, then pull down to refresh.</Notice> : null}
