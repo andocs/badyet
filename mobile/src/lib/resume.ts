@@ -2,9 +2,12 @@ import 'expo-sqlite/localStorage/install';
 import * as Updates from 'expo-updates';
 import { AppState } from 'react-native';
 import { diag, flushDiag } from './diag';
+import { networkAnswers } from './net';
 
-/** Away from the app at least this long, and it starts over when you come back (see installResumeGuard). */
-export const IDLE_RELOAD_MS = 10 * 60_000;
+/** Away from the app at least this long, and it starts over when you come back (see installResumeGuard), whatever state it is in. */
+export const IDLE_RELOAD_MS = 30 * 60_000;
+/** Away at least this long, and a tiny request checks the network client on the way back. */
+const PROBE_AFTER_MS = 60_000;
 /** Never restart twice within this long, so a problem that survives a restart cannot become a restart loop. */
 const MIN_BETWEEN_RELOADS_MS = 2 * 60_000;
 const KEY = 'resume_reload_at';
@@ -53,7 +56,18 @@ export function installResumeGuard(): () => void {
     else if (state === 'active') {
       const was = leftAt;
       leftAt = null;
-      if (shouldReload(was, Date.now(), readLast())) void reloadApp();
+      const now = Date.now();
+      if (shouldReload(was, now, readLast())) {
+        void reloadApp();
+        return;
+      }
+      // After a while away the network client can be left holding a dead connection. One tiny request tells, in about four seconds, and
+      // if it fails the app starts over before any screen shows an error.
+      if (was !== null && now - was >= PROBE_AFTER_MS) {
+        void networkAnswers('resume').then((ok) => {
+          if (!ok) void reloadApp();
+        });
+      }
     }
   });
   return () => sub.remove();

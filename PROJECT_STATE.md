@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-21 merged and published
-- **Gate:** none
-- **Next action:** User: apply migration 20261212000000_app_diagnostics.sql; open the phone app twice to get update 2f1eb099; when it sticks, force stop, reopen, then paste Settings > Diagnostics to me. Other open: savings plan in forecast (payroll-deducted or own transfer?), C1 Google Wallet sample, C2 device checks.
-- **User to-do now:** Apply migration 20261212000000_app_diagnostics.sql; open the phone app twice for the update; paste Settings > Diagnostics after it sticks; answer savings plan question
+- **Active slice / milestone:** rev-22 network probe (awaiting approval)
+- **Gate:** waiting
+- **Next action:** On approval: merge rev/22-network-probe and publish phone update. Optional: native build with an OkHttp ping interval for the root fix.
+- **User to-do now:** After publishing, repeat: leave the phone 10+ minutes, open the app; check Settings > Diagnostics for net-probe events
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 12:32 | rev-21 | Fast recovery. The reported error is 'Timed out. Pull down to try again' (our own 25s limit), so timers work and the hang is in the network/sign-in layer. A stuck load now probes sign-in for 4s; if it will not answer, the app restarts itself at once (max once per 2 min). Load limit cut from 25s to 15s. Not verified on a device. | -
 - 2026-11-22 12:47 | rev-21 | Diagnostics for the phone sticking after idle. User findings: swiping away does not fix it, Force stop in Settings does (so the wedge lives in the app process); web loads fine; Unrestricted battery; happens after the background task, Gmail capture connected. Added: shared http fetch with 20s limit and request logging (Supabase AND Gmail, which had none), 10s limit on Google silent sign-in, 45s/60s/30s limits on capture phases, diagnostic log kept on the phone and uploaded to app_diagnostics (migration 20261212000000, temporary, NOT applied) after a successful load, web page Settings > Diagnostics with Copy and Clear. 379 web + 158 phone tests, lint, build ok. Not verified on a device. | -
 - 2026-11-22 12:49 | ota | Phone update published to preview, runtime 1.1.0, group 2f1eb099-d51f-4067-8e8d-98b7048d8122 (commit 550073d): rev-21 (diagnostics, Gmail/capture limits, fast recovery); earlier group 4c46f8e9 carried rev-19 and rev-20. | -
+- 2026-11-22 13:22 | rev-22 | Diagnostics read (user log 22 Nov 13:18): background task confirmed running (bg-start/bg-end at 12:52 and 13:08, ~15 min apart, 0.4s and 2.5s). Stuck: at resume after 8 min away EVERY request to Supabase hangs (even new ones and the auth token refresh); after reload-app the same requests finish in 0.6s. So the wedge is the app's native network client (likely a dead long-lived HTTP/2 connection reused for every request), cleared by a JS restart. Old auth probe never touched the network (always answered). Fix: real network probe (health endpoint, 4s) on resume after 60s away and in the stuck-load path, restart at once if dead; unconditional idle restart raised to 30 min. Root fix needs a native build (OkHttp ping interval). Not verified on device. | -
 
 ## 4. Open questions
 
