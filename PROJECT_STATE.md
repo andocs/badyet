@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-29 dedupe+boot
-- **Gate:** waiting
-- **Next action:** User reviews rev-29; on approval merge, then rev-30 (credit card payment)
-- **User to-do now:** Apply migration 20261214000000; new phone build; reboot test; check Vercel preview
+- **Active slice / milestone:** rev-30 card payment
+- **Gate:** none
+- **Next action:** Investigate card payment with real data (balances.ts:21-26, held.ts:82-102); card leg = in
+- **User to-do now:** Apply migration 20261214000000; new phone build; Vercel preview
 
 ## 3. Execution log
 
@@ -51,6 +51,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:18 | rev-28 | Mockups corrected: phone back button removed; New rule has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes); card payment renamed Payment | -
 - 2026-11-22 22:47 | rev-28 | Rules mockups approved by user and merged to main (local, not pushed) | d8b5c7b
 - 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
+- 2026-11-22 23:27 | rev-29 | Approved by user; merged to main (local) | -
 
 ## 4. Open questions
 

@@ -45,6 +45,22 @@ describe('resolveHeldRow', () => {
     expect(await resolveHeldRow(supabase, { hash: row.hash, accountId: ACC, otherName: 'BPI Payroll' })).toEqual({ ok: true });
     expect(find(log, 'transactions', 'insert')?.args[0]).toMatchObject({ kind: 'transfer', merchant: 'BPI Payroll', category_id: 'tcat', status: 'confirmed' });
   });
+  it('saves the other half of a transfer too: paying a card puts the amount on the card', async () => {
+    const CARD = '33333333-3333-4333-8333-333333333333';
+    const out: Parsed = { ...parsed, direction: 'out' };
+    const held = heldToRow({ parsed: out, postTime: Date.parse('2026-11-22T04:00:00Z'), hash: 'abcdef123456', origin: 'notification' });
+    const { supabase, log } = client({ 'held_captures:select': { data: held }, 'accounts:select': { data: accounts }, 'categories:select': { data: { id: 'tcat' } } });
+    expect(await resolveHeldRow(supabase, { hash: held.hash, accountId: ACC, otherName: 'Maya Black', otherAccountId: CARD })).toEqual({ ok: true });
+    const inserts = log.filter((c) => c.table === 'transactions' && c.ops.some((o) => o.name === 'insert')).map((c) => c.ops.find((o) => o.name === 'insert')!.args[0] as { id: string; account_id: string; amount: number; kind: string; status: string; transfer_peer_id?: string | null; dedupe_hash?: string | null });
+    expect(inserts).toHaveLength(2);
+    expect(inserts[0]).toMatchObject({ account_id: ACC, amount: -10_000, kind: 'transfer' });
+    expect(inserts[1]).toMatchObject({ account_id: CARD, amount: 10_000, kind: 'transfer', status: 'confirmed', transfer_peer_id: inserts[0]!.id, dedupe_hash: null });
+  });
+  it('refuses a transfer to the same account', async () => {
+    const { supabase, log } = client({ 'held_captures:select': { data: row }, 'accounts:select': { data: accounts } });
+    expect(await resolveHeldRow(supabase, { hash: row.hash, accountId: ACC, otherName: 'Maya', otherAccountId: ACC })).toMatchObject({ error: expect.stringMatching(/two different/) });
+    expect(find(log, 'transactions', 'insert')).toBeUndefined();
+  });
   it('asks for a category when the other side is not your own account', async () => {
     const { supabase, log } = client({ 'held_captures:select': { data: row }, 'accounts:select': { data: accounts } });
     expect(await resolveHeldRow(supabase, { hash: row.hash, accountId: ACC })).toMatchObject({ error: expect.stringMatching(/Pick a category/) });
