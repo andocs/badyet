@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-17 T3 installments (awaiting approval)
-- **Gate:** waiting
-- **Next action:** On approval: merge rev/17-installments. Round three is then complete except C1 (Google Wallet, on hold) and the C2 device checks.
-- **User to-do now:** Apply supabase migrations 20261208000000, 20261208000100, 20261209000000, 20261210000000; publish phone update; test: add a card plan and see its line in Budget; send a Google Wallet sample when it arrives (C1).
+- **Active slice / milestone:** Round three built (rev-12 to rev-17 merged); C1 on hold
+- **Gate:** none
+- **Next action:** User: apply migrations 20261208000000, 20261208000100, 20261209000000, 20261210000000; publish phone update; check items on device (C2). Then send a Google Wallet notification sample for C1, or add new revisions.
+- **User to-do now:** Apply the four supabase migrations; publish the phone update (OTA or new APK); C2 device checks; Google Wallet sample for C1
 
 ## 3. Execution log
 
@@ -46,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:17 | rev-15 | S1: your own notification patterns. Write wording with {amount} {name} {last4} {ref} {any}; compiled to regex on the phone (lib/capture/template.ts), tried before the built-in readers, with a try-it-on-a-sample box on phone Capture rules and web Settings. New 'Other app' source for apps with no built-in reader. Migration 20261208000100_capture_patterns.sql (NOT yet applied; app works without it). Built-in readers and default app ids stay as fallbacks; email readers unchanged. 354+145 tests, lint, build ok. | -
 - 2026-11-22 11:27 | rev-16 | T4: fixed line on both cutoffs takes its own amount per cutoff (amount_second), shown per cutoff on web+phone. T5: reimbursement on a budget line (amount, cutoff, day): adds to that cutoff's available money so the rest line and over flag see it. B1: web received bonus cards can change where the money went (phone already could). Migration 20261209000000 NOT yet applied. 360+145 tests, lint, build ok. | -
 - 2026-11-22 11:32 | rev-17 | T3: installments rebuilt (the old page was retired in the rehaul). New installment_plans table; each plan owns one budget line (fixed, its cutoff, first to last due month, in an Installments category). Web /installments page and phone Plan > Installments screen add, edit, delete; shows monthly, paid of N, ends, left, interest; paid is inferred from due dates. Shared code in lib/installments. Migration 20261210000000 NOT yet applied. Last payment can differ by centavos on interest plans; the line uses the regular payment. 369+145 tests, lint, build ok. | -
+- 2026-11-22 11:36 | round-three | rev-12 to rev-17 approved and merged to main (T1-T5, W1-W3, N1-N2, I1-I2, A1-A2, B1, M1, S1). Open: C1 Google Wallet (needs sample), C2 device checks, four migrations to apply, phone update to publish. | -
 
 ## 4. Open questions
 
