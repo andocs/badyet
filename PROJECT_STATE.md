@@ -51,6 +51,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 11:57 | rev-18 | Fixes after review: swapped cards no longer trade colours (colour from account id, not list position; web, Now and phone); Planned vs spent really max 3 across (the old percentage minimum in auto-fit let 4 fit; now explicit 1/2/3 columns); one standard account card size on Accounts and Now (--acard-w 230px, 1.586 ratio); saving indicator and shimmer on swapped cards (web), Saving order notice and disabled buttons (phone); a new account no longer vanishes after a reorder. | -
 - 2026-11-22 12:01 | rev-18 | Approved and merged to main. | -
 - 2026-11-22 12:06 | ota | Phone update published to preview channel, runtime 1.1.0, update group 00cb0f75-f995-497a-9197-689fc27885b2 (commit f80924a): rev-12 to rev-18. Four migrations applied by the user. | -
+- 2026-11-22 12:16 | rev-19 | Held captures (no account yet) now show as ordinary cards in the phone Inbox To check list, sorted by time with the others, same layout and buttons; the top panel is gone. Added account chooser and where-from/where-to chips, Use this account, Not mine. | -
 
 ## 4. Open questions
 
