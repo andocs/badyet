@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-31 Rules page
-- **Gate:** waiting
-- **Next action:** User reviews rev-31; on approval merge. Nothing queued after rev-31
-- **User to-do now:** Apply migrations 20261214..16; rebuild phone app; check Vercel preview
+- **Active slice / milestone:** rev-31 merged
+- **Gate:** none
+- **Next action:** Batch 3 (rev-28..31) done and merged locally. Push main when ready; ask for next revisions or finish
+- **User to-do now:** Push main; apply migrations 20261214..16; rebuild phone app; check Vercel preview
 
 ## 3. Execution log
 
@@ -41,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 23:30 | rev-30 | Held transfer now inserts counter leg on other account (card gets +amount) and a DB trigger backlinks peers; web + mobile; tests green | -
 - 2026-11-22 23:44 | rev-30 | Approved by user; merged to main (local) | -
 - 2026-11-23 00:12 | rev-31 | Rules page built (web /rules, phone rules.tsx): rules migration, channel + any/must/skip words, record rules incl. transfer/payment with both legs, ordering, duplicate rule editor, device_apps + seen_senders pickers, Kotlin installedApps. Root 400+ tests, mobile tests, tsc, eslint, next build pass | -
+- 2026-11-23 00:14 | rev-31 | Approved by user; merged to main (local, not pushed) | -
 
 ## 4. Open questions
 
