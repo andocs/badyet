@@ -214,6 +214,8 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
   runningSince = Date.now();
   diag('capture-start', { src: opts.source });
   let added = 0;
+  // What the last pass did with what it read, so the log can tell a held capture from an ignored or skipped one.
+  let last: { held: number; skipped: number; ignored: number } | null = null;
   try {
     let force = opts.forceGmail;
     do {
@@ -232,6 +234,7 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
       const heldNow = read<Held[]>(HELD_KEY, []);
       setStatus({ held: heldNow.length, heldItems: heldNow });
       added += s.added;
+      last = { held: s.held, skipped: s.skipped, ignored: s.ignored };
       if (s.added > 0) {
         await withLimit(opts.send(), 30_000, 'send');
         await withLimit(pairRecent(supabase), 30_000, 'pair');
@@ -243,7 +246,7 @@ export async function requestCapture(opts: { forceGmail: boolean; source: RunSou
   } catch {
     // Anything unexpected: the queue and held items are untouched, so the next trigger retries.
   } finally {
-    diag('capture-end', { src: opts.source, ms: Date.now() - runningSince, added });
+    diag('capture-end', { src: opts.source, ms: Date.now() - runningSince, added, ...(last ?? {}) });
     running = false;
     void uploadDiag(supabase);
   }

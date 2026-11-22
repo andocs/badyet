@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-23 built and merged
-- **Gate:** none
-- **Next action:** User: install the new APK over the current app, then repeat the idle test (10+ min) and check Settings > Diagnostics (net-probe, limit, reload-app events). If stable for a few days, remove diagnostics. Other open: savings plan in forecast (payroll-deducted or own transfer?), C1 Google Wallet sample, C2 device checks.
-- **User to-do now:** Install the APK; idle test; tell me the result; answer savings plan question
+- **Active slice / milestone:** rev-24 inbox count (awaiting approval)
+- **Gate:** waiting
+- **Next action:** On approval: merge rev/24-inbox-count and publish phone update (OTA; no native change).
+- **User to-do now:** After publishing, send a test notification with the app closed and read Settings > Diagnostics: capture-end should now show held/skipped/ignored
 
 ## 3. Execution log
 
@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 13:23 | ota | Phone update published to preview, runtime 1.1.0, group 8e8ffc7f-500c-4715-9ed6-753f8656b04e (commit a7b766c): rev-22 network probe. | -
 - 2026-11-22 13:27 | rev-23 | Native keep-alive. Confirmed in React Native source that its OkHttp client has no timeouts by default (connect/read/write 0) and keeps idle connections, so a connection that dies while the phone idles hangs every request for ever (cleared only by a process restart). Config plugin mobile/plugins/withNetworkKeepAlive.js adds KeepAliveOkHttpClientFactory (15s connect, 30s read/write, no idle connection reuse, 15s HTTP/2 ping) and registers it in MainApplication; verified by a local expo prebuild. Also phone accounts: one card per row (max 340 wide), more space between kind groups. Needs a new APK. | -
 - 2026-11-22 13:45 | build | Android APK built OK from rev-23 (build e19f045c-f9a4-4dbc-b2c9-154232e828ca), artifact https://expo.dev/artifacts/eas/cUeQp38EjgrsZoCpvq3R6z5z3ZCtL2eQqWLxc5R4BDw.apk . rev-23 merged to main. | -
+- 2026-11-22 14:17 | rev-24 | Log check: notification-started headless runs work (bg-start src notification at 14:02:56 and 14:13:07, ~1.8s, capture ran) but both show added 0, which cannot say if the capture was held, ignored by the parser, or skipped. Inbox number: web nav badge counted only pending transactions (not held_captures) and was server-rendered so never refreshed; phone had no Inbox tab badge at all. Fixed: web badge includes held captures plus AutoRefresh (focus + every 60s); phone Inbox tab badge = pending + held, refreshed on focus, after capture, after queue sends, each minute. capture-end now logs held/skipped/ignored counts. 379 web + 161 phone tests, lint, build ok. | -
 
 ## 4. Open questions
 
