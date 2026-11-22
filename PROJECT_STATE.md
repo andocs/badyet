@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-28 mockups
+- **Active slice / milestone:** rev-29 dedupe+boot
 - **Gate:** waiting
-- **Next action:** User reviews revised rev-28 mockups (Rules before Settings, app + sender pickers); on approval merge, then rev-29
-- **User to-do now:** Review the revised mockups; confirm 'All apps' list (QUERY_ALL_PACKAGES) is OK
+- **Next action:** User reviews rev-29; on approval merge, then rev-30 (credit card payment)
+- **User to-do now:** Apply migration 20261214000000; new phone build; reboot test; check Vercel preview
 
 ## 3. Execution log
 
@@ -49,6 +49,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
 - 2026-11-22 22:18 | rev-28 | Mockups revised: phone back button removed; New rule sheet has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes) | -
 - 2026-11-22 22:18 | rev-28 | Mockups corrected: phone back button removed; New rule has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes); card payment renamed Payment | -
+- 2026-11-22 22:47 | rev-28 | Rules mockups approved by user and merged to main (local, not pushed) | d8b5c7b
+- 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
 
 ## 4. Open questions
 
@@ -87,7 +89,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,699,038 | 14,412,267 | 613,518 | 6,657,270 | 773,351,213 | 3,180,212 |  |
+| **Cumulative** | 3,834,148 | 15,045,706 | 633,887 | 6,826,984 | 777,150,107 | 3,221,565 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -104,7 +106,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-11..17 | 120,085 | 579,997 | 27,820 | 126,989 | 15,445,879 | 70,608 |  |
 | rev-18..23 | 131,120 | 618,049 | 26,724 | 177,898 | 35,812,772 | 88,889 |  |
 | rev-28 | 0 | 0 | 0 | 24,387 | 577,568 | 13,975 |  |
-| rev-29 | 4,574 | 30,482 | 744 | 22,631 | 993,397 | 7,844 |  |
+| rev-29 | 62,363 | 234,316 | 8,925 | 40,207 | 1,316,760 | 16,161 |  |
 | rev-30 | 12,105 | 27,159 | 1,105 | 11,276 | 976,333 | 7,753 |  |
 | rev-31 | 4,527 | 20,999 | 837 | 9,804 | 1,243,664 | 4,745 |  |
 | rev-1..4 | 1,171,705 | 4,752,666 | 196,083 | 2,617,926 | 321,135,092 | 1,441,593 |  |
@@ -164,6 +166,12 @@ Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, batte
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+Review rev-29 on branch rev/29-dedupe-boot (cut from main, which now includes the local rev-28 merge).
+1. Apply migration 20261214000000_dedupe_rules.sql to Supabase. Until then the defaults apply, so nothing breaks.
+2. Build and install a new phone build (the boot receiver and RECEIVE_BOOT_COMPLETED permission are native). Reboot the phone and check capture still works without opening the app.
+3. Test: a GCash/bank alert then its email up to 30 min later should make one item; a bank alert should trigger a Gmail check at once.
+4. Check the Vercel preview for this branch passes (lib/capture/recent.ts is shared with web).
 
 Open docs/mockups/v13-rules.html (desktop) and docs/mockups/phone/rules.html (phone, use a 320px-wide window). Try both tabs: Capture and Duplicates. On the phone page tap a rule, the + button, or a duplicate rule; links #edit, #new, #dup, #dupedit open each view directly. Check: listen on Notifications / Emails / Both, the keyword lists (any / must include / skip), the Card payment type, and the Test box.
 

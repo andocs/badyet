@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { patternsFromRows, validatePattern, type CapturePattern, type PatternInput, type PatternRow, MAX_PATTERNS } from '@/lib/capture/patterns';
 import { configsFromRows, defaultConfig, rulesFromRows, SOURCES, type CaptureRule, type RuleRow, type SourceConfig, type SourceRow } from '@/lib/capture/sources';
+import { DEFAULT_DEDUPE, type DedupeRule } from '@/lib/capture/recent';
 import { validateRule, validateSource, type RuleInput, type SourceInput } from '@/lib/capture/validate';
 
 export interface CaptureData {
@@ -8,6 +9,8 @@ export interface CaptureData {
   rules: CaptureRule[];
   /** Notification wordings you wrote yourself. */
   patterns: CapturePattern[];
+  /** When a notification and an email are the same movement. */
+  dedupe: DedupeRule;
   /** The capture tables are not in the database yet (migration not applied). */
   missing: boolean;
 }
@@ -18,17 +21,20 @@ export type Result = { ok: true } | { error: string };
 const isMissingTable = (e: { code?: string } | null) => !!e && (e.code === '42P01' || e.code === 'PGRST205');
 
 export async function loadCapture(supabase: SupabaseClient): Promise<CaptureData> {
-  const [src, rul, pat] = await Promise.all([
+  const [src, rul, pat, ded] = await Promise.all([
     supabase.from('capture_sources').select('source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount'),
     supabase.from('capture_rules').select('id, source, match_text, action, category_id').order('created_at'),
     supabase.from('capture_patterns').select('id, source, template, direction').order('created_at'),
+    supabase.from('dedupe_rules').select('window_minutes, match_source').maybeSingle(),
   ]);
-  if (isMissingTable(src.error) || isMissingTable(rul.error)) return { configs: SOURCES.map(defaultConfig), rules: [], patterns: [], missing: true };
+  if (isMissingTable(src.error) || isMissingTable(rul.error)) return { configs: SOURCES.map(defaultConfig), rules: [], patterns: [], dedupe: DEFAULT_DEDUPE, missing: true };
   if (src.error) throw src.error;
   if (rul.error) throw rul.error;
   // Patterns come from a newer migration; until it is applied everything else keeps working.
   const patterns = pat.error ? [] : patternsFromRows((pat.data ?? []) as PatternRow[]);
-  return { configs: configsFromRows((src.data ?? []) as SourceRow[]), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, missing: false };
+  // Also from a newer migration: no row, or no table yet, means the defaults.
+  const dedupe: DedupeRule = ded.data ? { windowMin: ded.data.window_minutes, matchSource: ded.data.match_source } : DEFAULT_DEDUPE;
+  return { configs: configsFromRows((src.data ?? []) as SourceRow[]), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, dedupe, missing: false };
 }
 
 /** Same checks as the web: the account and category must exist and not be archived. */

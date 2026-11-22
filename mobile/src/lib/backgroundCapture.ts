@@ -36,7 +36,8 @@ async function runClosedWork(source: RunSource): Promise<void> {
   try {
     const { data } = await supabase.auth.getSession();
     if (!data.session) return; // signed out: the listener queue stays put until you sign in
-    await requestCapture({ forceGmail: false, source, send: () => flushQueue(outbox, supabase).then(() => undefined) });
+    // A run started by a notification (or the boot receiver) checks Gmail right away; the 15 minute task keeps the normal pause.
+    await requestCapture({ forceGmail: source === 'notification', source, send: () => flushQueue(outbox, supabase).then(() => undefined) });
   } catch {
     // Never throw out of a background run; the queue is untouched and the next run retries.
   }

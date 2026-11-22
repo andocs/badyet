@@ -31,7 +31,8 @@ export function CaptureRunner() {
     const app = AppState.addEventListener('change', (st) => st === 'active' && run(false));
     let sub: { remove(): void } | null = null;
     try {
-      sub = onQueued(() => run(false));
+      // A bank or wallet alert is when its email is about to land, so look at Gmail now instead of waiting out the 5 minute pause.
+      sub = onQueued(() => run(true));
     } catch {
       sub = null;
     }

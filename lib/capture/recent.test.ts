@@ -6,16 +6,28 @@ const P: Parsed = { source: 'bpi', direction: 'out', amount: 5_000, counterparty
 const T = 1_000_000_000;
 
 describe('recent captures', () => {
-  it('matches the other kind of capture for the same source, direction and amount within ten minutes', () => {
+  it('matches the other kind of capture for the same direction and amount within thirty minutes', () => {
     const r = remember([], 'notification', P, T);
     expect(isRepeat(r, 'import', P, T + 4 * 60_000)).toBe(true);
     expect(isRepeat(r, 'import', P, T + REPEAT_WINDOW_MS + 1)).toBe(false);
   });
 
-  it('never matches the same kind, another source, direction or amount', () => {
+  it('matches across sources by default, and only the same source when the rule says so', () => {
+    const r = remember([], 'notification', P, T);
+    expect(isRepeat(r, 'import', { ...P, source: 'gcash' }, T)).toBe(true);
+    expect(isRepeat(r, 'import', { ...P, source: 'gcash' }, T, { windowMin: 30, matchSource: true })).toBe(false);
+    expect(isRepeat(r, 'import', P, T, { windowMin: 30, matchSource: true })).toBe(true);
+  });
+
+  it('uses the rule window', () => {
+    const r = remember([], 'notification', P, T);
+    expect(isRepeat(r, 'import', P, T + 20 * 60_000, { windowMin: 10, matchSource: false })).toBe(false);
+    expect(isRepeat(r, 'import', P, T + 20 * 60_000, { windowMin: 30, matchSource: false })).toBe(true);
+  });
+
+  it('never matches the same kind, another direction or amount', () => {
     const r = remember([], 'notification', P, T);
     expect(isRepeat(r, 'notification', P, T)).toBe(false);
-    expect(isRepeat(r, 'import', { ...P, source: 'gcash' }, T)).toBe(false);
     expect(isRepeat(r, 'import', { ...P, direction: 'in' }, T)).toBe(false);
     expect(isRepeat(r, 'import', { ...P, amount: 6_000 }, T)).toBe(false);
   });
