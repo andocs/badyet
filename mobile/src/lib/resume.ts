@@ -1,6 +1,7 @@
 import 'expo-sqlite/localStorage/install';
 import * as Updates from 'expo-updates';
 import { AppState } from 'react-native';
+import { diag, flushDiag } from './diag';
 
 /** Away from the app at least this long, and it starts over when you come back (see installResumeGuard). */
 export const IDLE_RELOAD_MS = 10 * 60_000;
@@ -34,6 +35,8 @@ export async function reloadApp(): Promise<boolean> {
   if (last !== null && now - last < MIN_BETWEEN_RELOADS_MS) return false;
   try {
     localStorage.setItem(KEY, String(now));
+    diag('reload-app');
+    flushDiag();
     await Updates.reloadAsync();
     return true;
   } catch {

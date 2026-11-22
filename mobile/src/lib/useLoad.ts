@@ -1,6 +1,9 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
+import { diag } from './diag';
+import { uploadDiag } from './diagUpload';
+import { inflightNow } from './http';
 import { reloadApp } from './resume';
 import { supabase } from './supabase';
 
@@ -56,12 +59,15 @@ export function useLoad<T>(load: () => Promise<T>) {
 
   const run = useCallback(async () => {
     const mine = ++latest.current;
+    const startedAt = Date.now();
     const attempt = async () => {
       const result = await withTimeout(loadRef.current());
       if (mine === latest.current) {
         setData(result);
         setError(null);
       }
+      // A load just worked, so the connection is good: send the diagnostic log (at most once a minute).
+      void uploadDiag(supabase);
     };
     try {
       await attempt();
@@ -69,8 +75,11 @@ export function useLoad<T>(load: () => Promise<T>) {
       // An expired session, or a request left hanging while the phone was idle or a background task ran: get the session back
       // (it is read from storage, where the background task may have just renewed it) and try once more on a fresh connection.
       if (expired(first) || stuck(first) || first instanceof TimedOut) {
+        diag('load-fail', { err: message(first).slice(0, 60), ms: Date.now() - startedAt, ...inflightNow() });
         // Wedged sign-in (it will not even answer a quick question): start the app over now instead of waiting through more timeouts.
-        if (!(await authAnswers()) && (await reloadApp())) return;
+        const answers = await authAnswers();
+        diag('auth-probe', { answers, ...inflightNow() });
+        if (!answers && (await reloadApp())) return;
         try {
           await withTimeout(supabase.auth.getSession());
           await withTimeout(supabase.auth.refreshSession());

@@ -50,6 +50,10 @@ export default async function Settings() {
           <div className="v-row v-sp"><h2 id="sw">Setup wizard</h2><Link className="v-btn v-sm" href="/setup">Run again</Link></div>
           <p className="v-xs v-muted" style={{ margin: 0 }}>Running it again adds to what you have: new accounts and budget lines are added, and your starting salary and paydays are updated.</p>
         </section>
+        <section className="v-card v-stack" aria-labelledby="dg">
+          <div className="v-row v-sp"><h2 id="dg">Diagnostics</h2><Link className="v-btn v-sm" href="/settings/diagnostics">Open</Link></div>
+          <p className="v-xs v-muted" style={{ margin: 0 }}>A temporary log from the phone app, for finding out why it sticks after idling.</p>
+        </section>
         <section className="v-card v-stack" aria-labelledby="yd">
           <h2 id="yd">Your data</h2>
           <p className="v-xs v-muted" style={{ margin: 0 }}>Each file is a CSV of one table. Only your own rows are included.</p>

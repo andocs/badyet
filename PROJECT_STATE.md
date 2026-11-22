@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions (Expo round two)
-- **Active slice / milestone:** rev-21 fast recovery (awaiting approval)
+- **Active slice / milestone:** rev-21 fast recovery plus diagnostics (awaiting approval)
 - **Gate:** waiting
-- **Next action:** On approval: merge rev/21-fast-recovery and publish the phone update.
-- **User to-do now:** After publishing: leave the phone idle 15+ minutes, open the app, tell me what it does
+- **Next action:** On approval: merge rev/21-fast-recovery, user applies migration 20261212000000_app_diagnostics.sql, publish phone update. After the next sticking, read Settings > Diagnostics.
+- **User to-do now:** Apply migration 20261212000000_app_diagnostics.sql; after it sticks again, force stop, reopen, then copy Settings > Diagnostics on the web and paste it to me
 
 ## 3. Execution log
 
@@ -42,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-22 12:26 | rev-19 | Approved and merged to main. | -
 - 2026-11-22 12:30 | rev-20 | Phone idle recovery. Cannot reproduce on a device; likely cause is app state wedged by idling or the background capture task. Fixes: the app restarts its JavaScript on return after 10+ minutes away (max once per 2 min); a load still stuck after retry on a fresh connection restarts it too; a stuck capture cycle (3 min) no longer blocks later ones; the background task always ends within 45s. 379 web + 154 phone tests, lint ok. Not verified on a device. | -
 - 2026-11-22 12:32 | rev-21 | Fast recovery. The reported error is 'Timed out. Pull down to try again' (our own 25s limit), so timers work and the hang is in the network/sign-in layer. A stuck load now probes sign-in for 4s; if it will not answer, the app restarts itself at once (max once per 2 min). Load limit cut from 25s to 15s. Not verified on a device. | -
+- 2026-11-22 12:47 | rev-21 | Diagnostics for the phone sticking after idle. User findings: swiping away does not fix it, Force stop in Settings does (so the wedge lives in the app process); web loads fine; Unrestricted battery; happens after the background task, Gmail capture connected. Added: shared http fetch with 20s limit and request logging (Supabase AND Gmail, which had none), 10s limit on Google silent sign-in, 45s/60s/30s limits on capture phases, diagnostic log kept on the phone and uploaded to app_diagnostics (migration 20261212000000, temporary, NOT applied) after a successful load, web page Settings > Diagnostics with Copy and Clear. 379 web + 158 phone tests, lint, build ok. Not verified on a device. | -
 
 ## 4. Open questions
 
