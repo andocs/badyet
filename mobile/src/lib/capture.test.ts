@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { describe, expect, it } from 'vitest';
 import { addRule, loadCapture, saveSource } from './capture';
+import { SOURCES } from '@/lib/capture/sources';
 
 const ACC = '22222222-2222-4222-8222-222222222222';
 const CAT = '33333333-3333-4333-8333-333333333333';
@@ -83,7 +84,7 @@ describe('loadCapture', () => {
     const { supabase } = client({ capture_sources: { error: { code: 'PGRST205' } }, capture_rules: { data: [] } });
     const d = await loadCapture(supabase);
     expect(d.missing).toBe(true);
-    expect(d.configs).toHaveLength(8);
+    expect(d.configs).toHaveLength(SOURCES.length);
     expect(d.rules).toEqual([]);
   });
   it('reads saved rows over the defaults', async () => {

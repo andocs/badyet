@@ -1,4 +1,6 @@
 import { parsePesos } from '@/lib/domain/money';
+import { compileTemplate } from './template';
+import type { CapturePattern } from './patterns';
 import type { SourceKey } from './sources';
 
 /** What a notification means, with no raw text left in it. */
@@ -37,7 +39,7 @@ export function centavos(text: string | undefined): number | null {
 }
 
 /** Drops phone numbers and masked digits, collapses spaces, trims, and keeps it within the 80 characters a merchant allows. */
-function clean(counterparty: string | undefined): string | null {
+export function clean(counterparty: string | undefined): string | null {
   if (!counterparty) return null;
   let t = counterparty
     .replace(/\+?\d[\d\s-]{8,}\d/g, '')
@@ -150,18 +152,50 @@ const bpi: Parser = (_title, body) => {
 const PARSERS: Partial<Record<SourceKey, Parser>> = { gcash, maya, gotyme, maribank, bpi };
 
 /** True when this source has a notification parser (Grab, foodpanda and Google Wallet do not yet). */
-export const canParse = (source: SourceKey): boolean => source in PARSERS;
+export const canParse = (source: SourceKey, patterns: readonly CapturePattern[] = []): boolean => source in PARSERS || patterns.some((p) => p.source === source);
 
 /**
  * Reads one notification. Uses the expanded text when there is one (it is not cut off), and returns null for anything
  * that is not a money movement, such as promos, so nothing unrelated reaches the Inbox.
  */
-export function parseNotification(source: SourceKey, n: RawNotification): Parsed | null {
-  const parser = PARSERS[source];
-  if (!parser) return null;
+export function parseNotification(source: SourceKey, n: RawNotification, patterns: readonly CapturePattern[] = []): Parsed | null {
   const body = (n.bigText && n.bigText.length >= (n.text?.length ?? 0) ? n.bigText : n.text) ?? '';
   if (!body) return null;
-  return parser(n.title ?? '', body);
+  // Your own patterns come first, so you can fix or replace a built-in reader without waiting for an update.
+  const mine = parseWithPatterns(patterns, source, body);
+  if (mine) return mine;
+  const parser = PARSERS[source];
+  return parser ? parser(n.title ?? '', body) : null;
+}
+
+/** What a pattern would read from a sample message, for the "try it" box. Nothing is saved. */
+export function testPattern(template: string, direction: 'in' | 'out', sample: string): { ok: true; parsed: Parsed | null } | { ok: false; error: string } {
+  const c = compileTemplate(template);
+  if (!c.ok) return { ok: false, error: c.error };
+  return { ok: true, parsed: parseWithPatterns([{ id: 'test', source: 'custom', template, direction }], 'custom', sample) };
+}
+
+/** Tries each of your patterns for this source, in the order you made them; the first that matches wins. */
+export function parseWithPatterns(patterns: readonly CapturePattern[], source: SourceKey, body: string): Parsed | null {
+  for (const p of patterns) {
+    if (p.source !== source) continue;
+    const c = compileTemplate(p.template);
+    if (!c.ok) continue;
+    const m = c.value.regex.exec(body);
+    if (!m) continue;
+    const amount = centavos(m[c.value.groups.amount!]);
+    if (amount === null) continue;
+    const g = c.value.groups;
+    return make({
+      source,
+      direction: p.direction,
+      amount,
+      counterparty: g.name ? clean(m[g.name]) : null,
+      accountHint: g.last4 ? (m[g.last4] ?? null) : null,
+      ref: g.ref ? (m[g.ref] ?? null) : null,
+    });
+  }
+  return null;
 }
 
 /** The words keyword rules look at. Used for matching only, never stored. */

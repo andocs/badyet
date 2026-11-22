@@ -4,6 +4,8 @@ import { useOptimistic, useState, useTransition } from "react";
 import { addCaptureRule, deleteCaptureRule, saveCaptureSource } from "@/app/(v13)/settings/actions";
 import { ACTION_LABEL, RULE_ACTIONS, SOURCES, SOURCE_INFO, type CaptureRule, type RuleAction, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
 import { formatPesos, money } from "@/lib/domain/money";
+import { PatternsSection } from "./capture-patterns";
+import type { CapturePattern } from "@/lib/capture/patterns";
 import { useConfirm, useToast } from "./feedback";
 import { useAct } from "./settings";
 
@@ -66,7 +68,7 @@ function SourceRow({ cfg, accounts, categories }: { cfg: SourceConfig; accounts:
   );
 }
 
-export function CaptureCard({ sources, rules: rulesIn, accounts, categories, missing }: { sources: SourceConfig[]; rules: CaptureRule[]; accounts: Option[]; categories: Option[]; missing: boolean }) {
+export function CaptureCard({ sources, rules: rulesIn, patterns, accounts, categories, missing }: { sources: SourceConfig[]; rules: CaptureRule[]; patterns: CapturePattern[]; accounts: Option[]; categories: Option[]; missing: boolean }) {
   const ask = useConfirm();
   const toast = useToast();
   const add = useAct();
@@ -92,6 +94,8 @@ export function CaptureCard({ sources, rules: rulesIn, accounts, categories, mis
       <h2 id="cp">Capture rules</h2>
       <p className="v-xs v-muted" style={{ margin: 0 }}>How the phone turns bank, wallet and shop notifications and emails into pending items. The same settings show on the phone.</p>
       <div className="v-capsrc">{SOURCES.map((k) => <SourceRow key={k} cfg={sources.find((c) => c.source === k)!} accounts={accounts} categories={categories} />)}</div>
+
+      <PatternsSection patterns={patterns} />
 
       <div className="v-stack">
         <h3 className="v-capsec">Keyword rules</h3>
