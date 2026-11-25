@@ -12,6 +12,10 @@ import { LinkPending } from "./link-pending";
 import { Money } from "./money";
 import { QuickAddButton } from "./quick-add";
 import { BillList } from "./bill-list";
+import { PaydayCard, PanelPicker } from "./payday-card";
+
+/** The envelopes you chose to show (all when you have not chosen). */
+const shownEnvelopes = (all: Envelope[], ids: string[] | null) => (ids ? all.filter((e) => ids.includes(e.categoryId)) : all);
 
 type Ready = Extract<NowData, { kind: "ready" }>;
 const CARD_COLORS = ["#2F5BD7", "#087A5A", "#B03030", "#7A3FB8", "#0F7A95", "#B83A86"];
@@ -36,6 +40,10 @@ export function NowPage({ data, pending }: { data: Ready; pending: number }) {
           </div>
         </div>
 
+        {data.payday ? (
+          <PaydayCard amount={data.payday.amount} cutoff={data.payday.cutoff} bonuses={data.payday.bonuses} accountId={data.payday.accountId} accounts={data.accounts.map((a) => ({ id: a.id, name: a.name, kind: a.kind }))} />
+        ) : null}
+
         <div className="v-top2">
           <Hero view={view} today={today} />
           <Recent txns={view.recent} today={today} />
@@ -47,9 +55,12 @@ export function NowPage({ data, pending }: { data: Ready; pending: number }) {
           <section aria-labelledby="pv">
             <div className="v-row v-sp v-wrap" style={{ marginBottom: 8 }}>
               <h2 id="pv">Planned vs spent</h2>
-              <span className="v-lbl">this cutoff</span>
+              <span className="v-row" style={{ gap: 10 }}>
+                <span className="v-lbl">this cutoff{data.nowCategories ? ` · ${shownEnvelopes(view.envelopes, data.nowCategories).length} of ${view.envelopes.length}` : ""}</span>
+                <PanelPicker all={view.envelopes.map((e) => ({ id: e.categoryId, name: e.name }))} shown={data.nowCategories} />
+              </span>
             </div>
-            <Envelopes envelopes={view.envelopes} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
+            <Envelopes envelopes={shownEnvelopes(view.envelopes, data.nowCategories)} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
           </section>
           <aside className="v-stack">
             <Bills view={view} accounts={data.accounts} />

@@ -136,3 +136,17 @@ export function monthFlag(b: BudgetMonth, tightBelow: Money): MonthFlag {
   const rest = b.rest.first + b.rest.second;
   return rest < tightBelow ? "tight" : null;
 }
+
+/**
+ * One cutoff's view of the month's groups: each line at its amount in that cutoff, lines with nothing in it left out, and each
+ * group's total and share worked against that cutoff's take-home.
+ */
+export function groupsForCutoff(groups: readonly GroupView[], cutoff: "first" | "second", cutoffTakeHome: number): GroupView[] {
+  return groups.map((g) => {
+    const lines = g.lines
+      .map((l) => ({ ...l, amount: l.amount === null ? null : l.perCutoff ? l.perCutoff[cutoff] : l.amount }))
+      .filter((l) => l.amount === null || l.amount > 0);
+    const total = sum(lines.map((l) => l.amount ?? ZERO));
+    return { ...g, lines, total, share: cutoffTakeHome > 0 ? Math.max(0, Math.min(100, (total / cutoffTakeHome) * 100)) : 0 };
+  });
+}

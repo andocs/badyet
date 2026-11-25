@@ -9,12 +9,13 @@ import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayNam
 import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Bill, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { BillSheet } from '~/components/BillSheet';
+import { PanelSheet, PaydayCard } from '~/components/Payday';
 import { AccountTile } from '~/components/AccountTile';
 import { GmailBanner } from '~/components/GmailBanner';
 import { stableColor } from '@/lib/accounts/order';
 import { HeldNotice } from '~/components/HeldNotice';
 import { Runway } from '~/components/Runway';
-import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
+import { Amount, Body, Card, Notice, Screen } from '~/components/ui';
 import { resolveColor } from '~/lib/color';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
@@ -61,10 +62,11 @@ export default function Now() {
     >
       <GmailBanner />
       <HeldNotice />
+      {data.payday ? <PaydayCard payday={data.payday} accounts={data.accounts} onSaved={reload} /> : null}
       <Hero view={view} today={today} />
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />
-      <Envelopes envelopes={view.envelopes} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
+      <Envelopes envelopes={view.envelopes} shown={data.nowCategories} dayNumber={view.dayNumber} daysTotal={view.daysTotal} onChanged={reload} />
       <Bills view={view} accounts={data.accounts} onChanged={reload} />
       {data.settleOpen > 0 ? (
         <Pressable onPress={() => router.navigate('/plan/budget')} accessibilityRole="button">
@@ -273,20 +275,36 @@ function EnvelopeRow({ e, ratio, open: initiallyOpen }: { e: Envelope; ratio: nu
   );
 }
 
-function Envelopes({ envelopes, dayNumber, daysTotal }: { envelopes: Envelope[]; dayNumber: number; daysTotal: number }) {
+function Envelopes({ envelopes: all, shown, dayNumber, daysTotal, onChanged }: { envelopes: Envelope[]; shown: string[] | null; dayNumber: number; daysTotal: number; onChanged: () => void }) {
   const c = useTheme();
   const ratio = dayNumber / daysTotal;
+  const [choosing, setChoosing] = useState(false);
+  // Only the categories you chose (all when you have not chosen).
+  const envelopes = shown ? all.filter((e) => shown.includes(e.categoryId)) : all;
   return (
     <View style={{ gap: 8 }}>
       <View style={s.between}>
         <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Planned vs spent</Text>
-        <Label>this cutoff</Label>
+        <Pressable onPress={() => setChoosing(true)} accessibilityRole="button" accessibilityLabel="Choose what Planned vs spent shows" style={{ minHeight: 36, justifyContent: 'center' }}>
+          <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>{shown ? `${envelopes.length} of ${all.length} · Choose` : 'Choose'}</Text>
+        </Pressable>
       </View>
       {envelopes.length === 0 ? (
         <Notice>No envelopes yet.</Notice>
       ) : (
         envelopes.map((e, i) => <EnvelopeRow key={e.categoryId} e={e} ratio={ratio} open={i === 0} />)
       )}
+      {choosing ? (
+        <PanelSheet
+          all={all.map((e) => ({ id: e.categoryId, name: e.name }))}
+          shown={shown}
+          onClose={() => setChoosing(false)}
+          onSaved={() => {
+            setChoosing(false);
+            onChanged();
+          }}
+        />
+      ) : null}
     </View>
   );
 }

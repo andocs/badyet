@@ -115,7 +115,7 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
   );
 }
 
-export interface SettleView { date: string; weekday: number; spent: number; budget: number; diff: number; settledTo: string | null }
+export interface SettleView { date: string; weekday: number; spent: number; budget: number; diff: number; skipped?: boolean; settledTo: string | null }
 
 /** Office days that ended under or over their budget: choose where the difference goes, or undo. */
 export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: number }) {
@@ -143,11 +143,11 @@ export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: numbe
   return (
     <section className="v-card" aria-labelledby="sl">
       <div className="v-row v-sp v-wrap"><h2 id="sl">Settle office days</h2><span className={`v-pill ${open ? "v-warn" : "v-ok"}`}>{open ? `${open} to settle` : "All settled"}</span></div>
-      <div className="v-lbl" style={{ margin: "2px 0 8px" }}>When an office day ends under or over its budget, choose where the difference goes.</div>
+      <div className="v-lbl" style={{ margin: "2px 0 8px" }}>When an office day ends under or over its budget, or you skip a usual one, choose where the money goes.</div>
       {list.map((r) => {
         const under = r.diff > 0;
         const amt = Math.abs(r.diff);
-        const label = dayText(r.date, r.weekday);
+        const label = `${dayText(r.date, r.weekday)}${r.skipped ? " (skipped)" : ""}`;
         if (r.settledTo) {
           return (
             <div key={r.date} className="v-stl v-done">

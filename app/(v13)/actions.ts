@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { parsePesos } from "@/lib/domain/money";
 import { requireAuthed } from "@/lib/auth/require";
 import { markBillSent, undoBillSent } from "@/lib/bills/send";
+import { recordPay, saveNowCategories } from "@/lib/pay/payday";
 
 export interface AddExpenseState {
   ok?: boolean;
@@ -67,6 +68,26 @@ export async function sendBill(input: { lineId: string; from: string; amount: st
   const r = await markBillSent(supabase, input);
   if ("error" in r) return { error: r.error };
   billsChanged();
+  return { ok: true };
+}
+
+/** Payday: the pay came in. Recorded as income on that account, which is remembered for next time. */
+export async function payArrived(input: { accountId: string; amount: string }): Promise<AddExpenseState> {
+  const supabase = await requireAuthed();
+  const r = await recordPay(supabase, input);
+  if ("error" in r) return { error: r.error };
+  revalidatePath("/");
+  revalidatePath("/accounts");
+  revalidatePath("/inbox");
+  return { ok: true };
+}
+
+/** Which categories Planned vs spent shows on Now (null = all). */
+export async function setNowCategories(ids: string[] | null): Promise<AddExpenseState> {
+  const supabase = await requireAuthed();
+  const r = await saveNowCategories(supabase, ids);
+  if ("error" in r) return { error: r.error };
+  revalidatePath("/");
   return { ok: true };
 }
 

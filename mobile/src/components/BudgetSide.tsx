@@ -101,10 +101,10 @@ export function BudgetSide({ data, nowRun, onChanged }: { data: BudgetData; nowR
               <Row key={r.date} onPress={where ? undefined : () => setOpen({ k: 'settle', date: r.date, under: r.diff >= 0, diff: Math.abs(r.diff) })} label={`Settle ${r.date}`}>
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>
-                    {wd} {shortDate(r.date)}
+                    {wd} {shortDate(r.date)}{r.skipped ? ' (skipped)' : ''}
                   </Text>
                   <Text style={muted}>
-                    {peso(r.spent, hide)} of {peso(r.budget, hide)}
+                    {r.skipped && r.spent === 0 ? `${peso(r.budget, hide)} unused` : `${peso(r.spent, hide)} of ${peso(r.budget, hide)}`}
                   </Text>
                 </View>
                 {where ? (

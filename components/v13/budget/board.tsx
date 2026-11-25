@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { deleteLine, saveLine } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
-import { cutoffText, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
+import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
 import { useConfirm, useToast } from "../feedback";
 import { MonthPicker } from "../pickers";
 import { Money } from "../money";
@@ -55,7 +55,9 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups, colors, categories, accounts, showSpent, takeHome }: { groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0 }: { groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number }) {
+  // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
+  const groups: GroupView[] = cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups;
   const dialog = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -145,9 +147,9 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
             <header className="v-gh">
               <div className="v-row v-sp"><h2><i className="v-dot" style={{ background: color }} />{g.name}</h2><b className="v-num v-big2"><Money value={g.total} /></b></div>
               <div className="v-bar" role="img" aria-label={`${Math.round(g.share)} percent of take-home`}><i style={{ width: `${g.share}%`, background: color }} /></div>
-              <div className="v-row v-sp v-xs v-muted"><span>{Math.round(g.share)}% of take-home · {g.lines.filter((l) => l.amount !== null).length} lines</span>{showSpent ? <span className="v-num"><Money value={g.spentTotal} /> sent or spent so far</span> : null}</div>
+              <div className="v-row v-sp v-xs v-muted"><span>{Math.round(g.share)}% of {cutoff ? "the cutoff's " : ""}take-home · {g.lines.filter((l) => l.amount !== null).length} lines</span>{showSpent ? <span className="v-num"><Money value={g.spentTotal} /> sent or spent so far</span> : null}</div>
             </header>
-            <div className="v-blh" aria-hidden="true"><span>Line</span><span>Rule</span><span>Cutoff</span><span style={{ textAlign: "right" }}>This month</span></div>
+            <div className="v-blh" aria-hidden="true"><span>Line</span><span>Rule</span><span>Cutoff</span><span style={{ textAlign: "right" }}>{cutoff === "first" ? "1st cutoff" : cutoff === "second" ? "2nd cutoff" : "This month"}</span></div>
             {g.lines.map((l) => {
               const pc = showSpent && l.spent && l.amount ? Math.min(100, (l.spent.amount / l.amount) * 100) : 0;
               return (
@@ -173,7 +175,7 @@ export function BudgetBoard({ groups, colors, categories, accounts, showSpent, t
                   </span>
                   <span className="v-ba">
                     <b className="v-num">{l.amount === null ? "—" : <Money value={l.amount} />}</b>
-                    {l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
+                    {!cutoff && l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
                     {l.reimburse ? <small>back <Money value={l.reimburse.amount} />{l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`}</small> : null}
                     {showSpent && l.spent && l.amount ? (
                       <>
