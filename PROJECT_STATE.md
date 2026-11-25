@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-45 gate
+- **Phase:** rev-45 merged
 - **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** awaiting approval (migration 20261225 to apply)
-- **Next action:** Approve rev-45, merge, OTA
+- **Gate:** none
+- **Next action:** Apply migration 20261225000000_other_deductions.sql; next revision
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -53,6 +53,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 20:07 | rev-45 | Deductions link to a budget category (group), shown as read-only rows in that category. | -
 - 2026-11-25 20:10 | rev-45 | Payslip deductions + savings plan shown in budget categories with Payslip rule and cutoff; panel removed. | -
 - 2026-11-25 20:11 | rev-45 | Credit card payment category hidden from Budget (still in Inbox pickers). | -
+- 2026-11-25 20:14 | rev-45 | Merged to main (30e8fe6) with rev-44; OTA published (group 08225860). Pending: user applies migration 20261225000000_other_deductions.sql. | -
 
 ## 4. Open questions
 
