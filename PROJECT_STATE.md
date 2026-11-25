@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:47 | rev-45 | Other deductions list per cutoff (needs migration 20261225000000_other_deductions.sql), no-cap funds, chart stack order. Checks PASS. | -
 - 2026-11-25 19:49 | rev-44 | Merged into rev-45 branch so inbox items (incl. All activity) can be edited | -
 - 2026-11-25 19:52 | rev-45 | Inbox edit now includes category (web, phone). | -
+- 2026-11-25 19:55 | rev-45 | Built-in Credit card payment category (acts like Transfer, shown in pickers). | -
 
 ## 4. Open questions
 
