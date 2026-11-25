@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-42 Pay checklist build
-- **Gate:** none
-- **Next action:** rev-42: build pay checklist (lib + web + phone), reconcile duplicate transfers
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA update; tell me how your Wants lines are set up (Choose on Planned vs spent)
+- **Gate:** waiting
+- **Next action:** Gate rev-42; on approve merge to main + OTA publish. Then: Wants in Planned vs spent (needs user answer), optional whole-month tab
+- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; tell me how your Wants lines are set up (Choose on Planned vs spent); consider making the GitHub repo private (it is public and holds budget notes)
 
 ## 3. Execution log
 
@@ -53,6 +53,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 18:56 | rev-40 | Approved; merged to main (238f945); OTA published (group a32f2b2e-fc97-40ef-b6e4-1cb0e238f0bb); Vercel main: success | -
 - 2026-11-25 18:58 | rev-41 | Pay checklist mockups (3 options: by line / by wallet / wallet cards with lines), web + phone, sample numbers | -
 - 2026-11-25 19:01 | rev-41 | Approved: pay checklist Option 3 + two-way sync (tick records transfer and moves balances; detected transfers auto-tick; duplicates not double counted); merged to main | -
+- 2026-11-25 19:08 | rev-42 | Pay checklist (Option 3): page /pay-checklist + phone plan/checklist; tick = one transfer from payroll account (pay_account_id) to line wallet, balances move; Send the rest = one lump; transfers detected from notifications/emails auto-tick lines in budget order; captured transfer that duplicates one the app recorded is ignored (single or lump of several ticks); lines without a wallet get a wallet picker; Now bills links to it. No migration. | a506a71
 
 ## 4. Open questions
 
@@ -92,7 +93,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,137,200 | 21,542,798 | 901,812 | 8,759,301 | 862,177,273 | 3,550,581 |  |
+| **Cumulative** | 5,184,203 | 21,726,356 | 910,572 | 8,821,672 | 876,772,372 | 3,602,928 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -156,6 +157,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-39 | 86,578 | 297,338 | 17,560 | 584,423 | 17,689,981 | 48,682 |  |
 | rev-40 | 147,843 | 333,414 | 22,018 | 119,072 | 30,873,194 | 68,565 |  |
 | rev-41 | 0 | 0 | 0 | 16,704 | 1,519,405 | 14,361 |  |
+| rev-42 | 47,003 | 183,558 | 8,760 | 61,365 | 13,044,241 | 46,014 |  |
 
 <!-- END SUMMARY -->
 
@@ -182,6 +184,16 @@ Batch 5 (notes in docs/BATCH-5-notes.md, 2026-11-25). Decisions: necessary deduc
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-42: what you do now
+1. Get the code:   git fetch && git checkout rev/42-pay-checklist   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000/pay-checklist   (or the Vercel preview for rev/42-pay-checklist)
+6. Check these:    pick "Send from" (your payroll account); tick a line: a transfer appears under Accounts and both balances move; tick again to undo; "Send the rest" on a wallet records one lump and ticks the unticked lines, Undo cancels it; make a transfer in the bank (or add one in the Inbox) from payroll to a wallet and see the lines tick themselves; "No wallet yet": pick a wallet for a line and it joins the checklist; the phone gets it by OTA after approval (More > Pay checklist)
+7. Known limits:   no whole-month tab yet; a lump the app detected from a notification is undone from the Inbox, not from the checklist; ticking a line you never ticked while a detected lump already covers it is not offered
+Reply: Approve / Request changes / Pause
 
 AFTER REV-40: what you do now
 1. Get the code:   git fetch && git checkout rev/40-batch5-fixes   (merge to main after you approve)
