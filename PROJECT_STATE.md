@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-33 Rules mockups
+- **Active slice / milestone:** rev-34 Small fixes
 - **Gate:** none
-- **Next action:** rev-33: build Rules redesign mockups (web + phone), present options
+- **Next action:** rev-34: Bonus + Pick apps spacing, Forecast savings plan, payslip fixes, mobile lint, Maya Black parser
 - **User to-do now:** Confirm migration 20261217000000 applied; install latest APK
 
 ## 3. Execution log
@@ -47,6 +47,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-23 07:40 | rev-32 | Approved by user; merged to main and pushed; APK build started | -
 - 2026-11-25 10:35 | handover | Batch 4 notes saved to docs/HANDOVER-batch-4.md for a fresh conversation (uncommitted) | -
 - 2026-11-25 11:02 | batch-4-plan | Section A answered; batch 4 sliced rev-33..41 and approved | -
+- 2026-11-25 11:06 | rev-33 | Rules redesign mockups: 3 options (one list / grouped by app / two sections), web + phone | 162b0af
+- 2026-11-25 11:33 | rev-33 | Approved: Rules option 1; email patterns added to rev-41 scope; merged to main | -
 
 ## 4. Open questions
 
@@ -85,7 +87,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,967,936 | 15,753,556 | 661,739 | 7,288,375 | 791,658,251 | 3,354,261 |  |
+| **Cumulative** | 4,205,674 | 16,964,555 | 700,219 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -140,6 +142,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-20 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-27 | 14,676 | 7,699 | 1,712 | 30,678 | 925,520 | 13,359 |  |
 | rev-32 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| rev-33 | 40,718 | 178,325 | 9,184 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -164,12 +167,23 @@ Batch 4 (picked 2026-11-25: all items a-j; rules redesign = mockups first)
 - 2026-11-25 Batch 4: all items picked; Rules redesign gets mockups (rev-33) before any code.
 - 2026-11-25 Budget plans (rev-40): no overlapping plans; plans start and end on cutoff days (the 10th / 25th), so a plan covers whole cutoffs.
 - 2026-11-25 Section A findings: bills can never be marked sent (nothing writes transactions.budget_line_id) -> rev-36; skipped RTO days free no money, and rto_amount is never written (unused) -> rev-39.
+- 2026-11-25 rev-33: Rules redesign = Option 1 "One list" (docs/mockups/v13-rules-redesign.html, phone/rules-redesign.html). Built-in sources become rules with no words (catch-all, at the bottom); account/category/min amount/auto-confirm on every rule; a rule's own apps/senders are listened to (fixes the rule-apps-capture-nothing bug); removed built-ins go to "Removed" with Add back, readers stay. rev-41 also adds email patterns (or at least email keywords) so senders without a built-in reader can be read.
 
 ## Run & verify guide (detected by Scout, kept current)
 
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-33: what you do now
+1. Get the code:   git fetch && git checkout rev/33-rules-mockups   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  none; open docs/mockups/v13-rules-redesign.html and docs/mockups/phone/rules-redesign.html in a browser
+6. Check these:    switch between Options 1/2/3 at the top; tap list cards to open each editor; read the comparison table; pick one
+7. Known limits:   mockups only, sample data; also confirm migration 20261217000000 is applied and install the latest APK (from batch 3)
+Reply: Approve (with option) / Request changes / Pause
 
 Review rev-32 on branch rev/32-gmail-alert-check.
 1. Apply migration 20261217000000_gmail_alert_check.sql (adds user_settings.gmail_alert_check, default on). Until then the phone treats it as on and the web toggle shows an "apply the update" error if you change it.
