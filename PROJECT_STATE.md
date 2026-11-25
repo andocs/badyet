@@ -51,6 +51,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:55 | rev-45 | Built-in Credit card payment category (acts like Transfer, shown in pickers). | -
 - 2026-11-25 20:04 | rev-45 | Other-deductions layout; rounded-square tickbox standard (web+phone); skeleton/loading bar; payslip deductions can show under a budget line (panel keeps the rest). | -
 - 2026-11-25 20:07 | rev-45 | Deductions link to a budget category (group), shown as read-only rows in that category. | -
+- 2026-11-25 20:10 | rev-45 | Payslip deductions + savings plan shown in budget categories with Payslip rule and cutoff; panel removed. | -
 
 ## 4. Open questions
 
