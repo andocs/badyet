@@ -9,8 +9,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-41 Pay checklist mockups
-- **Gate:** none
-- **Next action:** rev-41: pay checklist mockups (web + phone), user picks an option; then rev-42 build
+- **Gate:** waiting
+- **Next action:** Gate rev-41: user picks checklist option 1/2/3; then rev-42 build
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA update; tell me how your Wants lines are set up (Choose on Planned vs spent)
 
 ## 3. Execution log
@@ -51,6 +51,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
 - 2026-11-25 18:54 | rev-40 | Batch 5 fixes: SSS (SSS Circular 2024-006 table, 5% of MSC) and Pag-IBIG (2% to 10k cap) computed, phone field shows real amount; RTO skip prompt + skipped days listed at once, un-skip clears settle; Transfer category/group hidden, Inbox Transfer button (asTransfer); Forecast chart default saved-so-far + balance switch; transfer pairing windows 60 min gap / 3 h lookback; payslip Necessary vs Other deductions, HMO plan name + editor (web+phone), Budget read-only From your payslip card; savings plan shown per fund (forecast month sheet, Funds page). Migration 20261222000000_payroll_labels.sql. Wants in Planned vs spent pending user info. | 8860ac7
 - 2026-11-25 18:56 | rev-40 | Approved; merged to main (238f945); OTA published (group a32f2b2e-fc97-40ef-b6e4-1cb0e238f0bb); Vercel main: success | -
+- 2026-11-25 18:58 | rev-41 | Pay checklist mockups (3 options: by line / by wallet / wallet cards with lines), web + phone, sample numbers | -
 
 ## 4. Open questions
 
@@ -90,7 +91,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,137,200 | 21,542,798 | 901,812 | 8,739,620 | 858,387,987 | 3,532,698 |  |
+| **Cumulative** | 5,137,200 | 21,542,798 | 901,812 | 8,759,301 | 862,177,273 | 3,550,581 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -153,6 +154,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-38 | 71,440 | 325,505 | 13,060 | 0 | 0 | 0 |  |
 | rev-39 | 86,578 | 297,338 | 17,560 | 584,423 | 17,689,981 | 48,682 |  |
 | rev-40 | 147,843 | 333,414 | 22,018 | 119,072 | 30,873,194 | 68,565 |  |
+| rev-41 | 0 | 0 | 0 | 16,704 | 1,519,405 | 14,361 |  |
 
 <!-- END SUMMARY -->
 
