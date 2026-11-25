@@ -1,0 +1,126 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pay checklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a1320;--surface:#101c2e;--soft:#17263b;--ink:#e8eef7;--muted:#93a5bd;--line:#223349;--accent:#34d399;--on:#04281c;--at:#5ee6b4;--err:#ff8a8a;--errt:#3b1f26;--tint:#0f3a33;--gold:#f6c453;--goldt:#3a2f12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:500 14px "Atkinson Hyperlegible Next",system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 20px 60px;display:flex;flex-direction:column;gap:16px}
+h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
+.lbl{color:var(--muted);font-size:13px;margin-top:2px}.lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.b{font-weight:700}.mut{color:var(--muted)}.xs{font-size:12px}.num{font-variant-numeric:tabular-nums;font-weight:700}
+.row{display:flex;align-items:center;gap:8px}.sp{justify-content:space-between}.wrap{flex-wrap:wrap}.grow{flex:1;min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.btn{background:var(--accent);color:var(--on);min-height:40px;border-radius:999px;padding:0 16px;display:inline-flex;align-items:center;border:0;font:inherit;font-weight:700;cursor:pointer}
+.btn.g{background:var(--soft);color:var(--ink)}.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.pill{border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;background:var(--tint);color:var(--at);white-space:nowrap}.pill.n{background:var(--soft);color:var(--ink)}.pill.gd{background:var(--goldt);color:var(--gold)}
+.seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:4px;flex-wrap:wrap}.seg>div{min-height:34px;border-radius:999px;padding:0 14px;display:flex;align-items:center;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}.seg>div.on{background:var(--surface);color:var(--ink)}
+.input{min-height:40px;border-radius:10px;background:var(--soft);display:flex;align-items:center;padding:0 12px;color:var(--ink)}
+.nav{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px}.nav a{padding:8px 14px;border-radius:999px;color:var(--muted);font-weight:700;font-size:13px;text-decoration:none}.nav a.on{background:var(--tint);color:var(--at)}
+.opt{background:var(--goldt);border:1px solid var(--gold);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}.opt .seg{background:rgba(0,0,0,.25)}
+.cmp{width:100%;border-collapse:collapse;font-size:13px}.cmp th,.cmp td{text-align:left;padding:8px;border-top:1px solid var(--line);vertical-align:top}.cmp th{color:var(--muted);font-size:11px;letter-spacing:.6px;text-transform:uppercase}
+.hide{display:none!important}
+.split{display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start}@media(max-width:820px){.split{grid-template-columns:1fr}}
+.track{height:8px;border-radius:4px;background:var(--soft);overflow:hidden}.track i{display:block;height:100%;background:var(--accent);border-radius:inherit}
+.chk{width:24px;height:24px;border-radius:12px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:13px;flex:none;cursor:pointer;color:transparent}.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.li{display:flex;align-items:center;gap:12px;min-height:50px;border-top:1px solid var(--line)}.li:first-of-type{border-top:0}.li.done .nm{color:var(--muted);text-decoration:line-through}
+.wal{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:6px}.wal.done{border-color:var(--accent)}
+.lump{background:var(--tint);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.callout{border:1px solid rgba(246,196,83,.35);padding:8px 10px;background:rgba(246,196,83,.06);border-radius:8px;font-size:12px;color:var(--muted)}
+</style></head><body><main>
+<nav class="nav"><a>Now</a><a>Inbox</a><a>Accounts</a><a>Budget</a><a class="on">Pay checklist</a><a>Bonuses</a><a>Funds</a><a>Forecast</a><a>Rules</a><a>Settings</a></nav>
+
+<div class="opt">
+ <div class="row sp wrap"><div class="b">rev-41 mockup: pick one design (sample numbers, not yours)</div><div class="seg" id="opts"><div class="on" data-opt="1">Option 1 · By line, like your sheet</div><div data-opt="2">Option 2 · By wallet</div><div data-opt="3">Option 3 · Wallet cards with lines</div></div></div>
+ <table class="cmp">
+  <tr><th></th><th>1 · By line</th><th>2 · By wallet</th><th>3 · Wallet cards with lines</th></tr>
+  <tr><td class="b">Looks like</td><td>Your sheet: name, wallet, amount, tick. Wallet totals beside it.</td><td>One card per wallet with its total and one "I sent it" button.</td><td>Wallet cards that open into their lines, each with a tick.</td></tr>
+  <tr><td class="b">Ticking records</td><td>One transfer per line from your payroll account</td><td>One transfer per wallet (the total of its lines)</td><td>A line tick = one transfer; "Send all" on a wallet = one lump transfer</td></tr>
+  <tr><td class="b">Best when</td><td>You move money line by line</td><td>You move one lump per wallet (what the sheet's "Total per Wallet" suggests)</td><td>You do both, or change your mind</td></tr>
+  <tr><td class="b">Build</td><td>M</td><td>M-L: a lump transfer has to remember which lines it covers</td><td>L</td></tr>
+ </table>
+</div>
+
+<div class="row sp wrap"><div><h1>Pay checklist</h1><div class="lbl">Move money from your payroll account to each wallet. Tick it when it's sent; the transfer is recorded for you.</div></div>
+ <div class="row wrap"><div class="seg" id="cut"><div class="on" data-c="1">1st cutoff · Nov 10</div><div data-c="2">2nd cutoff · Nov 25</div><div data-c="m">Whole month</div></div></div></div>
+
+<div class="card">
+ <div class="row sp wrap"><div><span class="lab">From</span><div class="row" style="gap:8px;margin-top:4px"><div class="input" style="min-width:220px">BPI Payroll ▾</div><span class="xs mut">Remembered from payday</span></div></div>
+  <div style="min-width:240px;flex:1"><div class="row sp"><b id="prog-t">4 of 10 sent</b><span class="num" id="prog-a">₱7,950 of ₱24,398</span></div><div class="track" style="margin-top:6px"><i id="prog-b" style="width:33%"></i></div></div></div>
+</div>
+
+<!-- OPTION 1 -->
+<section data-o="1" class="split">
+ <div class="card" data-list>
+  <div class="row sp"><h2>1st cutoff</h2><span class="xs mut">Tick = money sent</span></div>
+  <div class="li done"><div class="chk on" data-amt="240000">✓</div><div class="grow nm b">Transport</div><span class="pill n">GCash</span><span class="num">₱2,400.00</span></div>
+  <div class="li done"><div class="chk on" data-amt="200000">✓</div><div class="grow nm b">Food</div><span class="pill n">GCash</span><span class="num">₱2,000.00</span></div>
+  <div class="li done"><div class="chk on" data-amt="55000">✓</div><div class="grow nm b">Contingency</div><span class="pill n">GCash</span><span class="num">₱550.00</span></div>
+  <div class="li"><div class="chk" data-amt="18000"></div><div class="grow nm b">Mobile load</div><span class="pill n">GCash</span><span class="num">₱180.00</span></div>
+  <div class="li"><div class="chk" data-amt="16900"></div><div class="grow nm b">Subscription</div><span class="pill n">GCash</span><span class="num">₱169.00</span></div>
+  <div class="li done"><div class="chk on" data-amt="300000">✓</div><div class="grow nm b">Family support</div><span class="pill n">BPI</span><span class="num">₱3,000.00</span></div>
+  <div class="li"><div class="chk" data-amt="300000"></div><div class="grow nm b">Installments</div><span class="pill n">BPI</span><span class="num">₱3,000.00</span></div>
+  <div class="li"><div class="chk" data-amt="600000"></div><div class="grow nm b">Wants</div><span class="pill n">BPI</span><span class="num">₱6,000.00</span></div>
+  <div class="li"><div class="chk" data-amt="500000"></div><div class="grow nm b">Emergency fund</div><span class="pill n">Maya</span><span class="num">₱5,000.00</span></div>
+  <div class="li"><div class="chk" data-amt="209900"></div><div class="grow nm b">Internet <span class="pill gd">reimbursed later</span></div><span class="pill n">Maya</span><span class="num">₱2,099.00</span></div>
+  <div class="callout" style="margin-top:6px">A line with no wallet yet shows <b>Pick a wallet</b> in its place; you set it once and it is remembered on the budget line.</div>
+ </div>
+ <div class="card"><h2>Total per wallet</h2>
+  <div class="row sp"><span class="b">GCash</span><span class="num">₱5,299.00</span></div><div class="track"><i style="width:93%"></i></div><div class="xs mut">sent ₱4,950 of ₱5,299</div>
+  <div class="row sp" style="margin-top:6px"><span class="b">Maya</span><span class="num">₱7,099.00</span></div><div class="track"><i style="width:0"></i></div><div class="xs mut">sent ₱0 of ₱7,099</div>
+  <div class="row sp" style="margin-top:6px"><span class="b">BPI</span><span class="num">₱12,000.00</span></div><div class="track"><i style="width:25%"></i></div><div class="xs mut">sent ₱3,000 of ₱12,000</div>
+  <div class="row sp" style="border-top:1px solid var(--line);padding-top:10px;margin-top:6px"><b>Total</b><b class="num">₱24,398.00</b></div>
+ </div>
+</section>
+
+<!-- OPTION 2 -->
+<section data-o="2" class="hide">
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
+  <div class="wal"><div class="row sp"><h3>GCash</h3><span class="num">₱5,299.00</span></div><div class="xs mut">5 lines: Transport, Food, Contingency, Mobile load, Subscription</div>
+   <div class="lump"><button class="btn sm" data-lump>I sent ₱5,299</button><span class="xs mut">One transfer from BPI Payroll to GCash</span></div></div>
+  <div class="wal"><div class="row sp"><h3>Maya</h3><span class="num">₱7,099.00</span></div><div class="xs mut">2 lines: Emergency fund, Internet</div>
+   <div class="lump"><button class="btn sm" data-lump>I sent ₱7,099</button><span class="xs mut">One transfer from BPI Payroll to Maya</span></div></div>
+  <div class="wal done"><div class="row sp"><h3>BPI <span class="pill">Sent</span></h3><span class="num">₱12,000.00</span></div><div class="xs mut">3 lines: Family support, Installments, Wants</div>
+   <div class="lump"><span class="b">✓ Sent ₱12,000</span><button class="btn g sm" data-undo>Undo</button><span class="xs mut">Stays in BPI, so no transfer is recorded</span></div></div>
+ </div>
+ <div class="callout" style="margin-top:12px">Lines are covered by their wallet's transfer. Lines whose wallet is the payroll account itself need no transfer, so they count as sent already.</div>
+</section>
+
+<!-- OPTION 3 -->
+<section data-o="3" class="hide">
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px">
+  <div class="wal"><div class="row sp"><h3>GCash</h3><span class="num">₱5,299.00</span></div>
+   <div class="row sp"><span class="xs mut">3 of 5 lines sent · ₱4,950 of ₱5,299</span><button class="btn g sm">Send the rest ₱349</button></div><div class="track"><i style="width:93%"></i></div>
+   <div class="li done"><div class="chk on">✓</div><div class="grow nm">Transport</div><span class="num">₱2,400</span></div>
+   <div class="li done"><div class="chk on">✓</div><div class="grow nm">Food</div><span class="num">₱2,000</span></div>
+   <div class="li done"><div class="chk on">✓</div><div class="grow nm">Contingency</div><span class="num">₱550</span></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Mobile load</div><span class="num">₱180</span></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Subscription</div><span class="num">₱169</span></div></div>
+  <div class="wal"><div class="row sp"><h3>Maya</h3><span class="num">₱7,099.00</span></div>
+   <div class="row sp"><span class="xs mut">0 of 2 lines sent</span><button class="btn sm">Send all ₱7,099</button></div><div class="track"><i style="width:0"></i></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Emergency fund</div><span class="num">₱5,000</span></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Internet <span class="pill gd">reimbursed later</span></div><span class="num">₱2,099</span></div></div>
+  <div class="wal"><div class="row sp"><h3>BPI</h3><span class="num">₱12,000.00</span></div>
+   <div class="row sp"><span class="xs mut">1 of 3 lines sent · ₱3,000 of ₱12,000</span><button class="btn g sm">Send the rest ₱9,000</button></div><div class="track"><i style="width:25%"></i></div>
+   <div class="li done"><div class="chk on">✓</div><div class="grow nm">Family support</div><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Installments</div><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div class="grow nm">Wants</div><span class="num">₱6,000</span></div></div>
+ </div>
+ <div class="callout" style="margin-top:12px">"Send the rest" records one lump transfer for the lines not yet ticked. Ticking lines one by one records a transfer each.</div>
+</section>
+
+<div class="card"><h3>Questions this raises</h3>
+ <div class="xs mut">1. Several budget lines can share a wallet; a line that goes to your payroll account itself needs no transfer.<br>2. A line split across two wallets (your sheet's "Mixed") would be one line per wallet.<br>3. The 2nd cutoff and the whole-month tab work the same way, with that cutoff's lines.</div>
+</div>
+
+<script>
+const recalc=()=>{const sec=document.querySelector('section[data-o="1"]');const all=[...sec.querySelectorAll('.chk')];const on=all.filter(c=>c.classList.contains('on'));const sum=a=>a.reduce((t,c)=>t+Number(c.dataset.amt||0),0);const fmt=n=>'₱'+(n/100).toLocaleString('en-PH',{maximumFractionDigits:0});
+ document.getElementById('prog-t').textContent=on.length+' of '+all.length+' sent';document.getElementById('prog-a').textContent=fmt(sum(on))+' of '+fmt(sum(all));document.getElementById('prog-b').style.width=(sum(on)/sum(all)*100)+'%'};
+document.addEventListener('click',e=>{
+ const o=e.target.closest('[data-opt]');if(o){document.querySelectorAll('[data-opt]').forEach(x=>x.classList.toggle('on',x===o));document.querySelectorAll('section[data-o]').forEach(s=>s.classList.toggle('hide',s.dataset.o!==o.dataset.opt));return}
+ const c=e.target.closest('[data-c]');if(c){document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===c));return}
+ const k=e.target.closest('.chk');if(k){k.classList.toggle('on');k.textContent=k.classList.contains('on')?'✓':'';k.closest('.li')?.classList.toggle('done',k.classList.contains('on'));if(k.dataset.amt)recalc();return}
+ const l=e.target.closest('[data-lump]');if(l){const w=l.closest('.wal');w.classList.add('done');l.outerHTML='<span class="b">✓ Sent</span><button class="btn g sm" data-undo>Undo</button>';return}
+ const u=e.target.closest('[data-undo]');if(u){u.closest('.wal').classList.remove('done')}
+});
+</script></main></body></html>
