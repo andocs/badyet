@@ -54,6 +54,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 18:58 | rev-41 | Pay checklist mockups (3 options: by line / by wallet / wallet cards with lines), web + phone, sample numbers | -
 - 2026-11-25 19:01 | rev-41 | Approved: pay checklist Option 3 + two-way sync (tick records transfer and moves balances; detected transfers auto-tick; duplicates not double counted); merged to main | -
 - 2026-11-25 19:08 | rev-42 | Pay checklist (Option 3): page /pay-checklist + phone plan/checklist; tick = one transfer from payroll account (pay_account_id) to line wallet, balances move; Send the rest = one lump; transfers detected from notifications/emails auto-tick lines in budget order; captured transfer that duplicates one the app recorded is ignored (single or lump of several ticks); lines without a wallet get a wallet picker; Now bills links to it. No migration. | a506a71
+- 2026-11-25 19:11 | rev-42 | Email dedupe and pairing use the transaction time written inside the email (lib/capture/email-time.ts) instead of the email's receipt time; falls back to arrival time when none found | 8a3f7f5
 
 ## 4. Open questions
 
