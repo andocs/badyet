@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-40 Batch 5 fixes
-- **Gate:** waiting
-- **Next action:** Gate rev-40; on approve merge to main and publish OTA; then rev-41 pay checklist mockups; Wants in Planned vs spent when the user replies
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; tell me how your Wants lines are set up (Choose on Planned vs spent: is Wants listed?)
+- **Active slice / milestone:** rev-41 Pay checklist mockups
+- **Gate:** none
+- **Next action:** rev-41: pay checklist mockups (web + phone), user picks an option; then rev-42 build
+- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA update; tell me how your Wants lines are set up (Choose on Planned vs spent)
 
 ## 3. Execution log
 
@@ -50,6 +50,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
 - 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
 - 2026-11-25 18:54 | rev-40 | Batch 5 fixes: SSS (SSS Circular 2024-006 table, 5% of MSC) and Pag-IBIG (2% to 10k cap) computed, phone field shows real amount; RTO skip prompt + skipped days listed at once, un-skip clears settle; Transfer category/group hidden, Inbox Transfer button (asTransfer); Forecast chart default saved-so-far + balance switch; transfer pairing windows 60 min gap / 3 h lookback; payslip Necessary vs Other deductions, HMO plan name + editor (web+phone), Budget read-only From your payslip card; savings plan shown per fund (forecast month sheet, Funds page). Migration 20261222000000_payroll_labels.sql. Wants in Planned vs spent pending user info. | 8860ac7
+- 2026-11-25 18:56 | rev-40 | Approved; merged to main (238f945); OTA published (group a32f2b2e-fc97-40ef-b6e4-1cb0e238f0bb); Vercel main: success | -
 
 ## 4. Open questions
 
