@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { evaluateBudget } from "@/lib/engine/budget";
 import { p, ym } from "@/lib/engine/fixtures";
-import { buildGroups, cutoffText, monthFlag, ruleText, type CategoryRow, type GroupRow, type LineRow } from "./view";
+import { buildGroups, cutoffText, groupsForCutoff, monthFlag, ruleText, type CategoryRow, type GroupRow, type LineRow } from "./view";
 
 const groups: GroupRow[] = [{ id: "ess", name: "Essentials", feedsSavings: false }, { id: "sav", name: "Savings", feedsSavings: true }];
 const categories: CategoryRow[] = [
@@ -43,6 +43,19 @@ describe("budget groups", () => {
     expect(view[0]!.lines.find((l) => l.id === "food")!.spent).toEqual({ amount: p(300), word: "spent" });
     expect(view[0]!.spentTotal).toBe(p(300));
     expect(view[1]!.lines[0]).toMatchObject({ id: "rest", amount: p(50_000 - 13_000) });
+  });
+});
+
+describe("one cutoff", () => {
+  it("shows each line at its amount in that cutoff and leaves out lines with nothing in it", () => {
+    const first = groupsForCutoff(view, "first", p(20_000))[0]!;
+    expect(first.lines.find((l) => l.id === "rent")).toBeUndefined(); // rent is 2nd cutoff only
+    expect(first.lines.find((l) => l.id === "food")!.amount).toBe(p(2_000)); // 10% of the 1st cutoff's 20,000
+    expect(first.total).toBe(p(2_000));
+    expect(first.share).toBeCloseTo(10);
+    const second = groupsForCutoff(view, "second", p(30_000))[0]!;
+    expect(second.lines.find((l) => l.id === "rent")!.amount).toBe(p(8_000));
+    expect(second.total).toBe(p(11_000));
   });
 });
 

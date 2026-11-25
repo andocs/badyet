@@ -30,18 +30,20 @@ export interface SettleRow {
   /** budget minus spent: positive = left over, negative = overspent. */
   diff: Money;
   settled: boolean;
+  /** A usual office day you did not go in: its whole day budget is unused unless you spent on it anyway. */
+  skipped: boolean;
 }
 
 /**
- * Office days that have ended with spending different from the day budget, so the user can say where the difference goes. A day is
- * settled once it has a settle entry. Differences under ₱1 are ignored.
+ * Office days that have ended with spending different from the day budget, so the user can say where the difference goes, and usual
+ * office days you skipped, whose budget went unused. A day is settled once it has a settle entry. Differences under ₱1 are ignored.
  */
 export function settleRows(input: { days: readonly OfficeDay[]; spendByDay: ReadonlyMap<string, Money>; dayBudget: Money; settledDays: ReadonlySet<string>; today: IsoDate }): SettleRow[] {
   return input.days
-    .filter((d) => d.office && d.date < input.today && input.spendByDay.has(d.date))
+    .filter((d) => d.date < input.today && ((d.office && input.spendByDay.has(d.date)) || d.skipped))
     .map((d) => {
-      const spent = input.spendByDay.get(d.date)!;
-      return { date: d.date, spent, budget: input.dayBudget, diff: money(input.dayBudget - spent), settled: input.settledDays.has(d.date) };
+      const spent = input.spendByDay.get(d.date) ?? money(0);
+      return { date: d.date, spent, budget: input.dayBudget, diff: money(input.dayBudget - spent), settled: input.settledDays.has(d.date), skipped: d.skipped };
     })
     .filter((r) => Math.abs(r.diff) >= 100 || r.settled);
 }

@@ -20,6 +20,7 @@ import {
   type SalaryEventRow,
 } from "@/lib/engine/rows";
 import { todayManila } from "@/lib/plans/validate";
+import { bonusesLanding, payRecorded, PAYDAY_PROMPT_DAYS, type BonusRuleLite } from "@/lib/pay/payday";
 import { buildNowView, currentCutoff, manilaDate, type NowCategory, type NowLine, type NowTxn, type NowView } from "./summary";
 
 export interface AccountCard {
@@ -46,6 +47,10 @@ export type NowData =
       settleOpen: number;
       /** The next payday's money: the payslip that lands then. */
       nextPay: { date: IsoDate; amount: Money; cutoff: "first" | "second" };
+      /** "Has the pay arrived?": shown early in a cutoff until its pay is recorded. amount = this cutoff's take-home from the payslip. */
+      payday: { amount: Money; cutoff: "first" | "second"; bonuses: string[]; accountId: string | null } | null;
+      /** Categories the Planned vs spent panel shows; null = all. */
+      nowCategories: string[] | null;
     };
 
 interface SettingsRow { first_payday_day: number; second_payday_day: number; office_days: number[]; rto_amount: number }
@@ -93,6 +98,10 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   ]);
   // The savings plan's amount and fund are asked for on their own, so a database without that update still loads.
   const planExtra = await supabase.from("pay_settings").select("savings_plan_amount, savings_plan_fund_id").maybeSingle();
+  // Same for the rev-36 settings: without that update there is no remembered pay account and the panel shows everything.
+  const nowExtra = await supabase.from("user_settings").select("pay_account_id, now_categories").maybeSingle();
+  const extra = (nowExtra.error ? null : nowExtra.data) as { pay_account_id: string | null; now_categories: string[] | null } | null;
+  const bonusRuleRes = await supabase.from("bonus_rules").select("name, recurrence, pay_month, once_on, payslip_cutoff");
 
 
   const salaryEvents = rows<SalaryEventRow>(events).map(salaryEventOf);
@@ -228,5 +237,15 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     total: sum(accounts.filter((a) => a.kind !== "credit").map((a) => a.balance)),
     settleOpen,
     nextPay: { date: nextPayDate, amount: nextPayMonth.pay[nextPayCutoff].takeHome, cutoff: nextPayCutoff },
+    payday:
+      view.dayNumber <= PAYDAY_PROMPT_DAYS && !payRecorded(txns)
+        ? {
+            amount: here.pay[view.cutoff].takeHome,
+            cutoff: view.cutoff,
+            bonuses: bonusesLanding(rows<BonusRuleLite>(bonusRuleRes), budgetMonth, view.cutoff),
+            accountId: extra?.pay_account_id && accountRows.some((a) => a.id === extra.pay_account_id) ? extra.pay_account_id : null,
+          }
+        : null,
+    nowCategories: extra?.now_categories ?? null,
   };
 }

@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
-import { cutoffText, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
+import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
 import type { LineInput } from '@/lib/budget/line-input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import { rangeLabel } from '@/lib/now/format';
@@ -336,6 +336,8 @@ export default function Budget() {
   const { data, error, refreshing, reload } = useLoad(() => loadBudget(supabase));
   const [month, setMonth] = useState<string | null>(null);
   const [editing, setEditing] = useState<Draft | null>(null);
+  // The whole month, or one cutoff of it.
+  const [cut, setCut] = useState<'first' | 'second' | null>(null);
 
   const fut = !!data && month !== null && month !== data.period.month;
   const screen = data ? buildBudgetScreen(data, { fut, month }) : null;
@@ -389,7 +391,17 @@ export default function Budget() {
                 </Notice>
               ) : null}
 
-              <Board groups={screen.groups} data={data} onEdit={(l) => setEditing(draftOf(l))} onAdd={(cat) => setEditing(blankDraft(cat))} />
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                <Chip label="Whole month" on={cut === null} onPress={() => setCut(null)} />
+                <Chip label="1st cutoff" on={cut === 'first'} onPress={() => setCut('first')} />
+                <Chip label="2nd cutoff" on={cut === 'second'} onPress={() => setCut('second')} />
+              </View>
+              <Board
+                groups={cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups}
+                data={data}
+                onEdit={(l) => setEditing(draftOf(l))}
+                onAdd={(cat) => setEditing(blankDraft(cat))}
+              />
 
               {screen.nowRun ? <BudgetSide data={data} nowRun={screen.nowRun} onChanged={() => void reload()} /> : null}
 
