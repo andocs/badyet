@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-32 merged
+- **Active slice / milestone:** rev-34 Small fixes
 - **Gate:** none
-- **Next action:** Install the new APK; apply migration 20261217000000; ask for next revisions or finish
-- **User to-do now:** Apply migration 20261217000000; install new APK; check Vercel deploy
+- **Next action:** rev-34: Bonus + Pick apps spacing, Forecast savings plan, payslip fixes, mobile lint, Maya Black parser
+- **User to-do now:** Confirm migration 20261217000000 applied; install latest APK
 
 ## 3. Execution log
 
@@ -45,6 +45,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-23 07:00 | rev-31 | main pushed to origin (rev-28..31 published); web deploy triggered | 6a0c909
 - 2026-11-23 07:39 | rev-32 | Gmail app notification triggers a forced Gmail check; toggle on Rules page (web + phone), user_settings.gmail_alert_check; Kotlin skips Gmail notification text. Tests 420 + 177, tsc, eslint pass | -
 - 2026-11-23 07:40 | rev-32 | Approved by user; merged to main and pushed; APK build started | -
+- 2026-11-25 10:35 | handover | Batch 4 notes saved to docs/HANDOVER-batch-4.md for a fresh conversation (uncommitted) | -
+- 2026-11-25 11:02 | batch-4-plan | Section A answered; batch 4 sliced rev-33..41 and approved | -
+- 2026-11-25 11:06 | rev-33 | Rules redesign mockups: 3 options (one list / grouped by app / two sections), web + phone | 162b0af
+- 2026-11-25 11:33 | rev-33 | Approved: Rules option 1; email patterns added to rev-41 scope; merged to main | -
 
 ## 4. Open questions
 
@@ -83,7 +87,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 3,967,936 | 15,753,556 | 661,739 | 7,288,375 | 791,658,251 | 3,354,261 |  |
+| **Cumulative** | 4,205,674 | 16,964,555 | 700,219 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -138,6 +142,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-20 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-27 | 14,676 | 7,699 | 1,712 | 30,678 | 925,520 | 13,359 |  |
 | rev-32 | 0 | 0 | 0 | 0 | 0 | 0 |  |
+| rev-33 | 40,718 | 178,325 | 9,184 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -145,22 +150,40 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Revision batch 3 (user direction 2026-11-22; rev-28 mockups revised, awaiting approval)
-- rev-28 (Needed): Mockups only. Rules is its own page in nav/More, listed BEFORE Settings (not inside Settings). Web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on Notifications/Emails/Both, keywords any/must/skip, card payment type, test), editable Duplicate rules, App picker (Recent / All apps; web shows the phone's synced list or a typed package id), Sender picker (recent Gmail senders + typed address or @domain).
-- rev-29 (Needed): Cross-source dedupe with hard-coded defaults (30 min, amount+direction, any source), DB-stored. Plus: (1) a bank/wallet notification forces a Gmail check (skips the 5-min throttle); (2) BOOT_COMPLETED receiver so capture restarts after reboot. Battery-exemption prompt NOT included (user chose items 1 and 2 only). Gmail push stays Nice-to-have, postponed (needs Pub/Sub, server refresh token, expo-notifications; Q18 kept push out of v1).
-- rev-30 (Needed): Credit card payment. Confirmed transfer did not drop Maya Black balance. Investigate with real data first (balances.ts:21-26, held.ts:82-102); card leg = in.
-- rev-31 (Needed): Build the Rules page (own route + phone screen before Settings), editable duplicate rules (dedupe_rules table), capture_rules migration (channel, keywords), app picker (Kotlin PackageManager list, QUERY_ALL_PACKAGES, assumes personal app outside Play, plus recent-notification apps) synced to a DB table so web sees it, sender picker from recent Gmail senders. Depends on rev-28 approval.
-Cut: rule import/export, hit-count history, dead apply_transfer_marks SQL, battery prompt.
+Batch 4 (picked 2026-11-25: all items a-j; rules redesign = mockups first)
+- rev-33 Rules redesign MOCKUPS (design only, no code): web + phone mockups of one merged "source/rule" editor (add-rule layout), with 2-3 options for per-source settings (min amount, usual account/category, auto-confirm) and for removing a built-in source. AC: user picks an option.
+- rev-34 Small fixes: Bonus yearly-rules spacing + Edit button placement (D10); Pick apps modal spacing (D12); Forecast savings plan shows (D11, reproduce first); payslip: de minimis line, leftover bonus in tax, tax overridable, SSS/Pag-IBIG/PenBoost not blank (B6); mobile lint clean; Maya "payment received on your Maya Black" parses (j). AC: tests for payslip + parser, lint passes.
+- rev-35 Capture: resolveAccount exact-name tie-break (G20, tests in row.test.ts); "may be a transfer" mark + block confirm-as-spending ~5 min for transfer-looking items (F15, Maya "from InstaPay" or counterparty = own account). AC: tests.
+- rev-36 Bills: "mark sent" action (web + phone) writing budget_line_id; Inbox confirm can link a payment to an unpaid bill. AC: Now shows N of M sent correctly.
+- rev-37 Payday prompt: on payday "Has the pay arrived?", confirm adds net pay from that month's payslip as income; ask actual take-home when a bonus is in that pay.
+- rev-38 Now + Budget: Planned vs Spent panel picker (h); Budget per-cutoff view (f).
+- rev-39 Skipped RTO days: show unused office-day money and offer pool / Wants / savings (e).
+- rev-40 Budget plans over date ranges (g), per the overlap rule the user picks.
+- rev-41 Rules redesign build, per the rev-33 choice.
 
 ## Decisions & architecture
 
 2026-11-22 answers for round three. Income tax: per cutoff, not per month. Deduction order: SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750), then tax on the remainder x 24 against the 2023 TRAIN bracket, divided by 24. Both-cutoff lines: a line can total 15,000 a month but be split 5,000 in the 1st cutoff and 10,000 in the 2nd. Reimbursements: a separate deposit; utility is fixed monthly, usually the 17th; wifi case is pay 2,099 then reimbursed; reallocation of the value needed. Installments: mostly card plans, also loans, each as its own budget line.
+- 2026-11-25 Batch 4: all items picked; Rules redesign gets mockups (rev-33) before any code.
+- 2026-11-25 Budget plans (rev-40): no overlapping plans; plans start and end on cutoff days (the 10th / 25th), so a plan covers whole cutoffs.
+- 2026-11-25 Section A findings: bills can never be marked sent (nothing writes transactions.budget_line_id) -> rev-36; skipped RTO days free no money, and rto_amount is never written (unused) -> rev-39.
+- 2026-11-25 rev-33: Rules redesign = Option 1 "One list" (docs/mockups/v13-rules-redesign.html, phone/rules-redesign.html). Built-in sources become rules with no words (catch-all, at the bottom); account/category/min amount/auto-confirm on every rule; a rule's own apps/senders are listened to (fixes the rule-apps-capture-nothing bug); removed built-ins go to "Removed" with Add back, readers stay. rev-41 also adds email patterns (or at least email keywords) so senders without a built-in reader can be read.
 
 ## Run & verify guide (detected by Scout, kept current)
 
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-33: what you do now
+1. Get the code:   git fetch && git checkout rev/33-rules-mockups   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  none; open docs/mockups/v13-rules-redesign.html and docs/mockups/phone/rules-redesign.html in a browser
+6. Check these:    switch between Options 1/2/3 at the top; tap list cards to open each editor; read the comparison table; pick one
+7. Known limits:   mockups only, sample data; also confirm migration 20261217000000 is applied and install the latest APK (from batch 3)
+Reply: Approve (with option) / Request changes / Pause
 
 Review rev-32 on branch rev/32-gmail-alert-check.
 1. Apply migration 20261217000000_gmail_alert_check.sql (adds user_settings.gmail_alert_check, default on). Until then the phone treats it as on and the web toggle shows an "apply the update" error if you change it.
