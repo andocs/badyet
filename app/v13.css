@@ -884,3 +884,11 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-ckb .v-i{width:14px;height:14px}
 .v-ckb[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#04281c}
 .v-ckb:disabled{cursor:default}.v-ckb:not([aria-pressed=true]):disabled{opacity:.5}
+
+/* Dropdown that matches the app (components/v13/pick.tsx) */
+.v-pk{width:100%;min-height:40px;border-radius:10px;background:var(--soft);border:1px solid var(--line);color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.v-pk:hover,.v-pk[aria-expanded=true]{border-color:var(--accent)}.v-pk:disabled{opacity:.6;cursor:default}
+.v-pk .v-ph{color:var(--muted)}.v-pk .v-cr{color:var(--muted);font-size:12px;flex:none}
+.v-pkm{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:100%;width:max-content;max-width:min(320px,86vw);max-height:min(50vh,320px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:2px}
+.v-pko{min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.v-pko:hover,.v-pko:focus-visible{background:var(--soft)}.v-pko[aria-selected=true]{color:var(--accent-text,var(--accent))}.v-pko .v-i{width:14px;height:14px}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { payArrived, setNowCategories } from "@/app/(v13)/actions";
 import { Money } from "./money";
 import type { Money as MoneyValue } from "@/lib/domain/money";
@@ -61,6 +61,16 @@ export function PaydayCard({ amount, cutoff, bonuses, accountId, accounts }: { a
 /** Choose which categories show under Planned vs spent. Saved to your account, so the phone shows the same. */
 export function PanelPicker({ all, shown }: { all: { id: string; name: string }[]; shown: string[] | null }) {
   const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  // Closes when you tap outside it or press Escape.
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", away); document.removeEventListener("keydown", esc); };
+  }, [open]);
   const [picked, setPicked] = useState<Set<string>>(() => new Set(shown ?? all.map((c) => c.id)));
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
@@ -73,10 +83,10 @@ export function PanelPicker({ all, shown }: { all: { id: string; name: string }[
       else setOpen(false);
     });
   return (
-    <div className="v-stack" style={{ gap: 8 }}>
-      <button type="button" className="v-btn v-sm" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Choose"}</button>
+    <div ref={box} style={{ position: "relative" }}>
+      <button type="button" className="v-btn v-sm" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen((o) => !o)}>{open ? "Close" : "Choose"}</button>
       {open ? (
-        <div className="v-card v-stack" style={{ gap: 8 }}>
+        <div className="v-card v-stack" role="dialog" aria-label="Choose what Planned vs spent shows" style={{ gap: 8, position: "absolute", right: 0, top: "calc(100% + 6px)", zIndex: 30, width: "min(300px, 86vw)", maxHeight: "min(60vh, 420px)", overflow: "auto", boxShadow: "0 12px 30px rgba(0,0,0,.35)" }}>
           <div className="v-lbl">Show these categories</div>
           {all.map((c) => (
             <label key={c.id} className="v-row" style={{ gap: 10, minHeight: 36 }}>

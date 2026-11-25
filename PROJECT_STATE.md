@@ -8,13 +8,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** batch 5 done (Wants open)
-- **Gate:** none
-- **Next action:** Batch 5 done except Wants in Planned vs spent (needs user answer) and an optional whole-month tab on the pay checklist. Ask the user for the next revisions or finish
+- **Active slice / milestone:** rev-43 Wants and cleanup
+- **Gate:** waiting
+- **Next action:** Gate rev-43; on approve merge to main + OTA publish
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA; tell me how your Wants lines are set up (Choose on Planned vs spent); consider making the GitHub repo private
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-25 to 2026-11-25) covering handover, batch-4-plan, rev-33, rev-34, rev-35, rev-36, rev-37, rev-38
 - earlier: 15 events (2026-11-22 to 2026-11-23) covering ota, rev-28, rev-29, rev-30, rev-31, rev-32
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering ota, rev-22, rev-23, build, rev-24, rev-25, rev-26, rev-27..29, rev-27
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering rev-14, rev-15, rev-16, rev-17, round-three, rev-18, ota, rev-19, rev-20, rev-21
@@ -31,21 +32,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-25 10:35 | handover | Batch 4 notes saved to docs/HANDOVER-batch-4.md for a fresh conversation (uncommitted) | -
-- 2026-11-25 11:02 | batch-4-plan | Section A answered; batch 4 sliced rev-33..41 and approved | -
-- 2026-11-25 11:06 | rev-33 | Rules redesign mockups: 3 options (one list / grouped by app / two sections), web + phone | 162b0af
-- 2026-11-25 11:33 | rev-33 | Approved: Rules option 1; email patterns added to rev-41 scope; merged to main | -
-- 2026-11-25 11:44 | rev-34 | Small fixes: Bonus rule rows (v-rule class clash), app/sender picker spacing, Maya Black card-payment parser, payslip (SSS 1000 / Pag-IBIG 200 / PenBoost 750 defaults, income tax editable on web, bonus taxable part in cutoff income tax, de minimis line), Forecast savings plan card, mobile ESLint set up (0 errors, 16 warnings) | 0f0e419
-- 2026-11-25 11:50 | rev-34 | Approved; merged to main; Vercel preview passed. Remaining slices regrouped into rev-35..38 | b5840d1
-- 2026-11-25 11:58 | rev-35 | Inbox and capture: resolveAccount exact-name tie-break (also for named accounts like Maya Black); 5-min 'may be a transfer' hold (InstaPay/PESONet or names another own account) on web + phone, enforced server side; bills Mark sent (transfer from another account, or spending from its own) + Undo on web + phone Now; web Inbox 'Pays a bill' link | 1d61e2d
-- 2026-11-25 12:00 | rev-35 | Approved; merged to main | -
-- 2026-11-25 12:10 | rev-36 | Now and Budget: payday prompt (records take-home as income, remembers pay account, asks actual take-home when a bonus lands), Planned vs Spent category picker saved to account, Budget whole-month/1st/2nd cutoff view (web + phone), skipped usual office days listed in Settle office days. Migration 20261218000000_payday_and_now_panel.sql | f467235
-- 2026-11-25 12:15 | rev-36 | Approved; merged to main | -
-- 2026-11-25 12:24 | rev-37 | Design decided: a plan replaces the whole budget (full set of lines copied from the current budget, then edited); dates are picked as start and end cutoffs; no overlaps; outside every plan the normal budget applies | -
-- 2026-11-25 12:33 | rev-37 | Budget plans: plan = full set of lines over a cutoff range, copied from the normal budget on create (with raise top-ups); engine picks per cutoff (plan in force or normal); no overlaps; web Budget plan bar (new/edit/delete, view any budget); phone can view/edit a plan's lines; one RTO contingency line per budget, pool stays on the normal one. Migration 20261219000000_budget_plans.sql | 1dcd588
-- 2026-11-25 12:35 | rev-37 | Approved; merged to main | -
-- 2026-11-25 12:44 | rev-38 | Rules redesign option 1: one list (rules, then 'Everything else from...' source cards, Removed with Add back); rule-style source editor on web (apps/senders pickers, how it's read + that source's patterns, account, category, skip under, auto-confirm, Remove); rule apps and senders now captured (allow-list, package and email routing); patterns read emails; @domain senders for sources. Migration 20261220000000_source_removed.sql | 38774e6
-- 2026-11-25 12:51 | rev-38 | Approved; merged to main; EAS preview build cb8b4696 started | 5e987a6
 - 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
 - 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
 - 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
@@ -56,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:08 | rev-42 | Pay checklist (Option 3): page /pay-checklist + phone plan/checklist; tick = one transfer from payroll account (pay_account_id) to line wallet, balances move; Send the rest = one lump; transfers detected from notifications/emails auto-tick lines in budget order; captured transfer that duplicates one the app recorded is ignored (single or lump of several ticks); lines without a wallet get a wallet picker; Now bills links to it. No migration. | a506a71
 - 2026-11-25 19:11 | rev-42 | Email dedupe and pairing use the transaction time written inside the email (lib/capture/email-time.ts) instead of the email's receipt time; falls back to arrival time when none found | 8a3f7f5
 - 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
+- 2026-11-25 19:21 | rev-43 | Wants row in Planned vs spent (plan = whatever-is-left + moved to Wants - taken; spent = Wants group categories); Choose dropdown floats (absolute popover, closes outside/Esc); docs/BATCH-5-notes.md and HANDOVER-batch-4.md removed and ignored; pay checklist uses a styled Pick dropdown, tab labels with payday dates. No migration. | 387f82f
 
 ## 4. Open questions
 
@@ -95,7 +82,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,184,203 | 21,726,356 | 910,572 | 8,821,672 | 876,772,372 | 3,602,928 |  |
+| **Cumulative** | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -160,6 +147,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-40 | 147,843 | 333,414 | 22,018 | 119,072 | 30,873,194 | 68,565 |  |
 | rev-41 | 0 | 0 | 0 | 16,704 | 1,519,405 | 14,361 |  |
 | rev-42 | 47,003 | 183,558 | 8,760 | 61,365 | 13,044,241 | 46,014 |  |
+| rev-43 | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 | no mark 'rev-43': all-time |
 
 <!-- END SUMMARY -->
 

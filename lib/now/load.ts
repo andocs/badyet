@@ -56,7 +56,7 @@ export type NowData =
 
 interface SettingsRow { first_payday_day: number; second_payday_day: number; office_days: number[]; rto_amount: number }
 interface CategoryRow { id: string; name: string; color: string | null; group_id: string }
-interface GroupRow { id: string; feeds_savings: boolean }
+interface GroupRow { id: string; name?: string; feeds_savings: boolean }
 interface LineRow {
   id: string; category_id: string; name: string; rule: "fixed" | "pct" | "rest"; amount: number | null; pct_bp: number | null;
   amount_second: number | null; reimburse_amount: number | null; reimburse_cutoff: "first" | "second" | null; reimburse_day: number | null;
@@ -87,7 +87,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     supabase.from("allowances").select("id, payslip_cutoff, name, amount, frequency, pay_month, taxable, starts_on, ends_on"),
     supabase.from("plan_assumptions").select("cip_multiplier_num, assumed_raise_on, assumed_raise_bp, assumed_raise_month").maybeSingle(),
     supabase.from("pay_settings").select("sss_override, philhealth_override, pagibig_override, tax_override_first, tax_override_second, other_deduction, savings_plan_bp").maybeSingle(),
-    supabase.from("category_groups").select("id, feeds_savings"),
+    supabase.from("category_groups").select("id, name, feeds_savings"),
     supabase.from("categories").select("id, name, color, group_id").is("archived_at", null),
     supabase.from("budget_lines_v2").select("id, category_id, name, rule, amount, pct_bp, amount_second, reimburse_amount, reimburse_cutoff, reimburse_day, cutoff, account_id, starts_on, ends_on, is_draft, counts_to_daily, kind").order("sort"),
     supabase.from("raise_allocations").select("salary_event_id, budget_line_id, mode, amount, pct_bp"),
@@ -113,7 +113,8 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   if (lineData.length === 0) return { kind: "setup", reason: "no-budget" };
 
   const feeds = new Map(rows<GroupRow>(groups).map((g) => [g.id, g.feeds_savings]));
-  const categories: NowCategory[] = rows<CategoryRow>(cats).map((c) => ({ id: c.id, name: c.name, color: c.color, feedsSavings: feeds.get(c.group_id) ?? false }));
+  const groupNames = new Map(rows<GroupRow>(groups).map((g) => [g.id, g.name ?? null]));
+  const categories: NowCategory[] = rows<CategoryRow>(cats).map((c) => ({ id: c.id, name: c.name, color: c.color, feedsSavings: feeds.get(c.group_id) ?? false, groupName: groupNames.get(c.group_id) ?? null }));
   const catById = new Map(categories.map((c) => [c.id, c]));
   const { plans, planOf } = await loadPlans(supabase);
   const lines: NowLine[] = lineData.map((l) => ({

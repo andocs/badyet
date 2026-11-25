@@ -51,6 +51,8 @@ export type ChecklistData =
       month: YearMonth;
       period: { start: IsoDate; end: IsoDate };
       payrollId: string | null;
+      /** The payday of each cutoff (day of the month), for the tab labels. */
+      paydays: { first: number; second: number };
       accounts: { id: string; name: string }[];
       checklist: Checklist;
       /** Budget lines with an amount in this cutoff but no wallet yet. */
@@ -102,5 +104,5 @@ export async function loadChecklist(supabase: SupabaseClient, wanted?: PayCutoff
   }
 
   const checklist = buildChecklist({ lines, transfers: transfersFromRows(rows), payrollId });
-  return { kind: "ready", cutoff, currentCutoff, month, period: { start: period.start, end: period.end }, payrollId, accounts: data.accounts, checklist, unassigned };
+  return { kind: "ready", cutoff, currentCutoff, month, period: { start: period.start, end: period.end }, payrollId, paydays: data.paydays, accounts: data.accounts, checklist, unassigned };
 }

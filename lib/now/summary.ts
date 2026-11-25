@@ -16,6 +16,8 @@ export interface NowCategory {
   color: string | null;
   /** The category's group feeds the savings pool, so it is not an envelope on Now. */
   feedsSavings: boolean;
+  /** The name of the category's group ("Essentials", "Wants", ...). */
+  groupName?: string | null;
 }
 
 export interface NowTxn {
@@ -61,6 +63,9 @@ export interface Envelope {
   overPace: Money;
   txns: NowTxn[];
 }
+
+/** The Wants row of Planned vs spent is not a category, so it has an id of its own (shaped like one, so a saved choice can name it). */
+export const WANTS_ENVELOPE_ID = "00000000-0000-4000-8000-000000000001";
 
 export interface Bill {
   lineId: string;
@@ -176,6 +181,27 @@ export function buildNowView(input: NowInput): NowView {
       txns: catTxns.sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
     };
   });
+
+  // Wants: what is left after every line ("Whatever is left"), plus what office days sent to Wants and less what they took from it.
+  // Spent is what you spent in the categories of the Wants group.
+  const wantsIds = new Set(input.categories.filter((c) => (c.groupName ?? "").trim().toLowerCase() === "wants").map((c) => c.id));
+  const wantsTxns = input.txns.filter((t) => t.categoryId !== null && wantsIds.has(t.categoryId) && t.kind === "expense" && t.status !== "ignored");
+  const wantsPlan = atLeastZero(sub(((budget.rest[cutoff] ?? ZERO) + (input.movedToWants ?? ZERO)) as Money, input.takenFromWants ?? ZERO));
+  const wantsSpent = sum(wantsTxns.filter((t) => t.status === "confirmed").map((t) => (-t.amount) as Money));
+  if (wantsPlan > 0 || wantsSpent > 0) {
+    const wantsPace = Number((BigInt(wantsPlan) * BigInt(dayNumber)) / BigInt(daysTotal)) as Money;
+    envelopes.push({
+      categoryId: WANTS_ENVELOPE_ID,
+      name: "Wants",
+      color: "var(--gold)",
+      plan: wantsPlan,
+      spent: wantsSpent,
+      left: sub(wantsPlan, wantsSpent),
+      pace: wantsPace,
+      overPace: sub(wantsSpent, wantsPace),
+      txns: wantsTxns.sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)),
+    });
+  }
 
   const billLines = input.lines.filter((l) => l.accountId !== null && l.rule !== "rest" && amountIn(l.id) > 0);
   const paidBy = new Map<string, string>();
