@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-41 Pay checklist mockups
-- **Gate:** waiting
-- **Next action:** Gate rev-41: user picks checklist option 1/2/3; then rev-42 build
+- **Active slice / milestone:** rev-42 Pay checklist build
+- **Gate:** none
+- **Next action:** rev-42: build pay checklist (lib + web + phone), reconcile duplicate transfers
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA update; tell me how your Wants lines are set up (Choose on Planned vs spent)
 
 ## 3. Execution log
@@ -52,6 +52,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 18:54 | rev-40 | Batch 5 fixes: SSS (SSS Circular 2024-006 table, 5% of MSC) and Pag-IBIG (2% to 10k cap) computed, phone field shows real amount; RTO skip prompt + skipped days listed at once, un-skip clears settle; Transfer category/group hidden, Inbox Transfer button (asTransfer); Forecast chart default saved-so-far + balance switch; transfer pairing windows 60 min gap / 3 h lookback; payslip Necessary vs Other deductions, HMO plan name + editor (web+phone), Budget read-only From your payslip card; savings plan shown per fund (forecast month sheet, Funds page). Migration 20261222000000_payroll_labels.sql. Wants in Planned vs spent pending user info. | 8860ac7
 - 2026-11-25 18:56 | rev-40 | Approved; merged to main (238f945); OTA published (group a32f2b2e-fc97-40ef-b6e4-1cb0e238f0bb); Vercel main: success | -
 - 2026-11-25 18:58 | rev-41 | Pay checklist mockups (3 options: by line / by wallet / wallet cards with lines), web + phone, sample numbers | -
+- 2026-11-25 19:01 | rev-41 | Approved: pay checklist Option 3 + two-way sync (tick records transfer and moves balances; detected transfers auto-tick; duplicates not double counted); merged to main | -
 
 ## 4. Open questions
 
@@ -170,11 +171,11 @@ Batch 5 (notes in docs/BATCH-5-notes.md, 2026-11-25). Decisions: necessary deduc
 ## Decisions & architecture
 
 2026-11-22 answers for round three. Income tax: per cutoff, not per month. Deduction order: SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750), then tax on the remainder x 24 against the 2023 TRAIN bracket, divided by 24. Both-cutoff lines: a line can total 15,000 a month but be split 5,000 in the 1st cutoff and 10,000 in the 2nd. Reimbursements: a separate deposit; utility is fixed monthly, usually the 17th; wifi case is pay 2,099 then reimbursed; reallocation of the value needed. Installments: mostly card plans, also loans, each as its own budget line.
-- 2026-11-25 Batch 4: all items picked; Rules redesign gets mockups (rev-33) before any code.
-- 2026-11-25 Budget plans (rev-37): no overlapping plans; plans start and end on cutoff days (the 10th / 25th), so a plan covers whole cutoffs. A plan replaces the whole budget (copied from the normal budget, then edited).
-- 2026-11-25 Section A findings: bills can never be marked sent (nothing writes transactions.budget_line_id) -> rev-35; skipped RTO days free no money -> rev-36 (settle list) and rev-39 (savings option).
-- 2026-11-25 rev-33: Rules redesign = Option 1 "One list" (docs/mockups/v13-rules-redesign.html, phone/rules-redesign.html). Sources are "Everything else from..." cards in the capture list; removed built-ins go to Removed with Add back; patterns also read emails.
-- 2026-11-25 Phone app updates: ship JS-only changes OTA with: cd mobile; npx eas-cli@latest update --channel preview --environment preview --message "..." --non-interactive (runtime 1.1.0, channel preview; the phone applies it after a force-close and reopen, up to twice). Build a new APK only for native changes (new native library, Kotlin listener, permissions or plugins in app.json, Expo SDK upgrade) and bump the app version then. rev-39 published OTA (update group c84f127c-c81b-4054-b724-10533ecc26a5).
+- 2026-11-25 Budget plans (rev-37): no overlapping plans; plans start and end on cutoff days; a plan replaces the whole budget (copied from the normal budget, then edited).
+- 2026-11-25 Rules redesign = Option 1 "One list" (mockups docs/mockups/v13-rules-redesign.html); sources are "Everything else from..." cards; patterns also read emails.
+- 2026-11-25 Phone app updates: ship JS-only changes OTA: cd mobile; npx eas-cli@latest update --channel preview --environment preview --message "..." --non-interactive (runtime 1.1.0, channel preview; phone applies it after a force-close and reopen, up to twice). New APK only for native changes (new native library, Kotlin listener, permissions/plugins in app.json, Expo SDK upgrade); bump the app version then.
+- 2026-11-25 Batch 5: necessary deductions = tax, SSS, PhilHealth, Pag-IBIG, SSS PenBoost; HMO / savings plan / other stay subtracted from take-home, shown in their own payslip section and a read-only Budget card. SSS = 5% of the monthly salary credit (SSS Circular 2024-006, Jan 2025 table, MSC 5,000..35,000 in 500 steps); Pag-IBIG = 2% of up to 10,000. Forecast chart defaults to saved-so-far with a balance switch. Transfer is a built-in Inbox button, its category is hidden.
+- 2026-11-25 Pay checklist (rev-42) = mockup Option 3 (wallet cards with lines, docs/mockups/v13-pay-checklist.html): tick a line = one transfer from the payroll account (pay_account_id) to the line's wallet; "Send the rest" on a wallet = one lump transfer for unticked lines; transfers the app detects from notifications/emails tick lines automatically (unlinked transfers into a wallet from the payroll account in the cutoff are allocated to its unticked lines in order); a captured transfer that duplicates one the app recorded is ignored, not counted twice.
 
 ## Run & verify guide (detected by Scout, kept current)
 
