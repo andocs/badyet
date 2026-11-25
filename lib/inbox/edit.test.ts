@@ -32,3 +32,13 @@ describe("manilaFields", () => {
     expect(manilaFields("2026-11-24T17:30:00Z")).toEqual({ date: "2026-11-25", time: "01:30" });
   });
 });
+
+describe("validateEdit: category", () => {
+  it("leaves the category alone when not given, clears it with null or empty, and takes an id", () => {
+    expect(validateEdit(input())).toMatchObject({ ok: true, value: { categoryId: undefined } });
+    expect(validateEdit(input({ categoryId: null }))).toMatchObject({ ok: true, value: { categoryId: null } });
+    expect(validateEdit(input({ categoryId: "" }))).toMatchObject({ ok: true, value: { categoryId: null } });
+    expect(validateEdit(input({ categoryId: ACC }))).toMatchObject({ ok: true, value: { categoryId: ACC } });
+    expect(validateEdit(input({ categoryId: "nope" }))).toMatchObject({ ok: false });
+  });
+});

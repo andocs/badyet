@@ -8,7 +8,7 @@ import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
 /** Change an Inbox item: its name, amount, direction, account, date and time, and note. A transfer keeps its two accounts. */
-export function InboxEditSheet({ t, accounts, onClose, onSaved }: { t: InboxTxn; accounts: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
+export function InboxEditSheet({ t, accounts, categories, onClose, onSaved }: { t: InboxTxn; accounts: { id: string; name: string }[]; categories: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
   const c = useTheme();
   const when = manilaFields(t.occurredAt);
   const isTransfer = t.kind === 'transfer';
@@ -16,6 +16,7 @@ export function InboxEditSheet({ t, accounts, onClose, onSaved }: { t: InboxTxn;
   const [amount, setAmount] = useState((Math.abs(t.amount) / 100).toFixed(2));
   const [direction, setDirection] = useState<'in' | 'out'>(t.amount < 0 ? 'out' : 'in');
   const [accountId, setAccountId] = useState(t.accountId);
+  const [categoryId, setCategoryId] = useState<string | null>(t.categoryId ?? null);
   const [date, setDate] = useState(when.date);
   const [time, setTime] = useState(when.time);
   const [note, setNote] = useState(t.note ?? '');
@@ -25,7 +26,7 @@ export function InboxEditSheet({ t, accounts, onClose, onSaved }: { t: InboxTxn;
   const save = async () => {
     setBusy(true);
     setProblem(null);
-    const r = await editTransaction(supabase, { id: t.id, merchant, amount, direction, accountId, date, time, note });
+    const r = await editTransaction(supabase, { id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId, date, time, note });
     setBusy(false);
     if ('error' in r) setProblem(r.error);
     else onSaved();
@@ -53,6 +54,14 @@ export function InboxEditSheet({ t, accounts, onClose, onSaved }: { t: InboxTxn;
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {accounts.map((a) => (
                 <Chip key={a.id} label={a.name} on={accountId === a.id} onPress={() => setAccountId(a.id)} />
+              ))}
+            </View>
+          </Field>
+          <Field label="Category">
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              <Chip label="None" on={categoryId === null} onPress={() => setCategoryId(null)} />
+              {categories.map((k) => (
+                <Chip key={k.id} label={k.name} on={categoryId === k.id} onPress={() => setCategoryId(k.id)} />
               ))}
             </View>
           </Field>

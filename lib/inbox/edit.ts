@@ -11,6 +11,8 @@ export interface EditInput {
   /** Whether the money went out or came in (not used for a transfer, which keeps its two sides). */
   direction: "in" | "out";
   accountId: string;
+  /** The category: an id, or null/empty for none. Left alone when not given. Not used for a transfer. */
+  categoryId?: string | null;
   /** YYYY-MM-DD. */
   date: string;
   /** HH:mm, 24-hour. */
@@ -29,6 +31,8 @@ export interface EditValue {
   amount: number;
   direction: "in" | "out";
   accountId: string;
+  /** undefined = leave the category as it is; null = no category. */
+  categoryId: string | null | undefined;
   /** ISO timestamp. */
   occurredAt: string;
   note: string | null;
@@ -42,6 +46,8 @@ export function validateEdit(input: EditInput): Checked<EditValue> {
   if (amount === undefined || amount <= 0 || amount > MAX) return { ok: false, error: "Enter an amount above zero, like 250 or 1,250.50." };
   if (input.direction !== "in" && input.direction !== "out") return { ok: false, error: "Say whether the money went out or came in." };
   if (!UUID.test(input.accountId)) return { ok: false, error: "Pick an account." };
+  const categoryId = input.categoryId === undefined ? undefined : input.categoryId === null || input.categoryId === "" ? null : input.categoryId;
+  if (categoryId && !UUID.test(categoryId)) return { ok: false, error: "That category was not found." };
   const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.date.trim());
   const time = /^(\d{1,2}):(\d{2})$/.exec(input.time.trim());
   if (!date || !time || +time[1]! > 23 || +time[2]! > 59) return { ok: false, error: "Enter the date as 2026-11-25 and the time as 10:02." };
@@ -49,7 +55,7 @@ export function validateEdit(input: EditInput): Checked<EditValue> {
   // Rolled over (a 31st that does not exist) or not a date at all.
   if (Number.isNaN(occurredAt.getTime()) || new Date(occurredAt.getTime() + 8 * 3_600_000).toISOString().slice(0, 10) !== input.date.trim()) return { ok: false, error: "That date does not exist." };
   const note = input.note.trim().slice(0, 200);
-  return { ok: true, value: { merchant: merchant === "" ? null : merchant, amount, direction: input.direction, accountId: input.accountId, occurredAt: occurredAt.toISOString(), note: note === "" ? null : note } };
+  return { ok: true, value: { merchant: merchant === "" ? null : merchant, amount, direction: input.direction, accountId: input.accountId, categoryId, occurredAt: occurredAt.toISOString(), note: note === "" ? null : note } };
 }
 
 /** The date (YYYY-MM-DD) and time (HH:mm) of an ISO timestamp in Philippine time, for filling the form. */
@@ -83,9 +89,16 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
 
   const acct = await supabase.from("accounts").select("id").eq("id", e.accountId).is("archived_at", null).maybeSingle();
   if (!acct.data) return { error: "That account was not found." };
+  if (e.categoryId) {
+    const cat = await supabase.from("categories").select("id").eq("id", e.categoryId).is("archived_at", null).maybeSingle();
+    if (!cat.data) return { error: "That category was not found." };
+  }
   const r = await supabase
     .from("transactions")
-    .update({ amount: e.direction === "out" ? -e.amount : e.amount, kind: e.direction === "out" ? "expense" : "income", account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note })
+    .update({
+      amount: e.direction === "out" ? -e.amount : e.amount, kind: e.direction === "out" ? "expense" : "income", account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note,
+      ...(e.categoryId !== undefined ? { category_id: e.categoryId } : {}),
+    })
     .eq("id", row.data.id);
   return r.error ? { error: "Could not change that. Try again." } : { ok: true };
 }

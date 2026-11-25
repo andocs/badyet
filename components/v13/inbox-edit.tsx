@@ -12,18 +12,20 @@ export interface EditableItem {
   amount: number;
   accountId: string;
   account: string;
+  categoryId: string | null;
   occurredAt: string;
   kind: "expense" | "income" | "transfer";
   note: string | null;
 }
 
 /** Change an Inbox item: its name, amount, direction, account, date and time, and note. A transfer keeps its two accounts. */
-export function InboxEditForm({ t, accounts, onSaved, onCancel }: { t: EditableItem; accounts: { id: string; name: string }[]; onSaved: () => void; onCancel: () => void }) {
+export function InboxEditForm({ t, accounts, categories, onSaved, onCancel }: { t: EditableItem; accounts: { id: string; name: string }[]; categories: { id: string; name: string }[]; onSaved: () => void; onCancel: () => void }) {
   const when = manilaFields(t.occurredAt);
   const [merchant, setMerchant] = useState(t.kind === "transfer" && /^Transfer (in|out)$/.test(t.who) ? "" : t.who === "Expense" ? "" : t.who);
   const [amount, setAmount] = useState((Math.abs(t.amount) / 100).toFixed(2));
   const [direction, setDirection] = useState<"in" | "out">(t.amount < 0 ? "out" : "in");
   const [accountId, setAccountId] = useState(t.accountId);
+  const [categoryId, setCategoryId] = useState(t.categoryId ?? "");
   const [date, setDate] = useState(when.date);
   const [time, setTime] = useState(when.time);
   const [note, setNote] = useState(t.note ?? "");
@@ -34,7 +36,7 @@ export function InboxEditForm({ t, accounts, onSaved, onCancel }: { t: EditableI
   const save = () =>
     start(async () => {
       setError(null);
-      const r = await editInboxItem({ id: t.id, merchant, amount, direction, accountId, date, time, note });
+      const r = await editInboxItem({ id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId || null, date, time, note });
       if (r.error) setError(r.error);
       else onSaved();
     });
@@ -60,6 +62,12 @@ export function InboxEditForm({ t, accounts, onSaved, onCancel }: { t: EditableI
         <div>
           <div className="v-lab">Account</div>
           <div style={{ marginTop: 6 }}><Pick label="Account" value={accountId} placeholder="Pick an account" options={accounts.map((a) => ({ value: a.id, label: a.name }))} onChange={setAccountId} /></div>
+        </div>
+      )}
+      {isTransfer ? null : (
+        <div>
+          <div className="v-lab">Category</div>
+          <div style={{ marginTop: 6 }}><Pick label="Category" value={categoryId} placeholder="No category" options={[{ value: "", label: "No category" }, ...categories.map((c) => ({ value: c.id, label: c.name }))]} onChange={setCategoryId} /></div>
         </div>
       )}
       <div className="v-two">

@@ -332,6 +332,7 @@ export default function Inbox() {
         <InboxEditSheet
           t={editing}
           accounts={data.accounts}
+          categories={data.categories}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

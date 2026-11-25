@@ -285,7 +285,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
               {open.kind === "transfer" ? <span className="v-pill">Transfer</span> : null}
             </div>
             {editing ? (
-              <InboxEditForm key={open.id} t={open} accounts={accounts} onSaved={() => setEditing(false)} onCancel={() => setEditing(false)} />
+              <InboxEditForm key={open.id} t={open} accounts={accounts} categories={categories} onSaved={() => setEditing(false)} onCancel={() => setEditing(false)} />
             ) : (
               <>
             <dl className="v-kv">
