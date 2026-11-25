@@ -369,7 +369,7 @@ function RuleCard({ rule, selected, first, last, enabled, busy, acct, cat, onSel
   return (
     <div className={`v-rulecard${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
       <div className="v-row v-sp">
-        <button type="button" className="v-btn v-sm" style={{ background: "none", padding: 0, fontWeight: 800, textAlign: "left", flex: 1, justifyContent: "flex-start", minWidth: 0 }} aria-label={`Edit ${ruleTitle(rule)}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{ruleTitle(rule)}</button>
+        <button type="button" style={{ background: "none", border: 0, borderRadius: 0, minHeight: 0, boxShadow: "none", padding: 0, font: "inherit", color: "inherit", fontWeight: 800, textAlign: "left", cursor: "pointer", flex: 1, minWidth: 0 }} aria-label={`Edit ${ruleTitle(rule)}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{ruleTitle(rule)}</button>
         <button type="button" className="v-btn v-sm" aria-label={`Move ${ruleTitle(rule)} up`} disabled={first || busy} onClick={(e) => { e.stopPropagation(); onMove("up"); }}>↑</button>
         <button type="button" className="v-btn v-sm" aria-label={`Move ${ruleTitle(rule)} down`} disabled={last || busy} onClick={(e) => { e.stopPropagation(); onMove("down"); }}>↓</button>
         <span onClick={(e) => e.stopPropagation()}><Switch on={enabled} label={`${ruleTitle(rule)} on or off`} disabled={busy} onChange={onToggle} /></span>
@@ -402,7 +402,7 @@ function SourceCard({ cfg, patterns, selected, busy, acct, cat, onSelect, onTogg
   return (
     <div className={`v-rulecard${cfg.enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
       <div className="v-row v-sp">
-        <button type="button" className="v-btn v-sm" style={{ background: "none", padding: 0, fontWeight: 800, textAlign: "left", flex: 1, justifyContent: "flex-start", minWidth: 0 }} aria-label={`Edit ${info.label}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{info.label}</button>
+        <button type="button" style={{ background: "none", border: 0, borderRadius: 0, minHeight: 0, boxShadow: "none", padding: 0, font: "inherit", color: "inherit", fontWeight: 800, textAlign: "left", cursor: "pointer", flex: 1, minWidth: 0 }} aria-label={`Edit ${info.label}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{info.label}</button>
         <span onClick={(e) => e.stopPropagation()}><Switch on={cfg.enabled} label={`${info.label} on or off`} disabled={busy} onChange={onToggle} /></span>
       </div>
       <div className="v-row v-wrap"><span className="v-pill v-ok">{l.listen}</span><span className="v-pill v-warn">{l.reader}</span>{l.mine ? <span className="v-pill">Your patterns ({l.mine})</span> : null}</div>
