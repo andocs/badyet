@@ -18,6 +18,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
   const plan: NavItem[] = [
     { label: "Salary and tax", icon: "salary", href: "/pay" },
     { label: "Budget", icon: "budget", href: "/budget", also: ["/subscriptions"] },
+    { label: "Pay checklist", icon: "check", href: "/pay-checklist" },
     { label: "Installments", icon: "wallet", href: "/installments" },
     { label: "Bonuses", icon: "gift", href: "/bonuses" },
     { label: "Funds", icon: "fund", href: "/funds" },
@@ -54,7 +55,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
         </div>
         <PhoneTabs
           inbox={today[1]!}
-          plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }}
+          plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/pay-checklist", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }}
           more={
             <div className="v-more">
               <RailLinks items={[...plan, { label: "Rules", icon: "rules", href: "/rules" }, { label: "Settings", icon: "settings", href: "/settings" }]} />

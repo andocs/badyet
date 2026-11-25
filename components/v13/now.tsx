@@ -314,6 +314,7 @@ function Bills({ view, accounts }: { view: NowView; accounts: AccountCard[] }) {
     <section className="v-card" aria-labelledby="bt">
       <div className="v-row v-sp">
         <h2 id="bt">Bills and transfers</h2>
+        <Link className="v-sm" href="/pay-checklist">Pay checklist →</Link>
         {view.bills.length > 0 ? <span className={`v-pill ${sent === view.bills.length ? "v-ok" : ""}`}>{sent} of {view.bills.length} sent</span> : null}
       </div>
       {view.bills.length === 0 ? (

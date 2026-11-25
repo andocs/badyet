@@ -78,14 +78,16 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
       seen.add(id);
       continue;
     }
-    const hash = await d.hash(dedupeKey(parsed, email.postTime));
+    // When the transaction happened comes from inside the email; the time the email was sent or received can trail it by a long while.
+    const at = parsed.occurredAt ?? email.postTime;
+    const hash = await d.hash(dedupeKey(parsed, at));
     // The phone alert for the same movement already came (placed, held or dropped), so this email adds nothing.
-    if (isRepeat(recent, 'import', parsed, email.postTime, ctx.dedupe)) {
+    if (isRepeat(recent, 'import', parsed, at, ctx.dedupe)) {
       out.skipped += 1;
     } else if (!known.has(hash)) {
       known.add(hash);
-      recent = remember(recent, 'import', parsed, email.postTime);
-      held.push({ parsed, postTime: email.postTime, decision, hash, origin: 'import' });
+      recent = remember(recent, 'import', parsed, at);
+      held.push({ parsed, postTime: at, decision, hash, origin: 'import' });
       out.found += 1;
     } else {
       out.skipped += 1;

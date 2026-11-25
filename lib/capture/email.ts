@@ -1,4 +1,5 @@
 import { centavos, parseWithPatterns, type Parsed } from './parsers';
+import { transactionTime } from './email-time';
 import type { CapturePattern } from './patterns';
 import { ruleSource, SOURCE_INFO, SOURCES, type CaptureRule, type SourceConfig, type SourceKey } from './sources';
 
@@ -209,10 +210,13 @@ export const canParseEmail = (source: SourceKey, patterns: readonly CapturePatte
  * Reads one email. Your patterns for the source come first (on the subject and text, so a pattern can match either), then the
  * built-in reader. Anything that is not a money movement (statements, promos) returns null.
  */
-export function parseEmail(source: SourceKey, e: Pick<Email, 'subject' | 'text'>, patterns: readonly CapturePattern[] = []): Parsed | null {
-  const mine = parseWithPatterns(patterns, source, [e.subject, e.text].join(String.fromCharCode(10)));
-  if (mine) return mine;
-  return PARSERS[source]?.(e.subject, e.text) ?? null;
+export function parseEmail(source: SourceKey, e: Pick<Email, 'subject' | 'text'> & { postTime?: number }, patterns: readonly CapturePattern[] = []): Parsed | null {
+  const body = [e.subject, e.text].join(String.fromCharCode(10));
+  const parsed = parseWithPatterns(patterns, source, body) ?? PARSERS[source]?.(e.subject, e.text) ?? null;
+  if (!parsed) return null;
+  // The time written in the email is when the transaction happened; the email itself can arrive much later.
+  const at = transactionTime(body, e.postTime);
+  return at === null ? parsed : { ...parsed, occurredAt: at };
 }
 
 export const EMAIL_SOURCES: readonly SourceKey[] = SOURCES.filter((s) => canParseEmail(s));

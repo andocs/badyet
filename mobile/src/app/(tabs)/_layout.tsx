@@ -17,6 +17,7 @@ const MORE: { title: string; icon: IconName; href: Href }[] = [
   { title: 'Salary and tax', icon: 'cash-outline', href: '/plan/salary' },
   { title: 'Budget', icon: 'pie-chart-outline', href: '/plan/budget' },
   { title: 'Bonuses', icon: 'gift-outline', href: '/plan/bonuses' },
+  { title: 'Pay checklist', icon: 'checkmark-done-outline', href: '/plan/checklist' },
   { title: 'Installments', icon: 'card-outline', href: '/plan/installments' },
   { title: 'Funds', icon: 'flag-outline', href: '/plan/funds' },
   { title: 'Forecast', icon: 'trending-up-outline', href: '/plan/forecast' },
@@ -104,6 +105,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="plan/budget" options={HIDDEN} />
         <Tabs.Screen name="plan/bonuses" options={HIDDEN} />
         <Tabs.Screen name="plan/installments" options={HIDDEN} />
+        <Tabs.Screen name="plan/checklist" options={HIDDEN} />
         <Tabs.Screen name="plan/funds" options={HIDDEN} />
         <Tabs.Screen name="plan/forecast" options={HIDDEN} />
         <Tabs.Screen name="settings" options={HIDDEN} />

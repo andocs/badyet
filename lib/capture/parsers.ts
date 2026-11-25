@@ -19,6 +19,8 @@ export interface Parsed {
   ref: string | null;
   /** Your own account's nickname, when the message shows it (BPI emails do). */
   accountName: string | null;
+  /** When the transaction happened, read from inside an email (epoch ms). The email's own send time trails it, so this is the time to match on. */
+  occurredAt?: number;
 }
 
 /** The pieces of an Android notification the parsers read. */
