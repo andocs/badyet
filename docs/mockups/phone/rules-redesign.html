@@ -25,11 +25,11 @@ h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
 .sw{width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;flex:none;cursor:pointer}.sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--ink)}.sw.on{background:var(--accent)}.sw.on:after{left:21px}
 .ib{width:36px;height:36px;border-radius:999px;background:var(--accent);color:var(--on);display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
 .grp{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px}
-.nest{margin-left:10px;border-left:2px solid var(--line);padding-left:8px;display:flex;flex-direction:column;gap:8px}
+.nest{margin-left:12px;display:flex;flex-direction:column;gap:8px}
 .scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;z-index:5}.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:12px 16px 20px;display:none;z-index:6;max-height:88%;overflow:auto;flex-direction:column;gap:12px}
 .scrim.show{display:block}.sheet.open{display:flex}.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
 .fld{display:flex;flex-direction:column;gap:6px}
-.callout{border-left:3px solid var(--gold);padding:6px 10px;background:rgba(246,196,83,.06);border-radius:0 8px 8px 0;font-size:12px;color:var(--muted)}
+.callout{border:1px solid rgba(246,196,83,.35);padding:8px 10px;background:rgba(246,196,83,.06);border-radius:8px;font-size:12px;color:var(--muted)}
 .optsw{display:flex;flex-direction:column;gap:6px}.optsw div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;color:var(--ink)}.optsw div.on{border-color:var(--gold);background:var(--goldt)}
 .hide{display:none!important}
 </style></head><body>
@@ -60,9 +60,9 @@ h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
 <!-- option 2 -->
 <div data-o="2" class="hide" style="flex-direction:column;gap:10px">
  <div class="grp"><div class="lab">Across apps</div><div class="card" data-sheet="w"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div><div class="s12 mut">Maya · BPI</div></div></div>
- <div class="grp" style="border-color:var(--accent)"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h3>Maya</h3><span class="pill gd">Built-in</span></div><div class="sw on"></div></div><div class="s12 mut">Notifications · skips under ₱20</div>
+ <div class="grp" style="border-color:var(--accent)"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h2 style="font-size:15px">Maya</h2><span class="pill gd">Built-in</span></div><div class="sw on"></div></div><div class="s12 mut">Notifications · skips under ₱20</div>
   <div class="nest"><div class="card" data-sheet="w"><div class="between"><div class="b">Maya transfers</div><div class="sw on"></div></div><div class="s12 mut">sent you · you sent</div></div><div class="card" data-sheet="e"><div class="between"><div class="b">Everything else</div><span class="pill n">last</span></div><div class="s12 mut">Account Maya · asks for category</div></div></div></div>
- <div class="grp"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h3>BPI</h3><span class="pill gd">Built-in</span></div><div class="sw on"></div></div>
+ <div class="grp"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h2 style="font-size:15px">BPI</h2><span class="pill gd">Built-in</span></div><div class="sw on"></div></div>
   <div class="nest"><div class="card" data-sheet="e"><div class="between"><div class="b">Everything else</div><span class="pill n">last</span></div><div class="s12 mut">Account BPI Savings</div></div></div></div>
  <div class="btn g">+ Add an app or sender</div>
 </div>
