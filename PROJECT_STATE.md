@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-36 Now and Budget
+- **Active slice / milestone:** rev-37 Budget plans
 - **Gate:** none
-- **Next action:** rev-36: payday prompt, Planned vs Spent picker, Budget per-cutoff view, skipped RTO money
-- **User to-do now:** Install latest APK; check rev-35 on the Vercel preview
+- **Next action:** rev-37: budget plans over date ranges (no overlaps, cutoff-day boundaries)
+- **User to-do now:** Apply migration 20261218000000_payday_and_now_panel.sql; install latest APK; check rev-36 on the Vercel preview
 
 ## 3. Execution log
 
@@ -53,6 +53,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 11:50 | rev-34 | Approved; merged to main; Vercel preview passed. Remaining slices regrouped into rev-35..38 | b5840d1
 - 2026-11-25 11:58 | rev-35 | Inbox and capture: resolveAccount exact-name tie-break (also for named accounts like Maya Black); 5-min 'may be a transfer' hold (InstaPay/PESONet or names another own account) on web + phone, enforced server side; bills Mark sent (transfer from another account, or spending from its own) + Undo on web + phone Now; web Inbox 'Pays a bill' link | 1d61e2d
 - 2026-11-25 12:00 | rev-35 | Approved; merged to main | -
+- 2026-11-25 12:10 | rev-36 | Now and Budget: payday prompt (records take-home as income, remembers pay account, asks actual take-home when a bonus lands), Planned vs Spent category picker saved to account, Budget whole-month/1st/2nd cutoff view (web + phone), skipped usual office days listed in Settle office days. Migration 20261218000000_payday_and_now_panel.sql | f467235
+- 2026-11-25 12:15 | rev-36 | Approved; merged to main | -
 
 ## 4. Open questions
 
@@ -91,7 +93,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,451,636 | 18,609,863 | 765,953 | 7,511,885 | 797,404,182 | 3,379,854 |  |
+| **Cumulative** | 4,572,733 | 19,569,252 | 791,717 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -149,6 +151,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-33 | 40,718 | 178,325 | 9,184 | 0 | 0 | 0 |  |
 | rev-34 | 155,648 | 1,386,351 | 47,508 | 0 | 0 | 0 |  |
 | rev-35 | 90,314 | 258,957 | 18,226 | 0 | 0 | 0 |  |
+| rev-36 | 121,097 | 959,389 | 25,764 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -175,6 +178,17 @@ Batch 4 (picked 2026-11-25). Done: rev-33 Rules mockups (option 1), rev-34 small
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-36: what you do now
+1. Get the code:   git fetch && git checkout rev/36-now-budget   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       apply supabase/migrations/20261218000000_payday_and_now_panel.sql (Supabase SQL editor, or: npx supabase db push). Additive: two new nullable columns on user_settings.
+                   Rollback: alter table public.user_settings drop column if exists pay_account_id, drop column if exists now_categories;
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000   (or the Vercel preview for rev/36-now-budget)
+6. Check these:    Now (first 7 days of a cutoff): "Has the pay arrived?" > pick account > Yes, add it > income appears and the card goes; Now > Planned vs spent > Choose > untick a category > Save (phone shows the same); Budget > 1st cutoff / 2nd cutoff switch; skip a usual office day earlier this cutoff > Budget > Settle office days lists it "(skipped)"
+7. Known limits:   pay account is set from the payday prompt (no separate Salary-page setting); no "to savings" option for skipped-day money (pool or Wants only); phone needs a new APK
+Reply: Approve / Request changes / Pause
 
 AFTER REV-35: what you do now
 1. Get the code:   git fetch && git checkout rev/35-inbox-capture   (merge to main after you approve)
