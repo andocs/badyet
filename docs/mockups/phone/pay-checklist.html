@@ -1,0 +1,83 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@700;800&family=Atkinson+Hyperlegible+Next:wght@500;700&display=swap" rel="stylesheet"><title>Pay checklist (phone)</title><style>
+:root{--bg:#0a1320;--surface:#101c2e;--soft:#17263b;--ink:#e8eef7;--muted:#93a5bd;--line:#223349;--accent:#34d399;--on:#04281c;--at:#5ee6b4;--tint:#0f3a33;--gold:#f6c453;--goldt:#3a2f12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#05090f;display:flex;justify-content:center;gap:24px;padding:24px;font-family:"Atkinson Hyperlegible Next",system-ui,sans-serif;font-weight:500;font-size:14px;color:var(--ink);flex-wrap:wrap}
+.side{width:260px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--muted);line-height:1.5}.side .b{color:var(--ink)}
+.optsw{display:flex;flex-direction:column;gap:6px}.optsw div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;color:var(--ink)}.optsw div.on{border-color:var(--gold);background:var(--goldt)}
+.phone{width:320px;height:872px;background:var(--bg);border-radius:22px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.scroll{flex:1;overflow:auto;padding:36px 16px 20px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.status{position:absolute;top:0;left:0;right:0;height:28px;display:flex;justify-content:space-between;padding:8px 18px;font-size:11px;color:var(--muted);z-index:2;background:var(--bg)}
+h1{font:800 24px/30px Gabarito,system-ui}.sub{font-size:13px;color:var(--muted);margin-top:1px}h3{font:800 16px Gabarito,system-ui}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.b{font-weight:700}.mut{color:var(--muted)}.s12{font-size:12px}.num{font-variant-numeric:tabular-nums;font-weight:700}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px}.row{display:flex;align-items:center;gap:8px}
+.btn{background:var(--accent);color:var(--on);min-height:44px;border-radius:999px;padding:0 16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;cursor:pointer}.btn.g{background:var(--soft);color:var(--ink)}.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.pill{border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;background:var(--soft);color:var(--ink);white-space:nowrap}.pill.gd{background:var(--goldt);color:var(--gold)}.pill.ok{background:var(--tint);color:var(--at)}
+.seg{display:flex;background:var(--soft);border-radius:999px;padding:4px}.seg>div{flex:1;min-height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--muted);cursor:pointer}.seg>div.on{background:var(--surface);color:var(--ink)}
+.track{height:8px;border-radius:4px;background:var(--soft);overflow:hidden}.track i{display:block;height:100%;background:var(--accent);border-radius:inherit}
+.chk{width:28px;height:28px;border-radius:14px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:14px;flex:none;cursor:pointer;color:transparent}.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on)}
+.li{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--line)}.li:first-of-type{border-top:0}.li.done .nm{color:var(--muted);text-decoration:line-through}
+.wal{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px;display:flex;flex-direction:column;gap:8px}.wal.done{border-color:var(--accent)}
+.lump{background:var(--tint);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+.callout{border:1px solid rgba(246,196,83,.35);padding:8px 10px;background:rgba(246,196,83,.06);border-radius:8px;font-size:12px;color:var(--muted)}
+.hide{display:none!important}
+</style></head><body>
+<div class="side"><div class="b">Pay checklist · phone (rev-41)</div><div>Pick an option, then tap ticks and buttons. Sample numbers, 320 x 872.</div>
+ <div class="optsw" id="opts"><div class="on" data-opt="1"><b>1 · By line</b><br><span class="s12 mut">Like your sheet: name, wallet, amount, tick. Wallet totals on top. One transfer per tick.</span></div><div data-opt="2"><b>2 · By wallet</b><br><span class="s12 mut">One card per wallet and one "I sent it" for its total. One transfer per wallet.</span></div><div data-opt="3"><b>3 · Wallet cards with lines</b><br><span class="s12 mut">Wallet cards that open into ticks, plus "Send the rest" as one lump.</span></div></div>
+ <div>On the phone this is a card on <b>Now</b> that opens the full checklist, replacing today's small "Bills and transfers" list.</div></div>
+
+<div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div><div class="scroll">
+ <div><h1>Pay checklist</h1><div class="sub">Send from BPI Payroll</div></div>
+ <div class="seg"><div class="on">1st · Nov 10</div><div>2nd · Nov 25</div><div>Month</div></div>
+ <div class="card"><div class="between"><b>4 of 10 sent</b><span class="num">₱7,950 of ₱24,398</span></div><div class="track"><i style="width:33%"></i></div></div>
+
+ <div data-o="1" style="display:flex;flex-direction:column;gap:12px">
+  <div class="card"><div class="lab">Total per wallet</div>
+   <div class="between"><span class="b">GCash</span><span class="num">₱5,299</span></div><div class="between"><span class="b">Maya</span><span class="num">₱7,099</span></div><div class="between"><span class="b">BPI</span><span class="num">₱12,000</span></div></div>
+  <div class="card">
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm b">Transport</div><span class="pill">GCash</span><span class="num">₱2,400</span></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm b">Food</div><span class="pill">GCash</span><span class="num">₱2,000</span></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm b">Contingency</div><span class="pill">GCash</span><span class="num">₱550</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Mobile load</div><span class="pill">GCash</span><span class="num">₱180</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Subscription</div><span class="pill">GCash</span><span class="num">₱169</span></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm b">Family support</div><span class="pill">BPI</span><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Installments</div><span class="pill">BPI</span><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Wants</div><span class="pill">BPI</span><span class="num">₱6,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Emergency fund</div><span class="pill">Maya</span><span class="num">₱5,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm b">Internet</div><span class="pill">Maya</span><span class="num">₱2,099</span></div></div>
+ </div>
+
+ <div data-o="2" class="hide" style="flex-direction:column;gap:12px">
+  <div class="wal"><div class="between"><h3>GCash</h3><span class="num">₱5,299</span></div><div class="s12 mut">Transport, Food, Contingency, Mobile load, Subscription</div><div class="lump"><div class="btn sm" data-lump>I sent ₱5,299</div><div class="s12 mut">One transfer from BPI Payroll to GCash</div></div></div>
+  <div class="wal"><div class="between"><h3>Maya</h3><span class="num">₱7,099</span></div><div class="s12 mut">Emergency fund, Internet</div><div class="lump"><div class="btn sm" data-lump>I sent ₱7,099</div><div class="s12 mut">One transfer from BPI Payroll to Maya</div></div></div>
+  <div class="wal done"><div class="between"><h3>BPI <span class="pill ok">Sent</span></h3><span class="num">₱12,000</span></div><div class="s12 mut">Family support, Installments, Wants</div><div class="lump"><div class="b">✓ Sent ₱12,000</div><div class="s12 mut">Stays in BPI, so no transfer is recorded</div></div></div>
+ </div>
+
+ <div data-o="3" class="hide" style="flex-direction:column;gap:12px">
+  <div class="wal"><div class="between"><h3>GCash</h3><span class="num">₱5,299</span></div><div class="s12 mut">3 of 5 sent · ₱4,950 of ₱5,299</div><div class="track"><i style="width:93%"></i></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm">Transport</div><span class="num">₱2,400</span></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm">Food</div><span class="num">₱2,000</span></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm">Contingency</div><span class="num">₱550</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Mobile load</div><span class="num">₱180</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Subscription</div><span class="num">₱169</span></div>
+   <div class="btn g sm">Send the rest ₱349</div></div>
+  <div class="wal"><div class="between"><h3>Maya</h3><span class="num">₱7,099</span></div><div class="s12 mut">0 of 2 sent</div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Emergency fund</div><span class="num">₱5,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Internet <span class="pill gd">reimbursed</span></div><span class="num">₱2,099</span></div>
+   <div class="btn sm">Send all ₱7,099</div></div>
+  <div class="wal"><div class="between"><h3>BPI</h3><span class="num">₱12,000</span></div><div class="s12 mut">1 of 3 sent · ₱3,000 of ₱12,000</div><div class="track"><i style="width:25%"></i></div>
+   <div class="li done"><div class="chk on">✓</div><div style="flex:1" class="nm">Family support</div><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Installments</div><span class="num">₱3,000</span></div>
+   <div class="li"><div class="chk"></div><div style="flex:1" class="nm">Wants</div><span class="num">₱6,000</span></div>
+   <div class="btn g sm">Send the rest ₱9,000</div></div>
+ </div>
+</div></div>
+<script>
+document.addEventListener("click",e=>{
+ const o=e.target.closest("[data-opt]");if(o){document.querySelectorAll("[data-opt]").forEach(x=>x.classList.toggle("on",x===o));document.querySelectorAll("[data-o]").forEach(s=>{const show=s.dataset.o===o.dataset.opt;s.classList.toggle("hide",!show);s.style.display=show?"flex":"none"});return}
+ const k=e.target.closest(".chk");if(k){k.classList.toggle("on");k.textContent=k.classList.contains("on")?"✓":"";k.closest(".li")?.classList.toggle("done",k.classList.contains("on"));return}
+ const l=e.target.closest("[data-lump]");if(l){l.closest(".wal").classList.add("done");l.outerHTML='<div class="b">✓ Sent</div>'}
+ const sg=e.target.closest(".seg>div");if(sg){sg.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===sg))}
+});
+</script></body></html>
