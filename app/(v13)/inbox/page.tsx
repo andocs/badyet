@@ -1,4 +1,5 @@
 import { HELD_COLUMNS, type HeldRow } from "@/lib/capture/held";
+import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
 import { SOURCE_INFO, isSource } from "@/lib/capture/sources";
 import { ensureTransferCategory } from "@/lib/capture/transfer-category";
 import { isoDate } from "@/lib/domain/dates";
@@ -14,6 +15,17 @@ interface Row {
   id: string; account_id: string; occurred_at: string; amount: number; merchant: string | null; kind: "expense" | "income" | "transfer";
   category_id: string | null; transfer_peer_id: string | null; source: string; status: "pending" | "confirmed"; dedupe_hash: string | null; note: string | null;
 }
+/** When each transfer-looking pending row may be confirmed as spending or income (ISO), as of this request. */
+function holdTimes(rows: Iterable<Row>, accounts: readonly HoldAccount[]): Map<string, string> {
+  const now = Date.now();
+  const out = new Map<string, string>();
+  for (const r of rows) {
+    const until = transferHoldUntil({ status: r.status, kind: r.kind, source: r.source, occurredAt: r.occurred_at, counterparty: r.merchant, accountId: r.account_id }, accounts, now);
+    if (until !== null) out.set(r.id, new Date(until).toISOString());
+  }
+  return out;
+}
+
 const SOURCE: Record<string, string> = { notification: "Notification", manual: "Added by hand", transfer: "Transfer", import: "Import", bonus: "Bonus" };
 
 export default async function Inbox() {
@@ -24,16 +36,19 @@ export default async function Inbox() {
   await ensureTransferCategory(supabase);
 
   const cols = "id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, dedupe_hash, note";
-  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts] = await Promise.all([
+  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts, billsRes] = await Promise.all([
     supabase.from("categories").select("id, name").is("archived_at", null).order("sort"),
-    supabase.from("accounts").select("id, name"),
+    supabase.from("accounts").select("id, name, institution, archived_at"),
     supabase.from("merchant_rules").select("id, pattern, category_id, account_id, priority"),
     supabase.from("transactions").select(cols).eq("status", "pending").order("occurred_at", { ascending: false }),
     supabase.from("transactions").select(cols).neq("status", "ignored").order("occurred_at", { ascending: false }).limit(60),
     supabase.from("transactions").select("merchant, category_id").eq("status", "confirmed").not("category_id", "is", null).order("occurred_at", { ascending: false }).limit(500),
     supabase.from("held_captures").select(HELD_COLUMNS).order("post_time", { ascending: false }),
     supabase.from("accounts").select("id, name").is("archived_at", null).order("sort").order("created_at"),
+    // Budget lines that go to an account are bills: a payment can be linked to one so it shows as sent.
+    supabase.from("budget_lines_v2").select("id, name").not("account_id", "is", null).neq("rule", "rest").order("name"),
   ]);
+  const holdAccounts = ((acct.data ?? []) as (HoldAccount & { archived_at: string | null })[]).filter((a) => a.archived_at === null);
   // Captures the phone could not place in an account (the table comes from a newer migration; without it there are none).
   const held: HeldCapture[] = heldRes.error ? [] : ((heldRes.data ?? []) as HeldRow[]).filter((h) => isSource(h.source)).map((h) => ({
     hash: h.hash, sourceLabel: SOURCE_INFO[h.source as keyof typeof SOURCE_INFO].label, direction: h.direction, amount: h.amount, counterparty: h.counterparty, postTime: h.post_time,
@@ -49,6 +64,7 @@ export default async function Inbox() {
   const all = new Map<string, Row>();
   for (const r of [...((recentRes.data ?? []) as Row[]), ...((pendingRes.data ?? []) as Row[])]) all.set(r.id, r);
 
+  const holds = holdTimes(all.values(), holdAccounts);
   const txns: InboxTxn[] = [...all.values()]
     .sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))
     .map((r) => {
@@ -79,8 +95,9 @@ export default async function Inbox() {
         guess,
         dedupe: r.dedupe_hash ? `${r.dedupe_hash.slice(0, 4)}…${r.dedupe_hash.slice(-4)}` : null,
         note: r.note,
+        holdUntil: holds.get(r.id) ?? null,
       };
     });
 
-  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} />;
+  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} bills={(billsRes.data ?? []) as { id: string; name: string }[]} />;
 }

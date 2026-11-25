@@ -42,8 +42,36 @@ describe('resolveAccount', () => {
   });
   it('returns null rather than guess when none or several match', () => {
     expect(resolveAccount(defaultConfig('grab'), parsed({ source: 'grab' }), accounts)).toBeNull();
-    const two = [...accounts, { id: 'a-gcash2', name: 'GCash Savings', institution: null, last4: null }];
+    const two: AccountLite[] = [
+      { id: 'a-g1', name: 'GCash Savings', institution: null, last4: null },
+      { id: 'a-g2', name: 'GCash Wallet', institution: null, last4: null },
+    ];
     expect(resolveAccount(defaultConfig('gcash'), parsed(), two)).toBeNull();
+  });
+  describe('several accounts share the source name', () => {
+    const mayas: AccountLite[] = [
+      { id: 'm-wallet', name: 'Maya', institution: null, last4: '0325' },
+      { id: 'm-black', name: 'Maya Black', institution: 'Maya', last4: null },
+      { id: 'm-save', name: 'Maya Savings', institution: 'Maya', last4: null },
+      { id: 'g-cash', name: 'GCash', institution: null, last4: '0325' },
+    ];
+    it('picks the account named exactly like the source', () => {
+      expect(resolveAccount(defaultConfig('maya'), parsed({ source: 'maya' }), mayas)).toBe('m-wallet');
+    });
+    it('is case and space blind', () => {
+      const odd = mayas.map((a) => (a.id === 'm-wallet' ? { ...a, name: ' maya ' } : a));
+      expect(resolveAccount(defaultConfig('maya'), parsed({ source: 'maya' }), odd)).toBe('m-wallet');
+    });
+    it('still asks when no account is named exactly like it', () => {
+      const renamed = mayas.map((a) => (a.id === 'm-wallet' ? { ...a, name: 'Maya Wallet' } : a));
+      expect(resolveAccount(defaultConfig('maya'), parsed({ source: 'maya' }), renamed)).toBeNull();
+    });
+    it('a message naming Maya Black lands on Maya Black', () => {
+      expect(resolveAccount(defaultConfig('maya'), parsed({ source: 'maya', accountName: 'Maya Black' }), mayas)).toBe('m-black');
+    });
+    it('a shared last4 is not used to pick one of them', () => {
+      expect(resolveAccount(defaultConfig('maya'), parsed({ source: 'maya', accountHint: '0325' }), mayas)).toBe('m-wallet');
+    });
   });
 });
 

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { ensureTransferCategory, TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
+import { transferHoldUntil, type HoldAccount } from '@/lib/capture/hold';
 
 export interface Category { id: string; name: string }
 
@@ -21,6 +22,8 @@ export interface InboxTxn {
   /** Where a suggested category came from. */
   guess: 'rule' | 'history' | null;
   note: string | null;
+  /** ISO time until which this looks like one side of a transfer still waiting for its other side; null = no wait. */
+  holdUntil: string | null;
 }
 
 export interface InboxData {
@@ -57,10 +60,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function buildInbox(
   rows: Row[],
   categories: Category[],
-  accounts: { id: string; name: string }[],
+  accounts: { id: string; name: string; institution?: string | null; archived_at?: string | null }[],
   rules: RuleRow[],
   history: { merchant: string | null; category_id: string | null }[],
+  nowMs: number = Date.now(),
 ): InboxTxn[] {
+  const live: HoldAccount[] = accounts.filter((a) => !a.archived_at).map((a) => ({ id: a.id, name: a.name, institution: a.institution ?? null }));
   const catName = new Map(categories.map((c) => [c.id, c.name]));
   const accountName = new Map(accounts.map((a) => [a.id, a.name]));
   const mr: MerchantRule[] = rules.map((r) => ({ id: r.id, pattern: r.pattern, categoryId: r.category_id, accountId: r.account_id, priority: r.priority }));
@@ -101,6 +106,10 @@ export function buildInbox(
         categoryName: categoryId ? (catName.get(categoryId) ?? null) : null,
         guess,
         note: r.note,
+        holdUntil: (() => {
+          const until = transferHoldUntil({ status: r.status, kind: r.kind, source: r.source, occurredAt: r.occurred_at, counterparty: r.merchant, accountId: r.account_id }, live, nowMs);
+          return until === null ? null : new Date(until).toISOString();
+        })(),
       };
     });
 }
@@ -112,7 +121,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   await ensureTransferCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes] = await Promise.all([
     supabase.from('categories').select('id, name').is('archived_at', null).order('sort'),
-    supabase.from('accounts').select('id, name'),
+    supabase.from('accounts').select('id, name, institution, archived_at'),
     supabase.from('merchant_rules').select('id, pattern, category_id, account_id, priority'),
     supabase.from('transactions').select(COLS).eq('status', 'pending').order('occurred_at', { ascending: false }),
     supabase.from('transactions').select(COLS).neq('status', 'ignored').order('occurred_at', { ascending: false }).limit(60),
@@ -123,7 +132,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   const rows = [...((recentRes.data ?? []) as Row[]), ...((pendingRes.data ?? []) as Row[])];
   return {
     categories,
-    txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
+    txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
   };
 }
 
@@ -138,7 +147,7 @@ export async function confirmTransaction(
   input: { id: string; categoryId: string | null; rule: boolean; note: string },
 ): Promise<Result> {
   if (!UUID.test(input.id)) return { error: 'That transaction was not found.' };
-  const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id').eq('id', input.id).maybeSingle();
+  const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source').eq('id', input.id).maybeSingle();
   if (!row.data || row.data.status !== 'pending') return { error: 'That one is no longer waiting.' };
 
   const isTransfer = row.data.kind === 'transfer';
@@ -151,6 +160,19 @@ export async function confirmTransaction(
     if (!cat.data) return { error: 'That category was not found.' };
     categoryId = input.categoryId;
     becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
+    // A transfer-looking item waits a few minutes for its other side before it can count as spending or income.
+    if (!becomesTransfer) {
+      const accts = await supabase.from('accounts').select('id, name, institution').is('archived_at', null);
+      const until = transferHoldUntil(
+        { status: row.data.status, kind: row.data.kind, source: row.data.source, occurredAt: row.data.occurred_at, counterparty: row.data.merchant, accountId: row.data.account_id },
+        (accts.data ?? []) as HoldAccount[],
+        Date.now(),
+      );
+      if (until !== null) {
+        const at = new Date(until).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
+        return { error: `This may be a transfer between your accounts. Wait until ${at} for the other side, or file it under ${TRANSFER_CATEGORY}.` };
+      }
+    }
   }
 
   const note = input.note.trim().slice(0, 200) || null;

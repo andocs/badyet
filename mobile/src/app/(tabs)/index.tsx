@@ -1,12 +1,14 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { undoBillSent } from '@/lib/bills/send';
 import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
 import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayName } from '@/lib/now/format';
 import { loadNow, type AccountCard } from '@/lib/now/load';
-import { manilaDate, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
+import { manilaDate, type Bill, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
+import { BillSheet } from '~/components/BillSheet';
 import { AccountTile } from '~/components/AccountTile';
 import { GmailBanner } from '~/components/GmailBanner';
 import { stableColor } from '@/lib/accounts/order';
@@ -63,7 +65,7 @@ export default function Now() {
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />
       <Envelopes envelopes={view.envelopes} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
-      <Bills view={view} />
+      <Bills view={view} accounts={data.accounts} onChanged={reload} />
       {data.settleOpen > 0 ? (
         <Pressable onPress={() => router.navigate('/plan/budget')} accessibilityRole="button">
           <Card>
@@ -289,9 +291,23 @@ function Envelopes({ envelopes, dayNumber, daysTotal }: { envelopes: Envelope[];
   );
 }
 
-function Bills({ view }: { view: NowView }) {
+function Bills({ view, accounts, onChanged }: { view: NowView; accounts: AccountCard[]; onChanged: () => void }) {
   const c = useTheme();
   const sent = view.bills.filter((b) => b.sent).length;
+  const [paying, setPaying] = useState<Bill | null>(null);
+  const undo = (b: Bill) =>
+    Alert.alert(`Undo ${b.name}?`, 'A payment made with Mark sent is cancelled. A captured payment stays, it just no longer marks the bill.', [
+      { text: 'Keep', style: 'cancel' },
+      {
+        text: 'Undo',
+        style: 'destructive',
+        onPress: async () => {
+          const r = await undoBillSent(supabase, b.txnId!);
+          if ('error' in r) Alert.alert('Could not undo', r.error);
+          else onChanged();
+        },
+      },
+    ]);
   return (
     <Card>
       <View style={s.between}>
@@ -309,7 +325,13 @@ function Bills({ view }: { view: NowView }) {
       ) : (
         <>
           {view.bills.map((b) => (
-            <View key={b.lineId} style={[s.between, { minHeight: 36 }]}>
+            <Pressable
+              key={b.lineId}
+              onPress={() => (b.sent ? (b.txnId ? undo(b) : undefined) : setPaying(b))}
+              accessibilityRole="button"
+              accessibilityLabel={b.sent ? `${b.name}, sent. Tap to undo` : `${b.name}, not sent yet. Tap to mark sent`}
+              style={[s.between, { minHeight: 44 }]}
+            >
               <View style={[s.row, { flex: 1 }]}>
                 <View style={[s.check, { backgroundColor: b.sent ? c.accent : 'transparent', borderColor: b.sent ? c.accent : c.line }]} accessibilityLabel={b.sent ? 'sent' : 'not sent yet'}>
                   {b.sent ? <Text style={{ color: c.onAccent, fontSize: 12, fontFamily: fonts.bodyBold }}>✓</Text> : null}
@@ -317,14 +339,26 @@ function Bills({ view }: { view: NowView }) {
                 <Body>{b.name}</Body>
               </View>
               <Amount value={b.amount} style={{ color: b.sent ? c.muted : c.ink }} />
-            </View>
+            </Pressable>
           ))}
+          {view.bills.some((b) => !b.sent) ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Tap a bill to mark it sent.</Text> : null}
           <View style={[s.between, { borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10, marginTop: 2 }]}>
             <Body bold>Sent this cutoff</Body>
             <Amount value={view.billsTotalSent} />
           </View>
         </>
       )}
+      {paying ? (
+        <BillSheet
+          bill={paying}
+          accounts={accounts.map((a) => ({ id: a.id, name: a.name }))}
+          onClose={() => setPaying(null)}
+          onSaved={() => {
+            setPaying(null);
+            onChanged();
+          }}
+        />
+      ) : null}
     </Card>
   );
 }

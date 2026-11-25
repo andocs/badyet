@@ -1,7 +1,8 @@
 "use client";
 
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { confirmTransaction, ignoreTransaction } from "@/app/(v13)/inbox/actions";
+import { TRANSFER_CATEGORY } from "@/lib/capture/transfer-category";
 import type { IsoDate } from "@/lib/domain/dates";
 import { money } from "@/lib/domain/money";
 import { relativeDay, timeLabel } from "@/lib/now/format";
@@ -28,6 +29,8 @@ export interface InboxTxn {
   guess: "rule" | "history" | null;
   dedupe: string | null;
   note: string | null;
+  /** ISO time until which this looks like one side of a transfer still waiting for its other side; null = no wait. */
+  holdUntil: string | null;
 }
 
 interface Category { id: string; name: string }
@@ -40,7 +43,7 @@ const when = (iso: string, today: IsoDate) => `${relativeDay(manilaDate(iso), to
  */
 type Change = { type: "confirm"; id: string; categoryId: string | null; categoryName: string | null } | { type: "ignore"; id: string };
 
-export function InboxView({ txns: txnsIn, categories, held, accounts, today }: { txns: InboxTxn[]; categories: Category[]; held: HeldCapture[]; accounts: { id: string; name: string }[]; today: IsoDate }) {
+export function InboxView({ txns: txnsIn, categories, held, accounts, today, bills }: { txns: InboxTxn[]; categories: Category[]; held: HeldCapture[]; accounts: { id: string; name: string }[]; today: IsoDate; bills: { id: string; name: string }[] }) {
   // A confirmed row leaves To check and an ignored row disappears the moment you tap; the server catches up in the background.
   const [txns, apply] = useOptimistic(txnsIn, (cur, c: Change) =>
     c.type === "ignore" ? cur.filter((t) => t.id !== c.id) : cur.map((t) => (t.id === c.id ? { ...t, status: "confirmed" as const, categoryId: c.categoryId, categoryName: c.categoryName } : t)),
@@ -57,14 +60,26 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
   const [picks, setPicks] = useState<Record<string, string | null>>({});
   const [rules, setRules] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [billPicks, setBillPicks] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null);
+  // The clock, so a transfer wait ends on screen without a reload. Until it first ticks, the server's view of the wait stands.
+  const [nowMs, setNowMs] = useState(0);
+  useEffect(() => {
+    const tick = () => setNowMs(Date.now());
+    const first = setTimeout(tick, 0);
+    const timer = setInterval(tick, 15_000);
+    return () => { clearTimeout(first); clearInterval(timer); };
+  }, []);
+  const transferCat = categories.find((c) => c.name === TRANSFER_CATEGORY)?.id ?? null;
+  const holding = (t: InboxTxn) => t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
 
   const open = txns.find((t) => t.id === openId) ?? null;
   const pick = (t: InboxTxn) => (t.id in picks ? picks[t.id]! : t.categoryId);
   const ruleOn = (t: InboxTxn) => (t.id in rules ? rules[t.id]! : t.guess === "rule");
-  const canConfirm = (t: InboxTxn) => t.kind === "transfer" || pick(t) !== null;
+  // While a transfer-looking item waits for its other side, it can only be filed as a Transfer.
+  const canConfirm = (t: InboxTxn) => t.kind === "transfer" || (pick(t) !== null && (!holding(t) || pick(t) === transferCat));
 
   function openDetail(id: string) {
     setOpenId(id);
@@ -80,7 +95,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
       const categoryId = pick(t);
       apply({ type: "confirm", id: t.id, categoryId, categoryName: categories.find((c) => c.id === categoryId)?.name ?? null });
       closeDetail();
-      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "" });
+      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "", billId: billPicks[t.id] || null });
       if (r.error) setError(r.error);
     });
   }
@@ -123,6 +138,12 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
     </span>
   );
   const label = (n: number) => `To check${n ? ` (${n})` : ""}`;
+  const holdNote = (t: InboxTxn) =>
+    holding(t) ? (
+      <div className="v-guess v-warnt" role="status">
+        May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. File it under {TRANSFER_CATEGORY} now, or confirm it as {t.amount < 0 ? "spending" : "income"} after that.
+      </div>
+    ) : null;
 
   return (
     <main className="v-main">
@@ -189,7 +210,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
                       </>
                     ) : (
                       <>
-                        <div className="v-inline">{chips(t)}{guessLine(t)}<div className="v-row v-sp" style={{ marginTop: 12 }}>{ruleRow(t)}</div></div>
+                        <div className="v-inline">{chips(t)}{holdNote(t) ?? guessLine(t)}<div className="v-row v-sp" style={{ marginTop: 12 }}>{ruleRow(t)}</div></div>
                         <div className="v-wide v-tp">
                           <span className="v-pill">{t.account}</span>
                           <span className={`v-pill ${pick(t) ? "" : "v-warn"}`}>{categories.find((c) => c.id === pick(t))?.name ?? "No category yet"}</span>
@@ -268,8 +289,17 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today }: {
               <>
                 <div className="v-lbl">Category</div>
                 {chips(open)}
-                {guessLine(open)}
+                {holdNote(open) ?? guessLine(open)}
                 {ruleRow(open)}
+                {open.amount < 0 && bills.length > 0 ? (
+                  <label className="v-field">
+                    Pays a bill
+                    <select value={billPicks[open.id] ?? ""} onChange={(e) => setBillPicks((b) => ({ ...b, [open.id]: e.target.value }))}>
+                      <option value="">No, not a bill</option>
+                      {bills.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  </label>
+                ) : null}
                 <label className="v-field">
                   Note
                   <input value={notes[open.id] ?? open.note ?? ""} maxLength={200} placeholder="Add a note (optional)" onChange={(e) => setNotes((n) => ({ ...n, [open.id]: e.target.value }))} />
