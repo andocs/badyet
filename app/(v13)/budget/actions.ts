@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import { validateCategory, validateLine } from "@/lib/budget/line-input";
+import { createPlan, deletePlan, planIdOf, updatePlan } from "@/lib/budget/plans-write";
 import type { FormState } from "@/lib/form-state";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -26,10 +27,18 @@ export async function saveLine(input: unknown): Promise<FormState> {
     const acct = await supabase.from("accounts").select("id").eq("id", l.accountId).maybeSingle();
     if (!acct.data) return { error: "That account was not found." };
   }
+  // A new line goes into the plan being viewed (null = the normal budget); an existing line keeps its plan.
+  let planId = planIdOf(input);
+  if (l.id) {
+    const cur = await supabase.from("budget_lines_v2").select("plan_id").eq("id", l.id).maybeSingle();
+    planId = (cur.data as { plan_id?: string | null } | null)?.plan_id ?? null;
+  }
   if (l.kind === "rto_contingency") {
     // The unique index allows one; free the role first so the save below cannot trip it.
     const q = supabase.from("budget_lines_v2").update({ kind: "normal" }).eq("kind", "rto_contingency");
-    await (l.id ? q.neq("id", l.id) : q);
+    // Each budget (the normal one, and each plan) has its own contingency line.
+    const scoped = planId ? q.eq("plan_id", planId) : q.is("plan_id", null);
+    await (l.id ? scoped.neq("id", l.id) : scoped);
   }
 
   const values = {
@@ -55,13 +64,14 @@ export async function saveLine(input: unknown): Promise<FormState> {
     const { error } = await supabase.from("budget_lines_v2").update(values).eq("id", l.id);
     if (error) return { error: "Could not save the line. Try again." };
   } else {
-    const { data, error } = await supabase.from("budget_lines_v2").insert(values).select("id").single();
+    const { data, error } = await supabase.from("budget_lines_v2").insert(planId ? Object.assign({}, values, { plan_id: planId }) : values).select("id").single();
     if (error) return { error: "Could not save the line. Try again." };
     lineId = data.id;
   }
 
   // The contingency line funds a pool of the same name; create it the first time.
-  if (l.kind === "rto_contingency" && lineId) {
+  // Only the normal budget's contingency line has the pool; a plan's copy reserves the money but shares that pool.
+  if (l.kind === "rto_contingency" && lineId && !planId) {
     const pool = await supabase.from("pools").select("id").eq("budget_line_id", lineId).maybeSingle();
     if (!pool.data) await supabase.from("pools").insert({ name: "RTO contingency", budget_line_id: lineId });
   }
@@ -127,7 +137,7 @@ export async function setOfficeDay(input: { date: string; office: boolean; usual
   // Three round trips instead of seven: look things up and clear the old tap together, then write.
   const [pool, contingency] = await Promise.all([
     supabase.from("pools").select("id, budget_line_id").not("budget_line_id", "is", null),
-    supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").maybeSingle(),
+    supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").is("plan_id", null).maybeSingle(),
     supabase.from("office_day_overrides").delete().eq("day", input.date),
   ]);
   const poolId = (pool.data ?? []).find((p) => p.budget_line_id === contingency.data?.id)?.id as string | undefined;
@@ -154,7 +164,7 @@ export async function settleDay(input: { date: string; under: boolean; to: "pool
   if (!Number.isInteger(input.amount) || input.amount <= 0 || input.amount > 100_000_000) return { error: "Check the amount." };
   const kind = input.under ? (input.to === "pool" ? "settle_to_pool" : input.to === "wants" ? "settle_to_wants" : null) : input.to === "wants" ? "over_from_wants" : input.to === "excess" ? "over_from_excess" : null;
   if (!kind) return { error: "Pick where it goes." };
-  const contingency = await supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").maybeSingle();
+  const contingency = await supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").is("plan_id", null).maybeSingle();
   const pool = contingency.data ? await supabase.from("pools").select("id").eq("budget_line_id", contingency.data.id).maybeSingle() : { data: null };
   if (!pool.data) return { error: "Mark one budget line as the RTO contingency first." };
   await supabase.from("pool_entries").delete().eq("pool_id", pool.data.id).eq("occurred_on", input.date).in("kind", [...SETTLE_KINDS]);
@@ -198,5 +208,38 @@ export async function createPool(input: { name: string; lineId: string | null; k
   const { error } = await supabase.from("pools").insert({ name, budget_line_id: input.lineId, keep_up_to: input.keepUpTo });
   if (error) return { error: "Could not create the pool. Try again." };
   refresh();
+  return { ok: true };
+}
+
+type PlanForm = { name: string; from: { month: string; cutoff: string }; to: { month: string; cutoff: string } };
+const plansChanged = () => {
+  refresh();
+  revalidatePath("/forecast");
+};
+
+/** A new budget plan for a range of cutoffs, started as a copy of the normal budget. */
+export async function addPlan(input: PlanForm): Promise<FormState & { id?: string }> {
+  const supabase = await requireAuthed();
+  const r = await createPlan(supabase, input);
+  if ("error" in r) return { error: r.error };
+  plansChanged();
+  return { ok: true, id: r.id };
+}
+
+/** Renames a plan or changes its cutoffs. */
+export async function editPlan(input: PlanForm & { id: string }): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await updatePlan(supabase, input);
+  if ("error" in r) return { error: r.error };
+  plansChanged();
+  return { ok: true };
+}
+
+/** Deletes a plan and its lines. */
+export async function removePlan(id: string): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await deletePlan(supabase, id);
+  if ("error" in r) return { error: r.error };
+  plansChanged();
   return { ok: true };
 }

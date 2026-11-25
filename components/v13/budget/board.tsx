@@ -55,7 +55,7 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0 }: { groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null }: { groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
   const groups: GroupView[] = cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups;
   const dialog = useRef<HTMLDialogElement>(null);
@@ -107,6 +107,7 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
     if (rbDay !== null && (!Number.isInteger(rbDay) || rbDay < 1 || rbDay > 31)) return setError("The deposit day is 1 to 31.");
     start(async () => {
       const r = await saveLine({
+        planId,
         id: draft.id,
         name: draft.name,
         categoryId: draft.categoryId,

@@ -12,6 +12,7 @@ export function forecastInput(d: FundsData, start: YearMonth, months = 60): Proj
     months,
     ...d.budget.salary.input,
     lines: d.budget.lines,
+    plans: d.budget.plans,
     allocations: d.budget.allocations,
     funds: d.funds,
     fundStart: d.fundStart,

@@ -8,6 +8,8 @@ import { currentCutoff, manilaDate } from "@/lib/now/summary";
 import { todayManila } from "@/lib/plans/validate";
 import { loadSalary, type SalaryData } from "@/lib/salary/load";
 import type { CategoryRow, GroupRow, LineRow } from "./view";
+import type { PlanSpan } from "./plans";
+import { loadPlans } from "./plans-load";
 
 export interface PoolData {
   id: string;
@@ -27,6 +29,8 @@ export interface BudgetData {
   groups: GroupRow[];
   categories: CategoryRow[];
   lines: LineRow[];
+  /** Budget plans over date ranges; a line's planId says which one it belongs to (null = the normal budget). */
+  plans: PlanSpan[];
   accounts: { id: string; name: string }[];
   allocations: RaiseAllocation[];
   officeDays: number[];
@@ -73,7 +77,9 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
     supabase.from("transactions").select("occurred_at, amount, category_id, budget_line_id, kind, status").gte("occurred_at", from).lt("occurred_at", to).eq("status", "confirmed"),
   ]);
 
+  const { plans, planOf } = await loadPlans(supabase);
   const lines: LineRow[] = rows<LineDb>(lineRes).map((l) => ({
+    planId: planOf.get(l.id) ?? null,
     id: l.id,
     name: l.name,
     rule: l.rule,
@@ -131,6 +137,7 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
     groups: groupRows,
     categories,
     lines,
+    plans,
     accounts: rows<{ id: string; name: string }>(accts),
     allocations: rows<RaiseAllocationRow>(alloc).map(raiseAllocationOf),
     officeDays: settings.office_days,

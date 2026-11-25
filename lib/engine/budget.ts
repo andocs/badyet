@@ -1,5 +1,6 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { atLeastZero, divRound, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
+import { planFor, type PlanSpan } from "./plans";
 import type { BudgetLine, PayCutoff, RaiseAllocation, SalaryEvent } from "./types";
 
 export interface TopUp {
@@ -30,6 +31,10 @@ export interface BudgetInput {
   /** Flag a cutoff as tight when the rest line falls below this. Default 0 (never tight). */
   tightBelow?: Money;
   includeDrafts?: boolean;
+  /** Budget plans: each cutoff uses the lines of the plan in force for it, or the normal budget's lines when none is. */
+  plans?: readonly PlanSpan[];
+  /** Show one budget for both cutoffs whatever the dates say: a plan's id, or null for the normal budget (Budget page). */
+  forcePlan?: string | null;
 }
 
 export interface BudgetMonth {
@@ -58,7 +63,7 @@ function isOn(line: BudgetLine, month: YearMonth, includeDrafts: boolean): boole
   return (line.startsOn == null || line.startsOn <= month) && (line.endsOn == null || line.endsOn >= month);
 }
 
-const applies = (line: BudgetLine, cutoff: PayCutoff): boolean => line.cutoff === "both" || line.cutoff === cutoff;
+const appliesTo = (line: BudgetLine, cutoff: PayCutoff): boolean => line.cutoff === "both" || line.cutoff === cutoff;
 
 /**
  * One month of the budget. A fixed line is its amount; a percent line is its share of that cutoff's take-home; the rest line is
@@ -70,13 +75,17 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
   const { month, takeHome } = input;
   const includeDrafts = input.includeDrafts === true;
   const eventMonth = new Map((input.events ?? []).map((e) => [e.id, e.effectiveMonth]));
-  const lines = input.lines.filter((l) => isOn(l, month, includeDrafts));
+  // Which budget each cutoff uses: a plan in force for it, or the normal budget (null).
+  const active: Record<PayCutoff, string | null> =
+    input.forcePlan !== undefined ? { first: input.forcePlan, second: input.forcePlan } : { first: planFor(input.plans ?? [], month, "first"), second: planFor(input.plans ?? [], month, "second") };
+  const applies = (line: BudgetLine, cutoff: PayCutoff): boolean => appliesTo(line, cutoff) && (line.planId ?? null) === active[cutoff];
+  const lines = input.lines.filter((l) => isOn(l, month, includeDrafts) && CUTOFFS.some((c) => applies(l, c)));
 
   const result = new Map<string, LineAmount>();
   const planned: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   const reimbursed: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   for (const line of lines) {
-    if (line.reimburse && line.reimburse.amount > 0) reimbursed[line.reimburse.cutoff] = (reimbursed[line.reimburse.cutoff] + line.reimburse.amount) as Money;
+    if (line.reimburse && line.reimburse.amount > 0 && (line.planId ?? null) === active[line.reimburse.cutoff]) reimbursed[line.reimburse.cutoff] = (reimbursed[line.reimburse.cutoff] + line.reimburse.amount) as Money;
     const row: LineAmount = { lineId: line.id, name: line.name, first: ZERO, second: ZERO, total: ZERO, topUps: [] };
     result.set(line.id, row);
     if (line.rule === "rest") continue;
@@ -103,11 +112,12 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
   const rest: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   const over: Record<PayCutoff, boolean> = { first: false, second: false };
   const tight: Record<PayCutoff, boolean> = { first: false, second: false };
-  const restLine = lines.find((l) => l.rule === "rest");
   for (const c of CUTOFFS) {
     const available = (takeHome[c] + reimbursed[c]) as Money;
     over[c] = planned[c] > available;
     rest[c] = atLeastZero(sub(available, planned[c]));
+    // The rest line of the budget this cutoff uses (a plan has its own).
+    const restLine = lines.find((l) => l.rule === "rest" && (l.planId ?? null) === active[c]);
     if (restLine && applies(restLine, c)) {
       result.get(restLine.id)![c] = rest[c];
       tight[c] = rest[c] < (input.tightBelow ?? ZERO);

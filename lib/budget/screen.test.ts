@@ -35,7 +35,7 @@ const data = (over: Partial<BudgetData> = {}): BudgetData => ({
   today: isoDate("2027-03-12"),
   paydays: { first: 10, second: 25 },
   period: { start: isoDate("2027-03-11"), end: isoDate("2027-03-25"), which: 1, month: yearMonth("2027-03") },
-  groups, categories, lines,
+  groups, categories, lines, plans: [],
   accounts: [{ id: "a1", name: "BPI" }],
   allocations: [],
   officeDays: [1, 2],

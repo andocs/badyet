@@ -15,6 +15,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-22 to 2026-11-23) covering ota, rev-28, rev-29, rev-30, rev-31, rev-32
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering ota, rev-22, rev-23, build, rev-24, rev-25, rev-26, rev-27..29, rev-27
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering rev-14, rev-15, rev-16, rev-17, round-three, rev-18, ota, rev-19, rev-20, rev-21
 - earlier: 15 events (2026-11-21 to 2026-11-22) covering rev-2, rev-3, G1, G2, G3, G4, G5, G1-G5-release, rev-9, rev-10, rev-11, plan, rev-12, rev-13
@@ -30,21 +31,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-22 15:27 | ota | Phone update published to preview, runtime 1.1.0, group 218c775d-0494-4578-8dae-fc8f5933d50e (commit 5187735): rev-27. rev-27 merged to main. | -
-- 2026-11-22 21:53 | rev-28 | Rules page mockups: web docs/mockups/v13-rules.html, phone docs/mockups/phone/rules.html. Capture rules (listen on, keywords, card payment type) + editable duplicate rules. | 6c9889a
-- 2026-11-22 22:04 | rev-28 | Scout: no server piece exists (no edge function, cron, Gmail watch or push). Phone background task every ~15 min plus a headless run on each notification; Gmail checked only if >5 min since last. No boot receiver or battery-exemption prompt. PROJECT_STATE line 182 (no background check) is stale. Gmail push needs Pub/Sub + server-held refresh token + expo-notifications; Q18 kept push out of v1. | -
-- 2026-11-22 22:18 | rev-28 | Mockups revised: phone back button removed; New rule sheet has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes) | -
-- 2026-11-22 22:18 | rev-28 | Mockups corrected: phone back button removed; New rule has +App/+Sender; Transfer and Payment rule editors added (phone sheets, web panes); card payment renamed Payment | -
-- 2026-11-22 22:47 | rev-28 | Rules mockups approved by user and merged to main (local, not pushed) | d8b5c7b
-- 2026-11-22 22:52 | rev-29 | Dedupe window 30 min, amount+direction, any source, rule in dedupe_rules (defaults if no row); notification/boot runs force Gmail; BOOT_COMPLETED receiver rebinds listener + runs capture. Tests: root 399, mobile 163, tsc OK. Mobile eslint not run (config ignores mobile/src) | ff49182
-- 2026-11-22 23:27 | rev-29 | Approved by user; merged to main (local) | -
-- 2026-11-22 23:30 | rev-30 | Held transfer now inserts counter leg on other account (card gets +amount) and a DB trigger backlinks peers; web + mobile; tests green | -
-- 2026-11-22 23:44 | rev-30 | Approved by user; merged to main (local) | -
-- 2026-11-23 00:12 | rev-31 | Rules page built (web /rules, phone rules.tsx): rules migration, channel + any/must/skip words, record rules incl. transfer/payment with both legs, ordering, duplicate rule editor, device_apps + seen_senders pickers, Kotlin installedApps. Root 400+ tests, mobile tests, tsc, eslint, next build pass | -
-- 2026-11-23 00:14 | rev-31 | Approved by user; merged to main (local, not pushed) | -
-- 2026-11-23 07:00 | rev-31 | main pushed to origin (rev-28..31 published); web deploy triggered | 6a0c909
-- 2026-11-23 07:39 | rev-32 | Gmail app notification triggers a forced Gmail check; toggle on Rules page (web + phone), user_settings.gmail_alert_check; Kotlin skips Gmail notification text. Tests 420 + 177, tsc, eslint pass | -
-- 2026-11-23 07:40 | rev-32 | Approved by user; merged to main and pushed; APK build started | -
 - 2026-11-25 10:35 | handover | Batch 4 notes saved to docs/HANDOVER-batch-4.md for a fresh conversation (uncommitted) | -
 - 2026-11-25 11:02 | batch-4-plan | Section A answered; batch 4 sliced rev-33..41 and approved | -
 - 2026-11-25 11:06 | rev-33 | Rules redesign mockups: 3 options (one list / grouped by app / two sections), web + phone | 162b0af
@@ -55,6 +41,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:00 | rev-35 | Approved; merged to main | -
 - 2026-11-25 12:10 | rev-36 | Now and Budget: payday prompt (records take-home as income, remembers pay account, asks actual take-home when a bonus lands), Planned vs Spent category picker saved to account, Budget whole-month/1st/2nd cutoff view (web + phone), skipped usual office days listed in Settle office days. Migration 20261218000000_payday_and_now_panel.sql | f467235
 - 2026-11-25 12:15 | rev-36 | Approved; merged to main | -
+- 2026-11-25 12:24 | rev-37 | Design decided: a plan replaces the whole budget (full set of lines copied from the current budget, then edited); dates are picked as start and end cutoffs; no overlaps; outside every plan the normal budget applies | -
 
 ## 4. Open questions
 
@@ -85,6 +72,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - [x] Q25: T4: which line is in both cutoffs with different values, and what does each cutoff show in the app versus what you expect? -> Example: personal savings 15,000 a month, 5,000 in the 1st cutoff, 10,000 in the 2nd.
 - [x] Q26: T5: do reimbursements arrive on your payslip (taxed or not), as a separate deposit, or both? Is the utility reimbursement a fixed monthly amount, and which cutoff does each land in? -> Separate deposit; utility fixed monthly on the 17th; wifi pay 2,099 and reimbursed; reallocation needed.
 - [x] Q27: T3: are installments card plans (a purchase split over months with a monthly charge) or loans, and do you want them to reduce Wants or sit as their own budget lines? -> Mostly card plans, also loans; each its own budget line.
+- [x] Q28: rev-37 plan design -> A plan replaces the whole budget (copied, then edited); start and end picked as cutoffs; no overlaps
 
 ## 5. Token & usage ledger
 

@@ -20,6 +20,7 @@ import {
   type SalaryEventRow,
 } from "@/lib/engine/rows";
 import { todayManila } from "@/lib/plans/validate";
+import { loadPlans } from "@/lib/budget/plans-load";
 import { bonusesLanding, payRecorded, PAYDAY_PROMPT_DAYS, type BonusRuleLite } from "@/lib/pay/payday";
 import { buildNowView, currentCutoff, manilaDate, type NowCategory, type NowLine, type NowTxn, type NowView } from "./summary";
 
@@ -112,8 +113,10 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   const feeds = new Map(rows<GroupRow>(groups).map((g) => [g.id, g.feeds_savings]));
   const categories: NowCategory[] = rows<CategoryRow>(cats).map((c) => ({ id: c.id, name: c.name, color: c.color, feedsSavings: feeds.get(c.group_id) ?? false }));
   const catById = new Map(categories.map((c) => [c.id, c]));
+  const { plans, planOf } = await loadPlans(supabase);
   const lines: NowLine[] = lineData.map((l) => ({
     id: l.id,
+    planId: planOf.get(l.id) ?? null,
     name: l.name,
     rule: l.rule,
     amount: l.amount == null ? null : money(l.amount),
@@ -146,6 +149,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       allocations: rows<RaiseAllocationRow>(alloc).map(raiseAllocationOf),
       funds: [],
       fundStart: {},
+      plans,
     },
     { includeExpected: false },
   );

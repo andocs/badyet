@@ -130,6 +130,8 @@ export interface BudgetLine {
   feedsSavings: boolean;
   countsToDaily: boolean;
   kind: "normal" | "rto" | "rto_contingency";
+  /** The budget plan the line belongs to; null or absent = the normal budget. */
+  planId?: string | null;
 }
 
 export interface RaiseAllocation {
