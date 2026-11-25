@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-34 Small fixes
+- **Active slice / milestone:** rev-35 Inbox and capture
 - **Gate:** none
-- **Next action:** rev-34: Bonus + Pick apps spacing, Forecast savings plan, payslip fixes, mobile lint, Maya Black parser
-- **User to-do now:** Confirm migration 20261217000000 applied; install latest APK
+- **Next action:** rev-35: Maya tie-break, transfer hold, bills mark sent
+- **User to-do now:** Confirm migration 20261217000000 applied; install latest APK; check rev-34 on the Vercel preview
 
 ## 3. Execution log
 
@@ -49,6 +49,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 11:02 | batch-4-plan | Section A answered; batch 4 sliced rev-33..41 and approved | -
 - 2026-11-25 11:06 | rev-33 | Rules redesign mockups: 3 options (one list / grouped by app / two sections), web + phone | 162b0af
 - 2026-11-25 11:33 | rev-33 | Approved: Rules option 1; email patterns added to rev-41 scope; merged to main | -
+- 2026-11-25 11:44 | rev-34 | Small fixes: Bonus rule rows (v-rule class clash), app/sender picker spacing, Maya Black card-payment parser, payslip (SSS 1000 / Pag-IBIG 200 / PenBoost 750 defaults, income tax editable on web, bonus taxable part in cutoff income tax, de minimis line), Forecast savings plan card, mobile ESLint set up (0 errors, 16 warnings) | 0f0e419
+- 2026-11-25 11:50 | rev-34 | Approved; merged to main; Vercel preview passed. Remaining slices regrouped into rev-35..38 | b5840d1
 
 ## 4. Open questions
 
@@ -87,7 +89,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,205,674 | 16,964,555 | 700,219 | 7,511,885 | 797,404,182 | 3,379,854 |  |
+| **Cumulative** | 4,361,322 | 18,350,906 | 747,727 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -143,6 +145,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-27 | 14,676 | 7,699 | 1,712 | 30,678 | 925,520 | 13,359 |  |
 | rev-32 | 0 | 0 | 0 | 0 | 0 | 0 |  |
 | rev-33 | 40,718 | 178,325 | 9,184 | 0 | 0 | 0 |  |
+| rev-34 | 155,648 | 1,386,351 | 47,508 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -150,16 +153,11 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Batch 4 (picked 2026-11-25: all items a-j; rules redesign = mockups first)
-- rev-33 Rules redesign MOCKUPS (design only, no code): web + phone mockups of one merged "source/rule" editor (add-rule layout), with 2-3 options for per-source settings (min amount, usual account/category, auto-confirm) and for removing a built-in source. AC: user picks an option.
-- rev-34 Small fixes: Bonus yearly-rules spacing + Edit button placement (D10); Pick apps modal spacing (D12); Forecast savings plan shows (D11, reproduce first); payslip: de minimis line, leftover bonus in tax, tax overridable, SSS/Pag-IBIG/PenBoost not blank (B6); mobile lint clean; Maya "payment received on your Maya Black" parses (j). AC: tests for payslip + parser, lint passes.
-- rev-35 Capture: resolveAccount exact-name tie-break (G20, tests in row.test.ts); "may be a transfer" mark + block confirm-as-spending ~5 min for transfer-looking items (F15, Maya "from InstaPay" or counterparty = own account). AC: tests.
-- rev-36 Bills: "mark sent" action (web + phone) writing budget_line_id; Inbox confirm can link a payment to an unpaid bill. AC: Now shows N of M sent correctly.
-- rev-37 Payday prompt: on payday "Has the pay arrived?", confirm adds net pay from that month's payslip as income; ask actual take-home when a bonus is in that pay.
-- rev-38 Now + Budget: Planned vs Spent panel picker (h); Budget per-cutoff view (f).
-- rev-39 Skipped RTO days: show unused office-day money and offer pool / Wants / savings (e).
-- rev-40 Budget plans over date ranges (g), per the overlap rule the user picks.
-- rev-41 Rules redesign build, per the rev-33 choice.
+Batch 4 (picked 2026-11-25). Done: rev-33 Rules mockups (option 1), rev-34 small fixes. Remaining slices grouped on user request (2026-11-25):
+- rev-35 Inbox and capture: resolveAccount exact-name tie-break (G20, tests in row.test.ts); "may be a transfer" mark + block confirm-as-spending ~5 min for transfer-looking items (F15: Maya "from InstaPay" or counterparty = own account); Bills: "mark sent" (web + phone) writing budget_line_id, and Inbox confirm can link a payment to an unpaid bill. AC: tests; Now shows N of M sent.
+- rev-36 Now and Budget: payday prompt "Has the pay arrived?" (adds net pay from that month's payslip as income; asks actual take-home when a bonus lands); Planned vs Spent panel picker; Budget per-cutoff view; skipped RTO days show unused money and offer pool / Wants / savings.
+- rev-37 Budget plans over date ranges: no overlaps, plans start and end on cutoff days (10th / 25th).
+- rev-38 Rules redesign build (option 1) + email patterns/keywords for senders without a built-in reader.
 
 ## Decisions & architecture
 
@@ -174,6 +172,16 @@ Batch 4 (picked 2026-11-25: all items a-j; rules redesign = mockups first)
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-34: what you do now
+1. Get the code:   git fetch && git checkout rev/34-small-fixes   (merge to main after you approve)
+2. Install deps:   cd mobile && npm install   (new dev tools: eslint, eslint-config-expo; web: no new deps)
+3. Database:       no DB changes
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000   (or the Vercel preview for rev/34-small-fixes)
+6. Check these:    Bonuses: yearly rules list as rows with Edit on the right; Rules > rule > + App: list scrolls inside the dialog, Done stays visible; Salary payslip: SSS/Pag-IBIG/PenBoost show 1,000/200/750, Income tax box editable (clear = computed); a bonus month shows "<bonus> de minimis" and no "<bonus> tax" line; Forecast: Savings plan card says which fund gets it or why it is left out
+7. Known limits:   payslip bonus tax can differ slightly from the Bonuses page net (old calculation there); phone Forecast has no Savings plan card yet; 16 mobile lint warnings left; APK not rebuilt
+Reply: Approve / Request changes / Pause
 
 AFTER REV-33: what you do now
 1. Get the code:   git fetch && git checkout rev/33-rules-mockups   (merge to main after you approve)
