@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-38 Rules redesign
-- **Gate:** none
-- **Next action:** rev-38: Rules redesign option 1 (sources become catch-all rules) + email patterns/keywords
-- **User to-do now:** Apply migrations 20261218000000 and 20261219000000; install latest APK; check rev-37 on the Vercel preview
+- **Gate:** waiting
+- **Next action:** Gate rev-38 (last of batch 4); on approve merge, build new APK, then finish batch 4
+- **User to-do now:** Apply migrations 20261218000000, 20261219000000, 20261220000000; install the new APK after rev-38; check rev-38 on the Vercel preview
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:24 | rev-37 | Design decided: a plan replaces the whole budget (full set of lines copied from the current budget, then edited); dates are picked as start and end cutoffs; no overlaps; outside every plan the normal budget applies | -
 - 2026-11-25 12:33 | rev-37 | Budget plans: plan = full set of lines over a cutoff range, copied from the normal budget on create (with raise top-ups); engine picks per cutoff (plan in force or normal); no overlaps; web Budget plan bar (new/edit/delete, view any budget); phone can view/edit a plan's lines; one RTO contingency line per budget, pool stays on the normal one. Migration 20261219000000_budget_plans.sql | 1dcd588
 - 2026-11-25 12:35 | rev-37 | Approved; merged to main | -
+- 2026-11-25 12:44 | rev-38 | Rules redesign option 1: one list (rules, then 'Everything else from...' source cards, Removed with Add back); rule-style source editor on web (apps/senders pickers, how it's read + that source's patterns, account, category, skip under, auto-confirm, Remove); rule apps and senders now captured (allow-list, package and email routing); patterns read emails; @domain senders for sources. Migration 20261220000000_source_removed.sql | 38774e6
 
 ## 4. Open questions
 
@@ -83,7 +84,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,632,485 | 19,805,599 | 803,576 | 7,511,885 | 797,404,182 | 3,379,854 |  |
+| **Cumulative** | 4,703,925 | 20,131,104 | 816,636 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -143,6 +144,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-35 | 90,314 | 258,957 | 18,226 | 0 | 0 | 0 |  |
 | rev-36 | 121,097 | 959,389 | 25,764 | 0 | 0 | 0 |  |
 | rev-37 | 59,752 | 236,347 | 11,859 | 0 | 0 | 0 |  |
+| rev-38 | 71,440 | 325,505 | 13,060 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -169,6 +171,17 @@ Batch 4 (picked 2026-11-25). Done: rev-33 Rules mockups (option 1), rev-34 small
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-38: what you do now
+1. Get the code:   git fetch && git checkout rev/38-rules-redesign   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       apply supabase/migrations/20261220000000_source_removed.sql (adds capture_sources.removed, default false)
+                   Rollback: alter table public.capture_sources drop column if exists removed;
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000/rules   (or the Vercel preview for rev/38-rules-redesign)
+6. Check these:    Rules: rules first, then "Everything else from..." cards; open Maya: apps, senders, How it's read (patterns for Maya only), account/category/skip under/auto-confirm, Save; Remove GoTyme -> it moves to Removed -> Add back; add an @domain sender; add a pattern on a source with no email reader and check an email from it is read (phone, after the new APK)
+7. Known limits:   no Listen-on switch on sources (apps = notifications, senders = emails); phone keeps patterns in their own card; still one "Other app" custom source; phone capture changes need a new APK
+Reply: Approve / Request changes / Pause
 
 AFTER REV-37: what you do now
 1. Get the code:   git fetch && git checkout rev/37-budget-plans   (merge to main after you approve)
