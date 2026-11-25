@@ -224,18 +224,25 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
     const d = drafts[i];
     const sign = line.kind === "deduction" ? "−" : "";
     if (d) {
-      const fixed = d.spec.source === "base_share" || d.spec.source === "income_tax";
+      // Basic pay is set by its share of the base; every other line, income tax included, can take a typed amount.
+      const fixed = d.spec.source === "base_share";
       return (
         <div key={d.key} className="v-plr">
           <div className="v-grow v-nm"><b>{line.label}</b>
             <small>
-              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.amountOverride != null ? "your value" : d.spec.source === "custom" ? "your line" : "standard"}
+              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.amountOverride != null && d.spec.source !== "custom" ? "your value" : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.source === "custom" ? "your line" : d.spec.source === "philhealth" ? "from your base pay" : "default · type to change"}
             </small>
           </div>
           <div className="v-pla">
             {fixed ? <span className="v-fixedv">{sign}<Money value={line.amount} /></span> : (
               <input key={`${d.key}-${line.amount}`} className="v-v" inputMode="decimal" defaultValue={(line.amount / 100).toFixed(2)} aria-label={`${line.label} amount, ${name2}`}
-                onBlur={(e) => { const v = parsePesos(e.target.value.replace(/^-/, "")); if (v !== undefined) onChange(d.key, { amountOverride: v }); }} />
+                onBlur={(e) => {
+                  const t = e.target.value.trim().replace(/^-/, "");
+                  // Clearing the box goes back to the computed amount (custom lines keep theirs).
+                  if (t === "") { if (d.spec.source !== "custom") onChange(d.key, { amountOverride: null }); return; }
+                  const v = parsePesos(t);
+                  if (v !== undefined && v !== line.amount) onChange(d.key, { amountOverride: v });
+                }} />
             )}
           </div>
           <div className="v-acts">
@@ -251,7 +258,7 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
     return (
       <div key={`auto-${i}`} className="v-plr">
         <div className="v-grow v-nm"><b>{line.label}</b>
-          <small>{allowance ? (allowance.frequency === "yearly" ? "once a year · from Recurring allowances" : "every month · from Recurring allowances") : line.source === "bonus" || line.source === "bonus_tax" ? "from Bonuses" : line.source === "savings_plan" ? "payroll savings plan" : "your payroll setting"}</small>
+          <small>{allowance ? (allowance.frequency === "yearly" ? "once a year · from Recurring allowances" : "every month · from Recurring allowances") : line.source === "de_minimis" ? "tax-free · from Bonuses" : line.source === "bonus" ? "from Bonuses · its tax is in Income tax" : line.source === "savings_plan" ? "payroll savings plan" : "your payroll setting"}</small>
         </div>
         <div className="v-pla"><span className="v-fixedv">{sign}<Money value={line.amount} /></span></div>
         <div className="v-acts">{allowance ? <button type="button" className="v-btn v-sm v-mv" onClick={() => onAllowance(allowance.id, { cutoff: cutoff === "first" ? "second" : "first" })}>{moveLabel}</button> : null}</div>

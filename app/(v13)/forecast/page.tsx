@@ -52,9 +52,18 @@ export default async function Forecast() {
     }))
     .sort((a, b) => a.month.localeCompare(b.month));
 
+  // The payroll savings plan, shown on its own so it is clear whether the forecast counts it (only when it names a fund).
+  const planFundId = d.budget.salary.input.settings.savingsPlanFundId ?? null;
+  const plan = {
+    perMonth: sum([...run[0]!.pay.first.lines, ...run[0]!.pay.second.lines].filter((l) => l.source === "savings_plan").map((l) => l.amount)),
+    fund: planFundId ? name.get(planFundId) ?? null : null,
+    fundSet: planFundId != null,
+  };
+
   return (
     <main className="v-main">
       <ForecastView
+        plan={plan}
         funds={funds}
         rows={rows}
         startTotal={sum(d.funds.map((f) => d.fundStart[f.id] ?? money(0)))}

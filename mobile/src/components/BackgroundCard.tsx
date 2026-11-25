@@ -10,9 +10,11 @@ const WHERE = { app: 'with the app open', notification: 'from a notification', b
 /** When capture last ran, so you can tell it works while the app is closed. */
 export function BackgroundCard() {
   const c = useTheme();
-  const [run, setRun] = useState<LastRun | null>(null);
-  useFocusEffect(useCallback(() => setRun(readLastRun()), []));
-  const mins = run ? Math.max(0, Math.round((Date.now() - run.at) / 60_000)) : 0;
+  // The clock is read when the screen comes into focus, not during render.
+  const [seen, setSeen] = useState<{ run: LastRun | null; now: number }>({ run: null, now: 0 });
+  useFocusEffect(useCallback(() => setSeen({ run: readLastRun(), now: Date.now() }), []));
+  const { run, now } = seen;
+  const mins = run ? Math.max(0, Math.round((now - run.at) / 60_000)) : 0;
   const when = !run ? 'Not yet' : mins < 1 ? 'Just now' : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`;
   return (
     <Card>

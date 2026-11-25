@@ -1,5 +1,5 @@
 import { seenPackages } from '@modules/notification-listener';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SOURCE_INFO, type SourceConfig } from '@/lib/capture/sources';
@@ -42,17 +42,16 @@ export function SourceEditor({
   const [categoryId, setCategoryId] = useState<string | null>(cfg.categoryId);
   const [autoConfirm, setAutoConfirm] = useState(cfg.autoConfirm);
   const [minAmount, setMinAmount] = useState(cfg.minAmount > 0 ? formatPesos(money(cfg.minAmount), { symbol: false }) : '');
-  const [seen, setSeen] = useState<string[]>([]);
+  const [seen] = useState<string[]>(() => {
+    try {
+      return seenPackages();
+    } catch {
+      return [];
+    }
+  });
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    try {
-      setSeen(seenPackages());
-    } catch {
-      setSeen([]);
-    }
-  }, []);
 
   const addPackage = (p: string) => setPackages((t) => (t.split(/\s+/).includes(p) ? t : (t.trim() ? t.trim() + '\n' : '') + p));
 

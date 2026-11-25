@@ -8,6 +8,7 @@
     "@expo/vector-icons": "^15.0.2",
     "@react-native-google-signin/google-signin": "^17.0.0",
     "@supabase/supabase-js": "^2.119.2",
+    "eslint-config-expo": "~58.0.4",
     "expo": "~58.0.26",
     "expo-auth-session": "~58.0.19",
     "expo-background-task": "~58.0.13",
@@ -45,6 +46,7 @@
     "@react-native/metro-babel-transformer": "^0.88.1",
     "@react-native/metro-config": "^0.88.1",
     "@types/react": "~19.3.0",
+    "eslint": "^9.39.5",
     "typescript": "~6.0.3",
     "vitest": "^3.2.7"
   },

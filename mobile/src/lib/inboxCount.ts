@@ -27,6 +27,7 @@ export function useInboxCount(): number {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load() sets state only after an await, not during the effect.
     void load();
     const app = AppState.addEventListener('change', (s) => s === 'active' && void load());
     const timer = setInterval(() => void load(), EVERY_MS);
@@ -38,6 +39,7 @@ export function useInboxCount(): number {
 
   // A capture was held or answered, or the queue just sent something: the count may have changed.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- as above: the count is set after the request returns.
     void load();
   }, [held, queued.length, load]);
 

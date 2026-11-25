@@ -42,6 +42,10 @@ describe('Maya', () => {
     expect(parseNotification('maya', n('Money received', 'You received ₱1,250.50 in your wallet via InstaPay.'))).toMatchObject({ direction: 'in', amount: 125_050, counterparty: 'InstaPay' });
     expect(parseNotification('maya', n('Money received', 'You received 100 in your wallet'))).toMatchObject({ direction: 'in', amount: 10_000, counterparty: null });
   });
+  it('a card payment received on Maya Black lands on that account', () => {
+    expect(parseNotification('maya', n('Payment received', 'Payment of ₱5,000.00 received on your Maya Black'))).toMatchObject({ direction: 'in', amount: 500_000, counterparty: null, accountName: 'Maya Black' });
+    expect(parseNotification('maya', n('Payment received', 'Your payment of PHP 1,234.56 has been received for your Maya Black.'))).toMatchObject({ direction: 'in', amount: 123_456, accountName: 'Maya Black' });
+  });
 });
 
 describe('GoTyme', () => {

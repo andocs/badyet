@@ -118,7 +118,7 @@ function AppPicker({ open, onClose, apps, lastSynced, picked, onChange }: { open
           <div className="v-xs v-muted">
             {lastSynced ? `These are the apps your phone has reported. The web cannot see your phone directly, so the list is saved to your account. Last synced ${when || "recently"}.` : "No apps yet. Open the phone app's Rules page so it can send its list here."}
           </div>
-          <div>
+          <div className="v-plistbox">
             {shown.map((a) => (
               <label key={a.package} className="v-plist">
                 <input type="checkbox" checked={picked.includes(a.package.toLowerCase())} onChange={() => toggle(a.package)} />
@@ -165,7 +165,7 @@ function SenderPicker({ open, onClose, seen, picked, onChange }: { open: boolean
     <Modal open={open} onClose={onClose} title="Pick senders">
       <label className="v-field">Search senders<input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Address" /></label>
       <div className="v-lab">Recent senders in your Gmail</div>
-      <div>
+      <div className="v-plistbox">
         {shown.map((s) => (
           <label key={s.address} className="v-plist">
             <input type="checkbox" checked={picked.includes(s.address.toLowerCase())} onChange={() => toggle(s.address)} />
@@ -363,7 +363,7 @@ function RuleCard({ rule, selected, first, last, enabled, busy, acct, cat, onSel
     ? "Skips matching items."
     : `${KIND_LABEL[kind]}${kind === "spending" && rule.categoryId ? `, category ${cat.get(rule.categoryId) ?? "a category"}` : ""}${(kind === "transfer" || kind === "payment") && rule.fromAccountId && rule.toAccountId ? `, ${acct.get(rule.fromAccountId) ?? "?"} to ${acct.get(rule.toAccountId) ?? "?"}` : ""}. ${rule.autoConfirm || rule.action === "auto_confirm" ? "Confirms automatically." : "Asks me to confirm."}`;
   return (
-    <div className={`v-rule${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
+    <div className={`v-rulecard${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
       <div className="v-row v-sp">
         <button type="button" className="v-btn v-sm" style={{ background: "none", padding: 0, fontWeight: 800, textAlign: "left", flex: 1, justifyContent: "flex-start", minWidth: 0 }} aria-label={`Edit ${ruleTitle(rule)}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{ruleTitle(rule)}</button>
         <button type="button" className="v-btn v-sm" aria-label={`Move ${ruleTitle(rule)} up`} disabled={first || busy} onClick={(e) => { e.stopPropagation(); onMove("up"); }}>↑</button>
