@@ -1,0 +1,149 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@700;800&family=Atkinson+Hyperlegible+Next:wght@500;700&display=swap" rel="stylesheet"><title>Rules redesign</title><style>
+:root{--bg:#0a1320;--surface:#101c2e;--soft:#17263b;--ink:#e8eef7;--muted:#93a5bd;--line:#223349;--accent:#34d399;--on:#04281c;--at:#5ee6b4;--err:#ff8a8a;--errt:#3b1f26;--tint:#0f3a33;--gold:#f6c453;--goldt:#3a2f12}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#05090f;display:flex;justify-content:center;gap:24px;padding:24px;font-family:"Atkinson Hyperlegible Next",system-ui,sans-serif;font-weight:500;font-size:14px;color:var(--ink);flex-wrap:wrap}
+.side{width:260px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--muted);line-height:1.5}
+.side .b{color:var(--ink)}
+.phone{width:320px;height:872px;background:var(--bg);border-radius:22px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;position:relative}
+.scroll{flex:1;overflow:auto;padding:36px 16px 20px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+.status{position:absolute;top:0;left:0;right:0;height:28px;display:flex;justify-content:space-between;padding:8px 18px;font-size:11px;color:var(--muted);z-index:2;background:var(--bg)}
+.head{display:flex;align-items:center;gap:12px;min-height:44px}.head>div:first-child{flex:1}
+h1{font:800 24px/30px Gabarito,system-ui}.sub{font-size:13px;color:var(--muted);margin-top:1px}
+h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;cursor:pointer}
+.card.off{opacity:.6}
+.lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.b{font-weight:700}.mut{color:var(--muted)}.s12{font-size:12px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{background:var(--accent);color:var(--on);min-height:44px;border-radius:999px;padding:0 16px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;cursor:pointer}
+.btn.g{background:var(--soft);color:var(--ink)}.btn.sm{min-height:36px;padding:0 12px;font-size:13px}.btn.out{background:transparent;border:1px solid var(--line);color:var(--err)}
+.chip{min-height:40px;border-radius:999px;padding:0 14px;display:inline-flex;align-items:center;background:var(--soft);font-weight:700;font-size:13px;white-space:nowrap}.chip.on{background:var(--accent);color:var(--on)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border-radius:999px;padding:2px 9px;font-weight:700;font-size:11px;background:var(--tint);color:var(--at);white-space:nowrap}.pill.n{background:var(--soft);color:var(--ink)}.pill.e{background:var(--errt);color:var(--err)}.pill.gd{background:var(--goldt);color:var(--gold)}
+.input{min-height:48px;border-radius:10px;background:var(--soft);display:flex;align-items:center;padding:0 14px;color:var(--ink);font-size:14px}.input.ph{color:var(--muted)}
+.seg{display:flex;background:var(--soft);border-radius:999px;padding:4px;flex-wrap:wrap}.seg>div{flex:1;min-height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--muted);padding:0 8px;cursor:pointer}.seg>div.on{background:var(--surface);color:var(--ink)}
+.sw{width:44px;height:26px;border-radius:13px;background:var(--line);position:relative;flex:none;cursor:pointer}.sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:10px;background:var(--ink)}.sw.on{background:var(--accent)}.sw.on:after{left:21px}
+.ib{width:36px;height:36px;border-radius:999px;background:var(--accent);color:var(--on);display:grid;place-items:center;font-size:22px;font-weight:700;flex:none}
+.grp{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px}
+.nest{margin-left:10px;border-left:2px solid var(--line);padding-left:8px;display:flex;flex-direction:column;gap:8px}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;z-index:5}.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:12px 16px 20px;display:none;z-index:6;max-height:88%;overflow:auto;flex-direction:column;gap:12px}
+.scrim.show{display:block}.sheet.open{display:flex}.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto}
+.fld{display:flex;flex-direction:column;gap:6px}
+.callout{border-left:3px solid var(--gold);padding:6px 10px;background:rgba(246,196,83,.06);border-radius:0 8px 8px 0;font-size:12px;color:var(--muted)}
+.optsw{display:flex;flex-direction:column;gap:6px}.optsw div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;color:var(--ink)}.optsw div.on{border-color:var(--gold);background:var(--goldt)}
+.hide{display:none!important}
+</style></head><body>
+<div class="side">
+ <div class="b">Rules redesign · phone (rev-33)</div>
+ <div>Pick an option, then tap a card to open its editor sheet. Sample data, 320 x 872.</div>
+ <div class="optsw" id="opts"><div class="on" data-opt="1"><b>1 · One list</b> (recommended)<br><span class="s12 mut">Built-in sources become rules with no words. Settings live on every rule.</span></div><div data-opt="2"><b>2 · Grouped by app</b><br><span class="s12 mut">App headers, rules nested under each, "Everything else" row last.</span></div><div data-opt="3"><b>3 · Two sections</b><br><span class="s12 mut">Sources stay separate but use the same editor. Smallest build.</span></div></div>
+ <div>Removing a built-in source works the same in all three: it moves to "Removed" with <b>Add back</b>. Its reader stays in the app.</div>
+</div>
+
+<div class="phone"><div class="status"><span>9:41</span><span>●●●</span></div>
+<div class="scroll">
+<div class="head"><div><h1>Rules</h1><div class="sub">What the app listens for</div></div><div class="ib">+</div></div>
+<div class="seg"><div class="on">Capture</div><div>Duplicates</div></div>
+
+<!-- option 1 -->
+<div data-o="1" style="display:flex;flex-direction:column;gap:10px">
+ <div class="s12 mut">Top to bottom, first match decides. Rules with no words catch everything else from their app.</div>
+ <div class="card" data-sheet="w"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div><div class="row"><span class="pill">Notif + Email</span><span class="s12 mut">Maya · BPI</span></div><div class="s12 mut">Payment to Maya Black · automatic</div></div>
+ <div class="card" data-sheet="w"><div class="between"><div class="b">Coffee</div><div class="sw on"></div></div><div class="row"><span class="pill">Emails</span><span class="s12 mut">Grab · Foodpanda</span></div><div class="s12 mut">Dining · asks me</div></div>
+ <div class="lab">Everything else from…</div>
+ <div class="card" data-sheet="s"><div class="between"><div class="b">Maya</div><div class="sw on"></div></div><div class="row"><span class="pill">Notifications</span><span class="pill gd">Built-in reader</span></div><div class="s12 mut">Account Maya · skips under ₱20</div></div>
+ <div class="card" data-sheet="s"><div class="between"><div class="b">BPI</div><div class="sw on"></div></div><div class="row"><span class="pill">Emails</span><span class="pill gd">Built-in reader</span></div><div class="s12 mut">Account BPI Savings</div></div>
+ <div class="card" data-sheet="s"><div class="between"><div class="b">GCash</div><div class="sw on"></div></div><div class="row"><span class="pill">Notifications</span><span class="pill gd">Built-in reader</span></div></div>
+ <div class="card" style="background:var(--soft);cursor:default"><div class="lab">Removed</div><div class="between"><span>GoTyme</span><div class="btn g sm">Add back</div></div><div class="between"><span>MariBank</span><div class="btn g sm">Add back</div></div></div>
+</div>
+
+<!-- option 2 -->
+<div data-o="2" class="hide" style="flex-direction:column;gap:10px">
+ <div class="grp"><div class="lab">Across apps</div><div class="card" data-sheet="w"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div><div class="s12 mut">Maya · BPI</div></div></div>
+ <div class="grp" style="border-color:var(--accent)"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h3>Maya</h3><span class="pill gd">Built-in</span></div><div class="sw on"></div></div><div class="s12 mut">Notifications · skips under ₱20</div>
+  <div class="nest"><div class="card" data-sheet="w"><div class="between"><div class="b">Maya transfers</div><div class="sw on"></div></div><div class="s12 mut">sent you · you sent</div></div><div class="card" data-sheet="e"><div class="between"><div class="b">Everything else</div><span class="pill n">last</span></div><div class="s12 mut">Account Maya · asks for category</div></div></div></div>
+ <div class="grp"><div class="between" data-sheet="a" style="cursor:pointer"><div class="row"><h3>BPI</h3><span class="pill gd">Built-in</span></div><div class="sw on"></div></div>
+  <div class="nest"><div class="card" data-sheet="e"><div class="between"><div class="b">Everything else</div><span class="pill n">last</span></div><div class="s12 mut">Account BPI Savings</div></div></div></div>
+ <div class="btn g">+ Add an app or sender</div>
+</div>
+
+<!-- option 3 -->
+<div data-o="3" class="hide" style="flex-direction:column;gap:10px">
+ <div class="lab">Rules</div>
+ <div class="card" data-sheet="w"><div class="between"><div class="b">Credit card payment</div><div class="sw on"></div></div><div class="s12 mut">Maya · BPI</div></div>
+ <div class="card" data-sheet="w"><div class="between"><div class="b">Coffee</div><div class="sw on"></div></div><div class="s12 mut">Grab · Foodpanda</div></div>
+ <div class="lab">Sources</div>
+ <div class="card" data-sheet="s3"><div class="between"><div class="b">Maya</div><div class="sw on"></div></div><div class="row"><span class="pill">Notifications</span><span class="pill gd">Built-in reader</span></div><div class="s12 mut">Account Maya · skips under ₱20</div></div>
+ <div class="card" data-sheet="s3"><div class="between"><div class="b">BPI</div><div class="sw on"></div></div><div class="row"><span class="pill">Emails</span><span class="pill gd">Built-in reader</span></div></div>
+ <div class="btn g">+ New source</div>
+ <div class="card" style="background:var(--soft);cursor:default"><div class="lab">Removed sources</div><div class="between"><span>GoTyme</span><div class="btn g sm">Add back</div></div></div>
+</div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<!-- sheet: option 1 source-as-rule -->
+<div class="sheet" id="sh-s"><div class="grab"></div><div class="between"><h2>Rule · Maya</h2><span class="pill gd">Built-in reader</span></div>
+ <div class="fld"><div class="lab">What is it for</div><div class="input">Maya</div></div>
+ <div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notif</div><div>Emails</div><div>Both</div></div></div>
+ <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya app ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div></div>
+ <div class="fld"><div class="lab">Read it with</div><div class="seg"><div class="on">Built-in Maya</div><div>My patterns</div></div></div>
+ <div class="fld"><div class="lab">Words</div><div class="chips"><span class="chip">+ Word</span></div><div class="s12 mut">None: catches everything else from Maya.</div></div>
+ <div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">From message</div><div>Spend</div><div>Income</div><div>Transfer</div></div></div>
+ <div class="fld"><div class="lab">Account</div><div class="input">Maya</div></div>
+ <div class="fld"><div class="lab">Category</div><div class="input ph">Ask me in the Inbox</div></div>
+ <div class="fld"><div class="lab">Skip if under</div><div class="input">₱ 20.00</div></div>
+ <div class="between"><div class="b">Confirm automatically</div><div class="sw"></div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
+ <div class="btn out">Remove Maya</div><div class="callout">Moves to "Removed". Add it back any time.</div>
+</div>
+<!-- sheet: word rule (all options) -->
+<div class="sheet" id="sh-w"><div class="grab"></div><div class="between"><h2>Rule · Coffee</h2><span class="pill">Saved</span></div>
+ <div class="fld"><div class="lab">What is it for</div><div class="input">Coffee</div></div>
+ <div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notif</div><div class="on">Emails</div><div>Both</div></div></div>
+ <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Grab ✕</span><span class="chip on">Foodpanda ✕</span><span class="chip">+ App</span></div></div>
+ <div class="fld"><div class="lab">Words</div><div class="chips"><span class="chip on">coffee ✕</span><span class="chip on">starbucks ✕</span><span class="chip">+ Word</span></div></div>
+ <div class="fld"><div class="lab">What it is</div><div class="seg"><div>From message</div><div class="on">Spend</div><div>Income</div><div>Transfer</div></div></div>
+ <div class="fld"><div class="lab">Category</div><div class="input">Dining</div></div>
+ <div class="between"><div class="b">Confirm automatically</div><div class="sw"></div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
+</div>
+<!-- sheet: option 2 app header -->
+<div class="sheet" id="sh-a"><div class="grab"></div><div class="between"><h2>App · Maya</h2><span class="pill gd">Built-in reader</span></div>
+ <div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notif</div><div>Emails</div><div>Both</div></div></div>
+ <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya app ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div></div>
+ <div class="fld"><div class="lab">Read it with</div><div class="seg"><div class="on">Built-in Maya</div><div>My patterns</div></div></div>
+ <div class="fld"><div class="lab">Skip if under</div><div class="input">₱ 20.00</div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
+ <div class="btn out">Remove Maya</div><div class="callout">The group and its rules pause and move to "Removed apps".</div>
+</div>
+<!-- sheet: option 2 everything else -->
+<div class="sheet" id="sh-e"><div class="grab"></div><h2>Maya · Everything else</h2><div class="s12 mut">Anything from Maya no rule above caught.</div>
+ <div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">From message</div><div>Spend</div><div>Income</div></div></div>
+ <div class="fld"><div class="lab">Account</div><div class="input">Maya</div></div>
+ <div class="fld"><div class="lab">Category</div><div class="input ph">Ask me in the Inbox</div></div>
+ <div class="between"><div class="b">Confirm automatically</div><div class="sw"></div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
+</div>
+<!-- sheet: option 3 source -->
+<div class="sheet" id="sh-s3"><div class="grab"></div><div class="between"><h2>Source · Maya</h2><span class="pill gd">Built-in reader</span></div>
+ <div class="fld"><div class="lab">Name</div><div class="input">Maya</div></div>
+ <div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notif</div><div>Emails</div><div>Both</div></div></div>
+ <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya app ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div></div>
+ <div class="fld"><div class="lab">Read it with</div><div class="seg"><div class="on">Built-in Maya</div><div>My patterns</div></div></div>
+ <div class="fld"><div class="lab">Usual account</div><div class="input">Maya</div></div>
+ <div class="fld"><div class="lab">Usual category</div><div class="input ph">Ask me</div></div>
+ <div class="fld"><div class="lab">Skip if under</div><div class="input">₱ 20.00</div></div>
+ <div class="between"><div class="b">Confirm automatically</div><div class="sw"></div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
+ <div class="btn out">Remove Maya</div>
+</div>
+</div>
+<script>
+const close=()=>{document.querySelectorAll(".sheet.open").forEach(x=>x.classList.remove("open"));document.getElementById("scrim").classList.remove("show")};
+document.addEventListener("click",e=>{
+const o=e.target.closest("[data-opt]");if(o){document.querySelectorAll("[data-opt]").forEach(x=>x.classList.toggle("on",x===o));document.querySelectorAll("[data-o]").forEach(s=>s.classList.toggle("hide",s.dataset.o!==o.dataset.opt));close();return}
+const s=e.target.closest(".sw");if(s){s.classList.toggle("on");e.stopPropagation();return}
+const sg=e.target.closest(".seg>div");if(sg){sg.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===sg));return}
+if(e.target.closest("[data-close]")||e.target.id==="scrim"){close();return}
+const c=e.target.closest("[data-sheet]");if(c){close();document.getElementById("sh-"+c.dataset.sheet).classList.add("open");document.getElementById("scrim").classList.add("show")}});
+</script></body></html>
