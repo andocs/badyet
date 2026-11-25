@@ -397,7 +397,7 @@ export default function Budget() {
                 </Text>
                 <Text style={{ color: '#fff', fontFamily: fonts.display, fontSize: 30, lineHeight: 36 }}>
                   {peso(money(Math.max(0, screen.rest)), hide)}
-                  <Text style={{ color: '#d3efe6', fontFamily: fonts.bodyBold, fontSize: 18 }}> / {peso(screen.takeHome, hide)}</Text>
+                  <Text style={{ color: '#d3efe6', fontFamily: fonts.bodyBold, fontSize: 18 }}> / {peso(money(screen.takeHome + screen.otherDeductions), hide)}</Text>
                 </Text>
                             </LinearGradient>
 

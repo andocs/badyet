@@ -96,7 +96,9 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
 }
 
 function Summary({ screen, data }: { screen: BudgetScreen; data: BudgetData }) {
-  const { shown, fut, wantsAdj, rest, fixed, flag, takeHome: take } = screen;
+  const { shown, fut, wantsAdj, rest, fixed, flag, takeHome: take0, otherDeductions } = screen;
+  // The hero's total is your pay before your other payroll deductions; they are already out of what is left, so the sum does not change.
+  const take = money(take0 + otherDeductions);
   if (!shown) return null;
   const b = shown.budget;
   return (
@@ -112,6 +114,7 @@ function Summary({ screen, data }: { screen: BudgetScreen; data: BudgetData }) {
           <span className="v-pill">Fixed lines <Money value={fixed} /> · {take > 0 ? Math.round((fixed / take) * 100) : 0}% of take-home</span>
           {!fut ? <span className="v-pill">Cutoffs: {rangeLabel(data.period.start, data.period.end)}</span> : null}
           {!fut ? <span className="v-pill v-ok">Daily pool this cutoff <Money value={money(b.dailyPool[data.period.which === 1 ? "first" : "second"] + wantsAdj)} />{wantsAdj !== 0 ? " (incl. pools)" : ""}</span> : null}
+          {otherDeductions > 0 ? <span className="v-pill">Other payroll deductions <Money value={otherDeductions} /></span> : null}
           {shown.assumed ? <span className="v-pill v-est">assumed raise year</span> : null}
           {shown.expected ? <span className="v-pill v-est">includes an expected raise</span> : null}
         </div>

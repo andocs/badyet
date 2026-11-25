@@ -29,6 +29,8 @@ export interface BudgetScreen {
   /** Left of take-home after every line, both cutoffs. */
   rest: Money;
   takeHome: Money;
+  /** Your other payroll deductions this month, already out of take-home; shown in the hero's total. */
+  otherDeductions: Money;
   fixed: Money;
   flag: MonthFlag;
   /** Names of the raises that top lines up, for the note under the board. */
@@ -87,9 +89,10 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const b = shown?.budget;
   const takeHome = shown ? shown.pay.takeHome : money(0);
   const rest = b ? money(b.rest.first + b.rest.second) : money(0);
+  const otherDeductions = shown ? sum([...shown.pay.first.lines, ...shown.pay.second.lines].filter((l) => l.source === "other_deduction").map((l) => l.amount)) : money(0);
   const fixed = b ? sum(b.lines.filter((l) => data.lines.find((x) => x.id === l.lineId)?.rule === "fixed").map((l) => l.total)) : money(0);
   const eventLabel = new Map(data.salary.input.events.map((e) => [e.id, `${monthLabel(e.effectiveMonth)} raise`]));
   const topUpRaises = [...new Set(groups.flatMap((g) => g.lines.flatMap((l) => l.topUps.map((t) => eventLabel.get(t.eventId) ?? "a raise"))))];
 
-  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
+  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, otherDeductions, fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
 }
