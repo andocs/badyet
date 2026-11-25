@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-39 Batch 4 leftovers
-- **Gate:** waiting
-- **Next action:** Gate rev-39; on approve merge to main and build a new APK
-- **User to-do now:** Apply migration 20261221000000_savings_and_custom_slots.sql; install the new APK after rev-39
+- **Active slice / milestone:** batch 4 done
+- **Gate:** none
+- **Next action:** Batch 4 and leftovers done. Ask the user for the next revisions or finish
+- **User to-do now:** Apply migration 20261221000000_savings_and_custom_slots.sql; on the phone force-close and reopen the app (up to twice) to get the OTA update
 
 ## 3. Execution log
 
@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:51 | rev-38 | Approved; merged to main; EAS preview build cb8b4696 started | 5e987a6
 - 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
 - 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
+- 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
 
 ## 4. Open questions
 
@@ -163,9 +164,10 @@ Batch 4 leftovers, grouped on user request (2026-11-25, migrations 20261217-2026
 
 2026-11-22 answers for round three. Income tax: per cutoff, not per month. Deduction order: SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750), then tax on the remainder x 24 against the 2023 TRAIN bracket, divided by 24. Both-cutoff lines: a line can total 15,000 a month but be split 5,000 in the 1st cutoff and 10,000 in the 2nd. Reimbursements: a separate deposit; utility is fixed monthly, usually the 17th; wifi case is pay 2,099 then reimbursed; reallocation of the value needed. Installments: mostly card plans, also loans, each as its own budget line.
 - 2026-11-25 Batch 4: all items picked; Rules redesign gets mockups (rev-33) before any code.
-- 2026-11-25 Budget plans (rev-40): no overlapping plans; plans start and end on cutoff days (the 10th / 25th), so a plan covers whole cutoffs.
-- 2026-11-25 Section A findings: bills can never be marked sent (nothing writes transactions.budget_line_id) -> rev-36; skipped RTO days free no money, and rto_amount is never written (unused) -> rev-39.
-- 2026-11-25 rev-33: Rules redesign = Option 1 "One list" (docs/mockups/v13-rules-redesign.html, phone/rules-redesign.html). Built-in sources become rules with no words (catch-all, at the bottom); account/category/min amount/auto-confirm on every rule; a rule's own apps/senders are listened to (fixes the rule-apps-capture-nothing bug); removed built-ins go to "Removed" with Add back, readers stay. rev-41 also adds email patterns (or at least email keywords) so senders without a built-in reader can be read.
+- 2026-11-25 Budget plans (rev-37): no overlapping plans; plans start and end on cutoff days (the 10th / 25th), so a plan covers whole cutoffs. A plan replaces the whole budget (copied from the normal budget, then edited).
+- 2026-11-25 Section A findings: bills can never be marked sent (nothing writes transactions.budget_line_id) -> rev-35; skipped RTO days free no money -> rev-36 (settle list) and rev-39 (savings option).
+- 2026-11-25 rev-33: Rules redesign = Option 1 "One list" (docs/mockups/v13-rules-redesign.html, phone/rules-redesign.html). Sources are "Everything else from..." cards in the capture list; removed built-ins go to Removed with Add back; patterns also read emails.
+- 2026-11-25 Phone app updates: ship JS-only changes OTA with: cd mobile; npx eas-cli@latest update --channel preview --environment preview --message "..." --non-interactive (runtime 1.1.0, channel preview; the phone applies it after a force-close and reopen, up to twice). Build a new APK only for native changes (new native library, Kotlin listener, permissions or plugins in app.json, Expo SDK upgrade) and bump the app version then. rev-39 published OTA (update group c84f127c-c81b-4054-b724-10533ecc26a5).
 
 ## Run & verify guide (detected by Scout, kept current)
 
