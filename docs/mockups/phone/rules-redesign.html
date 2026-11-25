@@ -31,12 +31,19 @@ h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
 .fld{display:flex;flex-direction:column;gap:6px}
 .callout{border:1px solid rgba(246,196,83,.35);padding:8px 10px;background:rgba(246,196,83,.06);border-radius:8px;font-size:12px;color:var(--muted)}
 .optsw{display:flex;flex-direction:column;gap:6px}.optsw div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;color:var(--ink)}.optsw div.on{border-color:var(--gold);background:var(--goldt)}
+.blk{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px}
+.ex{font-size:12px;background:var(--soft);border-radius:8px;padding:6px 10px}
+.pat{display:flex;align-items:center;gap:8px;background:var(--soft);border-radius:8px;padding:8px 10px}.pat .tpl{flex:1}
+.tpl{font-size:13px}.tpl i{font-style:normal;color:var(--gold);font-weight:700;background:var(--goldt);border-radius:4px;padding:0 3px}
+.li{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--line);font-size:18px}.li .b{font-size:14px}
+.chk{width:22px;height:22px;border-radius:11px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none;cursor:pointer}.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on)}
 .hide{display:none!important}
 </style></head><body>
 <div class="side">
  <div class="b">Rules redesign · phone (rev-33)</div>
  <div>Pick an option, then tap a card to open its editor sheet. Sample data, 320 x 872.</div>
  <div class="optsw" id="opts"><div class="on" data-opt="1"><b>1 · One list</b> (recommended)<br><span class="s12 mut">Built-in sources become rules with no words. Settings live on every rule.</span></div><div data-opt="2"><b>2 · Grouped by app</b><br><span class="s12 mut">App headers, rules nested under each, "Everything else" row last.</span></div><div data-opt="3"><b>3 · Two sections</b><br><span class="s12 mut">Sources stay separate but use the same editor. Smallest build.</span></div></div>
+ <div>In Option 1, open <b>Maya</b> and switch Listen on between Notif, Emails and Both. Tap <b>+ App</b>, <b>+ Sender</b> or <b>+ Pattern</b> to see each picker.</div>
  <div>Removing a built-in source works the same in all three: it moves to "Removed" with <b>Add back</b>. Its reader stays in the app.</div>
 </div>
 
@@ -84,9 +91,17 @@ h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
 <!-- sheet: option 1 source-as-rule -->
 <div class="sheet" id="sh-s"><div class="grab"></div><div class="between"><h2>Rule · Maya</h2><span class="pill gd">Built-in reader</span></div>
  <div class="fld"><div class="lab">What is it for</div><div class="input">Maya</div></div>
- <div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notif</div><div>Emails</div><div>Both</div></div></div>
- <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya app ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div></div>
- <div class="fld"><div class="lab">Read it with</div><div class="seg"><div class="on">Built-in Maya</div><div>My patterns</div></div></div>
+ <div class="fld"><div class="lab">Listen on</div><div class="seg" data-listen><div class="on" data-l="n">Notif</div><div data-l="e">Emails</div><div data-l="b">Both</div></div></div>
+ <div class="blk src-n"><div class="lab">Notifications from</div><div class="chips"><span class="chip on">💳 Maya ✕</span><span class="chip" data-sheet="apps">+ App</span></div><div class="s12 mut">Needs notification access (Settings › Capture).</div></div>
+ <div class="blk src-e hide"><div class="between"><div class="lab">Emails from</div><span class="pill">Gmail on</span></div><div class="chips"><span class="chip on">no-reply@paymaya.com ✕</span><span class="chip on">@maya.ph ✕</span><span class="chip" data-sheet="snd">+ Sender</span></div><div class="s12 mut">Checked every 5 min, and right away when a bank app notifies.</div></div>
+ <div class="blk"><div class="lab">How it's read</div>
+  <div class="between"><div class="b">Built-in Maya reader</div><span class="pill gd">Always on</span></div>
+  <div class="ex">You have received ₱1,100.00 from InstaPay.</div>
+  <div class="s12 mut src-e hide">No built-in Maya email reader yet (only BPI, Grab and Foodpanda).</div>
+  <div class="between" style="margin-top:4px"><div class="b">My patterns <span class="s12 mut">· tried first</span></div><div class="btn g sm" data-sheet="pat">+ Pattern</div></div>
+  <div class="pat"><div class="tpl">Payment of <i>{amount}</i> received on your Maya Black</div><span class="pill">In</span></div>
+  <div class="pat"><div class="tpl">You sent <i>{amount}</i> to <i>{name}</i><i>{any}</i>Ref <i>{ref}</i></div><span class="pill e">Out</span></div>
+  <div class="s12 mut">Patterns work on notifications only.</div></div>
  <div class="fld"><div class="lab">Words</div><div class="chips"><span class="chip">+ Word</span></div><div class="s12 mut">None: catches everything else from Maya.</div></div>
  <div class="fld"><div class="lab">What it is</div><div class="seg"><div class="on">From message</div><div>Spend</div><div>Income</div><div>Transfer</div></div></div>
  <div class="fld"><div class="lab">Account</div><div class="input">Maya</div></div>
@@ -96,6 +111,29 @@ h2{font:800 18px Gabarito,system-ui}h3{font:800 15px Gabarito,system-ui}
  <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-close>Cancel</div><div class="btn" style="flex:1" data-close>Save</div></div>
  <div class="btn out">Remove Maya</div><div class="callout">Moves to "Removed". Add it back any time.</div>
 </div>
+<!-- sheet: pick apps -->
+<div class="sheet" id="sh-apps"><div class="grab"></div><h2>Pick apps</h2>
+ <div class="input ph">Search apps</div><div class="s12 mut">Notified recently first, then the rest installed.</div>
+ <div><div class="li"><span>💳</span><div style="flex:1"><div class="b">Maya</div><div class="s12 mut">built-in reader</div></div><div class="chk on">✓</div></div>
+ <div class="li"><span>💸</span><div style="flex:1"><div class="b">GCash</div><div class="s12 mut">built-in reader</div></div><div class="chk"></div></div>
+ <div class="li"><span>🛍</span><div style="flex:1"><div class="b">ShopeePay</div><div class="s12 mut">needs your patterns</div></div><div class="chk"></div></div></div>
+ <div class="btn" data-sheet="s">Done</div></div>
+<!-- sheet: pick senders -->
+<div class="sheet" id="sh-snd"><div class="grab"></div><h2>Pick senders</h2>
+ <div class="lab">Recent in your Gmail</div>
+ <div><div class="li"><div style="flex:1"><div class="b">no-reply@paymaya.com</div><div class="s12 mut">9 emails</div></div><div class="chk on">✓</div></div>
+ <div class="li"><div style="flex:1"><div class="b">notifications@bpi.com.ph</div><div class="s12 mut">14 emails</div></div><div class="chk"></div></div></div>
+ <div class="fld"><div class="lab">Or type one</div><div class="input ph">name@bank.com or @bank.com</div></div>
+ <div class="btn" data-sheet="s">Done</div></div>
+<!-- sheet: new pattern -->
+<div class="sheet" id="sh-pat"><div class="grab"></div><h2>New pattern</h2>
+ <div class="fld"><div class="lab">1 · Pick a recent notification</div><div class="input" style="font-size:13px">Payment of ₱5,000.00 received on your Maya Black</div></div>
+ <div class="fld"><div class="lab">2 · Swap what changes</div><div class="input" style="font-size:13px;min-height:56px"><div class="tpl">Payment of <i>{amount}</i> received on your Maya Black</div></div>
+  <div class="chips"><span class="chip">{amount}</span><span class="chip">{name}</span><span class="chip">{last4}</span><span class="chip">{ref}</span><span class="chip">{any}</span></div>
+  <div class="s12 mut">{amount} once, required. {name} = who it was with, {last4} = your account digits, {ref} = reference, {any} = skip text.</div></div>
+ <div class="fld"><div class="lab">3 · Money</div><div class="seg"><div class="on">In</div><div>Out</div></div></div>
+ <div class="blk"><div class="row"><span class="pill">Matches</span><span class="s12">In · ₱5,000.00</span></div></div>
+ <div class="row" style="flex-wrap:nowrap"><div class="btn g" style="flex:1" data-sheet="s">Cancel</div><div class="btn" style="flex:1" data-sheet="s">Save</div></div></div>
 <!-- sheet: word rule (all options) -->
 <div class="sheet" id="sh-w"><div class="grab"></div><div class="between"><h2>Rule · Coffee</h2><span class="pill">Saved</span></div>
  <div class="fld"><div class="lab">What is it for</div><div class="input">Coffee</div></div>
@@ -143,6 +181,8 @@ const close=()=>{document.querySelectorAll(".sheet.open").forEach(x=>x.classList
 document.addEventListener("click",e=>{
 const o=e.target.closest("[data-opt]");if(o){document.querySelectorAll("[data-opt]").forEach(x=>x.classList.toggle("on",x===o));document.querySelectorAll("[data-o]").forEach(s=>s.classList.toggle("hide",s.dataset.o!==o.dataset.opt));close();return}
 const s=e.target.closest(".sw");if(s){s.classList.toggle("on");e.stopPropagation();return}
+const ck=e.target.closest(".chk");if(ck){const on=ck.classList.toggle("on");ck.textContent=on?"✓":"";return}
+const ls=e.target.closest("[data-listen]>div");if(ls){ls.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===ls));const sh=ls.closest(".sheet"),l=ls.dataset.l;sh.querySelectorAll(".src-n").forEach(x=>x.classList.toggle("hide",l==="e"));sh.querySelectorAll(".src-e").forEach(x=>x.classList.toggle("hide",l==="n"));return}
 const sg=e.target.closest(".seg>div");if(sg){sg.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===sg));return}
 if(e.target.closest("[data-close]")||e.target.id==="scrim"){close();return}
 const c=e.target.closest("[data-sheet]");if(c){close();document.getElementById("sh-"+c.dataset.sheet).classList.add("open");document.getElementById("scrim").classList.add("show")}});

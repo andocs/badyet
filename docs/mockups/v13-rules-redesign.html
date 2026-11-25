@@ -32,6 +32,15 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
 .grp{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px;background:rgba(255,255,255,.02)}
 .sub{margin-left:14px;display:flex;flex-direction:column;gap:8px}
 .reader{background:var(--soft);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.blk{display:flex;flex-direction:column;gap:8px;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:10px;padding:12px}
+.ex{font-size:12px;background:var(--surface);border-radius:8px;padding:6px 10px;color:var(--ink)}
+.pat{display:flex;align-items:center;gap:8px;background:var(--surface);border-radius:8px;padding:8px 10px}
+.tpl{font-size:13px}.tpl i{font-style:normal;color:var(--gold);font-weight:700;background:var(--goldt);border-radius:4px;padding:0 3px;margin:0 1px}
+.dim{opacity:.4;pointer-events:none}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;place-items:center;z-index:10;padding:16px}.scrim.show{display:grid}
+.dlg{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(540px,100%);max-height:90vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}.li .ic{width:36px;height:36px;border-radius:999px;background:var(--soft);display:grid;place-items:center;font-size:18px;flex:none}
+.chk{width:22px;height:22px;border-radius:11px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:12px;flex:none;cursor:pointer}.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on)}
 .callout{border:1px solid rgba(246,196,83,.35);padding:8px 10px;background:rgba(246,196,83,.06);border-radius:8px}
 </style></head><body><main>
 <nav class="nav"><a>Now</a><a>Inbox</a><a>Accounts</a><a>Budget</a><a>Bonuses</a><a>Funds</a><a>Forecast</a><a class="on">Rules</a><a>Settings</a></nav>
@@ -63,7 +72,7 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
   <div class="card rule sel" data-ed="1s"><div class="row sp"><div class="b">Maya</div><div class="sw on"></div></div><div class="row wrap"><span class="pill">Notifications</span><span class="pill gd">Built-in reader</span></div><div class="xs mut">Account Maya · asks for category · skips under ₱20</div></div>
   <div class="card rule" data-ed="1s"><div class="row sp"><div class="b">BPI</div><div class="sw on"></div></div><div class="row wrap"><span class="pill">Emails</span><span class="pill gd">Built-in reader</span></div><div class="xs mut">Account BPI Savings · asks for category</div></div>
   <div class="card rule" data-ed="1s"><div class="row sp"><div class="b">GCash</div><div class="sw on"></div></div><div class="row wrap"><span class="pill">Notifications</span><span class="pill gd">Built-in reader</span></div><div class="xs mut">Account GCash · asks for category</div></div>
-  <div class="card rule" data-ed="1s"><div class="row sp"><div class="b">ShopeePay</div><div class="sw on"></div></div><div class="row wrap"><span class="pill">Notifications</span><span class="pill n">Your patterns (2)</span></div><div class="xs mut">Added by you · account ShopeePay</div></div>
+  <div class="card rule" data-ed="1c"><div class="row sp"><div class="b">ShopeePay</div><div class="sw on"></div></div><div class="row wrap"><span class="pill">Notifications</span><span class="pill n">Your patterns (2)</span></div><div class="xs mut">Added by you · account ShopeePay</div></div>
   <div class="card" style="background:var(--soft)"><div class="lab">Removed</div>
    <div class="row sp"><span>GoTyme</span><button class="btn g sm">Add back</button></div><div class="row sp"><span>MariBank</span><button class="btn g sm">Add back</button></div>
    <div class="xs mut">Built-in readers are never deleted. Removing one only stops listening.</div></div>
@@ -71,9 +80,27 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
 
  <div class="card ed" id="ed-1s" style="gap:14px"><div class="row sp"><h2>Edit rule · Maya</h2><span class="pill gd">Built-in reader</span></div>
   <div class="fld"><div class="lab">What is it for</div><div class="input">Maya</div></div>
-  <div class="fld"><div class="lab">Listen on</div><div class="seg"><div class="on">Notifications</div><div>Emails</div><div>Both</div></div></div>
-  <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Maya app · com.paymaya ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div><div class="xs mut">Any app or sender here is listened to. No separate source needed.</div></div>
-  <div class="fld"><div class="lab">Read it with</div><div class="seg" style="align-self:flex-start"><div class="on">Built-in Maya reader</div><div>My patterns</div></div><div class="xs mut">The reader pulls the amount, direction and other side out of the message.</div></div>
+  <div class="fld"><div class="lab">Listen on</div><div class="seg" data-listen style="align-self:flex-start"><div class="on" data-l="n">Notifications</div><div data-l="e">Emails</div><div data-l="b">Both</div></div></div>
+
+  <div class="blk src-n"><div class="row sp"><div class="lab">Notifications from these apps</div><span class="pill n">Phone</span></div>
+   <div class="chips"><span class="chip on">💳 Maya · com.paymaya ✕</span><span class="chip" data-dlg="apps">+ App</span></div>
+   <div class="xs mut">Your phone listens to these apps. Turn on notification access on the phone once (Settings › Capture). The web shows the app list your phone last synced.</div></div>
+
+  <div class="blk src-e hide"><div class="row sp"><div class="lab">Emails from these senders</div><span class="pill">Gmail connected</span></div>
+   <div class="chips"><span class="chip on">no-reply@paymaya.com ✕</span><span class="chip on">@maya.ph ✕</span><span class="chip" data-dlg="senders">+ Sender</span></div>
+   <div class="xs mut">Gmail is checked every 5 minutes, and right away when a bank or wallet app notifies. A whole domain such as @maya.ph matches every address at it.</div></div>
+
+  <div class="blk"><div class="lab">How it's read</div>
+   <div class="reader"><div class="row sp"><div class="b">Built-in Maya reader</div><span class="pill gd">Always on</span></div>
+    <div class="xs mut">Reads Maya notifications such as:</div>
+    <div class="ex">You have received ₱1,100.00 from InstaPay.</div><div class="ex">You paid ₱250.00 to JOLLIBEE.</div>
+    <div class="xs mut src-e hide">For emails: there is no built-in Maya email reader yet. Built-in email readers exist for BPI, Grab and Foodpanda only.</div></div>
+   <div class="reader"><div class="row sp"><div class="b">My patterns <span class="xs mut">· tried first</span></div><button class="btn g sm" data-dlg="pattern">+ Pattern</button></div>
+    <div class="pat"><div class="grow"><div class="tpl">Payment of <i>{amount}</i> received on your Maya Black</div></div><span class="pill">Money in</span><span class="xs mut">✕</span></div>
+    <div class="pat"><div class="grow"><div class="tpl">You sent <i>{amount}</i> to <i>{name}</i><i>{any}</i>Ref <i>{ref}</i></div></div><span class="pill e">Money out</span><span class="xs mut">✕</span></div>
+    <div class="xs mut">Use a pattern when the built-in reader misses a wording. Patterns work on notifications only.</div></div>
+  </div>
+
   <div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip">+ Word</span></div><div class="xs mut">No words: catches everything from Maya that no rule above caught.</div></div>
   <div class="fld"><div class="lab">What it is</div><div class="seg" style="align-self:flex-start"><div class="on">From the message</div><div>Spending</div><div>Income</div><div>Transfer</div><div>Payment</div></div></div>
   <div class="g2"><div class="fld"><div class="lab">Account</div><div class="input">Maya</div></div><div class="fld"><div class="lab">Category</div><div class="input" style="color:var(--muted)">Ask me in the Inbox</div></div></div>
@@ -82,11 +109,25 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
   <div class="callout xs">Remove: Maya moves to "Removed" and stops listening. Add it back any time with the same reader and settings.</div>
  </div>
 
+ <div class="card ed hide" id="ed-1c" style="gap:14px"><div class="row sp"><h2>Edit rule · ShopeePay</h2><span class="pill n">Added by you</span></div>
+  <div class="fld"><div class="lab">What is it for</div><div class="input">ShopeePay</div></div>
+  <div class="fld"><div class="lab">Listen on</div><div class="seg" style="align-self:flex-start"><div class="on">Notifications</div><div class="dim">Emails</div><div class="dim">Both</div></div><div class="xs mut">Emails need a built-in reader, and ShopeePay has none, so only notifications can be used.</div></div>
+  <div class="blk"><div class="lab">Notifications from these apps</div><div class="chips"><span class="chip on">🛍 ShopeePay · com.shopeepay.ph ✕</span><span class="chip" data-dlg="apps">+ App</span></div></div>
+  <div class="blk"><div class="lab">How it's read</div>
+   <div class="reader"><div class="b">No built-in reader for this app</div><div class="xs mut">Add at least one pattern, or nothing from ShopeePay can be read.</div></div>
+   <div class="reader"><div class="row sp"><div class="b">My patterns</div><button class="btn g sm" data-dlg="pattern">+ Pattern</button></div>
+    <div class="pat"><div class="grow"><div class="tpl">You paid <i>{amount}</i> to <i>{name}</i></div></div><span class="pill e">Money out</span><span class="xs mut">✕</span></div>
+    <div class="pat"><div class="grow"><div class="tpl">Cash-in of <i>{amount}</i> successful<i>{any}</i></div></div><span class="pill">Money in</span><span class="xs mut">✕</span></div></div></div>
+  <div class="fld"><div class="lab">What it is</div><div class="seg" style="align-self:flex-start"><div class="on">From the message</div><div>Spending</div><div>Income</div><div>Transfer</div><div>Payment</div></div></div>
+  <div class="g2"><div class="fld"><div class="lab">Account</div><div class="input">ShopeePay</div></div><div class="fld"><div class="lab">Category</div><div class="input" style="color:var(--muted)">Ask me in the Inbox</div></div></div>
+  <div class="row sp"><button class="btn out sm">Delete rule</button><div class="row"><button class="btn g">Cancel</button><button class="btn">Save</button></div></div>
+ </div>
+
  <div class="card ed hide" id="ed-1w" style="gap:14px"><div class="row sp"><h2>Edit rule · Coffee</h2><span class="pill">Saved</span></div>
   <div class="fld"><div class="lab">What is it for</div><div class="input">Coffee</div></div>
   <div class="fld"><div class="lab">Listen on</div><div class="seg"><div>Notifications</div><div class="on">Emails</div><div>Both</div></div></div>
-  <div class="fld"><div class="lab">From</div><div class="chips"><span class="chip on">Grab ✕</span><span class="chip on">Foodpanda ✕</span><span class="chip">+ App</span><span class="chip">+ Sender</span></div></div>
-  <div class="fld"><div class="lab">Read it with</div><div class="seg" style="align-self:flex-start"><div class="on">Each app's own reader</div><div>My patterns</div></div></div>
+  <div class="blk"><div class="lab">Emails from these senders</div><div class="chips"><span class="chip on">no-reply@grab.com ✕</span><span class="chip on">@foodpanda.ph ✕</span><span class="chip" data-dlg="senders">+ Sender</span></div>
+   <div class="xs mut">Read by the built-in Grab and Foodpanda email readers.</div></div>
   <div class="fld"><div class="lab">Look for any of these words</div><div class="chips"><span class="chip on">coffee ✕</span><span class="chip on">starbucks ✕</span><span class="chip">+ Word</span></div></div>
   <div class="fld"><div class="lab">What it is</div><div class="seg" style="align-self:flex-start"><div>From the message</div><div class="on">Spending</div><div>Income</div><div>Transfer</div><div>Payment</div></div></div>
   <div class="g2"><div class="fld"><div class="lab">Account</div><div class="input" style="color:var(--muted)">Same as the app's rule</div></div><div class="fld"><div class="lab">Category</div><div class="input">Dining</div></div></div>
@@ -133,6 +174,7 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
   <div class="fld"><div class="lab">Read it with</div><div class="seg" style="align-self:flex-start"><div class="on">Built-in Maya reader</div><div>My patterns</div></div></div>
   <div class="fld"><div class="lab">Skip if under</div><div class="input" style="max-width:220px">₱ 20.00</div></div>
   <div class="row sp wrap"><button class="btn out sm">Remove Maya</button><div class="row"><button class="btn g">Cancel</button><button class="btn">Save</button></div></div>
+  <div class="callout xs">Listen on, apps, senders and patterns work exactly as in Option 1. Switch to Option 1 and open Maya to try them.</div>
   <div class="callout xs">Remove: the Maya group and its rules are paused and moved to "Removed apps". Add back restores everything.</div>
  </div>
 </section>
@@ -160,6 +202,7 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
   <div class="g2"><div class="fld"><div class="lab">Usual account</div><div class="input">Maya</div></div><div class="fld"><div class="lab">Usual category</div><div class="input" style="color:var(--muted)">Ask me</div></div></div>
   <div class="g2"><div class="fld"><div class="lab">Skip if under</div><div class="input">₱ 20.00</div></div><div class="fld" style="justify-content:flex-end"><div class="row sp"><div class="b">Confirm automatically</div><div class="sw"></div></div></div></div>
   <div class="row sp wrap"><button class="btn out sm">Remove Maya</button><div class="row"><button class="btn g">Cancel</button><button class="btn">Save</button></div></div>
+  <div class="callout xs">Listen on, apps, senders and patterns work exactly as in Option 1. Switch to Option 1 and open Maya to try them.</div>
   <div class="callout xs">No words and no "What it is" here: a source only says where to listen and the defaults. Rules do the rest.</div>
  </div>
  <div class="card ed hide" id="ed-3r" style="gap:14px"><div class="row sp"><h2>Edit rule</h2><span class="pill">Saved</span></div>
@@ -168,8 +211,41 @@ h1{font:800 28px Gabarito,system-ui}h2{font:800 17px Gabarito,system-ui}h3{font:
  </div>
 </section>
 
+<div class="scrim" id="d-apps"><div class="dlg"><div class="row sp"><h2>Pick apps</h2><button class="btn g sm" data-close>Close</button></div>
+<div class="input" style="color:var(--muted)">Search apps</div>
+<div class="xs mut">Apps your phone reported: ones that notified recently, then the rest installed. Last synced 3 min ago.</div>
+<div><div class="li"><span class="ic">💳</span><div class="grow"><div class="b">Maya</div><div class="xs mut">com.paymaya · built-in reader</div></div><div class="chk on">✓</div></div>
+<div class="li"><span class="ic">💸</span><div class="grow"><div class="b">GCash</div><div class="xs mut">com.globe.gcash.android · built-in reader</div></div><div class="chk"></div></div>
+<div class="li"><span class="ic">🛍</span><div class="grow"><div class="b">ShopeePay</div><div class="xs mut">com.shopeepay.ph · needs your patterns</div></div><div class="chk"></div></div>
+<div class="li"><span class="ic">🏦</span><div class="grow"><div class="b">UnionBank</div><div class="xs mut">com.unionbankph.online · needs your patterns</div></div><div class="chk"></div></div></div>
+<div class="fld"><div class="lab">Not listed? Type the package id</div><div class="row"><div class="input grow" style="color:var(--muted)">com.example.app</div><button class="btn g sm">Add</button></div></div>
+<div class="row sp"><span class="xs mut">1 picked</span><button class="btn" data-close>Done</button></div></div></div>
+
+<div class="scrim" id="d-senders"><div class="dlg"><div class="row sp"><h2>Pick senders</h2><button class="btn g sm" data-close>Close</button></div>
+<div class="input" style="color:var(--muted)">Search senders</div>
+<div class="lab">Recent senders in your Gmail</div>
+<div><div class="li"><div class="grow"><div class="b">no-reply@paymaya.com</div><div class="xs mut">9 emails this month</div></div><div class="chk on">✓</div></div>
+<div class="li"><div class="grow"><div class="b">notifications@bpi.com.ph</div><div class="xs mut">14 emails this month</div></div><div class="chk"></div></div>
+<div class="li"><div class="grow"><div class="b">no-reply@grab.com</div><div class="xs mut">6 emails this month</div></div><div class="chk"></div></div></div>
+<div class="fld"><div class="lab">Or type one</div><div class="row"><div class="input grow" style="color:var(--muted)">name@bank.com or @bank.com</div><button class="btn g sm">Add</button></div></div>
+<div class="row sp"><span class="xs mut">1 picked</span><button class="btn" data-close>Done</button></div></div></div>
+
+<div class="scrim" id="d-pattern"><div class="dlg"><div class="row sp"><h2>New pattern</h2><button class="btn g sm" data-close>Close</button></div>
+<div class="fld"><div class="lab">1 · Paste a real notification</div><div class="input">Payment of ₱5,000.00 received on your Maya Black</div></div>
+<div class="fld"><div class="lab">2 · Swap the parts that change for placeholders</div><div class="input"><div class="tpl">Payment of <i>{amount}</i> received on your Maya Black</div></div>
+ <div class="chips"><span class="chip">{amount} · required</span><span class="chip">{name} · who it was with</span><span class="chip">{last4} · your account digits</span><span class="chip">{ref} · reference</span><span class="chip">{any} · skip text</span></div>
+ <div class="xs mut">Tap a placeholder to insert it. {amount} goes in exactly once; the others are optional and once each, except {any}.</div></div>
+<div class="fld"><div class="lab">3 · Money in or out?</div><div class="seg" style="align-self:flex-start"><div class="on">Money in</div><div>Money out</div></div></div>
+<div class="blk"><div class="lab">Check</div><div class="row"><span class="pill">Matches</span><span class="xs">Money in · ₱5,000.00</span></div>
+ <div class="row"><span class="pill e">Error example</span><span class="xs mut">"Put {amount} exactly once, where the amount appears."</span></div></div>
+<div class="row sp"><span class="xs mut">Saved to this rule's app</span><div class="row"><button class="btn g" data-close>Cancel</button><button class="btn" data-close>Save pattern</button></div></div></div></div>
+
 <script>
 document.addEventListener("click",e=>{
+const dl=e.target.closest("[data-dlg]");if(dl){document.getElementById("d-"+dl.dataset.dlg).classList.add("show");return}
+if(e.target.closest("[data-close]")||e.target.classList.contains("scrim")){document.querySelectorAll(".scrim.show").forEach(x=>x.classList.remove("show"));return}
+const ck=e.target.closest(".chk");if(ck){const on=ck.classList.toggle("on");ck.textContent=on?"✓":"";return}
+const ls=e.target.closest("[data-listen]>div");if(ls){ls.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===ls));const ed=ls.closest(".ed"),l=ls.dataset.l;ed.querySelectorAll(".src-n").forEach(x=>x.classList.toggle("hide",l==="e"));ed.querySelectorAll(".src-e").forEach(x=>x.classList.toggle("hide",l==="n"));return}
 const o=e.target.closest("[data-opt]");if(o){document.querySelectorAll("[data-opt]").forEach(x=>x.classList.toggle("on",x===o));document.querySelectorAll("section[data-o]").forEach(s=>s.classList.toggle("hide",s.dataset.o!==o.dataset.opt));return}
 const s=e.target.closest(".sw");if(s){s.classList.toggle("on");e.stopPropagation();return}
 const sg=e.target.closest(".seg>div");if(sg&&!sg.dataset.opt){sg.parentNode.querySelectorAll(":scope>div").forEach(x=>x.classList.toggle("on",x===sg));return}
