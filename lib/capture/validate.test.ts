@@ -20,8 +20,13 @@ describe('validateSource', () => {
   it('accepts a normal source and turns pesos into centavos', () => {
     expect(validateSource(src({ minAmount: '1,250.50', accountId: ACC, categoryId: CAT, autoConfirm: true }))).toEqual({
       ok: true,
-      value: { source: 'gcash', enabled: true, packages: ['com.globe.gcash.android'], senders: [], accountId: ACC, categoryId: CAT, autoConfirm: true, minAmount: 125_050 },
+      value: { source: 'gcash', enabled: true, packages: ['com.globe.gcash.android'], senders: [], accountId: ACC, categoryId: CAT, autoConfirm: true, minAmount: 125_050, label: null },
     });
+  });
+  it('keeps a name only for Other app sources, trimmed', () => {
+    expect(validateSource(src({ source: 'custom2', label: '  Shopee   Pay ' }))).toMatchObject({ ok: true, value: { source: 'custom2', label: 'Shopee Pay' } });
+    expect(validateSource(src({ label: 'Renamed' }))).toMatchObject({ ok: true, value: { label: null } });
+    expect(validateSource(src({ source: 'custom3', label: 'x'.repeat(31) }))).toEqual({ ok: false, error: 'Keep the name under 30 characters.' });
   });
   it('treats an empty minimum as none, and lowercases ids and senders', () => {
     const r = validateSource(src({ packages: 'COM.Example.App', senders: 'Bank@Example.COM' }));

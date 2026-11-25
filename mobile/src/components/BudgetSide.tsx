@@ -19,7 +19,7 @@ import { fonts, useTheme } from '~/lib/theme';
 
 type Result = { ok: true } | { error: string };
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-const SETTLED_KIND: Record<string, string> = { settle_to_pool: 'pool', settle_to_wants: 'Wants', over_from_wants: 'Wants', over_from_excess: 'pool excess' };
+const SETTLED_KIND: Record<string, string> = { settle_to_pool: 'pool', settle_to_wants: 'Wants', settle_to_savings: 'savings', over_from_wants: 'Wants', over_from_excess: 'pool excess' };
 const COLORS = ['#34d399', '#7fa8ff', '#f6c453', '#c4a0ff', '#5cd0e6', '#f28bc8', '#ff8a8a', '#93a5bd'];
 
 type Open =
@@ -206,8 +206,8 @@ function SettleSheet({ date, under, diff, onClose, onSaved }: { date: string; un
   const c = useTheme();
   const { hide } = useHide();
   const { problem, busy, run } = useRun(onSaved);
-  const options: { to: 'pool' | 'wants' | 'excess'; label: string }[] = under
-    ? [{ to: 'pool', label: 'Keep it in the pool' }, { to: 'wants', label: 'Move it to Wants' }]
+  const options: { to: 'pool' | 'wants' | 'savings' | 'excess'; label: string }[] = under
+    ? [{ to: 'pool', label: 'Keep it in the pool' }, { to: 'wants', label: 'Move it to Wants' }, { to: 'savings', label: 'Move it to savings' }]
     : [{ to: 'wants', label: 'Take it from Wants' }, { to: 'excess', label: 'Take it from the pool excess' }];
   return (
     <Sheet title={`Settle ${shortDate(date as IsoDate)}`} onClose={onClose}>

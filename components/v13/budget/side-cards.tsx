@@ -123,8 +123,8 @@ export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: numbe
   const [list, apply] = useOptimistic(rows, (cur, c: { date: string; settledTo: string | null }) => cur.map((r) => (r.date === c.date ? { ...r, settledTo: c.settledTo } : r)));
   const [error, setError] = useState<string | null>(null);
   const [, start] = useTransition();
-  const WHERE = { pool: "contingency pool", wants: "Wants", excess: "contingency excess" } as const;
-  const settle = (date: string, under: boolean, to: "pool" | "wants" | "excess", amount: number) =>
+  const WHERE = { pool: "contingency pool", wants: "Wants", savings: "savings", excess: "contingency excess" } as const;
+  const settle = (date: string, under: boolean, to: "pool" | "wants" | "savings" | "excess", amount: number) =>
     start(async () => {
       setError(null);
       apply({ date, settledTo: WHERE[to] });
@@ -164,6 +164,7 @@ export function SettleCard({ rows, excess }: { rows: SettleView[]; excess: numbe
                 <>
                   <button type="button" className="v-btn v-sm v-pri" onClick={() => settle(r.date, true, "pool", amt)}>Contingency pool</button>
                   <button type="button" className="v-btn v-sm" onClick={() => settle(r.date, true, "wants", amt)}>Wants</button>
+                  <button type="button" className="v-btn v-sm" onClick={() => settle(r.date, true, "savings", amt)}>Savings</button>
                 </>
               ) : (
                 <>

@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { fetchWithTimeout, inflightNow, REQUEST_TIMEOUT_MS, withLimit } from './http';
+
 vi.mock('expo-sqlite/localStorage/install', () => ({}));
 vi.mock('react-native', () => ({ AppState: { currentState: 'active', addEventListener: vi.fn(() => ({ remove: vi.fn() })) } }));
-
-import { fetchWithTimeout, inflightNow, REQUEST_TIMEOUT_MS, withLimit } from './http';
 
 afterEach(() => {
   vi.useRealTimers();

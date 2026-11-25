@@ -29,6 +29,8 @@ export interface InboxTxn {
 export interface InboxData {
   txns: InboxTxn[];
   categories: Category[];
+  /** Budget lines that go to an account: a payment can be linked to one so it shows as sent. */
+  bills: { id: string; name: string }[];
 }
 
 export interface Row {
@@ -119,19 +121,21 @@ const COLS = 'id, account_id, occurred_at, amount, merchant, kind, category_id, 
 export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
   await ensureTransferCategory(supabase).catch(() => null);
-  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes] = await Promise.all([
+  const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, billsRes] = await Promise.all([
     supabase.from('categories').select('id, name').is('archived_at', null).order('sort'),
     supabase.from('accounts').select('id, name, institution, archived_at'),
     supabase.from('merchant_rules').select('id, pattern, category_id, account_id, priority'),
     supabase.from('transactions').select(COLS).eq('status', 'pending').order('occurred_at', { ascending: false }),
     supabase.from('transactions').select(COLS).neq('status', 'ignored').order('occurred_at', { ascending: false }).limit(60),
     supabase.from('transactions').select('merchant, category_id').eq('status', 'confirmed').not('category_id', 'is', null).order('occurred_at', { ascending: false }).limit(500),
+    supabase.from('budget_lines_v2').select('id, name').not('account_id', 'is', null).neq('rule', 'rest').order('name'),
   ]);
   for (const r of [cats, acct, rulesRes, pendingRes, recentRes, historyRes]) if (r.error) throw r.error;
   const categories = (cats.data ?? []) as Category[];
   const rows = [...((recentRes.data ?? []) as Row[]), ...((pendingRes.data ?? []) as Row[])];
   return {
     categories,
+    bills: billsRes.error ? [] : ((billsRes.data ?? []) as { id: string; name: string }[]),
     txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
   };
 }
@@ -144,11 +148,20 @@ export type Result = { ok: true } | { error: string };
  */
 export async function confirmTransaction(
   supabase: SupabaseClient,
-  input: { id: string; categoryId: string | null; rule: boolean; note: string },
+  input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null },
 ): Promise<Result> {
   if (!UUID.test(input.id)) return { error: 'That transaction was not found.' };
-  const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source').eq('id', input.id).maybeSingle();
+  const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source, amount').eq('id', input.id).maybeSingle();
   if (!row.data || row.data.status !== 'pending') return { error: 'That one is no longer waiting.' };
+
+  // "Pays a bill": the payment marks that bill sent for the cutoff. Only money going out can pay one.
+  let billId: string | null = null;
+  if (input.billId) {
+    if (!UUID.test(input.billId) || Number(row.data.amount) >= 0) return { error: 'That bill was not found.' };
+    const line = await supabase.from('budget_lines_v2').select('id').eq('id', input.billId).not('account_id', 'is', null).maybeSingle();
+    if (!line.data) return { error: 'That bill was not found.' };
+    billId = input.billId;
+  }
 
   const isTransfer = row.data.kind === 'transfer';
   let categoryId: string | null = null;
@@ -183,6 +196,10 @@ export async function confirmTransaction(
     .in('id', ids)
     .eq('status', 'pending');
   if (upd.error) return { error: 'Could not confirm that. Try again.' };
+  if (billId) {
+    const link = await supabase.from('transactions').update({ budget_line_id: billId }).eq('id', row.data.id);
+    if (link.error) return { error: 'Confirmed, but it was not linked to the bill. Mark the bill sent on Now.' };
+  }
 
   const pattern = normalizePattern(row.data.merchant as string | null);
   if (input.rule && categoryId && pattern) {

@@ -2,7 +2,7 @@ import { setSourceRemoved } from '@/lib/capture/source-write';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { SOURCES, SOURCE_INFO, type CaptureRule, type SourceKey } from '@/lib/capture/sources';
+import { SOURCES, SOURCE_INFO, type CaptureRule, type SourceKey, isUnusedSlot } from '@/lib/capture/sources';
 import { Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
 import { CHANNEL_LABEL, RuleEditor } from '~/components/RuleEditor';
 import { PatternsCard } from '~/components/PatternsCard';
@@ -160,9 +160,9 @@ export default function Rules() {
               const cfg = data.configs.find((x) => x.source === k)!;
               const where = [cfg.packages.length ? `${cfg.packages.length} app${cfg.packages.length === 1 ? '' : 's'}` : null, cfg.senders.length ? `${cfg.senders.length} sender${cfg.senders.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'No app or sender set yet';
               return (
-                <Pressable key={k} onPress={() => setEditingSource(k)} accessibilityRole="button" accessibilityLabel={`Edit ${SOURCE_INFO[k].label}`} style={[s.row, { minHeight: 52 }]}>
+                <Pressable key={k} onPress={() => setEditingSource(k)} accessibilityRole="button" accessibilityLabel={`Edit ${cfg.label}`} style={[s.row, { minHeight: 52 }]}>
                   <View style={{ flex: 1 }}>
-                    <Body bold>{SOURCE_INFO[k].label}</Body>
+                    <Body bold>{cfg.label}</Body>
                     <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
                       {cfg.enabled ? 'On' : 'Off'} · {where}
                       {cfg.autoConfirm ? ' · confirms itself' : ''}
@@ -172,12 +172,30 @@ export default function Rules() {
                 </Pressable>
               );
             })}
-            {data.configs.some((x) => x.removed) ? (
+            {(() => {
+              const next = data.configs.find((x) => isUnusedSlot(x, data.patterns));
+              return next ? (
+                <Pressable
+                  onPress={() =>
+                    void setSourceRemoved(supabase, next.source, false).then(async (r) => {
+                      if ('error' in r) return setProblem(r.error);
+                      await reload();
+                      setEditingSource(next.source);
+                    })
+                  }
+                  accessibilityRole="button"
+                  style={{ minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: c.soft }}
+                >
+                  <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>+ Another app</Text>
+                </Pressable>
+              ) : null;
+            })()}
+            {data.configs.some((x) => x.removed && !isUnusedSlot(x, data.patterns)) ? (
               <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10 }}>
                 <Label>Removed</Label>
-                {data.configs.filter((x) => x.removed).map((x) => (
+                {data.configs.filter((x) => x.removed && !isUnusedSlot(x, data.patterns)).map((x) => (
                   <View key={x.source} style={[s.row, { minHeight: 44 }]}>
-                    <Body>{SOURCE_INFO[x.source].label}</Body>
+                    <Body>{x.label}</Body>
                     <Pressable
                       onPress={() => void setSourceRemoved(supabase, x.source, false).then((r) => ('error' in r ? setProblem(r.error) : reload()))}
                       accessibilityRole="button"
@@ -191,7 +209,7 @@ export default function Rules() {
             ) : null}
           </Card>
 
-          <PatternsCard patterns={data.patterns} onChanged={reload} />
+          <PatternsCard patterns={data.patterns} sources={data.configs} onChanged={reload} />
         </>
       ) : null}
 

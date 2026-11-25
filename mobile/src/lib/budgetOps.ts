@@ -5,7 +5,7 @@ export type Result = { ok: true } | { error: string };
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
-const SETTLE_KINDS = ['settle_to_pool', 'settle_to_wants', 'over_from_wants', 'over_from_excess'];
+const SETTLE_KINDS = ['settle_to_pool', 'settle_to_wants', 'settle_to_savings', 'over_from_wants', 'over_from_excess'];
 
 /** Creates or edits a category. Same rules as the web action. */
 export async function saveCategory(supabase: SupabaseClient, input: unknown): Promise<Result> {
@@ -62,11 +62,11 @@ export async function setOfficeDay(supabase: SupabaseClient, input: { date: stri
 }
 
 /** Where an office day's difference goes: under budget to the pool or Wants, over budget from Wants or the pool's excess. */
-export async function settleDay(supabase: SupabaseClient, input: { date: string; under: boolean; to: 'pool' | 'wants' | 'excess'; amount: number }): Promise<Result> {
+export async function settleDay(supabase: SupabaseClient, input: { date: string; under: boolean; to: 'pool' | 'wants' | 'savings' | 'excess'; amount: number }): Promise<Result> {
   if (!DAY.test(input.date)) return { error: 'Pick a day.' };
   if (!Number.isInteger(input.amount) || input.amount <= 0 || input.amount > 100_000_000) return { error: 'Check the amount.' };
   const kind = input.under
-    ? input.to === 'pool' ? 'settle_to_pool' : input.to === 'wants' ? 'settle_to_wants' : null
+    ? input.to === 'pool' ? 'settle_to_pool' : input.to === 'wants' ? 'settle_to_wants' : input.to === 'savings' ? 'settle_to_savings' : null
     : input.to === 'wants' ? 'over_from_wants' : input.to === 'excess' ? 'over_from_excess' : null;
   if (!kind) return { error: 'Pick where it goes.' };
   const contingency = await supabase.from('budget_lines_v2').select('id').eq('kind', 'rto_contingency').is('plan_id', null).maybeSingle();

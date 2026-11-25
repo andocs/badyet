@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { wordsHit } from '@/lib/capture/decide';
-import { RULE_CHANNELS, RULE_KINDS, SOURCES, SOURCE_INFO, type CaptureRule, type RuleChannel, type RuleKind, type SourceKey } from '@/lib/capture/sources';
+import { RULE_CHANNELS, RULE_KINDS, SOURCES, SOURCE_INFO, type CaptureRule, type RuleChannel, type RuleKind, type SourceKey, isCustomSlot } from '@/lib/capture/sources';
 import { Body, Chip, Label } from '~/components/ui';
 import { saveRuleFull, deleteRule } from '~/lib/capture';
 import type { AppInfo, SenderInfo } from '~/lib/deviceApps';
@@ -119,7 +119,7 @@ export function RuleEditor({
 
             <Field label="From" hint="Leave empty to match anywhere.">
               <View style={s.chips}>
-                {SOURCES.map((k) => (
+                {SOURCES.filter((k) => !isCustomSlot(k)).map((k) => (
                   <Chip key={k} label={SOURCE_INFO[k].label} on={sources.includes(k)} onPress={() => setSources((l) => toggle(l, k))} />
                 ))}
                 {packages.map((p) => (

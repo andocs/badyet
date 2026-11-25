@@ -1,5 +1,4 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -104,7 +103,6 @@ function build(d: FundsData) {
 
 export default function Forecast() {
   const c = useTheme();
-  const router = useRouter();
   const { hide } = useHide();
   const { data, error, refreshing, reload } = useLoad(() => loadFunds(supabase));
   const [view, setView] = useState<'chart' | 'years'>('chart');

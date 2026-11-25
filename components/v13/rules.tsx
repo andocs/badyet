@@ -9,7 +9,7 @@ import { formatPesos, money } from "@/lib/domain/money";
 import { PatternsSection } from "./capture-patterns";
 import { wordsHit } from "@/lib/capture/decide";
 import type { CapturePattern } from "@/lib/capture/patterns";
-import { RULE_CHANNELS, RULE_KINDS, SOURCE_INFO, SOURCES, type CaptureRule, type RuleChannel, type RuleKind, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
+import { isCustomSlot, isUnusedSlot, RULE_CHANNELS, RULE_KINDS, SOURCE_INFO, SOURCES, type CaptureRule, type RuleChannel, type RuleKind, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
 import { addWord, ruleTitle, windowMinutes, windowParts } from "@/lib/rules/helpers";
 import { SourcesArea } from "./capture-rules";
 import { useConfirm, useToast } from "./feedback";
@@ -22,7 +22,7 @@ const PACKAGE = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i;
 const SENDER = /^(@[^\s@]+\.[^\s@]+|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
 const CHANNEL_LABEL: Record<RuleChannel, string> = { notifications: "Notifications", emails: "Emails", both: "Notifications + Emails" };
 const KIND_LABEL: Record<RuleKind, string> = { spending: "Spending", income: "Income", transfer: "Transfer", payment: "Payment" };
-const PICKABLE = SOURCES.filter((k) => k !== "custom");
+const PICKABLE = SOURCES.filter((k) => !isCustomSlot(k));
 
 /** Runs a server action, toasts the result, and tells the caller when it worked. */
 function useRun() {
@@ -397,7 +397,7 @@ function sourceLine(cfg: SourceConfig, patterns: CapturePattern[], acct: Map<str
 }
 
 function SourceCard({ cfg, patterns, selected, busy, acct, cat, onSelect, onToggle }: { cfg: SourceConfig; patterns: CapturePattern[]; selected: boolean; busy: boolean; acct: Map<string, string>; cat: Map<string, string>; onSelect: () => void; onToggle: (v: boolean) => void }) {
-  const info = SOURCE_INFO[cfg.source];
+  const info = { ...SOURCE_INFO[cfg.source], label: cfg.label };
   const l = sourceLine(cfg, patterns, acct, cat);
   return (
     <div className={`v-rulecard${cfg.enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
@@ -413,7 +413,8 @@ function SourceCard({ cfg, patterns, selected, busy, acct, cat, onSelect, onTogg
 
 /** One source, in the rule editor's layout: the apps and senders it listens to, how it is read, and what to do with anything no rule above caught. */
 function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, seenSenders, onDone }: { cfg: SourceConfig; patterns: CapturePattern[]; accounts: Option[]; categories: Option[]; apps: DeviceApp[]; lastSynced: string | null; seenSenders: SeenSender[]; onDone: () => void }) {
-  const info = SOURCE_INFO[cfg.source];
+  const [name, setName] = useState(cfg.label);
+  const info = { ...SOURCE_INFO[cfg.source], label: isCustomSlot(cfg.source) && name.trim() ? name.trim() : cfg.label };
   const ask = useConfirm();
   const s = useRun();
   const [packages, setPackages] = useState(cfg.packages);
@@ -426,7 +427,7 @@ function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, s
   const notif = canParse(cfg.source);
   const email = canParseEmail(cfg.source);
   const save = () =>
-    s.run(() => saveCaptureSource({ source: cfg.source, enabled: cfg.enabled, packages: packages.join("\n"), senders: senders.join("\n"), accountId: accountId || null, categoryId: categoryId || null, autoConfirm, minAmount }), `${info.label} saved.`);
+    s.run(() => saveCaptureSource({ source: cfg.source, enabled: cfg.enabled, packages: packages.join("\n"), senders: senders.join("\n"), accountId: accountId || null, categoryId: categoryId || null, autoConfirm, minAmount, label: name }), `${info.label} saved.`);
   const remove = async () => {
     if (!(await ask({ title: `Remove ${info.label}?`, message: `It stops listening and moves to Removed. Its reader and settings stay; Add back restores them.`, confirmLabel: "Remove", danger: true }))) return;
     s.run(() => removeSource(cfg.source, true), `${info.label} removed.`, onDone);
@@ -438,6 +439,7 @@ function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, s
     <section className="v-card v-stack" aria-labelledby="se" style={{ gap: 14 }}>
       <div className="v-row v-sp"><h2 id="se">Everything else from {info.label}</h2><span className="v-pill v-warn">{notif || email ? "Built-in reader" : "Your patterns"}</span></div>
       <p className="v-xs v-muted" style={{ margin: 0 }}>Catches anything from {info.label} that no rule above caught. {info.blurb}</p>
+      {isCustomSlot(cfg.source) ? <label className="v-field">Name<input value={name} maxLength={30} onChange={(e) => setName(e.target.value)} placeholder="e.g. ShopeePay" /></label> : null}
       <div className="v-stack" style={{ gap: 6 }}>
         <div className="v-lab">Notifications from these apps</div>
         <div className="v-chips">{chips(packages, setPackages, "apps")}<button type="button" className="v-btn v-sm" onClick={() => setPicker("apps")}>+ App</button></div>
@@ -490,7 +492,10 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
   const [sel, setSel] = useState<string | "new" | null>(rules[0]?.id ?? null);
   const [srcOver, setSrcOver] = useState<Record<string, boolean>>({});
   const live = sources.filter((c) => !c.removed).map((c) => (c.source in srcOver ? { ...c, enabled: srcOver[c.source]! } : c));
-  const removed = sources.filter((c) => c.removed);
+  // "Other app 2..6" nobody has set up yet are not "removed": they wait behind the + Another app button.
+  const unusedSlot = (c: SourceConfig) => isUnusedSlot(c, patterns);
+  const removed = sources.filter((c) => c.removed && !unusedSlot(c));
+  const nextSlot = sources.find(unusedSlot) ?? null;
   const chosenSource = sel?.startsWith("src:") ? live.find((c) => `src:${c.source}` === sel) ?? null : null;
   const [over, setOver] = useState<Record<string, boolean>>({});
   const s = useRun();
@@ -502,10 +507,10 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
   const toggleSource = (cfg: SourceConfig, v: boolean) => {
     setSrcOver((o) => ({ ...o, [cfg.source]: v }));
     s.run(async () => {
-      const res = await saveCaptureSource({ source: cfg.source, enabled: v, packages: cfg.packages.join("\n"), senders: cfg.senders.join("\n"), accountId: cfg.accountId, categoryId: cfg.categoryId, autoConfirm: cfg.autoConfirm, minAmount: cfg.minAmount > 0 ? formatPesos(money(cfg.minAmount), { symbol: false }) : "" });
+      const res = await saveCaptureSource({ source: cfg.source, enabled: v, packages: cfg.packages.join("\n"), senders: cfg.senders.join("\n"), accountId: cfg.accountId, categoryId: cfg.categoryId, autoConfirm: cfg.autoConfirm, minAmount: cfg.minAmount > 0 ? formatPesos(money(cfg.minAmount), { symbol: false }) : "", label: cfg.label });
       if (res.error) setSrcOver((o) => ({ ...o, [cfg.source]: !v }));
       return res;
-    }, v ? `${SOURCE_INFO[cfg.source].label} on.` : `${SOURCE_INFO[cfg.source].label} off.`);
+    }, v ? `${cfg.label} on.` : `${cfg.label} off.`);
   };
 
   if (captureMissing) {
@@ -544,11 +549,12 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
           {live.map((c) => (
             <SourceCard key={c.source} cfg={c} patterns={patterns} selected={sel === `src:${c.source}`} busy={s.busy} acct={acct} cat={cat} onSelect={() => setSel(`src:${c.source}`)} onToggle={(v) => toggleSource(c, v)} />
           ))}
+          {nextSlot ? <button type="button" className="v-btn v-sm" disabled={s.busy} onClick={() => s.run(() => removeSource(nextSlot.source, false), "Another app added. Name it and add its app or sender.", () => setSel(`src:${nextSlot.source}`))}>+ Another app</button> : null}
           {removed.length > 0 ? (
             <div className="v-testbox">
               <div className="v-lab">Removed</div>
               {removed.map((c) => (
-                <div key={c.source} className="v-row v-sp"><span>{SOURCE_INFO[c.source].label}</span><button type="button" className="v-btn v-sm" disabled={s.busy} onClick={() => s.run(() => removeSource(c.source, false), `${SOURCE_INFO[c.source].label} is back.`)}>Add back</button></div>
+                <div key={c.source} className="v-row v-sp"><span>{c.label}</span><button type="button" className="v-btn v-sm" disabled={s.busy} onClick={() => s.run(() => removeSource(c.source, false), `${c.label} is back.`)}>Add back</button></div>
               ))}
               <div className="v-xs v-muted">Built-in readers are never deleted. Removing one only stops listening.</div>
             </div>

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { IDLE_RELOAD_MS, shouldReload } from './resume';
+
 vi.mock('expo-sqlite/localStorage/install', () => ({}));
 vi.mock('expo-updates', () => ({ reloadAsync: vi.fn() }));
 vi.mock('react-native', () => ({ AppState: { addEventListener: vi.fn(() => ({ remove: vi.fn() })) } }));
-
-import { IDLE_RELOAD_MS, shouldReload } from './resume';
 
 const MIN = 60_000;
 

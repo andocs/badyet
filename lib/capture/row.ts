@@ -1,6 +1,6 @@
 import type { Decision } from './decide';
 import type { Parsed } from './parsers';
-import { SOURCE_INFO, type SourceConfig } from './sources';
+import type { SourceConfig } from './sources';
 
 /** A transaction as the phone inserts it. Same columns the web writes. */
 export interface TxnInsert {
@@ -79,7 +79,7 @@ export function resolveAccount(config: SourceConfig, p: Parsed, accounts: readon
     const byNick = single(accounts.filter((a) => nick.some((w) => accountWords(a).includes(w))), p.accountName);
     if (byNick) return byNick;
   }
-  const label = SOURCE_INFO[config.source].label;
+  const label = config.label;
   const words = label.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
   return single(accounts.filter((a) => words.some((w) => accountWords(a).includes(w))), label);
 }

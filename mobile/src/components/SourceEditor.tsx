@@ -5,7 +5,7 @@ import { canParseEmail } from '@/lib/capture/email';
 import { canParse } from '@/lib/capture/parsers';
 import { setSourceRemoved } from '@/lib/capture/source-write';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SOURCE_INFO, type SourceConfig } from '@/lib/capture/sources';
+import { isCustomSlot, SOURCE_INFO, type SourceConfig } from '@/lib/capture/sources';
 import { formatPesos, money } from '@/lib/domain/money';
 import { Body, Chip, Label } from '~/components/ui';
 import { saveSource } from '~/lib/capture';
@@ -37,7 +37,8 @@ export function SourceEditor({
   const c = useTheme();
   const insets = useSafeAreaInsets();
   const { session } = useSession();
-  const info = SOURCE_INFO[cfg.source];
+  const [name, setName] = useState(cfg.label);
+  const info = { ...SOURCE_INFO[cfg.source], label: isCustomSlot(cfg.source) && name.trim() ? name.trim() : cfg.label };
   const [enabled, setEnabled] = useState(cfg.enabled);
   const [packages, setPackages] = useState(cfg.packages.join('\n'));
   const [senders, setSenders] = useState(cfg.senders.join('\n'));
@@ -62,7 +63,7 @@ export function SourceEditor({
     if (!session) return;
     setBusy(true);
     setProblem(null);
-    const r = await saveSource(supabase, session.user.id, { source: cfg.source, enabled, packages, senders, accountId, categoryId, autoConfirm, minAmount });
+    const r = await saveSource(supabase, session.user.id, { source: cfg.source, enabled, packages, senders, accountId, categoryId, autoConfirm, minAmount, label: name });
     setBusy(false);
     if ('error' in r) setProblem(r.error);
     else onSaved();
@@ -99,6 +100,12 @@ export function SourceEditor({
             </View>
             <Switch value={enabled} onValueChange={setEnabled} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel={`Capture ${info.label}`} />
           </View>
+
+          {isCustomSlot(cfg.source) ? (
+            <Field label="Name">
+              <TextInput value={name} onChangeText={setName} maxLength={30} placeholder="e.g. ShopeePay" placeholderTextColor={c.muted} style={input} />
+            </Field>
+          ) : null}
 
           <Field label="Apps on this phone (one per line)">
             <TextInput value={packages} onChangeText={setPackages} multiline autoCapitalize="none" autoCorrect={false} placeholder="com.example.app" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />

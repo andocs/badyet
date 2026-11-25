@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { SalaryEvent, Allowance } from '@/lib/engine/types';
 import { loadSalary } from '@/lib/salary/load';
-import { eventRows, regularRange, yearOf, yearRows } from '@/lib/salary/view';
+import { eventRows, regularRange, yearOf, yearRows , salaryAt } from '@/lib/salary/view';
 import type { YearMonth } from '@/lib/domain/dates';
 import { PayslipSheet, AllowanceSheet, EventSheet, ProjectedSheet } from '~/components/SalarySheets';
 import { RaiseWizard, type RaiseKind } from '~/components/RaiseWizard';
 import { SavingsPlanCard } from '~/components/SavingsPlanCard';
-import { salaryAt } from '@/lib/salary/view';
+
 import { SalaryChart } from '~/components/SalaryChart';
 import { Amount, Card, Notice, Screen } from '~/components/ui';
 import { useHide } from '~/lib/hide';

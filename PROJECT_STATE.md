@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** batch 4 done
+- **Active slice / milestone:** rev-39 Batch 4 leftovers
 - **Gate:** none
-- **Next action:** Batch 4 done. Ask the user for the next revisions or finish
+- **Next action:** rev-39: phone Pays a bill, phone plans, multi custom sources, settle to savings, bonus net, lint
 - **User to-do now:** Apply migrations 20261218000000, 20261219000000, 20261220000000 (and confirm 20261217000000); install APK https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk
 
 ## 3. Execution log
@@ -154,11 +154,8 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Batch 4 (picked 2026-11-25). Done: rev-33 Rules mockups (option 1), rev-34 small fixes. Remaining slices grouped on user request (2026-11-25):
-- rev-35 Inbox and capture: resolveAccount exact-name tie-break (G20, tests in row.test.ts); "may be a transfer" mark + block confirm-as-spending ~5 min for transfer-looking items (F15: Maya "from InstaPay" or counterparty = own account); Bills: "mark sent" (web + phone) writing budget_line_id, and Inbox confirm can link a payment to an unpaid bill. AC: tests; Now shows N of M sent.
-- rev-36 Now and Budget: payday prompt "Has the pay arrived?" (adds net pay from that month's payslip as income; asks actual take-home when a bonus lands); Planned vs Spent panel picker; Budget per-cutoff view; skipped RTO days show unused money and offer pool / Wants / savings.
-- rev-37 Budget plans over date ranges: no overlaps, plans start and end on cutoff days (10th / 25th).
-- rev-38 Rules redesign build (option 1) + email patterns/keywords for senders without a built-in reader.
+Batch 4 leftovers, grouped on user request (2026-11-25, migrations 20261217-20261220 applied):
+- rev-39 (one gate): (1) phone Inbox "Pays a bill"; (2) phone budget plans: make/edit/delete; (3) more than one custom ("Other app") source; (4) skipped/under office-day money can go to savings (new pool kind settle_to_savings + migration, adds to that month's savings pool); (5) Bonuses page net uses the payslip tax method; (6) mobile lint warnings cleaned (16).
 
 ## Decisions & architecture
 

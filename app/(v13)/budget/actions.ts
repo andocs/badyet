@@ -155,14 +155,14 @@ export async function setOfficeDay(input: { date: string; office: boolean; usual
   return { ok: true };
 }
 
-const SETTLE_KINDS = ["settle_to_pool", "settle_to_wants", "over_from_wants", "over_from_excess"] as const;
+const SETTLE_KINDS = ["settle_to_pool", "settle_to_wants", "settle_to_savings", "over_from_wants", "over_from_excess"] as const;
 
-/** Where an office day's difference goes: under budget to the pool or Wants, over budget from Wants or the pool's excess. */
-export async function settleDay(input: { date: string; under: boolean; to: "pool" | "wants" | "excess"; amount: number }): Promise<FormState> {
+/** Where an office day's difference goes: under budget to the pool, Wants or savings, over budget from Wants or the pool's excess. */
+export async function settleDay(input: { date: string; under: boolean; to: "pool" | "wants" | "savings" | "excess"; amount: number }): Promise<FormState> {
   const supabase = await requireAuthed();
   if (!DAY.test(input.date)) return { error: "Pick a day." };
   if (!Number.isInteger(input.amount) || input.amount <= 0 || input.amount > 100_000_000) return { error: "Check the amount." };
-  const kind = input.under ? (input.to === "pool" ? "settle_to_pool" : input.to === "wants" ? "settle_to_wants" : null) : input.to === "wants" ? "over_from_wants" : input.to === "excess" ? "over_from_excess" : null;
+  const kind = input.under ? (input.to === "pool" ? "settle_to_pool" : input.to === "wants" ? "settle_to_wants" : input.to === "savings" ? "settle_to_savings" : null) : input.to === "wants" ? "over_from_wants" : input.to === "excess" ? "over_from_excess" : null;
   if (!kind) return { error: "Pick where it goes." };
   const contingency = await supabase.from("budget_lines_v2").select("id").eq("kind", "rto_contingency").is("plan_id", null).maybeSingle();
   const pool = contingency.data ? await supabase.from("pools").select("id").eq("budget_line_id", contingency.data.id).maybeSingle() : { data: null };

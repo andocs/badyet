@@ -5,7 +5,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-nati
 import { undoBillSent } from '@/lib/bills/send';
 import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
-import { dayLabel, ordinalCutoff, rangeLabel, relativeDay, shortDate, weekdayName } from '@/lib/now/format';
+import { dayLabel, ordinalCutoff, relativeDay, shortDate } from '@/lib/now/format';
 import { loadNow, type AccountCard } from '@/lib/now/load';
 import { manilaDate, type Bill, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { BillSheet } from '~/components/BillSheet';
@@ -92,7 +92,6 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
   const c = useTheme();
   const router = useRouter();
   const { hide } = useHide();
-  const officeNote = view.nextOffice !== null || view.isUsualOfficeDay;
   const over = view.overPace > 0;
   return (
     <LinearGradient colors={[c.heroA, c.heroB]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={s.hero}>
@@ -119,15 +118,6 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
         </Text>
       ) : null}
     </LinearGradient>
-  );
-}
-
-function Legend({ color, text, dashed }: { color: string; text: string; dashed?: boolean }) {
-  return (
-    <View style={s.legendItem}>
-      <View style={[s.swatch, dashed ? { borderTopWidth: 2, borderStyle: 'dashed', borderColor: color, height: 0 } : { backgroundColor: color }]} />
-      <Text style={{ color: '#d3efe6', fontFamily: fonts.body, fontSize: 13 }}>{text}</Text>
-    </View>
   );
 }
 

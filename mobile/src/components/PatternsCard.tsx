@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { CapturePattern } from '@/lib/capture/patterns';
 import { testPattern } from '@/lib/capture/parsers';
-import { SOURCES, SOURCE_INFO, type SourceKey } from '@/lib/capture/sources';
+import { SOURCES, SOURCE_INFO, type SourceKey, type SourceConfig } from '@/lib/capture/sources';
 import { money } from '@/lib/domain/money';
 import { Body, Card, Chip, Label } from '~/components/ui';
 import { addPattern, removePattern } from '~/lib/capture';
@@ -11,8 +11,11 @@ import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
 /** Your own notification patterns: write the wording with placeholders, try it on a sample, save it. The app turns it into a regex on the phone. */
-export function PatternsCard({ patterns, onChanged }: { patterns: CapturePattern[]; onChanged: () => void | Promise<void> }) {
+export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: CapturePattern[]; onChanged: () => void | Promise<void>; sources?: SourceConfig[] }) {
   const c = useTheme();
+  // Sources by their own names ("ShopeePay"), without the ones you removed or have not added yet.
+  const nameOf = (k: SourceKey) => sources.find((x) => x.source === k)?.label ?? SOURCE_INFO[k].label;
+  const shownSources: readonly SourceKey[] = sources.length ? sources.filter((x) => !x.removed).map((x) => x.source) : SOURCES;
   const [source, setSource] = useState<SourceKey>('custom');
   const [direction, setDirection] = useState<'in' | 'out'>('in');
   const [template, setTemplate] = useState('');
@@ -50,7 +53,7 @@ export function PatternsCard({ patterns, onChanged }: { patterns: CapturePattern
           <View style={{ flex: 1 }}>
             <Body bold>{p.template}</Body>
             <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
-              {SOURCE_INFO[p.source].label} · money {p.direction === 'in' ? 'in' : 'out'}
+              {nameOf(p.source)} · money {p.direction === 'in' ? 'in' : 'out'}
             </Text>
           </View>
           <Pressable onPress={() => void drop(p)} accessibilityRole="button" accessibilityLabel={`Delete pattern ${p.template}`} style={[s.small, { backgroundColor: c.soft }]}>
@@ -61,8 +64,8 @@ export function PatternsCard({ patterns, onChanged }: { patterns: CapturePattern
 
       <Label>For</Label>
       <View style={s.chips}>
-        {SOURCES.map((k) => (
-          <Chip key={k} label={SOURCE_INFO[k].label} on={source === k} onPress={() => setSource(k)} />
+        {shownSources.map((k) => (
+          <Chip key={k} label={nameOf(k)} on={source === k} onPress={() => setSource(k)} />
         ))}
       </View>
       <Label>Money</Label>

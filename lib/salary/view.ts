@@ -76,7 +76,7 @@ export function yearRows(input: SalaryInput, years: readonly number[]): YearRow[
     const salary = salaryAt(input, dec);
     const pay = buildMonthPay(salary, input.settings, [], input.templates);
     const months = monthRange(`${year}-01` as YearMonth, 12);
-    const bonuses: BonusPayment[] = planBonuses(input.bonusRules, input.bonusInstances, (m) => salaryAt(input, m), input.settings, input.assumptions, months);
+    const bonuses: BonusPayment[] = planBonuses(input.bonusRules, input.bonusInstances, (m) => salaryAt(input, m), input.settings, input.assumptions, months, input.templates);
     return {
       year,
       base: salary.base,
@@ -105,7 +105,7 @@ export function eventEffect(before: SalaryInput, after: SalaryInput, from: YearM
   const range = monthRange(from, months);
   const total = (input: SalaryInput) => {
     const salaryOf = (m: YearMonth) => salaryAt(input, m);
-    const bonuses = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, range);
+    const bonuses = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, range, input.templates);
     const regular = sum(range.map((m) => buildMonthPay(salaryOf(m), input.settings, [], input.templates).takeHome));
     return { regular, bonus: sum(bonuses.map((b) => b.net)) };
   };

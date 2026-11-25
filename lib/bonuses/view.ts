@@ -67,7 +67,7 @@ export function destName(kind: DestKind, targetId: string | null, label: string 
 export function bonusCards(year: number, input: SalaryInput, saved: ReadonlyMap<string, readonly SavedSplit[]>, funds: ReadonlyMap<string, string>): BonusCard[] {
   const months = monthRange(`${year}-01` as YearMonth, 12);
   const salaryOf = (m: YearMonth) => salaryAt(input, m);
-  const payments = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, months);
+  const payments = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, months, input.templates);
   const planned = planBonuses(
     input.bonusRules,
     input.bonusInstances.map((i) => ({ ...i, status: "planned" as const, grossActual: null, deMinimisActual: null, netActual: null })),
@@ -75,6 +75,7 @@ export function bonusCards(year: number, input: SalaryInput, saved: ReadonlyMap<
     input.settings,
     input.assumptions,
     months,
+    input.templates,
   );
 
   let used = ZERO as Money;

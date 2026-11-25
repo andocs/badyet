@@ -206,7 +206,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
     days,
     spendByDay,
     dayBudget,
-    settledDays: new Set(poolEntries.filter((e) => ["settle_to_pool", "settle_to_wants", "over_from_wants", "over_from_excess"].includes(e.kind)).map((e) => e.occurred_on)),
+    settledDays: new Set(poolEntries.filter((e) => ["settle_to_pool", "settle_to_wants", "settle_to_savings", "over_from_wants", "over_from_excess"].includes(e.kind)).map((e) => e.occurred_on)),
     today,
   }).filter((r) => !r.settled).length;
 

@@ -25,8 +25,8 @@ export async function setSourceRemoved(supabase: SupabaseClient, source: string,
 
 /** Lays the rev-38 "removed" flag over saved source rows. Asked for on its own so a database without that update still loads. */
 export async function withRemoved(supabase: SupabaseClient, rows: SourceRow[]): Promise<SourceRow[]> {
-  const r = await supabase.from("capture_sources").select("source, removed");
+  const r = await supabase.from("capture_sources").select("source, removed, label");
   if (r.error) return rows;
-  const removed = new Map(((r.data ?? []) as { source: string; removed: boolean }[]).map((x) => [x.source, x.removed]));
-  return rows.map((row) => ({ ...row, removed: removed.get(row.source) ?? false }));
+  const extra = new Map(((r.data ?? []) as { source: string; removed: boolean; label: string | null }[]).map((x) => [x.source, x]));
+  return rows.map((row) => ({ ...row, removed: extra.get(row.source)?.removed ?? false, label: extra.get(row.source)?.label ?? null }));
 }

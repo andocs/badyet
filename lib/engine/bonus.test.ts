@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EXEMPTION_CAP } from "@/lib/windfall/compute";
+import { buildMonthPay } from "./payslip";
 import { allocateSplits, fundCredits, planBonuses, type BonusPayment } from "./bonus";
 import { resolveSalaryTimeline } from "./salary";
 import { noAssumptions, p, settings, startEvent, ym } from "./fixtures";
@@ -19,6 +20,19 @@ const cip: BonusRule = {
 };
 const run = (rules: BonusRule[], months: string[], instances: BonusInstance[] = []) =>
   planBonuses(rules, instances, salaryOf, settings, noAssumptions, months.map(ym));
+
+describe("bonus net matches the payslip", () => {
+  it("the net is what the payslip adds to take-home in that cutoff, tax included", () => {
+    for (const rule of [thirteenth, cip]) {
+      const month = rule.payMonth === 12 ? "2026-12" : "2027-03";
+      const [pay] = run([rule], [month]);
+      const without = buildMonthPay(salaryOf(ym(month)), settings, []);
+      const withIt = buildMonthPay(salaryOf(ym(month)), settings, [pay!]);
+      const cut = rule.payslipCutoff;
+      expect(withIt[cut].takeHome - without[cut].takeHome).toBe(pay!.net);
+    }
+  });
+});
 
 describe("bonus plan", () => {
   it("13th month is one month of base pay, and a raise raises the next one", () => {
