@@ -38,17 +38,16 @@ export default function Rules() {
   });
   const held = useHeldCount();
   const [tab, setTab] = useState<Tab>('rules');
-  const [phone, setPhone] = useState<{ installed: AppInfo[]; recent: string[] }>({ installed: [], recent: [] });
+  // Read once when the page opens: the apps this phone has.
+  const [phone] = useState<{ installed: AppInfo[]; recent: string[] }>(() => readPhoneApps());
   const [editing, setEditing] = useState<CaptureRule | 'new' | null>(null);
   const [editingSource, setEditingSource] = useState<SourceKey | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
   // Opening the page tells the database which apps this phone has, so the web can offer them too.
   useEffect(() => {
-    const p = readPhoneApps();
-    setPhone(p);
-    void syncDeviceApps(supabase, p.installed, p.recent).catch(() => {});
-  }, []);
+    void syncDeviceApps(supabase, phone.installed, phone.recent).catch(() => {});
+  }, [phone]);
 
   async function afterEdit() {
     setEditing(null);

@@ -15,7 +15,9 @@ const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r);
 
 /** 60 months of fund balances: a chart, a year ladder with month cards, and a month sheet that tells the story. */
-export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, overrides: overridesIn }: { funds: FundMeta[]; rows: ForecastRow[]; startTotal: number; withoutTotal: number | null; overrides: { month: string; note: string; what: string }[] }) {
+export interface PlanMeta { perMonth: number; fund: string | null; fundSet: boolean }
+
+export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, overrides: overridesIn, plan }: { funds: FundMeta[]; rows: ForecastRow[]; startTotal: number; withoutTotal: number | null; overrides: { month: string; note: string; what: string }[]; plan: PlanMeta }) {
   // Resetting a month to the default clears its marker and its entry in "Months that differ" at once.
   const [opt, clearOverride] = useOptimistic({ rows: rowsIn, overrides: overridesIn }, (cur, month: string) => ({
     rows: cur.rows.map((r) => (r.month === month ? { ...r, override: false } : r)),
@@ -145,6 +147,17 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
           )}
         </div>
         <aside className="v-stack">
+          <section className="v-card v-stack" aria-labelledby="sph" style={{ gap: 8 }}>
+            <h2 id="sph">Savings plan</h2>
+            <p className="v-sm" style={{ margin: 0 }}>
+              {plan.perMonth <= 0
+                ? "No payroll savings plan is set."
+                : plan.fund
+                  ? <><Money value={money(plan.perMonth)} /> a month goes from your payslip into <b>{plan.fund}</b>. It is inside that fund&apos;s balance every month above.</>
+                  : <><Money value={money(plan.perMonth)} /> a month leaves your payslip, but {plan.fundSet ? "the fund it names no longer exists" : "it is not going to a fund"}, so the forecast leaves it out. Pick a fund for it.</>}
+            </p>
+            <Link className="v-btn v-sm" href="/pay" style={{ alignSelf: "flex-start" }}>{plan.perMonth > 0 && !plan.fund ? "Pick a fund" : "Change the plan"}</Link>
+          </section>
           <section className="v-card">
             <h2>Months that differ</h2>
             <div className="v-lbl" style={{ margin: "2px 0 6px" }}>Months you changed from the default order.</div>

@@ -27,7 +27,7 @@ export interface PayslipTemplate {
 export interface PayslipLine {
   kind: "earning" | "deduction";
   label: string;
-  source: PayslipLineSpec["source"] | "allowance" | "savings_plan" | "other_deduction" | "bonus" | "bonus_tax" | "one_off";
+  source: PayslipLineSpec["source"] | "allowance" | "savings_plan" | "other_deduction" | "bonus" | "de_minimis" | "one_off";
   amount: Money;
 }
 
@@ -64,6 +64,9 @@ export interface MonthPay {
  * second cutoff = half the base minus the other half of the tax, SSS, PhilHealth and Pag-IBIG. Allowances are added on the
  * cutoff each allowance says it lands in (the second by default).
  */
+/** Monthly contributions used when no amount is set (decided 2026-11-22): SSS 1,000, Pag-IBIG 200, SSS PenBoost 750. */
+export const STANDARD_CONTRIBUTION = { sss: money(100_000), pagibig: money(20_000), penboost: money(75_000) } as const;
+
 export function defaultTemplate(cutoff: PayCutoff): PayslipTemplate {
   const common: PayslipLineSpec[] = [
     { kind: "earning", label: "Basic pay", source: "base_share", shareBp: 5000 },
@@ -141,8 +144,8 @@ function slip(cutoff: PayCutoff, lines: PayslipLine[]): Payslip {
 }
 
 /**
- * The payslips for one month. `bonuses` are the payments landing this month; each adds its gross and its tax to the cutoff its
- * rule names. The engine's figures are placed on the template's lines; take-home = earnings minus deductions on each cutoff.
+ * The payslips for one month. `bonuses` are the payments landing this month; each adds its gross to the cutoff its rule names,
+ * and its taxable part to that cutoff's taxable pay, so its tax is in that cutoff's income tax line. The engine's figures are placed on the template's lines; take-home = earnings minus deductions on each cutoff.
  */
 export function buildMonthPay(
   salary: MonthSalary,
@@ -152,13 +155,13 @@ export function buildMonthPay(
   rows: readonly TaxRow[] = TAX_ROWS,
 ): MonthPay {
   const { base } = salary;
-  const sss = settings.sssOverride ?? ZERO;
-  const pagibig = settings.pagibigOverride ?? ZERO;
+  const sss = settings.sssOverride ?? STANDARD_CONTRIBUTION.sss;
+  const pagibig = settings.pagibigOverride ?? STANDARD_CONTRIBUTION.pagibig;
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
 
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
   // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
-  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost: ZERO };
+  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost: STANDARD_CONTRIBUTION.penboost };
   const mandatoryIn = (cutoff: PayCutoff): Money =>
     sum(
       templateFor(templates, cutoff, salary.month)
@@ -178,9 +181,14 @@ export function buildMonthPay(
       mandatoryIn(cutoff),
     );
 
-  const taxableFirst = taxableIn("first");
-  const taxableSecond = taxableIn("second");
-  const regularTaxable = (taxableFirst + taxableSecond) as Money;
+  // A bonus's taxable part (after its de minimis and the yearly tax-free cap) joins the taxable pay of the cutoff it lands in.
+  const bonusTaxableIn = (cutoff: PayCutoff): Money =>
+    sum(bonuses.filter((b) => b.cutoff === cutoff).map((b) => money(Math.max(0, b.gross - b.deMinimis - b.exempt))));
+  const regularFirst = taxableIn("first");
+  const regularSecond = taxableIn("second");
+  const regularTaxable = (regularFirst + regularSecond) as Money;
+  const taxableFirst = (regularFirst + bonusTaxableIn("first")) as Money;
+  const taxableSecond = (regularSecond + bonusTaxableIn("second")) as Money;
   const oneTime = sum([
     ...salary.allowances.filter((a) => a.allowance.taxable && a.allowance.frequency === "yearly").map((a) => a.amount),
     ...salary.oneOffs.filter((o) => o.taxable).map((o) => o.amount),
@@ -201,6 +209,7 @@ export function buildMonthPay(
       else if (spec.source === "sss") amount = sss;
       else if (spec.source === "philhealth") amount = philhealth;
       else if (spec.source === "pagibig") amount = pagibig;
+      else if (spec.source === "penboost") amount = STANDARD_CONTRIBUTION.penboost;
       else amount = ZERO;
       lines.push({ kind: spec.kind, label: spec.label, source: spec.source, amount });
     }
@@ -219,8 +228,9 @@ export function buildMonthPay(
     if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
     for (const b of bonuses) {
       if (b.cutoff !== cutoff) continue;
-      lines.push({ kind: "earning", label: b.name, source: "bonus", amount: b.gross });
-      if (b.tax > 0) lines.push({ kind: "deduction", label: `${b.name} tax`, source: "bonus_tax", amount: b.tax });
+      // Its tax is inside this cutoff's income tax line. De minimis gets its own line, since it is never taxed.
+      lines.push({ kind: "earning", label: b.name, source: "bonus", amount: sub(b.gross, b.deMinimis) });
+      if (b.deMinimis > 0) lines.push({ kind: "earning", label: `${b.name} de minimis`, source: "de_minimis", amount: b.deMinimis });
     }
     return slip(cutoff, lines);
   };

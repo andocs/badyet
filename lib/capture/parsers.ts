@@ -85,7 +85,13 @@ const gcash: Parser = (_title, body) => {
 
 /** Maya. "Success! You transferred ₱50.00 to BPI / VYBE by BPI." and "You received ₱1.00 from Maya Savings". "You paid" is a likely wording that has not been seen yet. */
 const maya: Parser = (_title, body) => {
-  const rcv = new RegExp(String.raw`received\s+${CUR}${AMT}\s+from\s+(.+?)\.?$`, 'i').exec(body);
+  // "Payment of ₱5,000.00 received on your Maya Black": a card payment landing on that account (lowers what is owed).
+  const card = new RegExp(String.raw`payment\s+of\s+${CUR}${AMT}\s+(?:has\s+been\s+)?received\s+(?:on|for)\s+your\s+(.+?)\.?$`, 'i').exec(body);
+  if (card) {
+    const amount = centavos(card[1]);
+    return amount === null ? null : make({ source: 'maya', direction: 'in', amount, counterparty: null, accountName: clean(card[2]) });
+  }
+  const rcv =new RegExp(String.raw`received\s+${CUR}${AMT}\s+from\s+(.+?)\.?$`, 'i').exec(body);
   if (rcv) {
     const amount = centavos(rcv[1]);
     return amount === null ? null : make({ source: 'maya', direction: 'in', amount, counterparty: clean(rcv[2]) });

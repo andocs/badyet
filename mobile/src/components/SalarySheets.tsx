@@ -3,7 +3,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 're
 import type { YearMonth } from '@/lib/domain/dates';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import { monthRange } from '@/lib/engine/months';
-import { templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
+import { STANDARD_CONTRIBUTION, templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
 import type { Allowance, PayCutoff, SalaryEvent } from '@/lib/engine/types';
 import type { SalaryInput } from '@/lib/salary/view';
 import { Chip } from '~/components/ui';
@@ -181,6 +181,12 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
     setNewLabel('');
     setNewAmount('');
   };
+  // What an empty box means: the saved setting or the standard amount for contributions, otherwise the engine's own figure.
+  const defaultHint = (source: PayslipLineSpec['source']): string => {
+    const st = input.settings;
+    const v = source === 'sss' ? (st.sssOverride ?? STANDARD_CONTRIBUTION.sss) : source === 'pagibig' ? (st.pagibigOverride ?? STANDARD_CONTRIBUTION.pagibig) : source === 'penboost' ? STANDARD_CONTRIBUTION.penboost : null;
+    return v == null ? 'computed' : `${formatPesos(v, { symbol: false })} (default)`;
+  };
   const lines = (cutoff: PayCutoff) => drafts[cutoff].map((d) => ({ kind: d.spec.kind, label: d.spec.label, source: d.spec.source, shareBp: d.spec.shareBp ?? null, amountOverride: d.spec.amountOverride ?? null }));
 
   return (
@@ -218,7 +224,7 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
                       patch(cutoff, d.key, { amountOverride: v === undefined ? sp.amountOverride : v === null ? null : money(v) });
                     }}
                     keyboardType="decimal-pad"
-                    placeholder={hide ? '' : 'computed'}
+                    placeholder={hide ? '' : defaultHint(sp.source)}
                   />
                 </Field>
                 <View style={s.chips}>
