@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ensureTransferCategory, TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
+import { ensureCardPaymentCategory, ensureTransferCategory, isMoveCategory } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
 import { transferHoldUntil, type HoldAccount } from '@/lib/capture/hold';
 
@@ -125,6 +125,7 @@ const COLS = 'id, account_id, occurred_at, amount, merchant, kind, category_id, 
 export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
   await ensureTransferCategory(supabase).catch(() => null);
+  await ensureCardPaymentCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, billsRes] = await Promise.all([
     supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').order('sort'),
     supabase.from('accounts').select('id, name, institution, archived_at'),
@@ -180,7 +181,7 @@ export async function confirmTransaction(
     const cat = await supabase.from('categories').select('id, name').eq('id', input.categoryId).is('archived_at', null).maybeSingle();
     if (!cat.data) return { error: 'That category was not found.' };
     categoryId = input.categoryId;
-    becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
+    becomesTransfer = isMoveCategory(cat.data.name as string);
     // A transfer-looking item waits a few minutes for its other side before it can count as spending or income.
     if (!becomesTransfer) {
       const accts = await supabase.from('accounts').select('id, name, institution').is('archived_at', null);

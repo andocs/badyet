@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
 import { resolveHeldRow } from "@/lib/capture/held";
-import { TRANSFER_CATEGORY } from "@/lib/capture/transfer-category";
+import { isMoveCategory } from "@/lib/capture/transfer-category";
 import { normalizePattern } from "@/lib/inbox/rules";
 import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
 import { editTransaction, type EditInput } from "@/lib/inbox/edit";
@@ -49,7 +49,7 @@ export async function confirmTransaction(input: { id: string; categoryId: string
     const cat = await supabase.from("categories").select("id, name").eq("id", input.categoryId).maybeSingle();
     if (!cat.data) return { error: "That category was not found." };
     categoryId = input.categoryId;
-    becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
+    becomesTransfer = isMoveCategory(cat.data.name as string);
     // A transfer-looking item waits a few minutes for its other side before it can count as spending or income.
     if (!becomesTransfer) {
       const accts = await supabase.from("accounts").select("id, name, institution").is("archived_at", null);

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isMoveCategory } from "@/lib/capture/transfer-category";
 import { parsePesos } from "@/lib/domain/money";
 
 /** What can be changed on an Inbox item. Dates and times are Philippine time, the way you read them. */
@@ -89,14 +90,17 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
 
   const acct = await supabase.from("accounts").select("id").eq("id", e.accountId).is("archived_at", null).maybeSingle();
   if (!acct.data) return { error: "That account was not found." };
+  let movesBetweenYours = false;
   if (e.categoryId) {
-    const cat = await supabase.from("categories").select("id").eq("id", e.categoryId).is("archived_at", null).maybeSingle();
+    const cat = await supabase.from("categories").select("id, name").eq("id", e.categoryId).is("archived_at", null).maybeSingle();
     if (!cat.data) return { error: "That category was not found." };
+    // "Credit card payment" (like Transfer) is a move between your own accounts, so it stops counting as spending or income.
+    movesBetweenYours = isMoveCategory(cat.data.name as string);
   }
   const r = await supabase
     .from("transactions")
     .update({
-      amount: e.direction === "out" ? -e.amount : e.amount, kind: e.direction === "out" ? "expense" : "income", account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note,
+      amount: e.direction === "out" ? -e.amount : e.amount, kind: movesBetweenYours ? "transfer" : e.direction === "out" ? "expense" : "income", account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note,
       ...(e.categoryId !== undefined ? { category_id: e.categoryId } : {}),
     })
     .eq("id", row.data.id);

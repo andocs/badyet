@@ -1,7 +1,7 @@
 import { HELD_COLUMNS, type HeldRow } from "@/lib/capture/held";
 import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
 import { SOURCE_INFO, isSource } from "@/lib/capture/sources";
-import { ensureTransferCategory } from "@/lib/capture/transfer-category";
+import { ensureCardPaymentCategory, ensureTransferCategory } from "@/lib/capture/transfer-category";
 import { isoDate } from "@/lib/domain/dates";
 import { bestGuess, matchRule, type MerchantRule } from "@/lib/inbox/rules";
 import { todayManila } from "@/lib/plans/validate";
@@ -34,6 +34,7 @@ export default async function Inbox() {
 
   // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
   await ensureTransferCategory(supabase);
+  await ensureCardPaymentCategory(supabase);
 
   const cols = "id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, dedupe_hash, note";
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts, billsRes] = await Promise.all([
