@@ -7,6 +7,7 @@ import { money } from "@/lib/domain/money";
 import { relativeDay, timeLabel } from "@/lib/now/format";
 import { manilaDate } from "@/lib/now/summary";
 import { HeldCaptureCard, type HeldCapture } from "./held-capture-card";
+import { InboxEditForm } from "./inbox-edit";
 import { V13Icon } from "./icons";
 import { Money } from "./money";
 
@@ -16,6 +17,7 @@ export interface InboxTxn {
   /** Centavos; negative = money out. */
   amount: number;
   account: string;
+  accountId: string;
   /** For a transfer: the other account. */
   peerAccount: string | null;
   occurredAt: string;
@@ -60,6 +62,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   const [rules, setRules] = useState<Record<string, boolean>>({});
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [billPicks, setBillPicks] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -82,11 +85,13 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   const canConfirm = (t: InboxTxn) => t.kind === "transfer" || asT[t.id] === true || (pick(t) !== null && !holding(t));
 
   function openDetail(id: string) {
+    setEditing(false);
     setOpenId(id);
     dialog.current?.showModal();
   }
   function closeDetail() {
     dialog.current?.close();
+    setEditing(false);
     setOpenId(null);
   }
   function confirm(t: InboxTxn) {
@@ -279,6 +284,10 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
               <span className={`v-pill ${open.status === "pending" ? "v-warn" : "v-ok"}`}>{open.status === "pending" ? "Pending" : "Confirmed"}</span>
               {open.kind === "transfer" ? <span className="v-pill">Transfer</span> : null}
             </div>
+            {editing ? (
+              <InboxEditForm key={open.id} t={open} accounts={accounts} onSaved={() => setEditing(false)} onCancel={() => setEditing(false)} />
+            ) : (
+              <>
             <dl className="v-kv">
               <dt>Account</dt><dd>{open.account}{open.peerAccount ? ` ↔ ${open.peerAccount}` : ""}</dd>
               <dt>When</dt><dd>{when(open.occurredAt, today)}</dd>
@@ -318,7 +327,10 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
               ) : (
                 <button type="button" className="v-btn v-grow" onClick={closeDetail}>Done</button>
               )}
+              <button type="button" className="v-btn" onClick={() => setEditing(true)}>Edit</button>
             </div>
+              </>
+            )}
           </div>
         ) : null}
       </dialog>

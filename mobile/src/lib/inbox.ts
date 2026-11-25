@@ -11,6 +11,7 @@ export interface InboxTxn {
   /** Centavos; negative = money out. */
   amount: number;
   account: string;
+  accountId: string;
   /** For a transfer: the other account. */
   peerAccount: string | null;
   occurredAt: string;
@@ -31,6 +32,8 @@ export interface InboxData {
   categories: Category[];
   /** Budget lines that go to an account: a payment can be linked to one so it shows as sent. */
   bills: { id: string; name: string }[];
+  /** Your live accounts, for changing which one an item is on. */
+  accounts: { id: string; name: string }[];
 }
 
 export interface Row {
@@ -99,6 +102,7 @@ export function buildInbox(
         who: r.merchant ?? (r.kind === 'transfer' ? (r.amount < 0 ? 'Transfer out' : 'Transfer in') : 'Expense'),
         amount: r.amount,
         account: accountName.get(r.account_id) ?? 'Account',
+        accountId: r.account_id,
         peerAccount: peer ? (accountName.get(peer.account_id) ?? null) : null,
         occurredAt: r.occurred_at,
         source: SOURCE[r.source] ?? r.source,
@@ -136,6 +140,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   return {
     categories,
     bills: billsRes.error ? [] : ((billsRes.data ?? []) as { id: string; name: string }[]),
+    accounts: ((acct.data ?? []) as { id: string; name: string; archived_at: string | null }[]).filter((a) => !a.archived_at).map((a) => ({ id: a.id, name: a.name })),
     txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
   };
 }

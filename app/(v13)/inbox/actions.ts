@@ -7,6 +7,7 @@ import { resolveHeldRow } from "@/lib/capture/held";
 import { TRANSFER_CATEGORY } from "@/lib/capture/transfer-category";
 import { normalizePattern } from "@/lib/inbox/rules";
 import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
+import { editTransaction, type EditInput } from "@/lib/inbox/edit";
 
 const manilaTime = (ms: number) => new Date(ms).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" });
 
@@ -92,6 +93,15 @@ export async function resolveHeldCapture(input: { hash: string; accountId: strin
   }
   if (input.categoryId !== null && !UUID.test(input.categoryId)) return { error: "Pick a category from the list." };
   const r = await resolveHeldRow(supabase, { hash: input.hash, accountId: input.accountId, otherName, otherAccountId: otherName ? input.otherAccountId : null, categoryId: input.categoryId });
+  if ("error" in r) return { error: r.error };
+  refresh();
+  return { ok: true };
+}
+
+/** Changes an Inbox item (pending or confirmed): name, amount, direction, account, date and time, note. */
+export async function editInboxItem(input: EditInput): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await editTransaction(supabase, input);
   if ("error" in r) return { error: r.error };
   refresh();
   return { ok: true };
