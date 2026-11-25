@@ -141,6 +141,15 @@ export function ProjectedSheet({ on: onIn, pctBp, month: monthIn, onClose, onSav
  * An amount box that shows what the line really comes to: your typed amount, else the computed one. Clearing it, or typing the
  * computed amount, goes back to computed so the line keeps following your pay.
  */
+/** What a contribution line is worked from, so it reads as based on your salary rather than "default". */
+const BASIS: Partial<Record<PayslipLineSpec['source'], string>> = {
+  sss: 'SSS table, from your salary',
+  pagibig: 'Pag-IBIG: 2% of your salary, up to ₱10,000',
+  philhealth: 'PhilHealth: 2.5% of your base pay',
+  penboost: 'PenBoost: your usual amount, not from salary',
+  income_tax: "Tax on this cutoff's taxable pay",
+};
+
 function AmountField({ override, fallback, placeholder, onChange }: { override: Money | null; fallback: Money | null; placeholder: string; onChange: (v: Money | null) => void }) {
   const show = (v: Money | null) => (v == null ? '' : formatPesos(v, { symbol: false }));
   const [text, setText] = useState(show(override ?? fallback));
@@ -246,7 +255,7 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
                     <Input value={String((sp.shareBp ?? 5000) / 100)} onChangeText={(t) => patch(cutoff, d.key, { shareBp: Math.round(Math.min(100, Math.max(0, Number(t) || 0)) * 100) })} keyboardType="decimal-pad" />
                   </Field>
                 ) : null}
-                <Field label={sp.source === 'custom' ? 'Amount (₱)' : 'Override amount (₱, empty = computed)'}>
+                <Field label={sp.source === 'custom' ? 'Amount (₱)' : `${BASIS[sp.source] ?? 'Computed'} · type your own to override (₱)`}>
                   <AmountField
                     key={d.key}
                     override={sp.amountOverride ?? null}

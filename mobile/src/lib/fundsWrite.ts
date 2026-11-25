@@ -1,3 +1,4 @@
+import { linkPlanFund, planLinkChoice } from '@/lib/pay/savings-plan';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateFund, validateOverride } from '@/lib/funds/input';
 
@@ -19,13 +20,23 @@ export async function saveFund(supabase: SupabaseClient, input: unknown): Promis
     name: f.name, color: f.color, rule: f.rule, target: f.target, tranches: f.tranches, max_per_month: f.maxPerMonth, fixed_amount: f.fixedAmount,
     reset_month: f.resetMonth, linked_account_id: f.linkedAccountId, share_bp: f.shareBp, start_balance: f.startBalance,
   };
+  let fundId = f.id ?? null;
   if (f.id) {
     const { error } = await supabase.from('funds').update(values).eq('id', f.id);
-    return error ? { error: 'Could not save the fund. Try again.' } : { ok: true };
+    if (error) return { error: 'Could not save the fund. Try again.' };
+  } else {
+    const last = await supabase.from('funds').select('priority').is('archived_at', null).order('priority', { ascending: false }).limit(1).maybeSingle();
+    const ins = await supabase.from('funds').insert({ ...values, priority: ((last.data as { priority?: number } | null)?.priority ?? 0) + 1 }).select('id').single();
+    if (ins.error || !ins.data) return { error: 'Could not save the fund. Try again.' };
+    fundId = (ins.data as { id: string }).id;
   }
-  const last = await supabase.from('funds').select('priority').is('archived_at', null).order('priority', { ascending: false }).limit(1).maybeSingle();
-  const { error } = await supabase.from('funds').insert({ ...values, priority: ((last.data as { priority?: number } | null)?.priority ?? 0) + 1 });
-  return error ? { error: 'Could not save the fund. Try again.' } : { ok: true };
+  // "The payroll savings plan goes into this fund": only one fund can have it.
+  const link = planLinkChoice(input);
+  if (link !== null && fundId) {
+    const r = await linkPlanFund(supabase, fundId, link);
+    if ('error' in r) return { error: 'The fund was saved, but ' + r.error.charAt(0).toLowerCase() + r.error.slice(1) };
+  }
+  return { ok: true };
 }
 
 /** Archives a fund: it leaves the forecast. */

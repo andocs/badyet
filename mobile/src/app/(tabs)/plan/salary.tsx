@@ -59,7 +59,6 @@ export default function Salary() {
 
       {data && input && hasStart ? (
         <>
-          <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ''} amount={input.settings.otherDeduction} onSaved={reload} />
           <SavingsPlanCard
             plan={{ bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null }}
             funds={data.funds}
@@ -177,6 +176,7 @@ export default function Salary() {
               </View>
             </Card>
           </Pressable>
+          <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ''} amount={input.settings.otherDeduction} onSaved={reload} />
         </>
       ) : null}
 

@@ -29,6 +29,7 @@ export default async function Funds() {
     shareBp: f.shareBp ?? null,
     balance: d.fundStart[f.id] ?? 0,
     planMonthly: f.id === settings.savingsPlanFundId ? planMonthly : null,
+    planLinked: f.id === settings.savingsPlanFundId,
   }));
   return (
     <main className="v-main">

@@ -27,8 +27,6 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
   const overrides = opt.overrides;
   const [view, setView] = useState<"c" | "y">("c");
   const [style, setStyle] = useState<"s" | "l">("s");
-  // "Saved so far" only goes up; "Balance" is the real amount, which drops when a fund resets.
-  const [basis, setBasis] = useState<"saved" | "balance">("saved");
   const [vis, setVis] = useState<Set<string>>(new Set(funds.map((f) => f.id)));
   const [year, setYear] = useState(rows[Math.min(11, rows.length - 1)]?.year ?? new Date().getFullYear());
   const [sel, setSel] = useState<string | null>(null);
@@ -85,24 +83,17 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
           {view === "c" ? (
             <section className="v-card">
               <div className="v-row v-sp v-wrap">
-                <h2>{basis === "saved" ? "Saved so far" : "Fund balances"}</h2>
-                <div className="v-row v-wrap" style={{ gap: 8 }}>
-                  <div className="v-seg" role="group" aria-label="What the chart shows">
-                    <button type="button" aria-pressed={basis === "saved"} onClick={() => setBasis("saved")}>Saved so far</button>
-                    <button type="button" aria-pressed={basis === "balance"} onClick={() => setBasis("balance")}>Balance</button>
-                  </div>
-                  <div className="v-seg" role="group" aria-label="Chart style">
-                    <button type="button" aria-pressed={style === "s"} onClick={() => setStyle("s")}>Stacked</button>
-                    <button type="button" aria-pressed={style === "l"} onClick={() => setStyle("l")}>Lines</button>
-                  </div>
+                <h2>Fund balances</h2>
+                <div className="v-seg" role="group" aria-label="Chart style">
+                  <button type="button" aria-pressed={style === "s"} onClick={() => setStyle("s")}>Stacked</button>
+                  <button type="button" aria-pressed={style === "l"} onClick={() => setStyle("l")}>Lines</button>
                 </div>
               </div>
               <div className="v-legend v-pillrow" style={{ marginTop: 12 }} role="group" aria-label="Show lines for">
                 <button type="button" aria-pressed={vis.size === funds.length} onClick={() => toggle("*")}>All funds</button>
                 {funds.map((f) => <button key={f.id} type="button" aria-pressed={vis.has(f.id)} onClick={() => toggle(f.id)}><i className="v-dot" style={{ background: f.color }} />{f.name}</button>)}
               </div>
-              <p className="v-xs v-muted" style={{ margin: "8px 0 0" }}>{basis === "saved" ? "Everything you put in, so it only rises. Funds that reset each year are not zeroed here." : "The real balance. A fund that resets each year drops to zero in its reset month."}</p>
-              <Chart rows={rows} funds={shown} stacked={style === "s"} basis={basis} onPick={open} sel={sel} />
+              <Chart rows={rows} funds={shown} stacked={style === "s"} onPick={open} sel={sel} />
               <div className="v-row v-sp v-wrap v-sm v-muted" style={{ marginTop: 6 }}>
                 <span><span className="v-tri" style={{ display: "inline-block", marginRight: 6 }} />= a month with an override</span>
                 <label className="v-row" style={{ gap: 8 }}>Jump to
@@ -215,7 +206,7 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
 }
 
 /** Stacked area or lines for the visible funds, with a tap target for every month. */
-function Chart(props: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; basis: "saved" | "balance"; onPick: (m: string) => void; sel: string | null }) {
+function Chart(props: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (m: string) => void; sel: string | null }) {
   // Drawn twice at its own size (wide, and a narrow one for phones) so the labels stay readable instead of shrinking.
   return (
     <>
@@ -225,7 +216,7 @@ function Chart(props: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean
   );
 }
 
-function ChartSvg({ rows, funds, stacked, basis, onPick, sel, W, H, cls }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; basis: "saved" | "balance"; onPick: (m: string) => void; sel: string | null; W: number; H: number; cls: string }) {
+function ChartSvg({ rows, funds, stacked, onPick, sel, W, H, cls }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (m: string) => void; sel: string | null; W: number; H: number; cls: string }) {
   const L = 56, R = 10, T = 14, B = 28;
   const n = rows.length;
   const x = (i: number) => L + ((W - L - R) * i) / Math.max(1, n - 1);
@@ -233,18 +224,18 @@ function ChartSvg({ rows, funds, stacked, basis, onPick, sel, W, H, cls }: { row
     const layers: { f: FundMeta; vals: number[]; bottom: number[] }[] = [];
     for (const f of funds) {
       const bottom = stacked && layers.length > 0 ? layers[layers.length - 1]!.vals : rows.map(() => 0);
-      layers.push({ f, vals: rows.map((r, i) => ((basis === "saved" ? r.funds[f.id]?.saved : r.funds[f.id]?.balance) ?? 0) + bottom[i]!), bottom });
+      layers.push({ f, vals: rows.map((r, i) => (r.funds[f.id]?.balance ?? 0) + bottom[i]!), bottom });
     }
     const max = Math.max(1, ...layers.flatMap((l) => l.vals));
     return { layers, max };
-  }, [rows, funds, stacked, basis]);
+  }, [rows, funds, stacked]);
   const step = (() => { const raw = data.max / 100 / 4; const nice = [1000, 2000, 5000, 10000, 20000, 25000, 50000, 100000, 200000, 500000].find((s) => s >= raw) ?? 1_000_000; return nice * 100; })();
   const top = Math.ceil(data.max / step) * step;
   const y = (v: number) => T + (H - T - B) * (1 - v / top);
   const ticks = Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => i * step);
   const ovIdx = rows.map((r, i) => (r.override ? i : -1)).filter((i) => i >= 0);
   return (
-    <svg className={`v-chart ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={basis === "saved" ? "Money saved into funds over the next five years" : "Fund balances over the next five years"} style={{ marginTop: 10 }}>
+    <svg className={`v-chart ${cls}`} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Fund balances over the next five years" style={{ marginTop: 10 }}>
       {ticks.map((v) => (<g key={v}><line className="v-grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text className="amt" x={L - 6} y={y(v) + 4} textAnchor="end">₱{v >= 100_000_000 ? `${+(v / 100_000_000).toFixed(1)}M` : `${Math.round(v / 100_000)}k`}</text></g>))}
       {rows.filter((r) => r.month.endsWith("-01")).map((r) => <text key={r.month} x={x(rows.indexOf(r))} y={H - 8} textAnchor="middle">{r.year}</text>)}
       {[...data.layers].reverse().map(({ f, vals, bottom }) => stacked ? (

@@ -54,11 +54,13 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
               <Link href="/pay?tab=payslip" role="tab" aria-selected={isPayslip} className="v-tab2">Payslip builder</Link>
             </div>
             {isPayslip ? (
-              <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
+              <>
+                <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
+                <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ""} amount={input.settings.otherDeduction} />
+              </>
             ) : (
               <>
                 <SavingsPlanCard plan={plan} funds={funds} base={salaryAt(input, thisMonth).base} />
-                <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ""} amount={input.settings.otherDeduction} />
                 <Timeline data={data} />
               </>
             )}

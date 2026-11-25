@@ -103,15 +103,15 @@ describe("projection", () => {
     const plain = runProjection({ ...input, bonusRules: [] }, { includeExpected: false });
     const withPlan = runProjection({ ...input, bonusRules: [], settings: { ...settings, savingsPlanAmount: p(2_000), savingsPlanFundId: "travel" } }, { includeExpected: false });
     // 2,000 a cutoff, two cutoffs a month, into Travel.
-    expect(withPlan[0]!.funds.funds.find((f) => f.fundId === "travel")!.bonus).toBe(p(4_000));
+    expect(withPlan[0]!.funds.funds.find((f) => f.fundId === "travel")!.plan).toBe(p(4_000));
     // It is a payslip deduction, so take-home drops; the budget lines are worked on that lower take-home.
     expect(withPlan[0]!.pay.first.takeHome).toBe(plain[0]!.pay.first.takeHome - p(2_000));
-    expect(plain[0]!.funds.funds.find((f) => f.fundId === "travel")!.bonus).toBe(0);
+    expect(plain[0]!.funds.funds.find((f) => f.fundId === "travel")!.plan).toBe(0);
   });
 
   it("does not count the plan in any fund when none is named", () => {
     const m = runProjection({ ...input, bonusRules: [], settings: { ...settings, savingsPlanAmount: p(2_000), savingsPlanFundId: null } }, { includeExpected: false });
-    expect(m[0]!.funds.funds.every((f) => f.bonus === 0)).toBe(true);
+    expect(m[0]!.funds.funds.every((f) => f.plan === 0)).toBe(true);
     expect(m[0]!.pay.first.lines.some((l) => l.source === "savings_plan")).toBe(true);
   });
 });

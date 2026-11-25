@@ -1,5 +1,6 @@
 "use server";
 
+import { linkPlanFund, planLinkChoice } from "@/lib/pay/savings-plan";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
@@ -28,15 +29,25 @@ export async function saveFund(input: unknown): Promise<FormState> {
     name: f.name, color: f.color, rule: f.rule, target: f.target, tranches: f.tranches, max_per_month: f.maxPerMonth, fixed_amount: f.fixedAmount,
     reset_month: f.resetMonth, linked_account_id: f.linkedAccountId, share_bp: f.shareBp, start_balance: f.startBalance,
   };
+  let fundId = f.id ?? null;
   if (f.id) {
     const { error } = await supabase.from("funds").update(values).eq("id", f.id);
     if (error) return { error: "Could not save the fund. Try again." };
   } else {
     const last = await supabase.from("funds").select("priority").is("archived_at", null).order("priority", { ascending: false }).limit(1).maybeSingle();
-    const { error } = await supabase.from("funds").insert({ ...values, priority: ((last.data?.priority as number | undefined) ?? 0) + 1 });
-    if (error) return { error: "Could not save the fund. Try again." };
+    const ins = await supabase.from("funds").insert({ ...values, priority: ((last.data?.priority as number | undefined) ?? 0) + 1 }).select("id").single();
+    if (ins.error || !ins.data) return { error: "Could not save the fund. Try again." };
+    fundId = ins.data.id as string;
+  }
+  // "The payroll savings plan goes into this fund": only one fund can have it.
+  const link = planLinkChoice(input);
+  if (link !== null && fundId) {
+    const r = await linkPlanFund(supabase, fundId, link);
+    if ("error" in r) return { error: "The fund was saved, but " + r.error.charAt(0).toLowerCase() + r.error.slice(1) };
   }
   refresh();
+  revalidatePath("/forecast");
+  revalidatePath("/pay");
   return { ok: true };
 }
 
