@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
-import { saveOtherDeduction } from "@/lib/pay/other-deduction";
+import { saveOtherDeductions } from "@/lib/pay/other-deduction";
 import { saveSavingsPlan } from "@/lib/pay/savings-plan";
 import { validateRaise, validateTemplates } from "@/lib/salary/event-input";
 
@@ -26,10 +26,10 @@ export async function saveSavingsPlanAction(input: unknown): Promise<FormState> 
   return { ok: true };
 }
 
-/** Saves the other payroll deduction (HMO plan and the like): its name and what comes off each cutoff. */
-export async function saveOtherDeductionAction(input: unknown): Promise<FormState> {
+/** Saves the other payroll deductions (HMO plan and the like): each one's name, cutoff and amount. */
+export async function saveOtherDeductionsAction(input: unknown): Promise<FormState> {
   const supabase = await requireAuthed();
-  const r = await saveOtherDeduction(supabase, input);
+  const r = await saveOtherDeductions(supabase, input);
   if ("error" in r) return { error: r.error };
   refresh();
   revalidatePath("/budget");

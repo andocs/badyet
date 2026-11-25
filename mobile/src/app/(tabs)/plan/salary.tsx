@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { SalaryEvent, Allowance } from '@/lib/engine/types';
 import { loadSalary } from '@/lib/salary/load';
+import { otherDeductionDrafts } from '@/lib/pay/other-deduction';
 import { eventRows, regularRange, yearOf, yearRows , salaryAt } from '@/lib/salary/view';
 import type { YearMonth } from '@/lib/domain/dates';
 import { PayslipSheet, AllowanceSheet, EventSheet, ProjectedSheet } from '~/components/SalarySheets';
@@ -176,7 +177,7 @@ export default function Salary() {
               </View>
             </Card>
           </Pressable>
-          <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ''} amount={input.settings.otherDeduction} onSaved={reload} />
+          <OtherDeductionCard items={otherDeductionDrafts(input.settings)} onSaved={reload} />
         </>
       ) : null}
 

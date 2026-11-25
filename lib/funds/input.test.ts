@@ -14,13 +14,15 @@ describe("validateFund", () => {
   it("accepts steps, cap, reset and fixed funds", () => {
     expect(validateFund(ef)).toMatchObject({ ok: true, value: { name: "Emergency", tranches: [10_000_000, 20_000_000] } });
     expect(validateFund({ name: "Wants", rule: "cap", target: 2_000_000 })).toMatchObject({ ok: true });
+    expect(validateFund({ name: "Long term", rule: "cap", target: null })).toMatchObject({ ok: true, value: { target: null } });
     expect(validateFund({ name: "Travel", rule: "reset", target: 5_000_000 })).toMatchObject({ ok: true, value: { resetMonth: 1 } });
     expect(validateFund({ name: "Car", rule: "fixed", fixedAmount: 300_000, target: 6_000_000 })).toMatchObject({ ok: true, value: { fixedAmount: 300_000 } });
   });
   it("each rule needs its own field", () => {
     expect(err({ name: "A", rule: "steps", tranches: [] })).toMatch(/tranche/);
     expect(err({ name: "A", rule: "steps", tranches: [0] })).toMatch(/tranche/);
-    expect(err({ name: "A", rule: "cap", target: null })).toMatch(/target/);
+    expect(err({ name: "A", rule: "reset", target: null })).toMatch(/target/);
+    expect(err({ name: "A", rule: "cap", target: 0 })).toMatch(/cap/);
     expect(err({ name: "A", rule: "fixed", fixedAmount: 0 })).toMatch(/fixed/);
     expect(err({ name: "A", rule: "reset", target: 1, resetMonth: 13 })).toMatch(/month/);
   });

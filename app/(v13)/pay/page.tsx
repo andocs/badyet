@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthRange } from "@/lib/engine/months";
 import { loadSalary } from "@/lib/salary/load";
+import { otherDeductionDrafts } from "@/lib/pay/other-deduction";
 import { eventRows, regularRange, salaryAt, yearRows, yearOf } from "@/lib/salary/view";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
@@ -56,7 +57,7 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
             {isPayslip ? (
               <>
                 <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
-                <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ""} amount={input.settings.otherDeduction} />
+                <OtherDeductionCard items={otherDeductionDrafts(input.settings)} />
               </>
             ) : (
               <>

@@ -1,7 +1,7 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { money, ZERO } from "@/lib/domain/money";
 import type { PayslipLineSpec, PayslipTemplate } from "./payslip";
-import type { Allowance, Assumptions, BonusInstance, BonusRule, BonusSplit, PaySettings, RaiseAllocation, SalaryEvent } from "./types";
+import type { Allowance, Assumptions, BonusInstance, BonusRule, BonusSplit, OtherDeductionItem, PaySettings, RaiseAllocation, SalaryEvent } from "./types";
 
 /** Database rows (snake_case, as Supabase returns them) turned into the engine's shapes. Dates become YearMonth. */
 
@@ -48,6 +48,8 @@ export interface PaySettingsRow {
   other_deduction: number;
   /** Added in rev-40; absent on a database without that update. */
   other_deduction_label?: string | null;
+  /** From a newer migration: the list of other deductions, in centavos. */
+  other_deductions?: unknown;
   savings_plan_bp: number;
   /** From a newer migration; absent until it is applied. */
   savings_plan_amount?: number | null;
@@ -103,6 +105,20 @@ export const DEFAULT_PAY_SETTINGS: PaySettings = {
   savingsPlanBp: 0,
 };
 
+/** Reads the stored list of other deductions, skipping anything that is not a well-formed item. */
+export function otherDeductionsOf(raw: unknown): OtherDeductionItem[] {
+  if (!Array.isArray(raw)) return [];
+  const out: OtherDeductionItem[] = [];
+  for (const x of raw) {
+    const o = x as { label?: unknown; cutoff?: unknown; amount?: unknown; amountSecond?: unknown } | null;
+    if (!o || typeof o.amount !== "number" || !Number.isInteger(o.amount) || o.amount < 0) continue;
+    const cutoff = o.cutoff === "first" || o.cutoff === "second" ? o.cutoff : "both";
+    const second = typeof o.amountSecond === "number" && Number.isInteger(o.amountSecond) && o.amountSecond >= 0 ? money(o.amountSecond) : null;
+    out.push({ label: typeof o.label === "string" ? o.label : "", cutoff, amount: money(o.amount), amountSecond: cutoff === "both" ? second : null });
+  }
+  return out;
+}
+
 export const paySettingsOf = (r: PaySettingsRow | null): PaySettings =>
   r
     ? {
@@ -113,6 +129,7 @@ export const paySettingsOf = (r: PaySettingsRow | null): PaySettings =>
         taxOverrideSecond: m(r.tax_override_second),
         otherDeduction: money(r.other_deduction),
         otherDeductionLabel: r.other_deduction_label ?? null,
+        otherDeductions: otherDeductionsOf(r.other_deductions),
         savingsPlanBp: r.savings_plan_bp,
         savingsPlanAmount: m(r.savings_plan_amount ?? null),
         savingsPlanFundId: r.savings_plan_fund_id ?? null,

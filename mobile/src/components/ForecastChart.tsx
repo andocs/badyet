@@ -9,6 +9,8 @@ export interface FundMeta {
   id: string;
   name: string;
   color: string;
+  /** Resets to zero each year. */
+  resets?: boolean;
 }
 
 const W = 380;
@@ -26,7 +28,8 @@ export function ForecastChart({ rows, funds, stacked, onPick, sel }: { rows: For
   const x = (i: number) => L + ((W - L - R) * i) / Math.max(1, n - 1);
   const data = useMemo(() => {
     const layers: { f: FundMeta; vals: number[]; bottom: number[] }[] = [];
-    for (const f of funds) {
+    // Funds that reset each year sit on top, so the ones that never reset stay smooth underneath them.
+    for (const f of [...funds].sort((a, b) => Number(!!a.resets) - Number(!!b.resets))) {
       const bottom = stacked && layers.length > 0 ? layers[layers.length - 1]!.vals : rows.map(() => 0);
       layers.push({ f, vals: rows.map((r, i) => (r.funds[f.id]?.balance ?? 0) + bottom[i]!), bottom });
     }

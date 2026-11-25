@@ -30,13 +30,13 @@ export interface FundCard {
 
 const RULES: ["steps" | "cap" | "reset" | "fixed", string, string][] = [
   ["steps", "Fill in steps", "One tranche at a time (like an emergency fund)"],
-  ["cap", "Fill to cap", "Keep going until the target is full"],
+  ["cap", "Fill to cap", "Keep going until the cap is full, or with no cap at all"],
   ["reset", "Reset each year", "Starts again every January (like travel)"],
   ["fixed", "Fixed monthly", "Same amount every month until the cap"],
 ];
 const EFFECT: Record<string, string> = {
   steps: "In steps: takes up to your monthly limit until the current tranche is full, then moves on to the next tranche.",
-  cap: "To cap: takes what the pool allows, in priority order, until it hits the cap. Then it drops out.",
+  cap: "To cap: takes what the pool allows, in priority order, until it hits the cap, then drops out. With no cap it keeps taking what the funds above it leave; use Most per month to hold it back.",
   reset: "Resets every January: the balance returns to zero and filling starts over.",
   fixed: "Fixed: the same amount each month if the pool can cover it, until the cap.",
 };
@@ -207,7 +207,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
             </div>
           </fieldset>
           <div className="v-grid2">
-            <label className="v-field">{d.rule === "steps" ? "Hard cap (optional, ₱)" : "Target or cap (₱)"}<input value={d.target} inputMode="decimal" onChange={(e) => set({ target: e.target.value })} /></label>
+            <label className="v-field">{d.rule === "steps" ? "Hard cap (optional, ₱)" : d.rule === "cap" ? "Cap (₱, empty = no cap)" : "Target or cap (₱)"}<input value={d.target} inputMode="decimal" onChange={(e) => set({ target: e.target.value })} /></label>
             <label className="v-field">Most per month (optional, ₱)<input value={d.max} inputMode="decimal" placeholder="no limit" onChange={(e) => set({ max: e.target.value })} /></label>
           </div>
           {d.rule === "steps" ? <label className="v-field">Tranches (₱, comma separated)<input value={d.tranches} onChange={(e) => set({ tranches: e.target.value })} placeholder="100,000.00" /><span className="v-xs" style={{ fontWeight: 500 }}>Fills the first one, then the next; the last repeats.</span></label> : null}

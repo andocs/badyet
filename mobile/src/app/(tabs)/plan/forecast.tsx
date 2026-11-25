@@ -118,7 +118,7 @@ export default function Forecast() {
   const ready = !!data && hasStart && data.funds.length > 0;
   const built = ready ? build(data) : null;
   const rows = built?.rows ?? [];
-  const funds: FundMeta[] = data ? data.funds.map((f, i) => ({ id: f.id, name: f.name, color: data.colors.get(f.id) ?? PALETTE[i % PALETTE.length]! })) : [];
+  const funds: FundMeta[] = data ? data.funds.map((f, i) => ({ id: f.id, name: f.name, color: data.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, resets: f.rule === 'reset' && f.id !== data.budget.salary.input.settings.savingsPlanFundId })) : [];
   const shownIds = vis ?? new Set(funds.map((f) => f.id));
   const shown = funds.filter((f) => shownIds.has(f.id));
   const last = rows[rows.length - 1];

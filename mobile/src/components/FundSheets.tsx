@@ -92,7 +92,7 @@ export function FundSheet({ fund, color, accounts, planFund, onClose, onSaved }:
         </Field>
       ) : null}
       {rule !== 'fixed' ? (
-        <Field label={rule === 'steps' ? 'Hard cap (₱, optional)' : 'Target (₱)'}>
+        <Field label={rule === 'steps' ? 'Hard cap (₱, optional)' : rule === 'cap' ? 'Cap (₱, empty = no cap)' : 'Target (₱)'}>
           <Input value={target} onChangeText={setTarget} keyboardType="decimal-pad" />
         </Field>
       ) : (

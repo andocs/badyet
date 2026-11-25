@@ -47,6 +47,14 @@ export interface Assumptions {
 }
 
 /** Payroll settings. null means the standard amount: PhilHealth's rate, or the official SSS and Pag-IBIG tables. */
+/** One other payroll deduction: on the 1st cutoff, the 2nd, or both (the 2nd's own amount, when it differs). */
+export interface OtherDeductionItem {
+  label: string;
+  cutoff: "first" | "second" | "both";
+  amount: Money;
+  amountSecond: Money | null;
+}
+
 export interface PaySettings {
   sssOverride: Money | null;
   philhealthOverride: Money | null;
@@ -57,6 +65,8 @@ export interface PaySettings {
   otherDeduction: Money;
   /** What it is called on the payslip, such as "HMO plan"; null = "Other deduction". */
   otherDeductionLabel?: string | null;
+  /** The list of other deductions. When it has anything in it, it replaces the single one above. */
+  otherDeductions?: readonly OtherDeductionItem[];
   /** Payroll savings plan, percent of basic per cutoff, basis points. */
   savingsPlanBp: number;
   /** Or a fixed amount per cutoff (wins over the percent when set). */

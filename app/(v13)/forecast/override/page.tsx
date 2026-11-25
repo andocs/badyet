@@ -25,7 +25,7 @@ export default async function Override({ searchParams }: { searchParams: Promise
   const input = forecastInput(d, start, 60);
   const run = runProjection(input, { includeExpected: true });
   const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)));
-  const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule] }));
+  const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule], resets: f.rule === "reset" && f.id !== d.budget.salary.input.settings.savingsPlanFundId }));
   const years = [...new Set(rows.map((r) => r.year))];
 
   if (sp.bulk) {

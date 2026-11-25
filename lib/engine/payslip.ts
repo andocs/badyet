@@ -229,7 +229,13 @@ export function buildMonthPay(
     }
     const plan = savingsPlanPerCutoff(settings, base);
     if (plan > 0) lines.push({ kind: "deduction", label: "Savings plan", source: "savings_plan", amount: plan });
-    if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: settings.otherDeductionLabel?.trim() || "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
+    const others = settings.otherDeductions ?? [];
+    if (others.length > 0) {
+      for (const o of others) {
+        const amount = o.cutoff === "both" ? (cutoff === "second" ? (o.amountSecond ?? o.amount) : o.amount) : o.cutoff === cutoff ? o.amount : ZERO;
+        if (amount > 0) lines.push({ kind: "deduction", label: o.label.trim() || "Other deduction", source: "other_deduction", amount });
+      }
+    } else if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: settings.otherDeductionLabel?.trim() || "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
     for (const b of bonuses) {
       if (b.cutoff !== cutoff) continue;
       // Its tax is inside this cutoff's income tax line. De minimis gets its own line, since it is never taxed.
