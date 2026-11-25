@@ -30,7 +30,7 @@ describe('validateSource', () => {
   it.each([
     [{ source: 'nope' }, 'That source was not found.'],
     [{ packages: 'notapackage' }, 'An app id looks like com.example.app.'],
-    [{ senders: 'not an email' }, 'An email sender looks like name@bank.com.'],
+    [{ senders: 'not an email' }, 'An email sender looks like name@bank.com, or @bank.com for the whole bank.'],
     [{ accountId: 'x' }, 'Pick an account from the list.'],
     [{ categoryId: 'x' }, 'Pick a category from the list.'],
     [{ minAmount: '-5' }, 'Minimum amount is pesos, like 50 or 1,250.50.'],

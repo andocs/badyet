@@ -103,7 +103,7 @@ async function loadContext(): Promise<RunContext | null> {
     if (acc.error) throw acc.error;
     const ctx: RunContext = { configs: cap.configs, rules: cap.rules, patterns: cap.patterns, dedupe: cap.dedupe, accounts: (acc.data ?? []) as AccountLite[] };
     write(CTX_KEY, ctx);
-    applyAllowlist(ctx.configs, cap.gmailAlert);
+    applyAllowlist(ctx.configs, cap.gmailAlert, ctx.rules);
     return ctx;
   } catch {
     return read<RunContext | null>(CTX_KEY, null);

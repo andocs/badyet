@@ -1,3 +1,4 @@
+import { withRemoved } from "@/lib/capture/source-write";
 import { RulesView, type DeviceApp, type SeenSender } from "@/components/v13/rules";
 import { configsFromRows, rulesFromRows, type RuleRow, type SourceRow } from "@/lib/capture/sources";
 import { patternsFromRows, type PatternRow } from "@/lib/capture/patterns";
@@ -42,7 +43,7 @@ export default async function Rules() {
     <main className="v-main">
       <RulesView
         rules={rulesFromRows(rulesRes.error ? [] : ((rulesRes.data ?? []) as unknown as RuleRow[]))}
-        sources={configsFromRows(srcRes.error ? [] : ((srcRes.data ?? []) as SourceRow[]))}
+        sources={configsFromRows(srcRes.error ? [] : await withRemoved(supabase, (srcRes.data ?? []) as SourceRow[]))}
         patterns={patRes.error ? [] : patternsFromRows((patRes.data ?? []) as PatternRow[])}
         accounts={(acctRes.data ?? []) as { id: string; name: string }[]}
         categories={(catRes.data ?? []) as { id: string; name: string }[]}

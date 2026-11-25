@@ -40,7 +40,7 @@ const MAX_HELD = 200;
 export async function runGmail(d: GmailDeps): Promise<GmailResult> {
   const ctx = await d.loadContext();
   if (!ctx) return { status: 'no-settings' };
-  const query = gmailQuery(ctx.configs, DAYS);
+  const query = gmailQuery(ctx.configs, DAYS, ctx.rules);
   if (!query) return { status: 'no-sources' };
   const token = await d.token();
   if (!token) return { status: 'not-connected' };
@@ -59,14 +59,14 @@ export async function runGmail(d: GmailDeps): Promise<GmailResult> {
       const address = (/<([^>]+)>/.exec(email.from)?.[1] ?? email.from).trim().toLowerCase();
       if (address) senders[address] = (senders[address] ?? 0) + 1;
     }
-    const source = email ? sourceForEmail(email.from, ctx.configs) : null;
+    const source = email ? sourceForEmail(email.from, ctx.configs, ctx.rules) : null;
     const cfg = source ? ctx.configs.find((c) => c.source === source) : undefined;
-    if (!email || !source || !cfg || !canParseEmail(source)) {
+    if (!email || !source || !cfg || !canParseEmail(source, ctx.patterns)) {
       out.ignored += 1;
       seen.add(id);
       continue;
     }
-    const parsed = parseEmail(source, email);
+    const parsed = parseEmail(source, email, ctx.patterns);
     if (!parsed) {
       out.ignored += 1;
       seen.add(id);

@@ -4,7 +4,7 @@ import { counterLeg } from '@/lib/capture/held';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
 import { isRepeat, remember, type DedupeRule, type Recent } from '@/lib/capture/recent';
-import type { CaptureRule, SourceConfig, SourceKey } from '@/lib/capture/sources';
+import { sourceForPackage, type CaptureRule, type SourceConfig, type SourceKey } from '@/lib/capture/sources';
 
 /** One notification as the Android listener queued it. */
 export interface CapturedNotification {
@@ -107,11 +107,9 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
     if (!(await place(h))) stillHeld.push(h);
   }
 
-  const bySource = new Map<string, SourceKey>();
-  for (const c of ctx.configs) for (const p of c.packages) bySource.set(p, c.source);
-
   for (const n of d.drain()) {
-    const source = bySource.get(n.package);
+    // An app a source lists, or one a rule names on its own (read by the rule's source, or by your patterns).
+    const source = sourceForPackage(n.package, ctx.configs, ctx.rules);
     const cfg = source ? cfgOf(source) : undefined;
     if (!source || !cfg || !canParse(source, ctx.patterns)) {
       sum.ignored += 1;

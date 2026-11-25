@@ -11,13 +11,14 @@ import { Money } from "./money";
 import { useAct } from "./settings";
 
 /** Your own notification patterns: wording with placeholders, tried on a sample message. The phone turns each into a regex. */
-export function PatternsSection({ patterns: patternsIn }: { patterns: CapturePattern[] }) {
+export function PatternsSection({ patterns: patternsIn, only }: { patterns: CapturePattern[]; /** Show and add patterns for this source only (the source editor). */ only?: SourceKey }) {
   const ask = useConfirm();
   const toast = useToast();
   const add = useAct();
-  const [patterns, drop] = useOptimistic(patternsIn, (cur, id: string) => cur.filter((x) => x.id !== id));
+  const [patterns, drop] = useOptimistic(only ? patternsIn.filter((p) => p.source === only) : patternsIn, (cur, id: string) => cur.filter((x) => x.id !== id));
   const [, startDrop] = useTransition();
-  const [source, setSource] = useState<SourceKey>("custom");
+  const [picked, setSource] = useState<SourceKey>("custom");
+  const source = only ?? picked;
   const [direction, setDirection] = useState<"in" | "out">("in");
   const [template, setTemplate] = useState("");
   const [sample, setSample] = useState("");
@@ -26,10 +27,10 @@ export function PatternsSection({ patterns: patternsIn }: { patterns: CapturePat
 
   return (
     <div className="v-stack">
-      <h3 className="v-capsec">Your own patterns</h3>
+      <h3 className="v-capsec">{only ? "My patterns · tried first" : "Your own patterns"}</h3>
       <div className="v-xs v-muted">
         Teach the app a notification without waiting for an update. Write the wording with placeholders: <code>{"{amount}"}</code> the amount (required), <code>{"{name}"}</code> who it was with,
-        {" "}<code>{"{last4}"}</code> the last digits of your account, <code>{"{ref}"}</code> a reference number, <code>{"{any}"}</code> anything to skip. Yours are tried before the built-in readers.
+        {" "}<code>{"{last4}"}</code> the last digits of your account, <code>{"{ref}"}</code> a reference number, <code>{"{any}"}</code> anything to skip. Yours are tried before the built-in readers, on notifications and on emails.
       </div>
       {patterns.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No patterns yet.</p> : (
         <div className="v-caprules">
@@ -49,11 +50,13 @@ export function PatternsSection({ patterns: patternsIn }: { patterns: CapturePat
       <div className="v-cappanel">
         <h3 className="v-capsec">Add a pattern</h3>
         <div className="v-grid2">
-          <label className="v-field">For
-            <select value={source} onChange={(e) => setSource(e.target.value as SourceKey)}>
-              {SOURCES.map((k) => <option key={k} value={k}>{SOURCE_INFO[k].label}</option>)}
-            </select>
-          </label>
+          {only ? null : (
+            <label className="v-field">For
+              <select value={source} onChange={(e) => setSource(e.target.value as SourceKey)}>
+                {SOURCES.map((k) => <option key={k} value={k}>{SOURCE_INFO[k].label}</option>)}
+              </select>
+            </label>
+          )}
           <label className="v-field">Money
             <select value={direction} onChange={(e) => setDirection(e.target.value as "in" | "out")}>
               <option value="in">Comes in</option>

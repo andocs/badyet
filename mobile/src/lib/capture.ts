@@ -1,3 +1,4 @@
+import { withRemoved } from '@/lib/capture/source-write';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { patternsFromRows, validatePattern, type CapturePattern, type PatternInput, type PatternRow, MAX_PATTERNS } from '@/lib/capture/patterns';
 import { configsFromRows, defaultConfig, rulesFromRows, SOURCES, type CaptureRule, type RuleRow, type SourceConfig, type SourceRow } from '@/lib/capture/sources';
@@ -47,7 +48,7 @@ export async function loadCapture(supabase: SupabaseClient): Promise<CaptureData
   const patterns = pat.error ? [] : patternsFromRows((pat.data ?? []) as PatternRow[]);
   // Also from a newer migration: no row, or no table yet, means the defaults.
   const dedupe: DedupeRule = ded.data ? { windowMin: ded.data.window_minutes, matchSource: ded.data.match_source } : DEFAULT_DEDUPE;
-  return { configs: configsFromRows((src.data ?? []) as SourceRow[]), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, dedupe, gmailAlert: set.data?.gmail_alert_check ?? true, missing: false };
+  return { configs: configsFromRows(await withRemoved(supabase, (src.data ?? []) as SourceRow[])), rules: rulesFromRows((rul.data ?? []) as RuleRow[]), patterns, dedupe, gmailAlert: set.data?.gmail_alert_check ?? true, missing: false };
 }
 
 /** Same checks as the web: the account and category must exist and not be archived. */
