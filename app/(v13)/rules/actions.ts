@@ -5,6 +5,7 @@ import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
 import { ruleFullRow, validateRuleFull, type RuleFullInput } from "@/lib/capture/validate";
 import { reorder, validateDedupe, type DedupeInput } from "@/lib/rules/helpers";
+import { setSourceRemoved } from "@/lib/capture/source-write";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const refresh = () => {
@@ -94,5 +95,14 @@ export async function setGmailAlertCheck(on: boolean): Promise<FormState> {
   const { error } = existing.data ? await supabase.from("user_settings").update(values).eq("user_id", existing.data.user_id) : await supabase.from("user_settings").insert(values);
   if (error) return { error: MISSING.includes(error.code ?? "") ? "Apply the Gmail alert database update first." : "That did not save. Try again." };
   refresh();
+  return { ok: true };
+}
+
+/** Removes a source from the Rules list (it stops listening), or adds it back. */
+export async function removeSource(source: string, removed: boolean): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await setSourceRemoved(supabase, source, removed);
+  if ("error" in r) return { error: r.error };
+  revalidatePath("/rules");
   return { ok: true };
 }

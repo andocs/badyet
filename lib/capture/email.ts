@@ -1,5 +1,6 @@
-import { centavos, type Parsed } from './parsers';
-import { SOURCE_INFO, SOURCES, type SourceConfig, type SourceKey } from './sources';
+import { centavos, parseWithPatterns, type Parsed } from './parsers';
+import type { CapturePattern } from './patterns';
+import { ruleSource, SOURCE_INFO, SOURCES, type CaptureRule, type SourceConfig, type SourceKey } from './sources';
 
 // ---- Reading a Gmail API message -------------------------------------------------------------------------------
 
@@ -105,22 +106,36 @@ export function readEmail(m: GmailMessage): Email | null {
 
 const address = (from: string): string => (/<([^>]+)>/.exec(from)?.[1] ?? from).trim().toLowerCase();
 
-export function sourceForEmail(from: string, configs: readonly SourceConfig[]): SourceKey | null {
+/** A sender entry matches an exact address, or a whole domain when written "@bank.com". */
+const sends = (entry: string, addr: string): boolean => {
+  const e = entry.trim().toLowerCase();
+  return e.startsWith('@') ? addr.endsWith(e) || addr.endsWith('.' + e.slice(1)) : e === addr;
+};
+
+/** Which source reads an email: an enabled source by sender or its bank's domain, else a rule that names the sender. */
+export function sourceForEmail(from: string, configs: readonly SourceConfig[], rules: readonly CaptureRule[] = []): SourceKey | null {
   const addr = address(from);
   const enabled = configs.filter((c) => c.enabled);
-  const exact = enabled.find((c) => c.senders.some((s) => s.toLowerCase() === addr));
+  const exact = enabled.find((c) => c.senders.some((s) => sends(s, addr)));
   if (exact) return exact.source;
   const byDomain = enabled.find((c) => SOURCE_INFO[c.source].domains.some((d) => addr.endsWith('@' + d) || addr.endsWith('.' + d)));
-  return byDomain?.source ?? null;
+  if (byDomain) return byDomain.source;
+  const rule = rules.find((r) => r.enabled && (r.senders ?? []).some((s) => sends(s, addr)));
+  return rule ? ruleSource(rule) : null;
 }
 
 /** The Gmail search that finds mail from your enabled sources, or null when none can send email. */
-export function gmailQuery(configs: readonly SourceConfig[], days: number): string | null {
+export function gmailQuery(configs: readonly SourceConfig[], days: number, rules: readonly CaptureRule[] = []): string | null {
   const terms = new Set<string>();
+  const add = (s: string) => {
+    const t = s.trim().toLowerCase().replace(/^@/, '');
+    if (t) terms.add(t);
+  };
   for (const c of configs.filter((x) => x.enabled)) {
-    for (const s of c.senders) terms.add(s.toLowerCase());
-    for (const d of SOURCE_INFO[c.source].domains) terms.add(d);
+    for (const s of c.senders) add(s);
+    for (const d of SOURCE_INFO[c.source].domains) add(d);
   }
+  for (const r of rules.filter((x) => x.enabled)) for (const s of (r.senders ?? [])) add(s);
   return terms.size === 0 ? null : `from:(${[...terms].join(' OR ')}) newer_than:${days}d`;
 }
 
@@ -187,11 +202,17 @@ function foodpanda(_subject: string, text: string): Parsed | null {
 
 const PARSERS: Partial<Record<SourceKey, (subject: string, text: string) => Parsed | null>> = { bpi, grab, foodpanda };
 
-export const canParseEmail = (source: SourceKey): boolean => source in PARSERS;
+/** True when an email from this source can be read: a built-in email reader, or your own patterns for the source. */
+export const canParseEmail = (source: SourceKey, patterns: readonly CapturePattern[] = []): boolean => source in PARSERS || patterns.some((p) => p.source === source);
 
-/** Reads one email. Anything that is not a money movement (statements, promos) returns null. */
-export function parseEmail(source: SourceKey, e: Pick<Email, 'subject' | 'text'>): Parsed | null {
+/**
+ * Reads one email. Your patterns for the source come first (on the subject and text, so a pattern can match either), then the
+ * built-in reader. Anything that is not a money movement (statements, promos) returns null.
+ */
+export function parseEmail(source: SourceKey, e: Pick<Email, 'subject' | 'text'>, patterns: readonly CapturePattern[] = []): Parsed | null {
+  const mine = parseWithPatterns(patterns, source, [e.subject, e.text].join(String.fromCharCode(10)));
+  if (mine) return mine;
   return PARSERS[source]?.(e.subject, e.text) ?? null;
 }
 
-export const EMAIL_SOURCES: readonly SourceKey[] = SOURCES.filter(canParseEmail);
+export const EMAIL_SOURCES: readonly SourceKey[] = SOURCES.filter((s) => canParseEmail(s));

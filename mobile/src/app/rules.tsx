@@ -1,3 +1,4 @@
+import { setSourceRemoved } from '@/lib/capture/source-write';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -49,21 +50,25 @@ export default function Rules() {
     void syncDeviceApps(supabase, phone.installed, phone.recent).catch(() => {});
   }, [phone]);
 
+  // A rule's own apps are listened to, so the phone's list changes when rules do.
+  const refreshAllowlist = () => void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert, d.rules)).catch(() => {});
   async function afterEdit() {
     setEditing(null);
     await reload();
+    refreshAllowlist();
   }
   async function toggleRule(r: CaptureRule, on: boolean) {
     const res = await setRuleEnabled(supabase, r.id, on);
     if ('error' in res) setProblem(res.error);
     await reload();
+    refreshAllowlist();
   }
   async function toggleGmailAlert(on: boolean) {
     if (!session) return;
     const res = await saveGmailAlert(supabase, session.user.id, on);
     if ('error' in res) setProblem(res.error);
     await reload();
-    void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert)).catch(() => {});
+    void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert, d.rules)).catch(() => {});
   }
   async function move(r: CaptureRule, dir: -1 | 1) {
     if (!data) return;
@@ -149,8 +154,9 @@ export default function Rules() {
           </Card>
 
           <Card>
-            <Label>Sources</Label>
-            {SOURCES.map((k) => {
+            <Label>Everything else from…</Label>
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Each app or bank catches whatever no rule above caught, with its own account, category and minimum.</Text>
+            {SOURCES.filter((k) => !data.configs.find((x) => x.source === k)!.removed).map((k) => {
               const cfg = data.configs.find((x) => x.source === k)!;
               const where = [cfg.packages.length ? `${cfg.packages.length} app${cfg.packages.length === 1 ? '' : 's'}` : null, cfg.senders.length ? `${cfg.senders.length} sender${cfg.senders.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'No app or sender set yet';
               return (
@@ -166,6 +172,23 @@ export default function Rules() {
                 </Pressable>
               );
             })}
+            {data.configs.some((x) => x.removed) ? (
+              <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10 }}>
+                <Label>Removed</Label>
+                {data.configs.filter((x) => x.removed).map((x) => (
+                  <View key={x.source} style={[s.row, { minHeight: 44 }]}>
+                    <Body>{SOURCE_INFO[x.source].label}</Body>
+                    <Pressable
+                      onPress={() => void setSourceRemoved(supabase, x.source, false).then((r) => ('error' in r ? setProblem(r.error) : reload()))}
+                      accessibilityRole="button"
+                      style={{ minHeight: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: c.soft }}
+                    >
+                      <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Add back</Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </View>
+            ) : null}
           </Card>
 
           <PatternsCard patterns={data.patterns} onChanged={reload} />
@@ -197,7 +220,7 @@ export default function Rules() {
           onClose={() => setEditingSource(null)}
           onSaved={() => {
             setEditingSource(null);
-            void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert)).catch(() => {});
+            void loadCapture(supabase).then((d) => applyAllowlist(d.configs, d.gmailAlert, d.rules)).catch(() => {});
             void reload();
           }}
         />

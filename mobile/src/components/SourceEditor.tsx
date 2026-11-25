@@ -1,6 +1,9 @@
 import { seenPackages } from '@modules/notification-listener';
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { canParseEmail } from '@/lib/capture/email';
+import { canParse } from '@/lib/capture/parsers';
+import { setSourceRemoved } from '@/lib/capture/source-write';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SOURCE_INFO, type SourceConfig } from '@/lib/capture/sources';
 import { formatPesos, money } from '@/lib/domain/money';
@@ -65,6 +68,23 @@ export function SourceEditor({
     else onSaved();
   }
 
+  const remove = () =>
+    Alert.alert(`Remove ${info.label}?`, 'It stops listening and moves to Removed. Its reader and settings stay; Add back restores them.', [
+      { text: 'Keep', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          const r = await setSourceRemoved(supabase, cfg.source, true);
+          if ('error' in r) setProblem(r.error);
+          else onSaved();
+        },
+      },
+    ]);
+  const notif = canParse(cfg.source);
+  const email = canParseEmail(cfg.source);
+  const reader = notif && email ? 'Built-in reader for notifications and emails.' : notif ? 'Built-in reader for notifications. Add a pattern (Rules > Your patterns) to read its emails.' : email ? 'Built-in reader for emails. Add a pattern to read its notifications.' : 'No built-in reader: add a pattern under Your patterns, or nothing from it can be read.';
+
   const input = [s.input, { color: c.ink, backgroundColor: c.soft, fontFamily: fonts.body }];
   return (
     <Modal visible animationType="slide" transparent onRequestClose={onClose}>
@@ -74,8 +94,8 @@ export function SourceEditor({
         <ScrollView contentContainerStyle={{ gap: 14 }} keyboardShouldPersistTaps="handled">
           <View style={s.between}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>{info.label}</Text>
-              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>{info.blurb}</Text>
+              <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>Everything else from {info.label}</Text>
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Anything from {info.label} no rule above caught. {reader}</Text>
             </View>
             <Switch value={enabled} onValueChange={setEnabled} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel={`Capture ${info.label}`} />
           </View>
@@ -95,7 +115,7 @@ export function SourceEditor({
           </Field>
 
           <Field label="Email senders (one per line)">
-            <TextInput value={senders} onChangeText={setSenders} multiline autoCapitalize="none" autoCorrect={false} keyboardType="email-address" placeholder="name@bank.com" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />
+            <TextInput value={senders} onChangeText={setSenders} multiline autoCapitalize="none" autoCorrect={false} keyboardType="email-address" placeholder="name@bank.com or @bank.com" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />
           </Field>
 
           <Field label="Usual account">
@@ -137,6 +157,9 @@ export function SourceEditor({
               <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>{busy ? 'Saving…' : 'Save'}</Text>
             </Pressable>
           </View>
+          <Pressable onPress={remove} accessibilityRole="button" style={[s.btn, { borderWidth: 1, borderColor: c.line }]}>
+            <Text style={{ color: c.err, fontFamily: fonts.bodyBold, fontSize: 15 }}>Remove {info.label}</Text>
+          </Pressable>
         </ScrollView>
       </View>
     </Modal>

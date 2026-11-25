@@ -38,6 +38,8 @@ export interface SourceConfig {
   autoConfirm: boolean;
   /** Centavos. */
   minAmount: number;
+  /** Removed from the Rules list (a built-in reader is never deleted; Add back restores it). A removed source is also off. */
+  removed: boolean;
 }
 
 export const defaultConfig = (source: SourceKey): SourceConfig => ({
@@ -49,6 +51,7 @@ export const defaultConfig = (source: SourceKey): SourceConfig => ({
   categoryId: null,
   autoConfirm: false,
   minAmount: 0,
+  removed: false,
 });
 
 /** 'record' is the Rules page's rule: say what the capture is (spending, income, transfer, payment) and what to do with it. The other three are the older keyword rules. */
@@ -111,6 +114,8 @@ export interface SourceRow {
   category_id: string | null;
   auto_confirm: boolean;
   min_amount: number;
+  /** Added in rev-38; absent on a database without that update. */
+  removed?: boolean;
 }
 export interface RuleRow {
   id: string;
@@ -150,6 +155,7 @@ export function configsFromRows(rows: readonly SourceRow[]): SourceConfig[] {
       categoryId: r.category_id,
       autoConfirm: r.auto_confirm,
       minAmount: Number(r.min_amount),
+      removed: r.removed ?? false,
     };
   });
 }
@@ -183,7 +189,27 @@ export function rulesFromRows(rows: readonly RuleRow[]): CaptureRule[] {
 /** The Gmail app. Its notifications are not read: one arriving just means "check Gmail now". */
 export const GMAIL_APP = 'com.google.android.gm';
 
-/** Android app ids to listen to: every enabled source's apps, plus Gmail when the Gmail alert is on. */
-export const allowedPackages = (configs: readonly SourceConfig[], gmailAlert = false): string[] => [
-  ...new Set([...configs.filter((c) => c.enabled).flatMap((c) => c.packages), ...(gmailAlert ? [GMAIL_APP] : [])]),
+/** Android app ids to listen to: every enabled source's apps, the apps your rules name, plus Gmail when the Gmail alert is on. */
+export const allowedPackages = (configs: readonly SourceConfig[], gmailAlert = false, rules: readonly Pick<CaptureRule, 'enabled' | 'packages'>[] = []): string[] => [
+  ...new Set([
+    ...configs.filter((c) => c.enabled).flatMap((c) => c.packages),
+    ...rules.filter((r) => r.enabled).flatMap((r) => r.packages ?? []),
+    ...(gmailAlert ? [GMAIL_APP] : []),
+  ]),
 ];
+
+/** The reader for something a rule listens to on its own: the rule's first source, else your own patterns ("Other app"). */
+export const ruleSource = (r: Pick<CaptureRule, 'sources' | 'source'>): SourceKey => r.sources?.[0] ?? r.source ?? 'custom';
+
+/**
+ * Which source reads a notification from this app: an enabled source that lists it, else a rule that names it (so an app added on
+ * a rule is really listened to). Null when nothing asks for it.
+ */
+export function sourceForPackage(pkg: string, configs: readonly SourceConfig[], rules: readonly CaptureRule[] = []): SourceKey | null {
+  const cfg = configs.find((c) => c.enabled && c.packages.includes(pkg));
+  if (cfg) return cfg.source;
+  const rule = rules.find((r) => r.enabled && (r.packages ?? []).includes(pkg));
+  if (rule) return ruleSource(rule);
+  // A source that is off still owns its apps, so its items are counted as skipped rather than unknown.
+  return configs.find((c) => c.packages.includes(pkg))?.source ?? null;
+}
