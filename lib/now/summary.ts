@@ -67,6 +67,10 @@ export interface Bill {
   name: string;
   amount: Money;
   sent: boolean;
+  /** The account the line goes to. */
+  accountId: string;
+  /** The confirmed payment that marks it sent this cutoff (the first one), for Undo. */
+  txnId: string | null;
 }
 
 export interface NowView {
@@ -174,8 +178,9 @@ export function buildNowView(input: NowInput): NowView {
   });
 
   const billLines = input.lines.filter((l) => l.accountId !== null && l.rule !== "rest" && amountIn(l.id) > 0);
-  const sentLineIds = new Set(input.txns.filter((t) => t.budgetLineId !== null && t.status === "confirmed").map((t) => t.budgetLineId));
-  const bills: Bill[] = billLines.map((l) => ({ lineId: l.id, name: l.name, amount: amountIn(l.id), sent: sentLineIds.has(l.id) }));
+  const paidBy = new Map<string, string>();
+  for (const t of input.txns) if (t.budgetLineId !== null && t.status === "confirmed" && !paidBy.has(t.budgetLineId)) paidBy.set(t.budgetLineId, t.id);
+  const bills: Bill[] = billLines.map((l) => ({ lineId: l.id, name: l.name, amount: amountIn(l.id), sent: paidBy.has(l.id), accountId: l.accountId!, txnId: paidBy.get(l.id) ?? null }));
 
   const recent = input.txns.filter((t) => t.status !== "ignored").sort((a, b) => b.occurredAt.localeCompare(a.occurredAt)).slice(0, 8);
 

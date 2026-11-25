@@ -91,7 +91,8 @@ describe("Now view", () => {
   });
 
   it("lists bills and transfers with their sent state", () => {
-    expect(v.bills).toEqual([{ lineId: "stashline", name: "stashline", amount: p(900), sent: true }]);
+    expect(v.bills).toMatchObject([{ lineId: "stashline", name: "stashline", amount: p(900), sent: true }]);
+    expect(v.bills[0]!.txnId).not.toBeNull();
     expect(v.billsTotalSent).toBe(p(900));
   });
 

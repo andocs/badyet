@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
@@ -57,7 +58,15 @@ function PendingCard({
   const [note, setNote] = useState(t.note ?? '');
   const isTransfer = t.kind === 'transfer';
   const chosen = categories.find((x) => x.id === categoryId)?.name;
-  const canConfirm = isTransfer || categoryId !== null;
+  // A transfer-looking item waits a few minutes for its other side; meanwhile it can only be filed as a Transfer.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    if (!t.holdUntil) return;
+    const timer = setInterval(() => setNowMs(Date.now()), 15_000);
+    return () => clearInterval(timer);
+  }, [t.holdUntil]);
+  const holding = t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
+  const canConfirm = isTransfer || (categoryId !== null && (!holding || chosen === TRANSFER_CATEGORY));
 
   return (
     <Card>
@@ -80,6 +89,11 @@ function PendingCard({
               <Chip key={x.id} label={x.name} on={x.id === categoryId} onPress={() => setCategoryId(x.id)} />
             ))}
           </View>
+          {holding ? (
+            <Text accessibilityRole="alert" style={{ color: c.ink, fontFamily: fonts.body, fontSize: 13 }}>
+              May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Pick {TRANSFER_CATEGORY} now, or confirm it as {t.amount < 0 ? 'spending' : 'income'} after that.
+            </Text>
+          ) : null}
           {t.guess && categoryId === t.categoryId ? (
             <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
               Suggested from {t.guess === 'rule' ? 'your rule' : 'what you did before'}.
@@ -133,7 +147,7 @@ function PendingCard({
               fontSize: 15,
             }}
           >
-            {canConfirm ? 'Confirm' : 'Pick a category'}
+            {canConfirm ? 'Confirm' : holding && categoryId !== null ? 'Waiting for the other side' : 'Pick a category'}
           </Text>
         </Pressable>
         <Pressable onPress={() => onIgnore(t)} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft }]}>

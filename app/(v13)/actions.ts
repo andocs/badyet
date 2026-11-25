@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { parsePesos } from "@/lib/domain/money";
 import { requireAuthed } from "@/lib/auth/require";
+import { markBillSent, undoBillSent } from "@/lib/bills/send";
 
 export interface AddExpenseState {
   ok?: boolean;
@@ -50,5 +51,30 @@ export async function addExpense(_prev: AddExpenseState, formData: FormData): Pr
   if (error) return { error: "Could not save that. Try again." };
 
   revalidatePath("/");
+  return { ok: true };
+}
+
+const billsChanged = () => {
+  revalidatePath("/");
+  revalidatePath("/budget");
+  revalidatePath("/accounts");
+  revalidatePath("/inbox");
+};
+
+/** Marks a bill sent for the cutoff from the Now page. */
+export async function sendBill(input: { lineId: string; from: string; amount: string }): Promise<AddExpenseState> {
+  const supabase = await requireAuthed();
+  const r = await markBillSent(supabase, input);
+  if ("error" in r) return { error: r.error };
+  billsChanged();
+  return { ok: true };
+}
+
+/** Undo for a bill marked sent. */
+export async function unsendBill(txnId: string): Promise<AddExpenseState> {
+  const supabase = await requireAuthed();
+  const r = await undoBillSent(supabase, txnId);
+  if ("error" in r) return { error: r.error };
+  billsChanged();
   return { ok: true };
 }

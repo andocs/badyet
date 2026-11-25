@@ -11,6 +11,7 @@ import { HScroll } from "./hscroll";
 import { LinkPending } from "./link-pending";
 import { Money } from "./money";
 import { QuickAddButton } from "./quick-add";
+import { BillList } from "./bill-list";
 
 type Ready = Extract<NowData, { kind: "ready" }>;
 const CARD_COLORS = ["#2F5BD7", "#087A5A", "#B03030", "#7A3FB8", "#0F7A95", "#B83A86"];
@@ -51,7 +52,7 @@ export function NowPage({ data, pending }: { data: Ready; pending: number }) {
             <Envelopes envelopes={view.envelopes} dayNumber={view.dayNumber} daysTotal={view.daysTotal} />
           </section>
           <aside className="v-stack">
-            <Bills view={view} />
+            <Bills view={view} accounts={data.accounts} />
             {data.settleOpen > 0 ? (
               <section className="v-card" aria-labelledby="st">
                 <h2 id="st">Settle office days</h2>
@@ -296,7 +297,7 @@ function Envelopes({ envelopes, dayNumber, daysTotal }: { envelopes: Envelope[];
   );
 }
 
-function Bills({ view }: { view: NowView }) {
+function Bills({ view, accounts }: { view: NowView; accounts: AccountCard[] }) {
   const sent = view.bills.filter((b) => b.sent).length;
   return (
     <section className="v-card" aria-labelledby="bt">
@@ -308,17 +309,7 @@ function Bills({ view }: { view: NowView }) {
         <p className="v-muted v-sm" style={{ marginTop: 8 }}>Budget lines that go to an account show here for the cutoff.</p>
       ) : (
         <>
-          <div style={{ marginTop: 6 }}>
-            {view.bills.map((b) => (
-              <div className="v-bl-i" key={b.lineId}>
-                <span className="v-chk" aria-checked={b.sent} role="img" aria-label={b.sent ? "sent" : "not sent yet"}>
-                  <V13Icon name="check" />
-                </span>
-                <span className="v-grow">{b.name}</span>
-                <b className="v-num"><Money value={b.amount} /></b>
-              </div>
-            ))}
-          </div>
+          <BillList bills={view.bills} accounts={accounts.map((a) => ({ id: a.id, name: a.name }))} />
           <div className="v-row v-sp" style={{ paddingTop: 10, borderTop: "1px solid var(--line)", marginTop: 2 }}>
             <b>Sent this cutoff</b>
             <b className="v-num"><Money value={view.billsTotalSent} /></b>

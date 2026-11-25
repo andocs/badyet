@@ -48,8 +48,25 @@ export function accountWords(a: Pick<AccountLite, 'name' | 'institution'>): stri
 }
 
 /**
+ * Out of several accounts that match by words, the one whose name is exactly `name` (ignoring case and spaces at the ends),
+ * else the only one that has every word of it. Null when there is still no single winner.
+ */
+function single(candidates: readonly AccountLite[], name: string): string | null {
+  if (candidates.length === 1) return candidates[0]!.id;
+  if (candidates.length === 0) return null;
+  const target = name.trim().toLowerCase();
+  const exact = candidates.filter((a) => a.name.trim().toLowerCase() === target);
+  if (exact.length === 1) return exact[0]!.id;
+  const words = accountWords({ name, institution: null });
+  const all = words.length > 1 ? candidates.filter((a) => words.every((w) => accountWords(a).includes(w))) : [];
+  return all.length === 1 ? all[0]!.id : null;
+}
+
+/**
  * Which of your accounts a capture belongs to: the one you chose for the source, else the one whose last digits match,
- * else the only one named like the source. Returns null when it cannot tell, so nothing lands in the wrong account.
+ * else the account the message names, else the only one named like the source. When several share a word (Maya, Maya Black,
+ * Maya Savings), the one named exactly like the message or the source wins. Returns null when it cannot tell, so nothing lands
+ * in the wrong account.
  */
 export function resolveAccount(config: SourceConfig, p: Parsed, accounts: readonly AccountLite[]): string | null {
   if (config.accountId && accounts.some((a) => a.id === config.accountId)) return config.accountId;
@@ -59,12 +76,12 @@ export function resolveAccount(config: SourceConfig, p: Parsed, accounts: readon
   }
   if (p.accountName) {
     const nick = accountWords({ name: p.accountName, institution: null });
-    const byNick = accounts.filter((a) => nick.some((w) => accountWords(a).includes(w)));
-    if (byNick.length === 1) return byNick[0]!.id;
+    const byNick = single(accounts.filter((a) => nick.some((w) => accountWords(a).includes(w))), p.accountName);
+    if (byNick) return byNick;
   }
-  const words = SOURCE_INFO[config.source].label.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
-  const byName = accounts.filter((a) => words.some((w) => accountWords(a).includes(w)));
-  return byName.length === 1 ? byName[0]!.id : null;
+  const label = SOURCE_INFO[config.source].label;
+  const words = label.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3);
+  return single(accounts.filter((a) => words.some((w) => accountWords(a).includes(w))), label);
 }
 
 /** The row to insert for a kept capture. */
