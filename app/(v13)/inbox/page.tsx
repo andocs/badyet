@@ -85,6 +85,7 @@ export default async function Inbox() {
         who: r.merchant ?? (r.kind === "transfer" ? (r.amount < 0 ? "Transfer out" : "Transfer in") : "Expense"),
         amount: r.amount,
         account: accountName.get(r.account_id) ?? "Account",
+        accountId: r.account_id,
         peerAccount: peer ? (accountName.get(peer.account_id) ?? null) : null,
         occurredAt: r.occurred_at,
         source: SOURCE[r.source] ?? r.source,

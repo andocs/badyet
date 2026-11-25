@@ -7,6 +7,7 @@ import { manilaDate } from '@/lib/now/summary';
 import { todayManila } from '@/lib/plans/validate';
 import { GmailBanner } from '~/components/GmailBanner';
 import { HeldCard, useHeldAccounts } from '~/components/HeldCards';
+import { InboxEditSheet } from '~/components/InboxEditSheet';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { useHeldItems } from '~/lib/CaptureRunner';
 import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxTxn } from '~/lib/inbox';
@@ -45,6 +46,7 @@ function PendingCard({
   today,
   onConfirm,
   onIgnore,
+  onEdit,
 }: {
   t: InboxTxn;
   categories: Category[];
@@ -52,6 +54,7 @@ function PendingCard({
   today: ReturnType<typeof isoDate>;
   onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null, asTransfer: boolean) => void;
   onIgnore: (t: InboxTxn) => void;
+  onEdit: (t: InboxTxn) => void;
 }) {
   const c = useTheme();
   const [categoryId, setCategoryId] = useState<string | null>(t.categoryId);
@@ -170,6 +173,9 @@ function PendingCard({
         <Pressable onPress={() => onIgnore(t)} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft }]}>
           <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Not mine</Text>
         </Pressable>
+        <Pressable onPress={() => onEdit(t)} accessibilityRole="button" accessibilityLabel={`Edit ${t.who}`} style={[s.btn, { backgroundColor: c.soft }]}>
+          <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>Edit</Text>
+        </Pressable>
       </View>
     </Card>
   );
@@ -183,6 +189,7 @@ export default function Inbox() {
   const [ignored, setIgnored] = useState<Set<string>>(new Set());
   const [confirmed, setConfirmed] = useState<Set<string>>(new Set());
   const [problem, setProblem] = useState<string | null>(null);
+  const [editing, setEditing] = useState<InboxTxn | null>(null);
   const today = useMemo(() => isoDate(todayManila()), []);
 
   const txns = (data?.txns ?? [])
@@ -281,6 +288,7 @@ export default function Inbox() {
                   )
                 }
                 onIgnore={(row) => act(row, 'ignore', () => ignoreTransaction(supabase, row.id))}
+                onEdit={setEditing}
               />
             ),
           )
@@ -294,7 +302,7 @@ export default function Inbox() {
           <Card>
             <Label>Recent</Label>
             {txns.map((t) => (
-              <View key={t.id} style={[s.row, { minHeight: 52 }]}>
+              <Pressable key={t.id} onPress={() => setEditing(t)} accessibilityRole="button" accessibilityLabel={`Edit ${t.who}`} style={[s.row, { minHeight: 52 }]}>
                 <View style={{ flex: 1 }}>
                   <Body>{t.who}</Body>
                   <Text
@@ -315,10 +323,21 @@ export default function Inbox() {
                     color: t.status === 'pending' ? c.gold : t.amount > 0 ? c.accentText : c.ink,
                   }}
                 />
-              </View>
+              </Pressable>
             ))}
           </Card>
         )
+      ) : null}
+      {editing && data ? (
+        <InboxEditSheet
+          t={editing}
+          accounts={data.accounts}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            void reload();
+          }}
+        />
       ) : null}
     </Screen>
   );
