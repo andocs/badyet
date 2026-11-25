@@ -10,8 +10,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** batch 4 done
 - **Gate:** none
-- **Next action:** Wait for APK build cb8b4696; send the user the APK link; then ask for next revisions or finish
-- **User to-do now:** Apply migrations 20261218000000, 20261219000000, 20261220000000 (and confirm 20261217000000); install the new APK when the link arrives
+- **Next action:** Batch 4 done. Ask the user for the next revisions or finish
+- **User to-do now:** Apply migrations 20261218000000, 20261219000000, 20261220000000 (and confirm 20261217000000); install APK https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk
 
 ## 3. Execution log
 
@@ -46,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:35 | rev-37 | Approved; merged to main | -
 - 2026-11-25 12:44 | rev-38 | Rules redesign option 1: one list (rules, then 'Everything else from...' source cards, Removed with Add back); rule-style source editor on web (apps/senders pickers, how it's read + that source's patterns, account, category, skip under, auto-confirm, Remove); rule apps and senders now captured (allow-list, package and email routing); patterns read emails; @domain senders for sources. Migration 20261220000000_source_removed.sql | 38774e6
 - 2026-11-25 12:51 | rev-38 | Approved; merged to main; EAS preview build cb8b4696 started | 5e987a6
+- 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
 
 ## 4. Open questions
 
