@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-42 Pay checklist build
-- **Gate:** waiting
-- **Next action:** Gate rev-42; on approve merge to main + OTA publish. Then: Wants in Planned vs spent (needs user answer), optional whole-month tab
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; tell me how your Wants lines are set up (Choose on Planned vs spent); consider making the GitHub repo private (it is public and holds budget notes)
+- **Active slice / milestone:** batch 5 done (Wants open)
+- **Gate:** none
+- **Next action:** Batch 5 done except Wants in Planned vs spent (needs user answer) and an optional whole-month tab on the pay checklist. Ask the user for the next revisions or finish
+- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA; tell me how your Wants lines are set up (Choose on Planned vs spent); consider making the GitHub repo private
 
 ## 3. Execution log
 
@@ -55,6 +55,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:01 | rev-41 | Approved: pay checklist Option 3 + two-way sync (tick records transfer and moves balances; detected transfers auto-tick; duplicates not double counted); merged to main | -
 - 2026-11-25 19:08 | rev-42 | Pay checklist (Option 3): page /pay-checklist + phone plan/checklist; tick = one transfer from payroll account (pay_account_id) to line wallet, balances move; Send the rest = one lump; transfers detected from notifications/emails auto-tick lines in budget order; captured transfer that duplicates one the app recorded is ignored (single or lump of several ticks); lines without a wallet get a wallet picker; Now bills links to it. No migration. | a506a71
 - 2026-11-25 19:11 | rev-42 | Email dedupe and pairing use the transaction time written inside the email (lib/capture/email-time.ts) instead of the email's receipt time; falls back to arrival time when none found | 8a3f7f5
+- 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
 
 ## 4. Open questions
 
