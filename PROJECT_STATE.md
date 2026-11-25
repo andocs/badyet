@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-37 Budget plans
-- **Gate:** waiting
-- **Next action:** Gate rev-37; on approve merge, then rev-38 Rules redesign build (option 1) + email patterns
+- **Active slice / milestone:** rev-38 Rules redesign
+- **Gate:** none
+- **Next action:** rev-38: Rules redesign option 1 (sources become catch-all rules) + email patterns/keywords
 - **User to-do now:** Apply migrations 20261218000000 and 20261219000000; install latest APK; check rev-37 on the Vercel preview
 
 ## 3. Execution log
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:15 | rev-36 | Approved; merged to main | -
 - 2026-11-25 12:24 | rev-37 | Design decided: a plan replaces the whole budget (full set of lines copied from the current budget, then edited); dates are picked as start and end cutoffs; no overlaps; outside every plan the normal budget applies | -
 - 2026-11-25 12:33 | rev-37 | Budget plans: plan = full set of lines over a cutoff range, copied from the normal budget on create (with raise top-ups); engine picks per cutoff (plan in force or normal); no overlaps; web Budget plan bar (new/edit/delete, view any budget); phone can view/edit a plan's lines; one RTO contingency line per budget, pool stays on the normal one. Migration 20261219000000_budget_plans.sql | 1dcd588
+- 2026-11-25 12:35 | rev-37 | Approved; merged to main | -
 
 ## 4. Open questions
 
