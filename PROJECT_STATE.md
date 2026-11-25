@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-37 Budget plans
-- **Gate:** none
-- **Next action:** rev-37: budget plans over date ranges (no overlaps, cutoff-day boundaries)
-- **User to-do now:** Apply migration 20261218000000_payday_and_now_panel.sql; install latest APK; check rev-36 on the Vercel preview
+- **Gate:** waiting
+- **Next action:** Gate rev-37; on approve merge, then rev-38 Rules redesign build (option 1) + email patterns
+- **User to-do now:** Apply migrations 20261218000000 and 20261219000000; install latest APK; check rev-37 on the Vercel preview
 
 ## 3. Execution log
 
@@ -42,6 +42,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:10 | rev-36 | Now and Budget: payday prompt (records take-home as income, remembers pay account, asks actual take-home when a bonus lands), Planned vs Spent category picker saved to account, Budget whole-month/1st/2nd cutoff view (web + phone), skipped usual office days listed in Settle office days. Migration 20261218000000_payday_and_now_panel.sql | f467235
 - 2026-11-25 12:15 | rev-36 | Approved; merged to main | -
 - 2026-11-25 12:24 | rev-37 | Design decided: a plan replaces the whole budget (full set of lines copied from the current budget, then edited); dates are picked as start and end cutoffs; no overlaps; outside every plan the normal budget applies | -
+- 2026-11-25 12:33 | rev-37 | Budget plans: plan = full set of lines over a cutoff range, copied from the normal budget on create (with raise top-ups); engine picks per cutoff (plan in force or normal); no overlaps; web Budget plan bar (new/edit/delete, view any budget); phone can view/edit a plan's lines; one RTO contingency line per budget, pool stays on the normal one. Migration 20261219000000_budget_plans.sql | 1dcd588
 
 ## 4. Open questions
 
@@ -81,7 +82,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,572,733 | 19,569,252 | 791,717 | 7,511,885 | 797,404,182 | 3,379,854 |  |
+| **Cumulative** | 4,632,485 | 19,805,599 | 803,576 | 7,511,885 | 797,404,182 | 3,379,854 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -140,6 +141,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-34 | 155,648 | 1,386,351 | 47,508 | 0 | 0 | 0 |  |
 | rev-35 | 90,314 | 258,957 | 18,226 | 0 | 0 | 0 |  |
 | rev-36 | 121,097 | 959,389 | 25,764 | 0 | 0 | 0 |  |
+| rev-37 | 59,752 | 236,347 | 11,859 | 0 | 0 | 0 |  |
 
 <!-- END SUMMARY -->
 
@@ -166,6 +168,17 @@ Batch 4 (picked 2026-11-25). Done: rev-33 Rules mockups (option 1), rev-34 small
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-37: what you do now
+1. Get the code:   git fetch && git checkout rev/37-budget-plans   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       apply supabase/migrations/20261219000000_budget_plans.sql (after 20261218000000). Adds budget_plans, budget_lines_v2.plan_id, and changes the one-contingency-line index to one per budget. No data changes.
+                   Rollback (deletes all plans and their lines): see the comment block at the end of the migration file.
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000/budget   (or the Vercel preview for rev/37-budget-plans)
+6. Check these:    Budget > + New plan > name, Sep 2026 1st cutoff to Nov 2026 2nd cutoff > Create: the board switches to the plan with your lines copied; change a line there and check the Normal budget is unchanged; try a second plan overlapping it (refused, names the clash); Now and Forecast follow the plan in force; Delete plan returns to normal
+7. Known limits:   plans are made/changed on the web only (phone can view and edit a plan's lines); settling office days and contingency saves need the migration applied
+Reply: Approve / Request changes / Pause
 
 AFTER REV-36: what you do now
 1. Get the code:   git fetch && git checkout rev/36-now-budget   (merge to main after you approve)
