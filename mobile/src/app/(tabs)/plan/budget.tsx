@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
+import { cutoffRefLabel } from '@/lib/budget/plans';
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
 import type { LineInput } from '@/lib/budget/line-input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
@@ -95,10 +96,12 @@ function toInput(d: Draft): unknown {
 }
 
 function LineEditor({
-  start, data, onClose, onSaved,
+  start, data, onClose, onSaved, planId,
 }: {
   start: Draft;
   data: BudgetData;
+  /** The plan a new line goes into (null = the normal budget). */
+  planId: string | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -113,7 +116,7 @@ function LineEditor({
   async function save() {
     setBusy(true);
     setProblem(null);
-    const r = await saveLine(supabase, toInput(d));
+    const r = await saveLine(supabase, Object.assign({}, toInput(d) as object, { planId }));
     setBusy(false);
     if ('error' in r) setProblem(r.error);
     else onSaved();
@@ -340,7 +343,9 @@ export default function Budget() {
   const [cut, setCut] = useState<'first' | 'second' | null>(null);
 
   const fut = !!data && month !== null && month !== data.period.month;
-  const screen = data ? buildBudgetScreen(data, { fut, month }) : null;
+  // Which budget the board shows: undefined = the one in force this cutoff, null = the normal one, else a plan's id.
+  const [plan, setPlan] = useState<string | null | undefined>(undefined);
+  const screen = data ? buildBudgetScreen(data, { fut, month, plan }) : null;
 
   return (
     <Screen
@@ -391,6 +396,23 @@ export default function Budget() {
                 </Notice>
               ) : null}
 
+              {!fut && screen.plan.list.length > 0 ? (
+                <Card>
+                  <Label>Budget shown</Label>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                    <Chip label={`Normal${screen.plan.activeNow === null ? ' · in force' : ''}`} on={screen.plan.selected === null} onPress={() => setPlan(null)} />
+                    {screen.plan.list.map((p) => (
+                      <Chip key={p.id} label={`${p.name}${screen.plan.activeNow === p.id ? ' · in force' : ''}`} on={screen.plan.selected === p.id} onPress={() => setPlan(p.id)} />
+                    ))}
+                  </View>
+                  <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                    {(() => {
+                      const sel = screen.plan.list.find((p) => p.id === screen.plan.selected);
+                      return sel ? `${cutoffRefLabel(sel.from)} to ${cutoffRefLabel(sel.to)}. Changes here only change this plan. Make or change plans on the web.` : 'Applies to every cutoff no plan covers.';
+                    })()}
+                  </Text>
+                </Card>
+              ) : null}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 <Chip label="Whole month" on={cut === null} onPress={() => setCut(null)} />
                 <Chip label="1st cutoff" on={cut === 'first'} onPress={() => setCut('first')} />
@@ -417,6 +439,7 @@ export default function Budget() {
             <LineEditor
               start={editing}
               data={data}
+              planId={screen?.plan.selected ?? null}
               onClose={() => setEditing(null)}
               onSaved={() => {
                 setEditing(null);

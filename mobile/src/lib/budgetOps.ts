@@ -46,7 +46,7 @@ export async function setOfficeDay(supabase: SupabaseClient, input: { date: stri
   const wantsOverride = input.office !== input.usual;
   const [pool, contingency] = await Promise.all([
     supabase.from('pools').select('id, budget_line_id').not('budget_line_id', 'is', null),
-    supabase.from('budget_lines_v2').select('id').eq('kind', 'rto_contingency').maybeSingle(),
+    supabase.from('budget_lines_v2').select('id').eq('kind', 'rto_contingency').is('plan_id', null).maybeSingle(),
     supabase.from('office_day_overrides').delete().eq('day', input.date),
   ]);
   const poolId = ((pool.data ?? []) as { id: string; budget_line_id: string }[]).find((p) => p.budget_line_id === (contingency.data as { id: string } | null)?.id)?.id;
@@ -69,7 +69,7 @@ export async function settleDay(supabase: SupabaseClient, input: { date: string;
     ? input.to === 'pool' ? 'settle_to_pool' : input.to === 'wants' ? 'settle_to_wants' : null
     : input.to === 'wants' ? 'over_from_wants' : input.to === 'excess' ? 'over_from_excess' : null;
   if (!kind) return { error: 'Pick where it goes.' };
-  const contingency = await supabase.from('budget_lines_v2').select('id').eq('kind', 'rto_contingency').maybeSingle();
+  const contingency = await supabase.from('budget_lines_v2').select('id').eq('kind', 'rto_contingency').is('plan_id', null).maybeSingle();
   const pool = contingency.data ? await supabase.from('pools').select('id').eq('budget_line_id', (contingency.data as { id: string }).id).maybeSingle() : { data: null };
   if (!pool.data) return { error: 'Mark one budget line as the RTO contingency first.' };
   const poolId = (pool.data as { id: string }).id;

@@ -2,6 +2,7 @@ import type { YearMonth } from "@/lib/domain/dates";
 import { addMonths } from "@/lib/domain/dates";
 import { sub, type Money } from "@/lib/domain/money";
 import { evaluateBudget, type BudgetMonth } from "./budget";
+import type { PlanSpan } from "./plans";
 import { fundCredits, planBonuses, type BonusPayment } from "./bonus";
 import { allocateFunds, type FundMonth } from "./funds";
 import { monthRange } from "./months";
@@ -38,6 +39,10 @@ export interface ProjectionInput {
   fundStart: Readonly<Record<string, Money>>;
   overrides?: readonly MonthOverride[];
   tightBelow?: Money;
+  /** Budget plans over date ranges (each cutoff uses the plan in force, else the normal budget). */
+  plans?: readonly PlanSpan[];
+  /** Budget page: show one budget (a plan id, or null for the normal one) whatever the dates say. */
+  forcePlan?: string | null;
 }
 
 export interface ProjectionMonth {
@@ -94,6 +99,8 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
       events: included,
       raiseExtras,
       tightBelow: input.tightBelow,
+      plans: input.plans,
+      forcePlan: input.forcePlan,
     });
   });
 

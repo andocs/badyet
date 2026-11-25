@@ -158,3 +158,35 @@ describe("office days and pools", () => {
     expect(evaluateBudget({ month: ym("2027-03"), takeHome, lines: [wifi] }).reimbursed).toEqual({ first: 0, second: 0 });
   });
 });
+
+describe("budget plans", () => {
+  // A plan from the Mar 2027 2nd cutoff to the Apr 2027 1st cutoff, with its own food line and rest line.
+  const planned: BudgetLine[] = [
+    ...lines,
+    line({ id: "p-food", amount: p(9_000), countsToDaily: true, planId: "trip" }),
+    line({ id: "p-rest", rule: "rest", feedsSavings: true, planId: "trip" }),
+  ];
+  const plans = [{ id: "trip", name: "Trip", from: { month: ym("2027-03"), cutoff: "second" as const }, to: { month: ym("2027-04"), cutoff: "first" as const } }];
+
+  it("uses each cutoff's own budget when a plan starts mid-month", () => {
+    const b = evaluateBudget({ month: ym("2027-03"), takeHome, lines: planned, plans });
+    expect(amountOf(b, "food")).toMatchObject({ first: p(5_000), second: p(0) });
+    expect(amountOf(b, "p-food")).toMatchObject({ first: p(0), second: p(9_000) });
+    expect(b.lines.find((l) => l.lineId === "rent")).toBeUndefined(); // the plan has no rent line
+    expect(amountOf(b, "rest").first).toBe(p(20_000 - 5_000 - 2_000));
+    expect(amountOf(b, "p-rest").second).toBe(p(30_000 - 9_000));
+    expect(b.dailyPool).toEqual({ first: p(5_000), second: p(9_000) });
+  });
+
+  it("goes back to the normal budget after the plan ends", () => {
+    const b = evaluateBudget({ month: ym("2027-04"), takeHome, lines: planned, plans });
+    expect(amountOf(b, "p-food")).toMatchObject({ first: p(9_000), second: p(0) });
+    expect(amountOf(b, "rent").second).toBe(p(8_000));
+  });
+
+  it("ignores plan lines when no plans are given, and can show one plan for both cutoffs", () => {
+    expect(evaluateBudget({ month: ym("2027-03"), takeHome, lines: planned }).lines.some((l) => l.lineId.startsWith("p-"))).toBe(false);
+    const forced = evaluateBudget({ month: ym("2027-01"), takeHome, lines: planned, plans, forcePlan: "trip" });
+    expect(forced.lines.map((l) => l.lineId).sort()).toEqual(["p-food", "p-rest"]);
+  });
+});

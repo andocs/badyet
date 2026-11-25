@@ -13,6 +13,7 @@ import { shortDate, rangeLabel } from "@/lib/now/format";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { BudgetBoard } from "@/components/v13/budget/board";
+import { PlanBar } from "@/components/v13/budget/plan-bar";
 import { YearMonths } from "@/components/v13/budget/year-months";
 import { CategoriesCard, PoolsCard, RtoCard, SettleCard } from "@/components/v13/budget/side-cards";
 
@@ -21,20 +22,22 @@ export const metadata = { title: "Budget · Bad(yet)" };
 const PALETTE = ["var(--accent)", "var(--blue)", "var(--gold)", "var(--violet)", "var(--teal)"];
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-export default async function Budget({ searchParams }: { searchParams: Promise<{ v?: string; m?: string; cmp?: string; c?: string }> }) {
+export default async function Budget({ searchParams }: { searchParams: Promise<{ v?: string; m?: string; cmp?: string; c?: string; p?: string }> }) {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
   const sp = await searchParams;
   const data = await loadBudget(supabase);
   const thisMonth = data.salary.thisMonth;
   const cmp = sp.cmp === "1";
-  const screen = buildBudgetScreen(data, { fut: sp.v === "fut", month: sp.m, compare: cmp });
+  // ?p=<plan id> shows that plan's budget, ?p=normal the normal one; without it, the budget in force this cutoff.
+  const screen = buildBudgetScreen(data, { fut: sp.v === "fut", month: sp.m, compare: cmp, plan: sp.p === "normal" ? null : sp.p });
   const { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, groups, topUpRaises } = screen;
   const cutoffKey = data.period.which === 1 ? "first" : "second";
   // This month as a whole, or one cutoff of it (?c=1 or ?c=2).
   const view: "first" | "second" | null = !fut && sp.c === "1" ? "first" : !fut && sp.c === "2" ? "second" : null;
   const colors = PALETTE;
 
+  const keepPlan = (sep: string) => (sp.p && /^(normal|[0-9a-f-]{36})$/i.test(sp.p) ? `${sep}p=${sp.p}` : "");
   const link = (q: Record<string, string>) => `/budget?${new URLSearchParams(q).toString()}`;
 
   return (
@@ -57,12 +60,13 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
           <div className="v-cols3">
             <div className="v-stack">
               {fut ? <FutureYears year={year} thisYear={Number(thisMonth.slice(0, 4))} month={month} run={yearRun!} without={yearWithout} cmp={cmp} link={link} groupsList={data.groups} colors={colors} /> : null}
+              {!fut ? <PlanBar plans={screen.plan.list} selected={screen.plan.selected} activeNow={screen.plan.activeNow} thisMonth={thisMonth} /> : null}
               <Summary screen={screen} data={data} />
               {!fut ? (
                 <div className="v-seg" role="group" aria-label="Show" style={{ alignSelf: "flex-start" }}>
-                  <Link href="/budget" className="v-segl" aria-current={view === null ? "true" : undefined}>Whole month</Link>
-                  <Link href="/budget?c=1" className="v-segl" aria-current={view === "first" ? "true" : undefined}>1st cutoff{cutoffKey === "first" ? " (now)" : ""}</Link>
-                  <Link href="/budget?c=2" className="v-segl" aria-current={view === "second" ? "true" : undefined}>2nd cutoff{cutoffKey === "second" ? " (now)" : ""}</Link>
+                  <Link href={`/budget${keepPlan("?")}`} className="v-segl" aria-current={view === null ? "true" : undefined}>Whole month</Link>
+                  <Link href={`/budget?c=1${keepPlan("&")}`} className="v-segl" aria-current={view === "first" ? "true" : undefined}>1st cutoff{cutoffKey === "first" ? " (now)" : ""}</Link>
+                  <Link href={`/budget?c=2${keepPlan("&")}`} className="v-segl" aria-current={view === "second" ? "true" : undefined}>2nd cutoff{cutoffKey === "second" ? " (now)" : ""}</Link>
                 </div>
               ) : null}
               {fut && cmp ? <Compare shown={shown} without={yearWithout?.find((m) => m.month === month) ?? null} /> : null}
@@ -75,6 +79,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
                 takeHome={shown.pay.takeHome}
                 cutoff={view}
                 cutoffTakeHome={view ? shown.pay[view].takeHome : 0}
+                planId={fut ? null : screen.plan.selected}
               />
               {topUpRaises.length > 0 ? (
                 <div className="v-note">Top-ups come from raises: <b>{topUpRaises.join(", ")}</b>. Change or remove the raise and they follow.</div>

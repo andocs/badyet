@@ -77,10 +77,20 @@ describe('saveLine', () => {
     const { supabase, log } = client({ 'categories:select': { data: { id: CAT } }, 'budget_lines_v2:update': {}, 'pools:select': { data: null } });
     const r = await saveLine(supabase, { ...base, id: LINE, rule: 'fixed', amount: 100_000, pctBp: null, kind: 'rto_contingency' });
     expect(r).toEqual({ ok: true });
-    const first = log.find((e) => e.table === 'budget_lines_v2')!;
-    expect(first.ops.map((o) => o.name)).toEqual(['update', 'eq', 'neq']);
+    // The line's plan is looked up first; the role is then freed only within the same budget (here the normal one).
+    const first = log.find((e) => e.table === 'budget_lines_v2' && e.ops[0]!.name === 'update')!;
+    expect(first.ops.map((o) => o.name)).toEqual(['update', 'eq', 'is', 'neq']);
     expect(first.ops[0]!.args[0]).toEqual({ kind: 'normal' });
     expect(find(log, 'pools', 'insert')?.args[0]).toEqual({ name: 'RTO contingency', budget_line_id: LINE });
+  });
+
+  it('a plan contingency line shares the normal budget pool instead of making one', async () => {
+    const PLAN = '33333333-3333-4333-8333-333333333333';
+    const { supabase, log } = client({ 'categories:select': { data: { id: CAT } }, 'budget_lines_v2:select': { data: { plan_id: PLAN } }, 'pools:select': { data: null } });
+    expect(await saveLine(supabase, { ...base, id: LINE, rule: 'fixed', amount: 100_000, pctBp: null, kind: 'rto_contingency' })).toEqual({ ok: true });
+    const freed = log.find((e) => e.table === 'budget_lines_v2' && e.ops[0]!.name === 'update')!;
+    expect(freed.ops.find((o) => o.name === 'eq' && o.args[0] === 'plan_id')?.args[1]).toBe(PLAN);
+    expect(find(log, 'pools', 'insert')).toBeUndefined();
   });
 
   it('does not add a second pool when one exists', async () => {

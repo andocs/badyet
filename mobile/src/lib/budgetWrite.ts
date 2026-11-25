@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateLine } from '@/lib/budget/line-input';
+import { planIdOf } from '@/lib/budget/plans-write';
 
 export type Result = { ok: true } | { error: string };
 
@@ -18,10 +19,18 @@ export async function saveLine(supabase: SupabaseClient, input: unknown): Promis
     const acct = await supabase.from('accounts').select('id').eq('id', l.accountId).maybeSingle();
     if (!acct.data) return { error: 'That account was not found.' };
   }
+  // A new line goes into the plan being viewed (null = the normal budget); an existing line keeps its plan.
+  let planId = planIdOf(input);
+  if (l.id) {
+    const cur = await supabase.from('budget_lines_v2').select('plan_id').eq('id', l.id).maybeSingle();
+    planId = (cur.data as { plan_id?: string | null } | null)?.plan_id ?? null;
+  }
   if (l.kind === 'rto_contingency') {
     // The database allows one contingency line; free the role first so the save below cannot trip it.
     const q = supabase.from('budget_lines_v2').update({ kind: 'normal' }).eq('kind', 'rto_contingency');
-    await (l.id ? q.neq('id', l.id) : q);
+    // Each budget (the normal one, and each plan) has its own contingency line.
+    const scoped = planId ? q.eq('plan_id', planId) : q.is('plan_id', null);
+    await (l.id ? scoped.neq('id', l.id) : scoped);
   }
 
   const values = {
@@ -47,13 +56,14 @@ export async function saveLine(supabase: SupabaseClient, input: unknown): Promis
     const { error } = await supabase.from('budget_lines_v2').update(values).eq('id', l.id);
     if (error) return { error: 'Could not save the line. Try again.' };
   } else {
-    const { data, error } = await supabase.from('budget_lines_v2').insert(values).select('id').single();
+    const { data, error } = await supabase.from('budget_lines_v2').insert(planId ? Object.assign({}, values, { plan_id: planId }) : values).select('id').single();
     if (error || !data) return { error: 'Could not save the line. Try again.' };
     lineId = data.id as string;
   }
 
   // The contingency line funds a pool of the same name; create it the first time.
-  if (l.kind === 'rto_contingency' && lineId) {
+  // Only the normal budget's contingency line has the pool; a plan's copy reserves the money but shares that pool.
+  if (l.kind === 'rto_contingency' && lineId && !planId) {
     const pool = await supabase.from('pools').select('id').eq('budget_line_id', lineId).maybeSingle();
     if (!pool.data) await supabase.from('pools').insert({ name: 'RTO contingency', budget_line_id: lineId });
   }
