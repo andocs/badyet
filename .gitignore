@@ -47,3 +47,7 @@ next-env.d.ts
 # e2e
 e2e/.auth/
 e2e/results/
+
+# Personal budget notes stay out of the repo
+/docs/HANDOVER-*.md
+/docs/BATCH-*-notes.md

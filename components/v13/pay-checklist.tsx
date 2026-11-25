@@ -7,6 +7,7 @@ import type { ChecklistData } from "@/lib/bills/load";
 import { restOf, type ChecklistLineOut, type WalletOut } from "@/lib/bills/checklist";
 import { money } from "@/lib/domain/money";
 import { V13Icon } from "./icons";
+import { Pick } from "./pick";
 import { Money } from "./money";
 
 type Ready = Extract<ChecklistData, { kind: "ready" }>;
@@ -32,9 +33,12 @@ export function PayChecklistView({ data }: { data: Ready }) {
     if (!l.sent) run(() => tickLine({ lineId: l.id, from: payrollId, amount: (l.amount / 100).toFixed(2) }));
   };
   const pct = checklist.total > 0 ? Math.round((checklist.sent / checklist.total) * 100) : 0;
+  const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const payday = (c: "first" | "second") => `${MON[Number(data.month.slice(5)) - 1]} ${data.paydays[c]}`;
   const tab = (c: "first" | "second", label: string, href: string) => (
-    <Link href={href} className="v-segl" aria-current={data.cutoff === c ? "true" : undefined}>{label}{data.currentCutoff === c ? " (now)" : ""}</Link>
+    <Link href={href} className="v-segl" aria-current={data.cutoff === c ? "true" : undefined}>{label} · {payday(c)}{data.currentCutoff === c ? " (now)" : ""}</Link>
   );
+  const accountOptions = accounts.map((a) => ({ value: a.id, label: a.name }));
 
   return (
     <div className="v-stack v-l">
@@ -51,13 +55,12 @@ export function PayChecklistView({ data }: { data: Ready }) {
 
       <section className="v-card v-stack" aria-label="Progress" style={{ gap: 10 }}>
         <div className="v-row v-sp v-wrap" style={{ gap: 16 }}>
-          <label className="v-field" style={{ minWidth: 240 }}>
-            Send from
-            <select value={payrollId ?? ""} disabled={busy} onChange={(e) => e.target.value && run(() => choosePayAccount(e.target.value))}>
-              <option value="">Pick the account your pay lands in</option>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </label>
+          <div style={{ minWidth: 240 }}>
+            <div className="v-lab">Send from</div>
+            <div style={{ marginTop: 6 }}>
+              <Pick label="Send from" value={payrollId} placeholder="Pick the account your pay lands in" options={accountOptions} disabled={busy} onChange={(id) => run(() => choosePayAccount(id))} />
+            </div>
+          </div>
           <div style={{ flex: 1, minWidth: 240 }}>
             <div className="v-row v-sp"><b>{checklist.sentCount} of {checklist.lineCount} sent</b><span className="v-num"><Money value={checklist.sent} /> of <Money value={checklist.total} /></span></div>
             <div className="v-bar" role="img" aria-label={`${pct} percent sent`}><i style={{ width: `${pct}%` }} /></div>
@@ -83,10 +86,9 @@ export function PayChecklistView({ data }: { data: Ready }) {
             <div key={l.id} className="v-ckl">
               <span className="v-grow">{l.name}</span>
               <span className="v-num"><Money value={l.amount} /></span>
-              <select aria-label={`Wallet for ${l.name}`} value="" disabled={busy} onChange={(e) => e.target.value && run(() => chooseWallet(l.id, e.target.value))}>
-                <option value="">Pick a wallet</option>
-                {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              </select>
+              <div style={{ width: 200 }}>
+                <Pick label={`Wallet for ${l.name}`} value={null} placeholder="Pick a wallet" options={accountOptions} disabled={busy} onChange={(id) => run(() => chooseWallet(l.id, id))} />
+              </div>
             </div>
           ))}
         </details>

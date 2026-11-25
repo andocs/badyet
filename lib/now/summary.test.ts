@@ -83,11 +83,26 @@ describe("Now view", () => {
   });
 
   it("makes an envelope per category that has a plan this cutoff and is not a savings category", () => {
-    expect(v.envelopes.map((e) => e.name)).toEqual(["Food", "Commute"]); // Rent is second cutoff; Stash feeds savings
+    expect(v.envelopes.map((e) => e.name)).toEqual(["Food", "Commute", "Wants"]); // Rent is second cutoff; Stash feeds savings; Wants is the money left after every line
     const food = v.envelopes[0]!;
     expect(food).toMatchObject({ plan: p(7_000), spent: p(2_100), left: p(4_900), pace: p(3_500), overPace: p(-1_400) });
     expect(food.txns.map((t) => t.id)).toEqual(["d", "b", "a"]); // newest first, ignored left out, pending shown
     expect(v.envelopes[1]!.color).toBe("#123456");
+  });
+
+  it("adds a Wants row from what is left after every line, plus what office days sent to Wants and less what they took", () => {
+    // First cutoff: 20,000 take-home less food 7,000, commute 2,800 and stash 900 leaves 9,300.
+    expect(v.envelopes.find((e) => e.name === "Wants")).toMatchObject({ plan: p(9_300), spent: 0 });
+    const more = buildNowView({ ...base("2027-03-17"), movedToWants: p(250), takenFromWants: p(50) });
+    expect(more.envelopes.find((e) => e.name === "Wants")!.plan).toBe(p(9_500));
+  });
+
+  it("counts spending in the categories of the Wants group against that row", () => {
+    const cats = [...categories, { id: "fun", name: "Fun", color: null, feedsSavings: false, groupName: "Wants" }];
+    const t = [...txns, txn({ id: "w1", occurredAt: "2027-03-15T04:00:00Z", amount: p(-400), categoryId: "fun" })];
+    const wants = buildNowView({ ...base("2027-03-17"), categories: cats, txns: t }).envelopes.find((e) => e.name === "Wants")!;
+    expect(wants).toMatchObject({ plan: p(9_300), spent: p(400), left: p(8_900) });
+    expect(wants.txns.map((x) => x.id)).toEqual(["w1"]);
   });
 
   it("lists bills and transfers with their sent state", () => {
