@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-40 Batch 5 fixes
-- **Gate:** none
-- **Next action:** rev-40: RTO deselect prompt, hide Transfer, SSS/Pag-IBIG official, chart default, late emails, deduction sections, savings plan per fund
-- **User to-do now:** Apply migration 20261221000000_savings_and_custom_slots.sql; on the phone force-close and reopen the app (up to twice) to get the OTA update
+- **Gate:** waiting
+- **Next action:** Gate rev-40; on approve merge to main and publish OTA; then rev-41 pay checklist mockups; Wants in Planned vs spent when the user replies
+- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; tell me how your Wants lines are set up (Choose on Planned vs spent: is Wants listed?)
 
 ## 3. Execution log
 
@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
 - 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
 - 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
+- 2026-11-25 18:54 | rev-40 | Batch 5 fixes: SSS (SSS Circular 2024-006 table, 5% of MSC) and Pag-IBIG (2% to 10k cap) computed, phone field shows real amount; RTO skip prompt + skipped days listed at once, un-skip clears settle; Transfer category/group hidden, Inbox Transfer button (asTransfer); Forecast chart default saved-so-far + balance switch; transfer pairing windows 60 min gap / 3 h lookback; payslip Necessary vs Other deductions, HMO plan name + editor (web+phone), Budget read-only From your payslip card; savings plan shown per fund (forecast month sheet, Funds page). Migration 20261222000000_payroll_labels.sql. Wants in Planned vs spent pending user info. | 8860ac7
 
 ## 4. Open questions
 
@@ -88,7 +89,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,790,503 | 20,428,442 | 834,196 | 8,567,128 | 816,120,760 | 3,434,541 |  |
+| **Cumulative** | 5,137,200 | 21,542,798 | 901,812 | 8,739,620 | 858,387,987 | 3,532,698 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -150,6 +151,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-37 | 59,752 | 236,347 | 11,859 | 0 | 0 | 0 |  |
 | rev-38 | 71,440 | 325,505 | 13,060 | 0 | 0 | 0 |  |
 | rev-39 | 86,578 | 297,338 | 17,560 | 584,423 | 17,689,981 | 48,682 |  |
+| rev-40 | 147,843 | 333,414 | 22,018 | 119,072 | 30,873,194 | 68,565 |  |
 
 <!-- END SUMMARY -->
 
@@ -176,6 +178,16 @@ Batch 5 (notes in docs/BATCH-5-notes.md, 2026-11-25). Decisions: necessary deduc
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-40: what you do now
+1. Get the code:   git fetch && git checkout rev/40-batch5-fixes   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       apply supabase/migrations/20261222000000_payroll_labels.sql (adds pay_settings.other_deduction_label). Rollback: alter table public.pay_settings drop column if exists other_deduction_label;
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000   (or the Vercel preview for rev/40-batch5-fixes)
+6. Check these:    Salary and tax: Other payroll deduction > name it HMO plan > Save; Payslip builder shows Necessary deductions / Other deductions; SSS and Pag-IBIG amounts are the table values (SSS 1,750 at a 50,000 base); Budget > From your payslip card; Budget > Office days: tap a usual day off > "Put it in: Wants / Contingency pool / Savings"; Inbox: a pending item has a "Transfer" button, and no Transfer category anywhere in Budget; Forecast: chart defaults to Saved so far, with a Balance switch; Funds / Forecast month sheet show "from your payroll savings plan" on the plan fund
+7. Known limits:   Wants in Planned vs spent not changed yet (needs your answer); pay checklist is next (mockups); the phone gets rev-40 by OTA after approval
+Reply: Approve / Request changes / Pause
 
 AFTER REV-39: what you do now
 1. Get the code:   git fetch && git checkout rev/39-batch4-leftovers   (merge to main after you approve)
