@@ -46,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:23 | rev-43 | Approved; merged to main (a30e9ea); OTA published (group a4ae1f48-ba76-497e-ac73-2c58eaa107b2); Vercel main: success | -
 - 2026-11-25 19:41 | rev-45 | Savings plan fund link (uncapped, never resets), pills removed, Other payroll deduction moved beside payslip builder, salary-based contribution labels. All checks PASS. | f3b61f8
 - 2026-11-25 19:47 | rev-45 | Other deductions list per cutoff (needs migration 20261225000000_other_deductions.sql), no-cap funds, chart stack order. Checks PASS. | -
+- 2026-11-25 19:49 | rev-44 | Merged into rev-45 branch so inbox items (incl. All activity) can be edited | -
 
 ## 4. Open questions
 
