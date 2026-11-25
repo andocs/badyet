@@ -874,3 +874,13 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-agroup.v-busy .v-acslot{opacity:.7}
 .v-acslot.v-moved .v-acard{animation:v13shimmer 1s linear infinite;background-image:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0));background-size:200% 100%}
 @media(prefers-reduced-motion:reduce){.v-acslot.v-moved .v-acard{animation:none}}
+
+/* rev-42: pay checklist */
+.v-ckgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.v-wal{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:8px}.v-wal.v-dn{border-color:var(--accent)}
+.v-ckl{display:flex;align-items:center;gap:12px;min-height:48px;border-top:1px solid var(--line)}.v-ckl:first-child{border-top:0}
+.v-ckl.v-dn .v-ckn{color:var(--muted);text-decoration:line-through}
+.v-ckb{width:28px;height:28px;border-radius:14px;border:1.5px solid var(--line);background:transparent;display:grid;place-items:center;color:transparent;cursor:pointer;flex:none;padding:0}
+.v-ckb .v-i{width:14px;height:14px}
+.v-ckb[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#04281c}
+.v-ckb:disabled{cursor:default}.v-ckb:not([aria-pressed=true]):disabled{opacity:.5}

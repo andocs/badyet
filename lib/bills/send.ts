@@ -6,6 +6,25 @@ const MAX = 100_000_000_000;
 
 export type BillResult = { ok: true } | { error: string };
 
+/** Two confirmed transfer rows that point at each other: money out of `from`, the same amount into `to`. */
+async function insertTransferPair(supabase: SupabaseClient, input: { from: string; to: string; amount: number; merchant: string; lineId: string | null }): Promise<BillResult> {
+  const now = new Date().toISOString();
+  const base = { occurred_at: now, merchant: input.merchant.slice(0, 80), status: "confirmed", confirmed_at: now, kind: "transfer", source: "transfer", ...(input.lineId ? { budget_line_id: input.lineId } : {}) };
+  const { data, error } = await supabase
+    .from("transactions")
+    .insert([
+      { ...base, account_id: input.from, amount: -input.amount },
+      { ...base, account_id: input.to, amount: input.amount },
+    ])
+    .select("id, account_id");
+  if (error || !data || data.length !== 2) return { error: "Could not save that. Try again." };
+  const out = data.find((r) => r.account_id === input.from)!;
+  const inn = data.find((r) => r.account_id === input.to)!;
+  const a = await supabase.from("transactions").update({ transfer_peer_id: inn.id }).eq("id", out.id);
+  const b = await supabase.from("transactions").update({ transfer_peer_id: out.id }).eq("id", inn.id);
+  return a.error || b.error ? { error: "The money moved but the two sides were not linked. Check Inbox." } : { ok: true };
+}
+
 /**
  * Marks a bill (a budget line that goes to an account) sent: the money really moves, and the rows carry the line so Now shows it
  * sent for the cutoff. Paid from another of your accounts, it is a transfer into the line's account; paid out of the line's own
@@ -23,25 +42,39 @@ export async function markBillSent(supabase: SupabaseClient, input: { lineId: st
   const owned = await supabase.from("accounts").select("id").in("id", [...new Set([input.from, to])]).is("archived_at", null);
   if ((owned.data ?? []).length !== (input.from === to ? 1 : 2)) return { error: "One of those accounts was not found." };
 
-  const now = new Date().toISOString();
-  const base = { occurred_at: now, merchant: String(line.data.name).slice(0, 80), status: "confirmed", confirmed_at: now, budget_line_id: input.lineId };
   if (input.from === to) {
-    const r = await supabase.from("transactions").insert({ ...base, account_id: to, amount: -amount, kind: "expense", category_id: line.data.category_id, source: "manual" });
+    const now = new Date().toISOString();
+    const r = await supabase.from("transactions").insert({ occurred_at: now, merchant: String(line.data.name).slice(0, 80), status: "confirmed", confirmed_at: now, budget_line_id: input.lineId, account_id: to, amount: -amount, kind: "expense", category_id: line.data.category_id, source: "manual" });
     return r.error ? { error: "Could not save that. Try again." } : { ok: true };
   }
-  const { data, error } = await supabase
-    .from("transactions")
-    .insert([
-      { ...base, account_id: input.from, amount: -amount, kind: "transfer", source: "transfer" },
-      { ...base, account_id: to, amount, kind: "transfer", source: "transfer" },
-    ])
-    .select("id, account_id");
-  if (error || !data || data.length !== 2) return { error: "Could not save that. Try again." };
-  const out = data.find((r) => r.account_id === input.from)!;
-  const inn = data.find((r) => r.account_id === to)!;
-  const a = await supabase.from("transactions").update({ transfer_peer_id: inn.id }).eq("id", out.id);
-  const b = await supabase.from("transactions").update({ transfer_peer_id: out.id }).eq("id", inn.id);
-  return a.error || b.error ? { error: "The money moved but the two sides were not linked. Check Inbox." } : { ok: true };
+  return insertTransferPair(supabase, { from: input.from, to, amount, merchant: String(line.data.name), lineId: input.lineId });
+}
+
+/**
+ * "Send the rest" on the pay checklist: one transfer from the payroll account to a wallet for everything not yet sent there. It is not
+ * tied to one line; the checklist reads it as covering the wallet's unsent lines in budget order.
+ */
+export async function sendLump(supabase: SupabaseClient, input: { from: string; to: string; amount: number }): Promise<BillResult> {
+  if (!UUID.test(input.from) || !UUID.test(input.to)) return { error: "Pick both accounts." };
+  if (input.from === input.to) return { error: "That money is already in the payroll account." };
+  if (!Number.isInteger(input.amount) || input.amount <= 0 || input.amount > MAX) return { error: "Enter an amount above zero." };
+  const owned = await supabase.from("accounts").select("id").in("id", [input.from, input.to]).is("archived_at", null);
+  if ((owned.data ?? []).length !== 2) return { error: "One of those accounts was not found." };
+  return insertTransferPair(supabase, { from: input.from, to: input.to, amount: input.amount, merchant: "Pay checklist", lineId: null });
+}
+
+/**
+ * Cancels a transfer made from the pay checklist (a tick, or a lump) with its other side. One that came from a bank notification
+ * is not the app's to cancel: ignore it in the Inbox instead.
+ */
+export async function cancelTransfer(supabase: SupabaseClient, outId: string): Promise<BillResult> {
+  if (!UUID.test(outId)) return { error: "That transfer was not found." };
+  const row = await supabase.from("transactions").select("id, kind, source, status, transfer_peer_id").eq("id", outId).maybeSingle();
+  if (!row.data || row.data.kind !== "transfer" || row.data.status === "ignored") return { error: "That transfer was not found." };
+  if (row.data.source !== "transfer") return { error: "That one came from a notification. Ignore it in the Inbox instead." };
+  const ids = [row.data.id as string, ...(row.data.transfer_peer_id ? [row.data.transfer_peer_id as string] : [])];
+  const r = await supabase.from("transactions").update({ status: "ignored" }).in("id", ids);
+  return r.error ? { error: "Could not undo that. Try again." } : { ok: true };
 }
 
 /**

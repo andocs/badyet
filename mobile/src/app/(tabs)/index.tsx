@@ -301,6 +301,7 @@ function Envelopes({ envelopes: all, shown, dayNumber, daysTotal, onChanged }: {
 
 function Bills({ view, accounts, onChanged }: { view: NowView; accounts: AccountCard[]; onChanged: () => void }) {
   const c = useTheme();
+  const router = useRouter();
   const sent = view.bills.filter((b) => b.sent).length;
   const [paying, setPaying] = useState<Bill | null>(null);
   const undo = (b: Bill) =>
@@ -320,6 +321,9 @@ function Bills({ view, accounts, onChanged }: { view: NowView; accounts: Account
     <Card>
       <View style={s.between}>
         <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Bills and transfers</Text>
+        <Pressable onPress={() => router.navigate('/plan/checklist')} accessibilityRole="link" style={{ minHeight: 36, justifyContent: 'center' }}>
+          <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>Pay checklist ›</Text>
+        </Pressable>
         {view.bills.length > 0 ? (
           <View style={[s.pill, { backgroundColor: sent === view.bills.length ? c.tint : c.soft }]}>
             <Text style={{ color: sent === view.bills.length ? c.accentText : c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>
