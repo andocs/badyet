@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** batch 5 done
-- **Gate:** none
-- **Next action:** Batch 5 done. Ask the user for the next revisions (optional: whole-month tab on the pay checklist, styled pickers on other web pages) or finish
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
+- **Active slice / milestone:** rev-44 Edit Inbox item
+- **Gate:** paused
+- **Next action:** rev-44 (edit an Inbox item) is on branch rev/44-inbox-edit (7176cd1), not merged. User paused at the gate. On resume: ask Approve (+ OTA) / Request changes
+- **User to-do now:** Try the Inbox Edit on the rev/44-inbox-edit preview, then approve or request changes; apply migration 20261222000000_payroll_labels.sql if not yet
 
 ## 3. Execution log
 
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
 - 2026-11-25 19:21 | rev-43 | Wants row in Planned vs spent (plan = whatever-is-left + moved to Wants - taken; spent = Wants group categories); Choose dropdown floats (absolute popover, closes outside/Esc); docs/BATCH-5-notes.md and HANDOVER-batch-4.md removed and ignored; pay checklist uses a styled Pick dropdown, tab labels with payday dates. No migration. | 387f82f
 - 2026-11-25 19:23 | rev-43 | Approved; merged to main (a30e9ea); OTA published (group a4ae1f48-ba76-497e-ac73-2c58eaa107b2); Vercel main: success | -
+- 2026-11-25 19:28 | rev-44 | Edit an Inbox item: shared lib/inbox/edit.ts (validate + editTransaction; transfers update both legs; dedupe hash untouched); web Edit in the item dialog (InboxEditForm), phone InboxEditSheet from card Edit or activity row. No migration. | 7176cd1
 
 ## 4. Open questions
 
@@ -83,7 +84,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 |  |
+| **Cumulative** | 5,222,920 | 21,844,710 | 920,661 | 8,891,549 | 907,324,148 | 3,658,368 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -149,6 +150,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-41 | 0 | 0 | 0 | 16,704 | 1,519,405 | 14,361 |  |
 | rev-42 | 47,003 | 183,558 | 8,760 | 61,365 | 13,044,241 | 46,014 |  |
 | rev-43 | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 | no mark 'rev-43': all-time |
+| rev-44 | 5,222,920 | 21,844,710 | 920,661 | 8,891,549 | 907,324,148 | 3,658,368 | no mark 'rev-44': all-time |
 
 <!-- END SUMMARY -->
 
