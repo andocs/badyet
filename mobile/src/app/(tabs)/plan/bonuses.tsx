@@ -8,7 +8,7 @@ import { money } from '@/lib/domain/money';
 import type { BonusRule } from '@/lib/engine/types';
 import { EXEMPTION_CAP } from '@/lib/windfall/compute';
 import { EditBonusSheet, ReceivedSheet, RuleSheet } from '~/components/BonusSheets';
-import { Amount, Body, Card, Chip, Notice, Screen } from '~/components/ui';
+import { Amount, Body, Card, Chip, Notice, Screen, Tick } from '~/components/ui';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
 import { supabase } from '~/lib/supabase';
@@ -102,9 +102,7 @@ function CardView({
               style={[s.between, { minHeight: 44 }]}
             >
               <View style={[s.row, { flex: 1 }]}>
-                <View style={[s.check, { backgroundColor: d.done || received ? c.accent : 'transparent', borderColor: d.done || received ? c.accent : c.line }]}>
-                  {d.done || received ? <Text style={{ color: c.onAccent, fontSize: 12, fontFamily: fonts.bodyBold }}>✓</Text> : null}
-                </View>
+                <Tick on={d.done || received} size={22} />
                 <View style={[s.dot, { backgroundColor: colors[destKey(d)] ?? c.muted }]} />
                 <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15, flexShrink: 1 }}>{d.name}</Text>
               </View>
@@ -250,5 +248,4 @@ const s = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dot: { width: 10, height: 10, borderRadius: 5 },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

@@ -15,7 +15,7 @@ import { GmailBanner } from '~/components/GmailBanner';
 import { stableColor } from '@/lib/accounts/order';
 import { HeldNotice } from '~/components/HeldNotice';
 import { Runway } from '~/components/Runway';
-import { Amount, Body, Card, Notice, Screen } from '~/components/ui';
+import { Amount, Body, Card, Notice, Screen, Tick } from '~/components/ui';
 import { resolveColor } from '~/lib/color';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
@@ -345,9 +345,7 @@ function Bills({ view, accounts, onChanged }: { view: NowView; accounts: Account
               style={[s.between, { minHeight: 44 }]}
             >
               <View style={[s.row, { flex: 1 }]}>
-                <View style={[s.check, { backgroundColor: b.sent ? c.accent : 'transparent', borderColor: b.sent ? c.accent : c.line }]} accessibilityLabel={b.sent ? 'sent' : 'not sent yet'}>
-                  {b.sent ? <Text style={{ color: c.onAccent, fontSize: 12, fontFamily: fonts.bodyBold }}>✓</Text> : null}
-                </View>
+                <Tick on={b.sent} size={22} />
                 <Body>{b.name}</Body>
               </View>
               <Amount value={b.amount} style={{ color: b.sent ? c.muted : c.ink }} />
@@ -394,5 +392,4 @@ const s = StyleSheet.create({
   pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 2 },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   marker: { position: 'absolute', top: -3, width: 2, height: 14, borderRadius: 1 },
-  check: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
 });

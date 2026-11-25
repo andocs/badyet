@@ -30,6 +30,8 @@ export interface PayslipLine {
   label: string;
   source: PayslipLineSpec["source"] | "allowance" | "savings_plan" | "other_deduction" | "bonus" | "de_minimis" | "one_off";
   amount: Money;
+  /** An other deduction set to show under a budget line: that line's id. */
+  ref?: string;
 }
 
 export interface Payslip {
@@ -233,7 +235,7 @@ export function buildMonthPay(
     if (others.length > 0) {
       for (const o of others) {
         const amount = o.cutoff === "both" ? (cutoff === "second" ? (o.amountSecond ?? o.amount) : o.amount) : o.cutoff === cutoff ? o.amount : ZERO;
-        if (amount > 0) lines.push({ kind: "deduction", label: o.label.trim() || "Other deduction", source: "other_deduction", amount });
+        if (amount > 0) lines.push({ kind: "deduction", label: o.label.trim() || "Other deduction", source: "other_deduction", amount, ...(o.lineId ? { ref: o.lineId } : {}) });
       }
     } else if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: settings.otherDeductionLabel?.trim() || "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
     for (const b of bonuses) {

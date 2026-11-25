@@ -110,11 +110,11 @@ export function otherDeductionsOf(raw: unknown): OtherDeductionItem[] {
   if (!Array.isArray(raw)) return [];
   const out: OtherDeductionItem[] = [];
   for (const x of raw) {
-    const o = x as { label?: unknown; cutoff?: unknown; amount?: unknown; amountSecond?: unknown } | null;
+    const o = x as { label?: unknown; cutoff?: unknown; amount?: unknown; amountSecond?: unknown; lineId?: unknown } | null;
     if (!o || typeof o.amount !== "number" || !Number.isInteger(o.amount) || o.amount < 0) continue;
     const cutoff = o.cutoff === "first" || o.cutoff === "second" ? o.cutoff : "both";
     const second = typeof o.amountSecond === "number" && Number.isInteger(o.amountSecond) && o.amountSecond >= 0 ? money(o.amountSecond) : null;
-    out.push({ label: typeof o.label === "string" ? o.label : "", cutoff, amount: money(o.amount), amountSecond: cutoff === "both" ? second : null });
+    out.push({ label: typeof o.label === "string" ? o.label : "", cutoff, amount: money(o.amount), amountSecond: cutoff === "both" ? second : null, lineId: typeof o.lineId === "string" && o.lineId !== "" ? o.lineId : null });
   }
   return out;
 }

@@ -27,6 +27,8 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
   const hasStart = input.events.some((e) => e.kind === "start");
   const fundsRes = await supabase.from("funds").select("id, name").is("archived_at", null).order("priority");
   const funds = (fundsRes.data ?? []) as { id: string; name: string }[];
+  const linesRes = await supabase.from("budget_lines_v2").select("id, name").order("sort");
+  const lines = (linesRes.data ?? []) as { id: string; name: string }[];
   const plan = { bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null };
 
   const months = monthRange(thisMonth, 60);
@@ -57,7 +59,7 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
             {isPayslip ? (
               <>
                 <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
-                <OtherDeductionCard items={otherDeductionDrafts(input.settings)} />
+                <OtherDeductionCard items={otherDeductionDrafts(input.settings)} lines={lines} />
               </>
             ) : (
               <>

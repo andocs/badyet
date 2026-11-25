@@ -53,6 +53,8 @@ export interface OtherDeductionItem {
   cutoff: "first" | "second" | "both";
   amount: Money;
   amountSecond: Money | null;
+  /** The budget line it is shown under on the Budget page (an id), or null. */
+  lineId?: string | null;
 }
 
 export interface PaySettings {

@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { BudgetBoard } from "@/components/v13/budget/board";
 import { PlanBar } from "@/components/v13/budget/plan-bar";
+import { payrollOnLines } from "@/lib/budget/payroll";
 import { PayrollDeductionsCard } from "@/components/v13/budget/payroll-card";
 import { YearMonths } from "@/components/v13/budget/year-months";
 import { CategoriesCard, PoolsCard, RtoCard, SettleCard } from "@/components/v13/budget/side-cards";
@@ -63,7 +64,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
               {fut ? <FutureYears year={year} thisYear={Number(thisMonth.slice(0, 4))} month={month} run={yearRun!} without={yearWithout} cmp={cmp} link={link} groupsList={data.groups} colors={colors} /> : null}
               {!fut ? <PlanBar plans={screen.plan.list} selected={screen.plan.selected} activeNow={screen.plan.activeNow} thisMonth={thisMonth} /> : null}
               <Summary screen={screen} data={data} />
-              {shown ? <PayrollDeductionsCard pay={shown.pay} /> : null}
+              {shown ? <PayrollDeductionsCard pay={shown.pay} lineIds={new Set(groups.flatMap((g) => g.lines.map((l) => l.id)))} /> : null}
               {!fut ? (
                 <div className="v-seg" role="group" aria-label="Show" style={{ alignSelf: "flex-start" }}>
                   <Link href={`/budget${keepPlan("?")}`} className="v-segl" aria-current={view === null ? "true" : undefined}>Whole month</Link>
@@ -82,6 +83,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
                 cutoff={view}
                 cutoffTakeHome={view ? shown.pay[view].takeHome : 0}
                 planId={fut ? null : screen.plan.selected}
+                payroll={payrollOnLines(shown.pay, new Set(groups.flatMap((g) => g.lines.map((l) => l.id)))).byLine}
               />
               {topUpRaises.length > 0 ? (
                 <div className="v-note">Top-ups come from raises: <b>{topUpRaises.join(", ")}</b>. Change or remove the raise and they follow.</div>

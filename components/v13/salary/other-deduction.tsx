@@ -6,8 +6,9 @@ import { money, parsePesos } from "@/lib/domain/money";
 import { MAX_OTHER_DEDUCTIONS, type OtherDeductionDraft } from "@/lib/pay/other-deduction";
 import { useToast } from "../feedback";
 import { Money } from "../money";
+import { Pick } from "../pick";
 
-const blank = (): OtherDeductionDraft => ({ label: "", cutoff: "both", amount: "", amountSecond: "" });
+const blank = (): OtherDeductionDraft => ({ label: "", cutoff: "both", amount: "", amountSecond: "", lineId: "" });
 
 /** What one row takes in the 1st and 2nd cutoff, or null while it is not readable yet. */
 function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | null {
@@ -23,7 +24,7 @@ function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | 
  * with its own amount in each. They lower your take-home, show in their own section on the payslip, and the Budget page lists them
  * without counting them in the planned total.
  */
-export function OtherDeductionCard({ items }: { items: OtherDeductionDraft[] }) {
+export function OtherDeductionCard({ items, lines }: { items: OtherDeductionDraft[]; /** Your budget lines, to choose which one a deduction shows under. */ lines: { id: string; name: string }[] }) {
   const toast = useToast();
   const [busy, start] = useTransition();
   const [rows, setRows] = useState<OtherDeductionDraft[]>(items);
@@ -53,19 +54,23 @@ export function OtherDeductionCard({ items }: { items: OtherDeductionDraft[] }) 
         const pc = perCutoff(d);
         return (
           <div key={i} className="v-stack" style={{ gap: 10, paddingTop: i === 0 ? 0 : 12, borderTop: i === 0 ? "none" : "1px solid var(--line)" }}>
-            <div className="v-two">
-              <label className="v-field">Name<input value={d.label} maxLength={30} placeholder="HMO plan" onChange={(e) => set(i, { label: e.target.value })} /></label>
-              <label className="v-field">{d.cutoff === "both" ? "1st cutoff amount (₱)" : "Amount (₱)"}<input value={d.amount} inputMode="decimal" placeholder="0" onChange={(e) => set(i, { amount: e.target.value })} /></label>
-            </div>
-            <div className="v-two">
-              <div className="v-field">Cutoff
-                <div className="v-seg" role="group" aria-label={`Cutoff for ${d.label || "this deduction"}`} style={{ width: "100%" }}>
-                  {([["first", "1st"], ["second", "2nd"], ["both", "Both"]] as const).map(([v, l]) => <button key={v} type="button" style={{ flex: 1 }} aria-pressed={d.cutoff === v} onClick={() => set(i, { cutoff: v })}>{l}</button>)}
+            <div className="v-row" style={{ gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <label className="v-field" style={{ flex: "1 1 180px" }}>Name<input value={d.label} maxLength={30} placeholder="HMO plan" onChange={(e) => set(i, { label: e.target.value })} /></label>
+              <div className="v-field" style={{ flex: "none" }}>Cutoff
+                <div className="v-seg" role="group" aria-label={`Cutoff for ${d.label || "this deduction"}`} style={{ width: "fit-content" }}>
+                  {([["first", "1st"], ["second", "2nd"], ["both", "Both"]] as const).map(([v, l]) => <button key={v} type="button" aria-pressed={d.cutoff === v} onClick={() => set(i, { cutoff: v })}>{l}</button>)}
                 </div>
               </div>
+            </div>
+            <div className="v-two">
+              <label className="v-field">{d.cutoff === "both" ? "1st cutoff (₱)" : "Amount (₱)"}<input value={d.amount} inputMode="decimal" placeholder="0" onChange={(e) => set(i, { amount: e.target.value })} /></label>
               {d.cutoff === "both" ? (
-                <label className="v-field">2nd cutoff amount (₱, empty = same as the 1st)<input value={d.amountSecond} inputMode="decimal" placeholder={d.amount} onChange={(e) => set(i, { amountSecond: e.target.value })} /></label>
+                <label className="v-field">2nd cutoff (₱, empty = same)<input value={d.amountSecond} inputMode="decimal" placeholder={d.amount} onChange={(e) => set(i, { amountSecond: e.target.value })} /></label>
               ) : null}
+            </div>
+            <div>
+              <div className="v-lab">Show under this budget line</div>
+              <div style={{ marginTop: 6 }}><Pick label="Budget line" value={d.lineId} placeholder="No line (listed separately)" options={[{ value: "", label: "No line (listed separately)" }, ...lines.map((l) => ({ value: l.id, label: l.name }))]} onChange={(v) => set(i, { lineId: v })} /></div>
             </div>
             <div className="v-row v-sp">
               <div className="v-xs v-muted" aria-live="polite">

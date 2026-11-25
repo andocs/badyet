@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { payrollOnLines, type PayrollOnLine } from '@/lib/budget/payroll';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
@@ -260,7 +261,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
+function LineRow({ l, payroll, onPress }: { l: LineView; payroll: PayrollOnLine[]; onPress: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
@@ -269,6 +270,11 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
       <View style={{ flex: 1 }}>
         <Body bold>{l.name}</Body>
         <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{sub}</Text>
+        {payroll.map((d) => (
+          <Text key={d.label} style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+            {d.label} {peso(money(d.amount), hide)} from your payslip
+          </Text>
+        ))}
         {l.spent ? (
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
             {peso(l.spent.amount, hide)} {l.spent.word}
@@ -292,7 +298,7 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
   );
 }
 
-function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+function Board({ groups, data, payroll, onEdit, onAdd }: { payroll: Record<string, PayrollOnLine[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
@@ -315,7 +321,7 @@ function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: Bud
               <View style={{ width: `${g.share}%`, height: 6, borderRadius: 3, backgroundColor: c.accent }} />
             </View>
             {g.lines.map((l) => (
-              <LineRow key={l.id} l={l} onPress={() => onEdit(l)} />
+              <LineRow key={l.id} l={l} payroll={payroll[l.id] ?? []} onPress={() => onEdit(l)} />
             ))}
             {firstCategory ? (
               <Pressable onPress={() => onAdd(firstCategory)} accessibilityRole="button" style={[s.add, { backgroundColor: c.soft }]}>
@@ -395,7 +401,8 @@ export default function Budget() {
               ) : null}
 
               {(() => {
-                const lines = [...screen.shown.pay.first.lines, ...screen.shown.pay.second.lines].filter((l) => l.source === 'other_deduction' || l.source === 'savings_plan');
+                // An other deduction set to show under a budget line is shown on that line, so only the rest is listed here.
+                const lines = payrollOnLines(screen.shown.pay, new Set(screen.groups.flatMap((g) => g.lines.map((l) => l.id)))).loose;
                 if (lines.length === 0) return null;
                 const byName = new Map<string, number[]>();
                 for (const l of lines) byName.set(l.label, [...(byName.get(l.label) ?? []), l.amount]);
@@ -462,6 +469,7 @@ export default function Budget() {
               <Board
                 groups={cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups}
                 data={data}
+                payroll={payrollOnLines(screen.shown.pay, new Set(screen.groups.flatMap((g) => g.lines.map((l) => l.id)))).byLine}
                 onEdit={(l) => setEditing(draftOf(l))}
                 onAdd={(cat) => setEditing(blankDraft(cat))}
               />

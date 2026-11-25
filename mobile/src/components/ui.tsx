@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import type { ReactNode } from 'react';
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Animated, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Money } from '@/lib/domain/money';
 import { useHide } from '~/lib/hide';
@@ -85,8 +85,44 @@ export function Bar({ fraction, color, over }: { fraction: number; color: string
   );
 }
 
+/** Placeholder bars while a screen's data loads: they pulse so the screen visibly responds at once. */
+export function Loading() {
+  const c = useTheme();
+  const [pulse] = useState(() => new Animated.Value(0.5));
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }), Animated.timing(pulse, { toValue: 0.5, duration: 700, useNativeDriver: true })]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulse]);
+  return (
+    <Animated.View style={{ opacity: pulse, gap: 12 }} accessibilityRole="progressbar" accessibilityLabel="Loading">
+      <View style={{ height: 120, borderRadius: 14, backgroundColor: c.soft }} />
+      <View style={{ height: 76, borderRadius: 14, backgroundColor: c.soft }} />
+      <View style={{ height: 76, borderRadius: 14, backgroundColor: c.soft }} />
+    </Animated.View>
+  );
+}
+
+/** The one tickbox: a rounded square, accent green with a check mark when ticked. Put it inside a Pressable that carries the tap. */
+export function Tick({ on, size = 24 }: { on: boolean; size?: number }) {
+  const c = useTheme();
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={{ width: size, height: size, borderRadius: Math.round(size * 0.3), borderWidth: 2, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? c.accent : 'transparent', borderColor: on ? c.accent : c.muted }}
+    >
+      {on ? <Text style={{ color: c.onAccent, fontSize: Math.round(size * 0.55), lineHeight: Math.round(size * 0.7), fontFamily: fonts.bodyBold }}>✓</Text> : null}
+    </View>
+  );
+}
+
 export function Notice({ children, tone }: { children: ReactNode; tone?: 'error' }) {
   const c = useTheme();
+  // Every screen says "Loading…" while its data loads; show placeholder bars for that instead of a line of text.
+  if (children === 'Loading…') return <Loading />;
   return (
     <Card style={tone === 'error' ? { backgroundColor: c.errTint, borderColor: c.err } : undefined}>
       <Text style={{ color: tone === 'error' ? c.err : c.muted, fontFamily: fonts.body, fontSize: 15 }}>{children}</Text>

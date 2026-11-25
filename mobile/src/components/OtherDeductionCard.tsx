@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { money, formatPesos, parsePesos } from '@/lib/domain/money';
 import { MAX_OTHER_DEDUCTIONS, saveOtherDeductions, type OtherDeductionDraft } from '@/lib/pay/other-deduction';
 import { Input } from '~/components/Sheet';
@@ -7,7 +7,7 @@ import { Card, Chip, Label } from '~/components/ui';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
-const blank = (): OtherDeductionDraft => ({ label: '', cutoff: 'both', amount: '', amountSecond: '' });
+const blank = (): OtherDeductionDraft => ({ label: '', cutoff: 'both', amount: '', amountSecond: '', lineId: '' });
 
 /** What one row takes in the 1st and 2nd cutoff, or null while it is not readable yet. */
 function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | null {
@@ -22,7 +22,7 @@ function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | 
  * Payroll deductions that are not the necessary ones, such as your HMO plan or a loan. Each is on the 1st cutoff, the 2nd, or both,
  * with its own amount in each. The Budget page lists them without counting them in the planned total.
  */
-export function OtherDeductionCard({ items, onSaved }: { items: OtherDeductionDraft[]; onSaved: () => void }) {
+export function OtherDeductionCard({ items, lines, onSaved }: { items: OtherDeductionDraft[]; /** Your budget lines, to choose which one a deduction shows under. */ lines: { id: string; name: string }[]; onSaved: () => void }) {
   const c = useTheme();
   const [rows, setRows] = useState<OtherDeductionDraft[]>(items);
   const [problem, setProblem] = useState<string | null>(null);
@@ -53,15 +53,28 @@ export function OtherDeductionCard({ items, onSaved }: { items: OtherDeductionDr
         return (
           <View key={i} style={{ gap: 8, paddingTop: i === 0 ? 0 : 12, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: c.line }}>
             <Input value={d.label} onChangeText={(t) => set(i, { label: t })} maxLength={30} placeholder="Name, e.g. HMO plan" />
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8, alignSelf: 'flex-start' }}>
               {([['first', '1st'], ['second', '2nd'], ['both', 'Both']] as const).map(([v, l]) => (
                 <Chip key={v} label={l} on={d.cutoff === v} onPress={() => set(i, { cutoff: v })} />
               ))}
             </View>
-            <Input value={d.amount} onChangeText={(t) => set(i, { amount: t })} keyboardType="decimal-pad" placeholder={d.cutoff === 'both' ? '1st cutoff amount (₱)' : 'Amount (₱)'} />
-            {d.cutoff === 'both' ? (
-              <Input value={d.amountSecond} onChangeText={(t) => set(i, { amountSecond: t })} keyboardType="decimal-pad" placeholder={d.amount.trim() === '' ? '2nd cutoff amount (empty = same)' : `2nd cutoff amount (empty = ${d.amount})`} />
-            ) : null}
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Input value={d.amount} onChangeText={(t) => set(i, { amount: t })} keyboardType="decimal-pad" placeholder={d.cutoff === 'both' ? '1st cutoff (₱)' : 'Amount (₱)'} />
+              </View>
+              {d.cutoff === 'both' ? (
+                <View style={{ flex: 1 }}>
+                  <Input value={d.amountSecond} onChangeText={(t) => set(i, { amountSecond: t })} keyboardType="decimal-pad" placeholder={d.amount.trim() === '' ? '2nd (empty = same)' : `2nd (empty = ${d.amount})`} />
+                </View>
+              ) : null}
+            </View>
+            <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>Show under this budget line</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              <Chip label="None" on={d.lineId === ''} onPress={() => set(i, { lineId: '' })} />
+              {lines.map((l) => (
+                <Chip key={l.id} label={l.name} on={d.lineId === l.id} onPress={() => set(i, { lineId: l.id })} />
+              ))}
+            </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12, flex: 1 }}>
                 {pc ? `${formatPesos(money(pc.first + pc.second))} a month${pc.first > 0 && pc.second > 0 ? `: ${formatPesos(money(pc.first))} in the 1st, ${formatPesos(money(pc.second))} in the 2nd` : `, all in the ${pc.first > 0 ? '1st' : '2nd'} cutoff`}` : ''}
