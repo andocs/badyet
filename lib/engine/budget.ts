@@ -30,6 +30,8 @@ export interface BudgetInput {
   raiseExtras?: Readonly<Record<string, Record<PayCutoff, Money>>>;
   /** Flag a cutoff as tight when the rest line falls below this. Default 0 (never tight). */
   tightBelow?: Money;
+  /** Office-day money settled to savings in this month: it adds to the savings pool. */
+  extraSavings?: Money;
   includeDrafts?: boolean;
   /** Budget plans: each cutoff uses the lines of the plan in force for it, or the normal budget's lines when none is. */
   plans?: readonly PlanSpan[];
@@ -135,7 +137,7 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
     rest,
     over,
     tight,
-    savingsPool: sumBy((l) => l.feedsSavings),
+    savingsPool: (sumBy((l) => l.feedsSavings) + (input.extraSavings ?? ZERO)) as Money,
     dailyPool: { first: sumBy((l) => l.countsToDaily && l.kind === "normal", "first"), second: sumBy((l) => l.countsToDaily && l.kind === "normal", "second") },
     rtoTotal: { first: sumBy((l) => l.kind === "rto", "first"), second: sumBy((l) => l.kind === "rto", "second") },
   };
@@ -148,7 +150,7 @@ export function rtoDayBudget(rtoCutoffTotal: Money, usualOfficeDays: number): Mo
   return usualOfficeDays > 0 ? divRound(rtoCutoffTotal, usualOfficeDays) : ZERO;
 }
 
-export type PoolEntryKind = "fund" | "use" | "to_wants" | "settle_to_pool" | "settle_to_wants" | "over_from_wants" | "over_from_excess";
+export type PoolEntryKind = "fund" | "use" | "to_wants" | "settle_to_pool" | "settle_to_wants" | "settle_to_savings" | "over_from_wants" | "over_from_excess";
 
 export interface PoolEntrySpec {
   kind: PoolEntryKind;
@@ -162,12 +164,12 @@ export interface PoolEntrySpec {
 export function settleOfficeDay(input: {
   budget: Money;
   spent: Money;
-  underTo: "pool" | "wants";
+  underTo: "pool" | "wants" | "savings";
   overFrom: "wants" | "excess";
 }): PoolEntrySpec | null {
   const diff = input.budget - input.spent;
   if (diff === 0) return null;
-  if (diff > 0) return { kind: input.underTo === "pool" ? "settle_to_pool" : "settle_to_wants", amount: diff as Money };
+  if (diff > 0) return { kind: input.underTo === "pool" ? "settle_to_pool" : input.underTo === "savings" ? "settle_to_savings" : "settle_to_wants", amount: diff as Money };
   return { kind: input.overFrom === "wants" ? "over_from_wants" : "over_from_excess", amount: (-diff) as Money };
 }
 
@@ -182,6 +184,7 @@ const POOL_SIGN: Record<PoolEntryKind, 1 | -1 | 0> = {
   to_wants: -1,
   settle_to_pool: 1,
   settle_to_wants: 0, // goes to Wants, not through the pool
+  settle_to_savings: 0, // goes to the month's savings pool, not through the contingency pool
   over_from_wants: 0,
   over_from_excess: -1,
 };

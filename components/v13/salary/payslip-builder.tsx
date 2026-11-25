@@ -55,7 +55,7 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
     [drafts, month],
   );
   const salary = useMemo(() => salaryAt(eff, month), [eff, month]);
-  const bonuses = useMemo(() => planBonuses(eff.bonusRules, eff.bonusInstances, (m) => salaryAt(eff, m), eff.settings, eff.assumptions, [month]), [eff, month]);
+  const bonuses = useMemo(() => planBonuses(eff.bonusRules, eff.bonusInstances, (m) => salaryAt(eff, m), eff.settings, eff.assumptions, [month], eff.templates), [eff, month]);
   const pay = useMemo(() => buildMonthPay(salary, input.settings, bonuses, templates), [salary, input.settings, bonuses, templates]);
   // Each cutoff's tax is worked on its own taxable pay x 24.
   const working = useMemo(

@@ -190,3 +190,17 @@ describe("budget plans", () => {
     expect(forced.lines.map((l) => l.lineId).sort()).toEqual(["p-food", "p-rest"]);
   });
 });
+
+describe("settle to savings", () => {
+  it("under-budget office day money can go to savings, and does not touch the contingency pool", () => {
+    const e = settleOfficeDay({ budget: p(250), spent: p(100), underTo: "savings", overFrom: "wants" });
+    expect(e).toEqual({ kind: "settle_to_savings", amount: p(150) });
+    expect(poolBalance([e!])).toBe(0);
+  });
+  it("adds to the month's savings pool", () => {
+    const base = evaluateBudget({ month: ym("2027-03"), takeHome, lines });
+    const more = evaluateBudget({ month: ym("2027-03"), takeHome, lines, extraSavings: p(150) });
+    expect(more.savingsPool - base.savingsPool).toBe(p(150));
+    expect(more.rest).toEqual(base.rest);
+  });
+});

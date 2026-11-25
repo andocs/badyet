@@ -42,20 +42,23 @@ function Chip({ label, on, onPress }: { label: string; on: boolean; onPress: () 
 function PendingCard({
   t,
   categories,
+  bills,
   today,
   onConfirm,
   onIgnore,
 }: {
   t: InboxTxn;
   categories: Category[];
+  bills: { id: string; name: string }[];
   today: ReturnType<typeof isoDate>;
-  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string) => void;
+  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null) => void;
   onIgnore: (t: InboxTxn) => void;
 }) {
   const c = useTheme();
   const [categoryId, setCategoryId] = useState<string | null>(t.categoryId);
   const [rule, setRule] = useState(t.guess === 'rule');
   const [note, setNote] = useState(t.note ?? '');
+  const [billId, setBillId] = useState<string | null>(null);
   const isTransfer = t.kind === 'transfer';
   const chosen = categories.find((x) => x.id === categoryId)?.name;
   // A transfer-looking item waits a few minutes for its other side; meanwhile it can only be filed as a Transfer.
@@ -123,6 +126,18 @@ function PendingCard({
         </>
       )}
 
+      {!isTransfer && t.amount < 0 && bills.length > 0 ? (
+        <View style={{ gap: 6 }}>
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Pays a bill? It will show as sent on Now.</Text>
+          <View style={s.chips}>
+            <Chip label="No" on={billId === null} onPress={() => setBillId(null)} />
+            {bills.map((b) => (
+              <Chip key={b.id} label={b.name} on={billId === b.id} onPress={() => setBillId(b.id)} />
+            ))}
+          </View>
+        </View>
+      ) : null}
+
       <TextInput
         value={note}
         onChangeText={setNote}
@@ -134,7 +149,7 @@ function PendingCard({
 
       <View style={s.row}>
         <Pressable
-          onPress={() => onConfirm(t, isTransfer ? null : categoryId, rule && !isTransfer, note)}
+          onPress={() => onConfirm(t, isTransfer ? null : categoryId, rule && !isTransfer, note, isTransfer ? null : billId)}
           disabled={!canConfirm}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canConfirm }}
@@ -249,14 +264,16 @@ export default function Inbox() {
                 key={item.t!.id}
                 t={item.t!}
                 categories={data.categories}
+                bills={data.bills}
                 today={today}
-                onConfirm={(row, categoryId, rule, note) =>
+                onConfirm={(row, categoryId, rule, note, billId) =>
                   act(row, 'confirm', () =>
                     confirmTransaction(supabase, {
                       id: row.id,
                       categoryId,
                       rule,
                       note,
+                      billId,
                     }),
                   )
                 }

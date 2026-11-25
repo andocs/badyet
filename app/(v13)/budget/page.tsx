@@ -202,7 +202,7 @@ function Side({ data, nowRun, cutoffKey }: { data: BudgetData; nowRun: Projectio
     return { p, perCutoff, balance, excess: poolExcess(balance, p.keepUpTo) };
   });
   const cont = contLine ? pools.find((x) => x.p.lineId === contLine.id) : undefined;
-  const settleKinds: Record<string, string> = { settle_to_pool: "contingency pool", settle_to_wants: "Wants", over_from_wants: "Wants", over_from_excess: "contingency excess" };
+  const settleKinds: Record<string, string> = { settle_to_pool: "contingency pool", settle_to_wants: "Wants", settle_to_savings: "savings", over_from_wants: "Wants", over_from_excess: "contingency excess" };
   const settled = new Map<string, string>();
   for (const e of cont?.p.entries ?? []) if (settleKinds[e.kind]) settled.set(e.occurredOn, settleKinds[e.kind]!);
   const rows = settleRows({ days, spendByDay: data.spendByDay, dayBudget, settledDays: new Set(settled.keys()), today: data.today });

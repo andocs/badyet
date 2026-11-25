@@ -4,6 +4,7 @@ import { money, sum, type Money } from "@/lib/domain/money";
 import { fundCredits } from "@/lib/engine/bonus";
 import type { ProjectionInput, ProjectionMonth } from "@/lib/engine/projection";
 import type { FundsData } from "./load";
+import { savingsByMonth } from "@/lib/budget/savings";
 
 /** The whole projection input for the forecast: salary, bonuses, budget lines, funds and overrides. */
 export function forecastInput(d: FundsData, start: YearMonth, months = 60): ProjectionInput {
@@ -13,6 +14,7 @@ export function forecastInput(d: FundsData, start: YearMonth, months = 60): Proj
     ...d.budget.salary.input,
     lines: d.budget.lines,
     plans: d.budget.plans,
+    extraSavings: savingsByMonth(d.budget.pools, d.budget.paydays),
     allocations: d.budget.allocations,
     funds: d.funds,
     fundStart: d.fundStart,

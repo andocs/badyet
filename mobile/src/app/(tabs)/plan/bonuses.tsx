@@ -1,5 +1,4 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { destColors, destKey } from '@/lib/bonuses/colors';
@@ -136,7 +135,6 @@ function CardView({
 
 export default function Bonuses() {
   const c = useTheme();
-  const router = useRouter();
   const { hide } = useHide();
   const { data, error, refreshing, reload } = useLoad(() => loadBonuses(supabase));
   const [year, setYear] = useState<number | null>(null);
@@ -148,7 +146,6 @@ export default function Bonuses() {
   const funds = data ? new Map(data.funds.map((f) => [f.id, f.name])) : new Map<string, string>();
   const cards = data && input && hasStart ? bonusCards(shownYear, input, data.saved, funds) : [];
   const sum = yearSummary(cards);
-  const prev = data && input && hasStart && shownYear > data.thisYear ? yearSummary(bonusCards(shownYear - 1, input, data.saved, funds)) : null;
   const total = Math.max(1, sum.net);
   const colors = data ? destColors(data.funds, cards.flatMap((x) => x.dests)) : {};
 

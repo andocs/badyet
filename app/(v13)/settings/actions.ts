@@ -73,6 +73,7 @@ export async function saveCaptureSource(input: SourceInput): Promise<FormState> 
       category_id: v.value.categoryId,
       auto_confirm: v.value.autoConfirm,
       min_amount: v.value.minAmount,
+      label: v.value.label,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,source" },

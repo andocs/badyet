@@ -1,9 +1,11 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthParts } from "@/lib/domain/dates";
-import { fromRatio, min, mulBp, sub, ZERO, type Money } from "@/lib/domain/money";
+import { fromRatio, min, money, mulBp, sub, ZERO, type Money } from "@/lib/domain/money";
 import { cipGross } from "@/lib/domain/windfall";
 import type { PayProfile } from "@/lib/pay/compute";
 import { CIP_COMPONENT_DENOMINATOR, CIP_MULTIPLIER_DENOMINATOR, computeEvents, type WindfallEvent } from "@/lib/windfall/compute";
+import { TAX_ROWS } from "@/lib/pay/tax-table";
+import { buildMonthPay, cutoffIncomeTax, type PayslipTemplate } from "./payslip";
 import type { MonthSalary } from "./salary";
 import type { Assumptions, BonusInstance, BonusRule, BonusSplit, PayCutoff, PaySettings } from "./types";
 
@@ -99,6 +101,8 @@ export function planBonuses(
   settings: PaySettings,
   assumptions: Assumptions,
   months: readonly YearMonth[],
+  /** The payslip layout in force, so the tax is worked the way the payslip works it. */
+  templates: readonly PayslipTemplate[] = [],
 ): BonusPayment[] {
   const wanted = new Set(months);
   const years = [...new Set(months.map((m) => monthParts(m).year))].sort();
@@ -124,7 +128,13 @@ export function planBonuses(
       if (!wanted.has(l.month)) return;
       const profile = profileFor(salaryOf(l.month), settings);
       const result = computeEvents(profile, events).at(-1)!;
-      const net = received && l.instance!.netActual != null ? (l.instance!.netActual as Money) : result.net;
+      // The bonus's taxable part (after its de minimis and the yearly tax-free cap) is taxed on top of that cutoff's regular taxable
+      // pay, the same way the payslip does it, so this figure and the payslip agree.
+      const regular = buildMonthPay(salaryOf(l.month), settings, [], templates);
+      const regularTaxable = l.rule.payslipCutoff === "first" ? regular.taxableFirst : regular.taxableSecond;
+      const bonusTaxable = money(Math.max(0, result.gross - result.deMinimis - result.exempt));
+      const slipTax = sub(cutoffIncomeTax(TAX_ROWS, money(regularTaxable + bonusTaxable)), cutoffIncomeTax(TAX_ROWS, regularTaxable));
+      const net = received && l.instance!.netActual != null ? (l.instance!.netActual as Money) : sub(result.gross, slipTax);
       out.push({
         ruleId: l.rule.id,
         name: l.rule.name,

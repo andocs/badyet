@@ -1,16 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
-import { cutoffRefLabel } from '@/lib/budget/plans';
+import { cutoffRefLabel, type PlanSpan } from '@/lib/budget/plans';
+import { PlanSheet } from '~/components/PlanSheet';
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
 import type { LineInput } from '@/lib/budget/line-input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
-import { rangeLabel } from '@/lib/now/format';
 import { BudgetSide } from '~/components/BudgetSide';
 import { Amount, Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
 import { deleteLine, saveLine } from '~/lib/budgetWrite';
@@ -19,8 +18,6 @@ import { peso } from '~/lib/money';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 import { useLoad } from '~/lib/useLoad';
-
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 type Draft = {
   id?: string;
@@ -334,7 +331,6 @@ function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: Bud
 
 export default function Budget() {
   const c = useTheme();
-  const router = useRouter();
   const { hide } = useHide();
   const { data, error, refreshing, reload } = useLoad(() => loadBudget(supabase));
   const [month, setMonth] = useState<string | null>(null);
@@ -345,6 +341,8 @@ export default function Budget() {
   const fut = !!data && month !== null && month !== data.period.month;
   // Which budget the board shows: undefined = the one in force this cutoff, null = the normal one, else a plan's id.
   const [plan, setPlan] = useState<string | null | undefined>(undefined);
+  // Making or changing a plan: 'new', the plan being edited, or nothing.
+  const [planEdit, setPlanEdit] = useState<'new' | PlanSpan | null>(null);
   const screen = data ? buildBudgetScreen(data, { fut, month, plan }) : null;
 
   return (
@@ -396,9 +394,14 @@ export default function Budget() {
                 </Notice>
               ) : null}
 
-              {!fut && screen.plan.list.length > 0 ? (
+              {!fut ? (
                 <Card>
-                  <Label>Budget shown</Label>
+                  <View style={s.between}>
+                    <Label>Budget plans</Label>
+                    <Pressable onPress={() => setPlanEdit('new')} accessibilityRole="button" style={{ minHeight: 36, justifyContent: 'center' }}>
+                      <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>+ New plan</Text>
+                    </Pressable>
+                  </View>
                   <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                     <Chip label={`Normal${screen.plan.activeNow === null ? ' · in force' : ''}`} on={screen.plan.selected === null} onPress={() => setPlan(null)} />
                     {screen.plan.list.map((p) => (
@@ -408,10 +411,30 @@ export default function Budget() {
                   <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
                     {(() => {
                       const sel = screen.plan.list.find((p) => p.id === screen.plan.selected);
-                      return sel ? `${cutoffRefLabel(sel.from)} to ${cutoffRefLabel(sel.to)}. Changes here only change this plan. Make or change plans on the web.` : 'Applies to every cutoff no plan covers.';
+                      return sel ? `${cutoffRefLabel(sel.from)} to ${cutoffRefLabel(sel.to)}. Changes here only change this plan.` : screen.plan.list.length > 0 ? 'Applies to every cutoff no plan covers.' : 'A plan is a whole budget for a range of cutoffs, such as a trip. It starts as a copy of this one.';
                     })()}
                   </Text>
+                  {(() => {
+                    const sel = screen.plan.list.find((p) => p.id === screen.plan.selected);
+                    return sel ? (
+                      <Pressable onPress={() => setPlanEdit(sel)} accessibilityRole="button" style={{ minHeight: 36, justifyContent: 'center' }}>
+                        <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>Edit or delete this plan</Text>
+                      </Pressable>
+                    ) : null;
+                  })()}
                 </Card>
+              ) : null}
+              {planEdit ? (
+                <PlanSheet
+                  plan={planEdit === 'new' ? null : planEdit}
+                  thisMonth={data.salary.thisMonth}
+                  onClose={() => setPlanEdit(null)}
+                  onSaved={(id) => {
+                    setPlanEdit(null);
+                    setPlan(id ?? null);
+                    void reload();
+                  }}
+                />
               ) : null}
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 <Chip label="Whole month" on={cut === null} onPress={() => setCut(null)} />
@@ -450,14 +473,6 @@ export default function Budget() {
         </>
       ) : null}
     </Screen>
-  );
-}
-
-function Pill({ text }: { text: string }) {
-  return (
-    <View style={s.pill}>
-      <Text style={{ color: '#fff', fontFamily: fonts.bodyBold, fontSize: 12 }}>{text}</Text>
-    </View>
   );
 }
 

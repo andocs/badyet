@@ -39,6 +39,8 @@ export interface ProjectionInput {
   fundStart: Readonly<Record<string, Money>>;
   overrides?: readonly MonthOverride[];
   tightBelow?: Money;
+  /** Office-day money settled to savings, by budget month (adds to that month's savings pool). */
+  extraSavings?: Readonly<Record<string, Money>>;
   /** Budget plans over date ranges (each cutoff uses the plan in force, else the normal budget). */
   plans?: readonly PlanSpan[];
   /** Budget page: show one budget (a plan id, or null for the normal one) whatever the dates say. */
@@ -77,7 +79,7 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
   const templates = input.templates ?? [];
   const regularPay = (m: YearMonth): MonthPay => buildMonthPay(salaryOf(m), input.settings, [], templates);
 
-  const bonuses = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, months);
+  const bonuses = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, months, input.templates ?? []);
   const included = input.events.filter((e) => opts.includeExpected || e.status === "confirmed");
   const allocations = (input.allocations ?? []).filter((a) => included.some((e) => e.id === a.salaryEventId));
   const raiseExtras: Record<string, Record<PayCutoff, Money>> = {};
@@ -101,6 +103,7 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
       tightBelow: input.tightBelow,
       plans: input.plans,
       forcePlan: input.forcePlan,
+      extraSavings: input.extraSavings?.[m],
     });
   });
 

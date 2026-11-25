@@ -1,7 +1,15 @@
-export const SOURCES = ['gcash', 'maya', 'bpi', 'gotyme', 'maribank', 'grab', 'foodpanda', 'gwallet', 'custom'] as const;
+export const SOURCES = ['gcash', 'maya', 'bpi', 'gotyme', 'maribank', 'grab', 'foodpanda', 'gwallet', 'custom', 'custom2', 'custom3', 'custom4', 'custom5', 'custom6'] as const;
 export type SourceKey = (typeof SOURCES)[number];
 
 export const isSource = (v: unknown): v is SourceKey => typeof v === 'string' && (SOURCES as readonly string[]).includes(v);
+
+/** The "Other app" slots: sources you make yourself, each with its own name, apps, senders and patterns. */
+export const CUSTOM_SLOTS: readonly SourceKey[] = ['custom', 'custom2', 'custom3', 'custom4', 'custom5', 'custom6'];
+export const isCustomSlot = (k: SourceKey): boolean => CUSTOM_SLOTS.includes(k);
+
+/** An extra "Other app" slot (2 to 6) still in its starting state: it waits behind the "+ Another app" button instead of showing as removed. */
+export const isUnusedSlot = (c: { source: SourceKey; removed: boolean; packages: string[]; senders: string[]; label: string }, patterns: readonly { source: SourceKey }[]): boolean =>
+  c.source !== 'custom' && isCustomSlot(c.source) && c.removed && c.packages.length === 0 && c.senders.length === 0 && c.label === SOURCE_INFO[c.source].label && !patterns.some((p) => p.source === c.source);
 
 interface SourceInfo {
   label: string;
@@ -25,6 +33,11 @@ export const SOURCE_INFO: Record<SourceKey, SourceInfo> = {
   foodpanda: { label: 'foodpanda', blurb: 'Order receipts.', packages: [], senders: ['info@mail.foodpanda.ph'], domains: ['foodpanda.com','foodpanda.ph'] },
   custom: { label: 'Other app', blurb: 'Any app you set up yourself: add its app id and your own patterns.', packages: [], senders: [], domains: [] },
   gwallet: { label: 'Google Wallet', blurb: 'Tap-to-pay notifications.', packages: ['com.google.android.apps.walletnfcrel'], senders: [], domains: [] },
+  custom2: { label: 'Other app 2', blurb: 'Another app you set up yourself.', packages: [], senders: [], domains: [] },
+  custom3: { label: 'Other app 3', blurb: 'Another app you set up yourself.', packages: [], senders: [], domains: [] },
+  custom4: { label: 'Other app 4', blurb: 'Another app you set up yourself.', packages: [], senders: [], domains: [] },
+  custom5: { label: 'Other app 5', blurb: 'Another app you set up yourself.', packages: [], senders: [], domains: [] },
+  custom6: { label: 'Other app 6', blurb: 'Another app you set up yourself.', packages: [], senders: [], domains: [] },
 };
 
 /** How one source is handled. A source with no saved row uses these defaults. */
@@ -40,6 +53,8 @@ export interface SourceConfig {
   minAmount: number;
   /** Removed from the Rules list (a built-in reader is never deleted; Add back restores it). A removed source is also off. */
   removed: boolean;
+  /** What it is called: its built-in name, or the name you gave an "Other app" source. */
+  label: string;
 }
 
 export const defaultConfig = (source: SourceKey): SourceConfig => ({
@@ -51,7 +66,9 @@ export const defaultConfig = (source: SourceKey): SourceConfig => ({
   categoryId: null,
   autoConfirm: false,
   minAmount: 0,
-  removed: false,
+  // "Other app 2..6" stay out of the list until you add them.
+  removed: source !== 'custom' && isCustomSlot(source),
+  label: SOURCE_INFO[source].label,
 });
 
 /** 'record' is the Rules page's rule: say what the capture is (spending, income, transfer, payment) and what to do with it. The other three are the older keyword rules. */
@@ -116,6 +133,8 @@ export interface SourceRow {
   min_amount: number;
   /** Added in rev-38; absent on a database without that update. */
   removed?: boolean;
+  /** Added in rev-39: the name of an "Other app" source. */
+  label?: string | null;
 }
 export interface RuleRow {
   id: string;
@@ -156,6 +175,7 @@ export function configsFromRows(rows: readonly SourceRow[]): SourceConfig[] {
       autoConfirm: r.auto_confirm,
       minAmount: Number(r.min_amount),
       removed: r.removed ?? false,
+      label: (isCustomSlot(source) ? r.label?.trim() : null) || SOURCE_INFO[source].label,
     };
   });
 }

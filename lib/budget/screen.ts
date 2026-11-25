@@ -5,6 +5,7 @@ import { runProjection, type ProjectionInput, type ProjectionMonth } from "@/lib
 import type { BudgetData } from "./load";
 import { buildGroups, monthFlag, type GroupView, type MonthFlag } from "./view";
 import { planFor, type PlanSpan } from "./plans";
+import { savingsByMonth } from "./savings";
 
 /** ₱2,500 left in a month is "tight". */
 export const TIGHT = 250_000;
@@ -51,7 +52,7 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const year = Number(month.slice(0, 4));
 
   const input = (start: YearMonth, months: number): ProjectionInput => ({
-    start, months, ...data.salary.input, bonusRules: [], bonusInstances: [], lines: data.lines, allocations: data.allocations, funds: [], fundStart: {}, plans: data.plans,
+    start, months, ...data.salary.input, bonusRules: [], bonusInstances: [], lines: data.lines, allocations: data.allocations, funds: [], fundStart: {}, plans: data.plans, extraSavings: savingsByMonth(data.pools, data.paydays),
   });
   const cutoffNow = data.period.which === 1 ? "first" : "second";
   const activeNow = planFor(data.plans, data.period.month, cutoffNow);

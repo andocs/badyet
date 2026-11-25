@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('react-native', () => ({ AppState: { currentState: 'active', addEventListener: vi.fn(() => ({ remove: vi.fn() })) } }));
-
 import { networkAnswers, PROBE_MS } from './net';
+
+vi.mock('react-native', () => ({ AppState: { currentState: 'active', addEventListener: vi.fn(() => ({ remove: vi.fn() })) } }));
 
 beforeEach(() => {
   process.env.EXPO_PUBLIC_SUPABASE_URL = 'https://example.supabase.co';

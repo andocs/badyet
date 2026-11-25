@@ -1,5 +1,5 @@
 import { parsePesos } from '@/lib/domain/money';
-import { isSource, RULE_ACTIONS, RULE_CHANNELS, RULE_KINDS, type RuleAction, type RuleChannel, type RuleKind, type SourceKey } from './sources';
+import { isSource, RULE_ACTIONS, RULE_CHANNELS, RULE_KINDS, type RuleAction, type RuleChannel, type RuleKind, type SourceKey, isCustomSlot } from './sources';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PACKAGE = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i;
@@ -23,6 +23,8 @@ export interface SourceInput {
   autoConfirm: boolean;
   /** Pesos as typed; empty means no minimum. */
   minAmount: string;
+  /** The name of an "Other app" source; ignored for the built-in ones. */
+  label?: string;
 }
 
 export interface SourceValue {
@@ -34,6 +36,8 @@ export interface SourceValue {
   categoryId: string | null;
   autoConfirm: boolean;
   minAmount: number;
+  /** Set only for "Other app" sources; null = the default name. */
+  label: string | null;
 }
 
 export function validateSource(i: SourceInput): Result<SourceValue> {
@@ -50,9 +54,12 @@ export function validateSource(i: SourceInput): Result<SourceValue> {
   const min = typed === '' ? 0 : parsePesos(typed);
   if (min === undefined || min < 0) return { ok: false, error: 'Minimum amount is pesos, like 50 or 1,250.50.' };
   if (min > MAX_CENTAVOS) return { ok: false, error: 'That minimum is too large.' };
+  const typedLabel = (i.label ?? '').trim().replace(/\s+/g, ' ');
+  if (typedLabel.length > 30) return { ok: false, error: 'Keep the name under 30 characters.' };
+  const label = isCustomSlot(i.source) && typedLabel !== '' ? typedLabel : null;
   return {
     ok: true,
-    value: { source: i.source, enabled: i.enabled, packages, senders, accountId: i.accountId, categoryId: i.categoryId, autoConfirm: i.autoConfirm, minAmount: min },
+    value: { source: i.source, enabled: i.enabled, packages, senders, accountId: i.accountId, categoryId: i.categoryId, autoConfirm: i.autoConfirm, minAmount: min, label },
   };
 }
 

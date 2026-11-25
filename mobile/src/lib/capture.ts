@@ -74,6 +74,7 @@ export async function saveSource(supabase: SupabaseClient, userId: string, input
       category_id: v.value.categoryId,
       auto_confirm: v.value.autoConfirm,
       min_amount: v.value.minAmount,
+      label: v.value.label,
       updated_at: new Date().toISOString(),
     },
     { onConflict: 'user_id,source' },
