@@ -55,7 +55,7 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {} }: { /** Payslip deductions shown under the budget line they are set to, by line id. */ payroll?: Record<string, { label: string; amount: number }[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {} }: { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, { label: string; amount: number }[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
   const groups: GroupView[] = cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups;
   const dialog = useRef<HTMLDialogElement>(null);
@@ -177,7 +177,6 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                   <span className="v-ba">
                     <b className="v-num">{l.amount === null ? "—" : <Money value={l.amount} />}</b>
                     {!cutoff && l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
-                    {(payroll[l.id] ?? []).map((d) => <small key={d.label}>{d.label} <Money value={money(d.amount)} /> from your payslip</small>)}
                     {l.reimburse ? <small>back <Money value={l.reimburse.amount} />{l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`}</small> : null}
                     {showSpent && l.spent && l.amount ? (
                       <>
@@ -189,6 +188,14 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                 </div>
               );
             })}
+            {(payroll[g.id] ?? []).map((d) => (
+              <div key={d.label} className="v-bl" aria-label={`${d.label}, taken from your payslip`} style={{ cursor: "default" }}>
+                <span className="v-bn"><i className="v-dot" style={{ background: color, opacity: 0.45 }} /><span><b>{d.label}</b><span className="v-xs v-muted" style={{ display: "block" }}>from your payslip, not in the total</span></span></span>
+                <span className="v-br" />
+                <span className="v-bcut" />
+                <span className="v-ba"><b className="v-num"><Money value={money(d.amount)} /></b></span>
+              </div>
+            ))}
             <button type="button" className="v-btn v-sm v-ghost" style={{ marginTop: 8 }} onClick={() => open(blank(first?.id ?? categories[0]?.id ?? ""))} disabled={categories.length === 0}>+ Line in {g.name}</button>
           </section>
         );

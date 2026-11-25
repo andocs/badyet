@@ -36,9 +36,9 @@ export default function Salary() {
     const [salary, funds, lines] = await Promise.all([
       loadSalary(supabase),
       supabase.from('funds').select('id, name').is('archived_at', null).order('priority'),
-      supabase.from('budget_lines_v2').select('id, name').order('sort'),
+      supabase.from('category_groups').select('id, name').is('archived_at', null).neq('name', 'Transfers').order('sort'),
     ]);
-    return { ...salary, funds: (funds.data ?? []) as { id: string; name: string }[], lines: (lines.data ?? []) as { id: string; name: string }[] };
+    return { ...salary, funds: (funds.data ?? []) as { id: string; name: string }[], groups: (lines.data ?? []) as { id: string; name: string }[] };
   });
   const [open, setOpen] = useState<Open | null>(null);
   const [yearIdx, setYearIdx] = useState(0);
@@ -178,7 +178,7 @@ export default function Salary() {
               </View>
             </Card>
           </Pressable>
-          <OtherDeductionCard items={otherDeductionDrafts(input.settings)} lines={data.lines} onSaved={reload} />
+          <OtherDeductionCard items={otherDeductionDrafts(input.settings)} groups={data.groups} onSaved={reload} />
         </>
       ) : null}
 

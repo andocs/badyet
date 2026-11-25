@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { otherDeductionDrafts, validateOtherDeductions } from './other-deduction';
 
-const row = (over: Record<string, unknown>) => ({ label: 'HMO', cutoff: 'both', amount: '10', amountSecond: '', lineId: '', ...over });
+const row = (over: Record<string, unknown>) => ({ label: 'HMO', cutoff: 'both', amount: '10', amountSecond: '', groupId: '', ...over });
 
 describe('validateOtherDeductions', () => {
   it('takes a name, a cutoff and an amount for each', () => {
     expect(validateOtherDeductions({ items: [row({ label: '  HMO   plan ', cutoff: 'first', amount: '1,250.50' })] })).toEqual({
       ok: true,
-      value: [{ label: 'HMO plan', cutoff: 'first', amount: 125_050, amountSecond: null, lineId: null }],
+      value: [{ label: 'HMO plan', cutoff: 'first', amount: 125_050, amountSecond: null, groupId: null }],
     });
   });
   it('lets the 2nd cutoff differ when the deduction is on both', () => {
     expect(validateOtherDeductions({ items: [row({ label: 'Loan', amount: '500', amountSecond: '800' })] })).toEqual({
       ok: true,
-      value: [{ label: 'Loan', cutoff: 'both', amount: 50_000, amountSecond: 80_000, lineId: null }],
+      value: [{ label: 'Loan', cutoff: 'both', amount: 50_000, amountSecond: 80_000, groupId: null }],
     });
     // The 2nd amount means nothing when it is on one cutoff only.
     expect(validateOtherDeductions({ items: [row({ cutoff: 'second', amount: '500', amountSecond: '800' })] })).toMatchObject({ ok: true, value: [{ amountSecond: null }] });
@@ -33,7 +33,7 @@ describe('validateOtherDeductions', () => {
 describe('otherDeductionDrafts', () => {
   it('turns the old single deduction into one row on both cutoffs', () => {
     expect(otherDeductionDrafts({ otherDeduction: 120_000 as never, otherDeductionLabel: 'HMO', otherDeductions: [] })).toEqual([
-      { label: 'HMO', cutoff: 'both', amount: '1200.00', amountSecond: '', lineId: '' },
+      { label: 'HMO', cutoff: 'both', amount: '1200.00', amountSecond: '', groupId: '' },
     ]);
   });
 });

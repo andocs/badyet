@@ -7,9 +7,9 @@ import { Money } from "../money";
  * What your employer takes from each payslip apart from the necessary deductions (an HMO plan, the payroll savings plan). It is already
  * out of your take-home, so it is listed here for the whole picture but is not part of the planned total.
  */
-export function PayrollDeductionsCard({ pay, lineIds }: { pay: MonthPay; lineIds: ReadonlySet<string> }) {
+export function PayrollDeductionsCard({ pay, groupIds }: { pay: MonthPay; groupIds: ReadonlySet<string> }) {
   // An other deduction set to show under a budget line is shown on that line instead, so only the rest is listed here.
-  const lines = payrollOnLines(pay, lineIds).loose;
+  const lines = payrollOnLines(pay, groupIds).loose;
   if (lines.length === 0) return null;
   // Each shows once per cutoff on the payslip; list each by name with what it comes to each cutoff and in the month.
   const byName = new Map<string, number[]>();

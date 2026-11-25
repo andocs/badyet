@@ -15,8 +15,8 @@ export interface OtherDeductionDraft {
   amount: string;
   /** Pesos as typed, only when it is on both cutoffs: the 2nd cutoff's amount. Empty = the same as the 1st. */
   amountSecond: string;
-  /** The budget line it shows under on the Budget page (an id), or empty for none. */
-  lineId: string;
+  /** The budget category it shows under on the Budget page (an id), or empty for none. */
+  groupId: string;
 }
 
 /** What is stored: centavos. */
@@ -25,7 +25,7 @@ export interface StoredOtherDeduction {
   cutoff: 'first' | 'second' | 'both';
   amount: number;
   amountSecond: number | null;
-  lineId: string | null;
+  groupId: string | null;
 }
 
 export const MAX_OTHER_DEDUCTIONS = 8;
@@ -38,8 +38,8 @@ const pesos = (c: number) => (c / 100).toFixed(2);
 /** The rows to edit: your list, or the single deduction you had before the list existed. */
 export function otherDeductionDrafts(settings: Pick<PaySettings, 'otherDeduction' | 'otherDeductionLabel' | 'otherDeductions'>): OtherDeductionDraft[] {
   const list = settings.otherDeductions ?? [];
-  if (list.length > 0) return list.map((o) => ({ label: o.label, cutoff: o.cutoff, amount: pesos(o.amount), amountSecond: o.amountSecond === null ? '' : pesos(o.amountSecond), lineId: o.lineId ?? '' }));
-  if (settings.otherDeduction > 0) return [{ label: settings.otherDeductionLabel ?? '', cutoff: 'both', amount: pesos(settings.otherDeduction), amountSecond: '', lineId: '' }];
+  if (list.length > 0) return list.map((o) => ({ label: o.label, cutoff: o.cutoff, amount: pesos(o.amount), amountSecond: o.amountSecond === null ? '' : pesos(o.amountSecond), groupId: o.groupId ?? '' }));
+  if (settings.otherDeduction > 0) return [{ label: settings.otherDeductionLabel ?? '', cutoff: 'both', amount: pesos(settings.otherDeduction), amountSecond: '', groupId: '' }];
   return [];
 }
 
@@ -66,9 +66,9 @@ export function validateOtherDeductions(input: unknown): Checked<StoredOtherDedu
       if (v === undefined || v < 0 || v > 10_000_000_000) return { ok: false, error: `Enter the 2nd cutoff amount for ${name}, like 1,200, or leave it empty to use the same amount.` };
       amountSecond = v;
     }
-    const lineId = typeof r.lineId === 'string' && r.lineId !== '' ? r.lineId : null;
-    if (lineId !== null && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lineId)) return { ok: false, error: `Pick a budget line from the list for ${name}.` };
-    out.push({ label, cutoff, amount, amountSecond, lineId });
+    const groupId = typeof r.groupId === 'string' && r.groupId !== '' ? r.groupId : null;
+    if (groupId !== null && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(groupId)) return { ok: false, error: `Pick a budget category from the list for ${name}.` };
+    out.push({ label, cutoff, amount, amountSecond, groupId });
   }
   return { ok: true, value: out };
 }

@@ -261,7 +261,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-function LineRow({ l, payroll, onPress }: { l: LineView; payroll: PayrollOnLine[]; onPress: () => void }) {
+function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
@@ -270,11 +270,6 @@ function LineRow({ l, payroll, onPress }: { l: LineView; payroll: PayrollOnLine[
       <View style={{ flex: 1 }}>
         <Body bold>{l.name}</Body>
         <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{sub}</Text>
-        {payroll.map((d) => (
-          <Text key={d.label} style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
-            {d.label} {peso(money(d.amount), hide)} from your payslip
-          </Text>
-        ))}
         {l.spent ? (
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
             {peso(l.spent.amount, hide)} {l.spent.word}
@@ -321,7 +316,16 @@ function Board({ groups, data, payroll, onEdit, onAdd }: { payroll: Record<strin
               <View style={{ width: `${g.share}%`, height: 6, borderRadius: 3, backgroundColor: c.accent }} />
             </View>
             {g.lines.map((l) => (
-              <LineRow key={l.id} l={l} payroll={payroll[l.id] ?? []} onPress={() => onEdit(l)} />
+              <LineRow key={l.id} l={l} onPress={() => onEdit(l)} />
+            ))}
+            {(payroll[g.id] ?? []).map((d) => (
+              <View key={d.label} style={[s.between, { minHeight: 44 }]}>
+                <View style={{ flex: 1 }}>
+                  <Body bold>{d.label}</Body>
+                  <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>from your payslip, not in the total</Text>
+                </View>
+                <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 15 }}>{peso(money(d.amount), hide)}</Text>
+              </View>
             ))}
             {firstCategory ? (
               <Pressable onPress={() => onAdd(firstCategory)} accessibilityRole="button" style={[s.add, { backgroundColor: c.soft }]}>
@@ -401,8 +405,8 @@ export default function Budget() {
               ) : null}
 
               {(() => {
-                // An other deduction set to show under a budget line is shown on that line, so only the rest is listed here.
-                const lines = payrollOnLines(screen.shown.pay, new Set(screen.groups.flatMap((g) => g.lines.map((l) => l.id)))).loose;
+                // An other deduction set to show under a budget category is shown in that category, so only the rest is listed here.
+                const lines = payrollOnLines(screen.shown.pay, new Set(screen.groups.map((g) => g.id))).loose;
                 if (lines.length === 0) return null;
                 const byName = new Map<string, number[]>();
                 for (const l of lines) byName.set(l.label, [...(byName.get(l.label) ?? []), l.amount]);
@@ -469,7 +473,7 @@ export default function Budget() {
               <Board
                 groups={cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups}
                 data={data}
-                payroll={payrollOnLines(screen.shown.pay, new Set(screen.groups.flatMap((g) => g.lines.map((l) => l.id)))).byLine}
+                payroll={payrollOnLines(screen.shown.pay, new Set(screen.groups.map((g) => g.id))).byGroup}
                 onEdit={(l) => setEditing(draftOf(l))}
                 onAdd={(cat) => setEditing(blankDraft(cat))}
               />

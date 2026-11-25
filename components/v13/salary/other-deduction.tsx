@@ -8,7 +8,7 @@ import { useToast } from "../feedback";
 import { Money } from "../money";
 import { Pick } from "../pick";
 
-const blank = (): OtherDeductionDraft => ({ label: "", cutoff: "both", amount: "", amountSecond: "", lineId: "" });
+const blank = (): OtherDeductionDraft => ({ label: "", cutoff: "both", amount: "", amountSecond: "", groupId: "" });
 
 /** What one row takes in the 1st and 2nd cutoff, or null while it is not readable yet. */
 function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | null {
@@ -24,7 +24,7 @@ function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | 
  * with its own amount in each. They lower your take-home, show in their own section on the payslip, and the Budget page lists them
  * without counting them in the planned total.
  */
-export function OtherDeductionCard({ items, lines }: { items: OtherDeductionDraft[]; /** Your budget lines, to choose which one a deduction shows under. */ lines: { id: string; name: string }[] }) {
+export function OtherDeductionCard({ items, groups }: { items: OtherDeductionDraft[]; /** Your budget categories, to choose which one a deduction shows under. */ groups: { id: string; name: string }[] }) {
   const toast = useToast();
   const [busy, start] = useTransition();
   const [rows, setRows] = useState<OtherDeductionDraft[]>(items);
@@ -69,8 +69,8 @@ export function OtherDeductionCard({ items, lines }: { items: OtherDeductionDraf
               ) : null}
             </div>
             <div>
-              <div className="v-lab">Show under this budget line</div>
-              <div style={{ marginTop: 6 }}><Pick label="Budget line" value={d.lineId} placeholder="No line (listed separately)" options={[{ value: "", label: "No line (listed separately)" }, ...lines.map((l) => ({ value: l.id, label: l.name }))]} onChange={(v) => set(i, { lineId: v })} /></div>
+              <div className="v-lab">Show under this budget category</div>
+              <div style={{ marginTop: 6 }}><Pick label="Budget category" value={d.groupId} placeholder="No category (listed separately)" options={[{ value: "", label: "No category (listed separately)" }, ...groups.map((g) => ({ value: g.id, label: g.name }))]} onChange={(v) => set(i, { groupId: v })} /></div>
             </div>
             <div className="v-row v-sp">
               <div className="v-xs v-muted" aria-live="polite">

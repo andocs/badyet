@@ -7,7 +7,7 @@ import { Card, Chip, Label } from '~/components/ui';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
-const blank = (): OtherDeductionDraft => ({ label: '', cutoff: 'both', amount: '', amountSecond: '', lineId: '' });
+const blank = (): OtherDeductionDraft => ({ label: '', cutoff: 'both', amount: '', amountSecond: '', groupId: '' });
 
 /** What one row takes in the 1st and 2nd cutoff, or null while it is not readable yet. */
 function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | null {
@@ -22,7 +22,7 @@ function perCutoff(d: OtherDeductionDraft): { first: number; second: number } | 
  * Payroll deductions that are not the necessary ones, such as your HMO plan or a loan. Each is on the 1st cutoff, the 2nd, or both,
  * with its own amount in each. The Budget page lists them without counting them in the planned total.
  */
-export function OtherDeductionCard({ items, lines, onSaved }: { items: OtherDeductionDraft[]; /** Your budget lines, to choose which one a deduction shows under. */ lines: { id: string; name: string }[]; onSaved: () => void }) {
+export function OtherDeductionCard({ items, groups, onSaved }: { items: OtherDeductionDraft[]; /** Your budget categories, to choose which one a deduction shows under. */ groups: { id: string; name: string }[]; onSaved: () => void }) {
   const c = useTheme();
   const [rows, setRows] = useState<OtherDeductionDraft[]>(items);
   const [problem, setProblem] = useState<string | null>(null);
@@ -68,11 +68,11 @@ export function OtherDeductionCard({ items, lines, onSaved }: { items: OtherDedu
                 </View>
               ) : null}
             </View>
-            <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>Show under this budget line</Text>
+            <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>Show under this budget category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-              <Chip label="None" on={d.lineId === ''} onPress={() => set(i, { lineId: '' })} />
-              {lines.map((l) => (
-                <Chip key={l.id} label={l.name} on={d.lineId === l.id} onPress={() => set(i, { lineId: l.id })} />
+              <Chip label="None" on={d.groupId === ''} onPress={() => set(i, { groupId: '' })} />
+              {groups.map((g) => (
+                <Chip key={g.id} label={g.name} on={d.groupId === g.id} onPress={() => set(i, { groupId: g.id })} />
               ))}
             </ScrollView>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
