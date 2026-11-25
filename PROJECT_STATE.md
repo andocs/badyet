@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-39 Batch 4 leftovers
-- **Gate:** none
-- **Next action:** rev-39: phone Pays a bill, phone plans, multi custom sources, settle to savings, bonus net, lint
-- **User to-do now:** Apply migrations 20261218000000, 20261219000000, 20261220000000 (and confirm 20261217000000); install APK https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk
+- **Gate:** waiting
+- **Next action:** Gate rev-39; on approve merge to main and build a new APK
+- **User to-do now:** Apply migration 20261221000000_savings_and_custom_slots.sql; install the new APK after rev-39
 
 ## 3. Execution log
 
@@ -47,6 +47,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 12:44 | rev-38 | Rules redesign option 1: one list (rules, then 'Everything else from...' source cards, Removed with Add back); rule-style source editor on web (apps/senders pickers, how it's read + that source's patterns, account, category, skip under, auto-confirm, Remove); rule apps and senders now captured (allow-list, package and email routing); patterns read emails; @domain senders for sources. Migration 20261220000000_source_removed.sql | 38774e6
 - 2026-11-25 12:51 | rev-38 | Approved; merged to main; EAS preview build cb8b4696 started | 5e987a6
 - 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
+- 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
 
 ## 4. Open questions
 
@@ -86,7 +87,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 4,703,925 | 20,131,104 | 816,636 | 7,511,885 | 797,404,182 | 3,379,854 |  |
+| **Cumulative** | 4,790,503 | 20,428,442 | 834,196 | 8,567,128 | 816,120,760 | 3,434,541 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -147,6 +148,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-36 | 121,097 | 959,389 | 25,764 | 0 | 0 | 0 |  |
 | rev-37 | 59,752 | 236,347 | 11,859 | 0 | 0 | 0 |  |
 | rev-38 | 71,440 | 325,505 | 13,060 | 0 | 0 | 0 |  |
+| rev-39 | 86,578 | 297,338 | 17,560 | 584,423 | 17,689,981 | 48,682 |  |
 
 <!-- END SUMMARY -->
 
@@ -170,6 +172,17 @@ Batch 4 leftovers, grouped on user request (2026-11-25, migrations 20261217-2026
 Mobile (planned): cd mobile; npm install; npx expo start (dev client); npm test (vitest/jest for parsers and queue); eas build -p android --profile preview (APK). Env: EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY. Web unchanged: npm run dev, test, lint, build.
 
 ## Slice handoffs (what the user does after each slice)
+
+AFTER REV-39: what you do now
+1. Get the code:   git fetch && git checkout rev/39-batch4-leftovers   (merge to main after you approve)
+2. Install deps:   no new deps
+3. Database:       apply supabase/migrations/20261221000000_savings_and_custom_slots.sql (savings pool-entry kind, capture_sources.label, source checks widened to custom2..custom6). No data changes.
+                   Rollback: see the comment block at the end of the migration (delete rows using the new values first).
+4. Config:         none
+5. Start the app:  npm run dev  ->  open http://localhost:3000   (or the Vercel preview for rev/39-batch4-leftovers)
+6. Check these:    Rules > "+ Another app" > name it (e.g. ShopeePay), add an app, add a pattern, Save; Budget > Settle office days > Savings on an under-budget day, then the month's savings pool/Forecast rises by that amount; Bonuses page net for a bonus month equals the payslip's take-home change; on the phone: Inbox > a pending payment > "Pays a bill?" then Now shows the bill sent; Budget > "+ New plan"
+7. Known limits:   phone Forecast has no Savings plan card; held captures from extra Other-app sources show a generic name; phone needs the new APK
+Reply: Approve / Request changes / Pause
 
 AFTER REV-38: what you do now
 1. Get the code:   git fetch && git checkout rev/38-rules-redesign   (merge to main after you approve)
