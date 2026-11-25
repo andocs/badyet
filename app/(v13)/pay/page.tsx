@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthRange } from "@/lib/engine/months";
 import { loadSalary } from "@/lib/salary/load";
+import { otherDeductionDrafts } from "@/lib/pay/other-deduction";
 import { eventRows, regularRange, salaryAt, yearRows, yearOf } from "@/lib/salary/view";
 import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
@@ -26,6 +27,8 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
   const hasStart = input.events.some((e) => e.kind === "start");
   const fundsRes = await supabase.from("funds").select("id, name").is("archived_at", null).order("priority");
   const funds = (fundsRes.data ?? []) as { id: string; name: string }[];
+  const groupsRes = await supabase.from("category_groups").select("id, name").is("archived_at", null).neq("name", "Transfers").order("sort");
+  const groups = (groupsRes.data ?? []) as { id: string; name: string }[];
   const plan = { bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null };
 
   const months = monthRange(thisMonth, 60);
@@ -54,11 +57,13 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
               <Link href="/pay?tab=payslip" role="tab" aria-selected={isPayslip} className="v-tab2">Payslip builder</Link>
             </div>
             {isPayslip ? (
-              <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
+              <>
+                <PayslipBuilder key={month} input={input} paydays={data.paydays} month={month}months={months.map((m) => ({ value: m, label: label(m) }))} />
+                <OtherDeductionCard items={otherDeductionDrafts(input.settings)} groups={groups} />
+              </>
             ) : (
               <>
                 <SavingsPlanCard plan={plan} funds={funds} base={salaryAt(input, thisMonth).base} />
-                <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ""} amount={input.settings.otherDeduction} />
                 <Timeline data={data} />
               </>
             )}

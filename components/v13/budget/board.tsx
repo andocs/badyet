@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { deleteLine, saveLine } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
+import type { PayrollRow } from "@/lib/budget/payroll";
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
 import { useConfirm, useToast } from "../feedback";
 import { MonthPicker } from "../pickers";
@@ -55,7 +56,7 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null }: { groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {} }: { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
   const groups: GroupView[] = cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups;
   const dialog = useRef<HTMLDialogElement>(null);
@@ -188,6 +189,21 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                 </div>
               );
             })}
+            {(payroll[g.id] ?? []).filter((d) => !cutoff || d[cutoff] > 0).map((d) => (
+              <div key={`${d.kind}-${d.label}`} className="v-bl" aria-label={`${d.label}, taken from your payslip`} style={{ cursor: "default" }}>
+                <span className="v-bn"><i className="v-dot" style={{ background: color, opacity: 0.45 }} /><span><b>{d.label}</b><span className="v-xs v-muted" style={{ display: "block" }}>from your payslip, not in the total</span></span></span>
+                <span className="v-br"><span className="v-pill v-rl">Payslip</span></span>
+                <span className="v-bcut">
+                  <span className="v-cutp" role="img" aria-label={cutoffText(d.cutoff)}>
+                    <i className={d.cutoff !== "second" ? "v-on" : ""}>1</i><i className={d.cutoff !== "first" ? "v-on" : ""}>2</i>
+                  </span>
+                </span>
+                <span className="v-ba">
+                  <b className="v-num"><Money value={money(cutoff ? d[cutoff] : d.amount)} /></b>
+                  {!cutoff && d.cutoff === "both" && d.first !== d.second ? <small className="v-num">1st <Money value={money(d.first)} /> · 2nd <Money value={money(d.second)} /></small> : null}
+                </span>
+              </div>
+            ))}
             <button type="button" className="v-btn v-sm v-ghost" style={{ marginTop: 8 }} onClick={() => open(blank(first?.id ?? categories[0]?.id ?? ""))} disabled={categories.length === 0}>+ Line in {g.name}</button>
           </section>
         );

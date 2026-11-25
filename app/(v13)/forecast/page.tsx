@@ -35,9 +35,9 @@ export default async function Forecast() {
   const run = runProjection(input, { includeExpected: true });
   const hasExpected = run.some((m) => m.expected);
   const without = hasExpected ? runProjection(input, { includeExpected: false }) : null;
-  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.fundStart, d.budget.salary.input.settings.savingsPlanFundId ?? null);
+  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)));
 
-  const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule] }));
+  const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule], resets: f.rule === "reset" && f.id !== d.budget.salary.input.settings.savingsPlanFundId }));
   const name = new Map(d.funds.map((f) => [f.id, f.name]));
   const peso = (n: number) => `₱${(n / 100).toLocaleString("en-PH", { maximumFractionDigits: 2 })}`;
   const overrides = d.overrides

@@ -25,13 +25,11 @@ export function forecastInput(d: FundsData, start: YearMonth, months = 60): Proj
 export interface FundCell {
   /** Taken from the month's pool. */
   amount: Money;
-  /** Bonus money credited straight to the fund. */
+  /** Money credited straight to the fund, not taken from the pool: bonuses and the payroll savings plan. */
   bonus: Money;
   balance: Money;
   /** Part of the credited money that came from the payroll savings plan (the rest of `bonus` is real bonuses). */
   plan: Money;
-  /** Everything put into the fund so far (what you had today plus every month's money), ignoring yearly resets, so it only goes up. */
-  saved: Money;
   reasons: string[];
 }
 
@@ -53,15 +51,10 @@ export interface ForecastRow {
   funds: Record<string, FundCell>;
 }
 
-/** Projection months as plain rows for the screens. A month's saved total = what the pool gave funds plus bonus money. */
-export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: ReadonlySet<string>, start: Readonly<Record<string, Money>> = {}, planFundId: string | null = null): ForecastRow[] {
+/** Projection months as plain rows for the screens. A month's saved total = what the pool gave funds plus money credited straight to them. */
+export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: ReadonlySet<string>): ForecastRow[] {
   const credits = fundCredits(run.flatMap((m) => m.bonuses));
-  // Running total of what went in, per fund: it never drops when a fund resets.
-  const saved: Record<string, number> = { ...start };
-  return run.map((m) => {
-    // What the payroll savings plan puts in this month (both cutoffs), when it names a fund.
-    const planMonth = sum([...m.pay.first.lines, ...m.pay.second.lines].filter((l) => l.source === "savings_plan").map((l) => l.amount));
-    return {
+  return run.map((m) => ({
     month: m.month,
     year: monthParts(m.month).year,
     assumed: m.assumed,
@@ -74,15 +67,9 @@ export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: Re
     tight: m.budget.tight.first || m.budget.tight.second || m.budget.over.first || m.budget.over.second,
     bonusCredits: credits.get(m.month) ?? {},
     funds: Object.fromEntries(
-      m.funds.funds.map((f) => {
-        saved[f.fundId] = (saved[f.fundId] ?? 0) + f.amount + f.bonus;
-        // The plan's share of what was credited (credits are capped by room, so never more than was credited).
-        const plan = f.fundId === planFundId ? money(Math.min(planMonth, f.bonus)) : money(0);
-        return [f.fundId, { amount: f.amount, bonus: f.bonus, balance: f.balanceAfter, saved: money(saved[f.fundId]!), plan, reasons: f.reasons }];
-      }),
+      m.funds.funds.map((f) => [f.fundId, { amount: f.amount, bonus: money(f.bonus + f.plan), plan: f.plan, balance: f.balanceAfter, reasons: f.reasons }]),
     ),
-    };
-  });
+  }));
 }
 
 export const totalBalance = (row: ForecastRow): Money => sum(Object.values(row.funds).map((f) => f.balance));

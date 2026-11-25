@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { ensureTransferCategory, TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
+import { ensureCardPaymentCategory, ensureTransferCategory, isMoveCategory } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
 import { transferHoldUntil, type HoldAccount } from '@/lib/capture/hold';
 
@@ -11,6 +11,7 @@ export interface InboxTxn {
   /** Centavos; negative = money out. */
   amount: number;
   account: string;
+  accountId: string;
   /** For a transfer: the other account. */
   peerAccount: string | null;
   occurredAt: string;
@@ -31,6 +32,8 @@ export interface InboxData {
   categories: Category[];
   /** Budget lines that go to an account: a payment can be linked to one so it shows as sent. */
   bills: { id: string; name: string }[];
+  /** Your live accounts, for changing which one an item is on. */
+  accounts: { id: string; name: string }[];
 }
 
 export interface Row {
@@ -99,6 +102,7 @@ export function buildInbox(
         who: r.merchant ?? (r.kind === 'transfer' ? (r.amount < 0 ? 'Transfer out' : 'Transfer in') : 'Expense'),
         amount: r.amount,
         account: accountName.get(r.account_id) ?? 'Account',
+        accountId: r.account_id,
         peerAccount: peer ? (accountName.get(peer.account_id) ?? null) : null,
         occurredAt: r.occurred_at,
         source: SOURCE[r.source] ?? r.source,
@@ -121,6 +125,7 @@ const COLS = 'id, account_id, occurred_at, amount, merchant, kind, category_id, 
 export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
   await ensureTransferCategory(supabase).catch(() => null);
+  await ensureCardPaymentCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, billsRes] = await Promise.all([
     supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').order('sort'),
     supabase.from('accounts').select('id, name, institution, archived_at'),
@@ -136,6 +141,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   return {
     categories,
     bills: billsRes.error ? [] : ((billsRes.data ?? []) as { id: string; name: string }[]),
+    accounts: ((acct.data ?? []) as { id: string; name: string; archived_at: string | null }[]).filter((a) => !a.archived_at).map((a) => ({ id: a.id, name: a.name })),
     txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
   };
 }
@@ -175,7 +181,7 @@ export async function confirmTransaction(
     const cat = await supabase.from('categories').select('id, name').eq('id', input.categoryId).is('archived_at', null).maybeSingle();
     if (!cat.data) return { error: 'That category was not found.' };
     categoryId = input.categoryId;
-    becomesTransfer = cat.data.name === TRANSFER_CATEGORY;
+    becomesTransfer = isMoveCategory(cat.data.name as string);
     // A transfer-looking item waits a few minutes for its other side before it can count as spending or income.
     if (!becomesTransfer) {
       const accts = await supabase.from('accounts').select('id, name, institution').is('archived_at', null);

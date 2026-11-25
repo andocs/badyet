@@ -53,3 +53,24 @@ export async function saveSavingsPlan(supabase: SupabaseClient, input: unknown):
   if (error) return { error: error.code === '42703' ? 'Apply the savings plan database update first, then try again.' : 'Could not save that. Try again.' };
   return { ok: true };
 }
+
+/** From a fund editor's input: true = this fund should get the payroll savings plan, false = it should not, null = not asked. */
+export function planLinkChoice(input: unknown): boolean | null {
+  const v = (input as { linkPlan?: unknown } | null)?.linkPlan;
+  return typeof v === 'boolean' ? v : null;
+}
+
+/**
+ * Makes a fund the one the payroll savings plan feeds, or stops it feeding it. Only one fund can have it: choosing another moves it,
+ * and turning it off on a fund that does not have it changes nothing.
+ */
+export async function linkPlanFund(supabase: SupabaseClient, fundId: string, linked: boolean): Promise<Result> {
+  if (!UUID.test(fundId)) return { error: 'That fund was not found.' };
+  const existing = await supabase.from('pay_settings').select('user_id, savings_plan_fund_id').maybeSingle();
+  if (existing.error) return { error: existing.error.code === '42703' ? 'Apply the savings plan database update first, then try again.' : 'Could not link the savings plan. Try again.' };
+  const current = (existing.data as { savings_plan_fund_id: string | null } | null)?.savings_plan_fund_id ?? null;
+  if (!linked && current !== fundId) return { ok: true };
+  const value = linked ? fundId : null;
+  const r = existing.data ? await supabase.from('pay_settings').update({ savings_plan_fund_id: value }).eq('user_id', (existing.data as { user_id: string }).user_id) : await supabase.from('pay_settings').insert({ savings_plan_fund_id: value });
+  return r.error ? { error: 'Could not link the savings plan. Try again.' } : { ok: true };
+}

@@ -91,3 +91,27 @@ describe("start balances", () => {
     expect(() => startBalances([f("a", 6000), f("b", 5000)], { x: p(1) })).toThrow(RangeError);
   });
 });
+
+describe("payroll savings plan fund", () => {
+  const months = [ym("2026-12"), ym("2027-01"), ym("2027-02")].map((month) => ({ month, pool: p(0), planCredits: { travel: p(4_000) } }));
+
+  it("takes the plan's money in full even when the fund has a target, so a full fund never turns it away", () => {
+    // Travel's target is 50,000 and it already holds 49,000; the plan puts in 4,000 a month regardless.
+    const out = allocateFunds([travel], { travel: p(49_000) }, months, [], "travel");
+    expect(out.map((m) => row(m, "travel").plan)).toEqual([p(4_000), p(4_000), p(4_000)]);
+    expect(out[2]!.bonusUnplaced).toBe(0);
+  });
+
+  it("never resets, so the plan's money is not wiped each January", () => {
+    const out = allocateFunds([travel], {}, months, [], "travel");
+    expect(out.map((m) => row(m, "travel").balanceAfter)).toEqual([p(4_000), p(8_000), p(12_000)]);
+    // The same fund, not linked to the plan, does reset in January.
+    const unlinked = allocateFunds([travel], { travel: p(4_000) }, [{ month: ym("2026-12"), pool: p(0) }, { month: ym("2027-01"), pool: p(0) }]);
+    expect(row(unlinked[1]!, "travel").balanceAfter).toBe(0);
+  });
+
+  it("money for a fund that no longer exists is left unplaced, not lost silently", () => {
+    const [m] = allocateFunds([wants], {}, [{ month: ym("2026-12"), pool: p(0), planCredits: { gone: p(1_000) } }], [], "gone");
+    expect(m!.bonusUnplaced).toBe(p(1_000));
+  });
+});

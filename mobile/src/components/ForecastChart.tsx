@@ -9,6 +9,8 @@ export interface FundMeta {
   id: string;
   name: string;
   color: string;
+  /** Resets to zero each year. */
+  resets?: boolean;
 }
 
 const W = 380;
@@ -19,19 +21,20 @@ const T = 14;
 const B = 28;
 
 /** Stacked area or lines for the visible funds, with a tap strip over every month. Same drawing as the web chart. */
-export function ForecastChart({ rows, funds, stacked, basis = 'saved', onPick, sel }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; basis?: 'saved' | 'balance'; onPick: (month: string) => void; sel: string | null }) {
+export function ForecastChart({ rows, funds, stacked, onPick, sel }: { rows: ForecastRow[]; funds: FundMeta[]; stacked: boolean; onPick: (month: string) => void; sel: string | null }) {
   const c = useTheme();
   const { hide } = useHide();
   const n = rows.length;
   const x = (i: number) => L + ((W - L - R) * i) / Math.max(1, n - 1);
   const data = useMemo(() => {
     const layers: { f: FundMeta; vals: number[]; bottom: number[] }[] = [];
-    for (const f of funds) {
+    // Funds that reset each year sit on top, so the ones that never reset stay smooth underneath them.
+    for (const f of [...funds].sort((a, b) => Number(!!a.resets) - Number(!!b.resets))) {
       const bottom = stacked && layers.length > 0 ? layers[layers.length - 1]!.vals : rows.map(() => 0);
-      layers.push({ f, vals: rows.map((r, i) => ((basis === 'saved' ? r.funds[f.id]?.saved : r.funds[f.id]?.balance) ?? 0) + bottom[i]!), bottom });
+      layers.push({ f, vals: rows.map((r, i) => (r.funds[f.id]?.balance ?? 0) + bottom[i]!), bottom });
     }
     return { layers, max: Math.max(1, ...layers.flatMap((l) => l.vals)) };
-  }, [rows, funds, stacked, basis]);
+  }, [rows, funds, stacked]);
   const step = (() => {
     const raw = data.max / 100 / 4;
     const nice = [1000, 2000, 5000, 10000, 20000, 25000, 50000, 100000, 200000, 500000].find((s) => s >= raw) ?? 1_000_000;
@@ -46,7 +49,7 @@ export function ForecastChart({ rows, funds, stacked, basis = 'saved', onPick, s
 
   return (
     <View style={{ aspectRatio: W / H, marginTop: 10 }}>
-      <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} accessibilityLabel={basis === 'saved' ? 'Money saved into funds over the next five years' : 'Fund balances over the next five years'}>
+      <Svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} accessibilityLabel="Fund balances over the next five years">
         {ticks.map((v) => (
           <Line key={`g${v}`} x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke={c.line} strokeWidth={1} />
         ))}

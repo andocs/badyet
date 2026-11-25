@@ -6,7 +6,7 @@ import { cancelTransfer, markBillSent, sendLump, undoBillSent } from '@/lib/bill
 import { setLineWallet, setPayAccount } from '@/lib/bills/settings';
 import { money } from '@/lib/domain/money';
 import type { PayCutoff } from '@/lib/engine/types';
-import { Amount, Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
+import { Amount, Body, Card, Chip, Label, Notice, Screen, Tick } from '~/components/ui';
 import { useHide } from '~/lib/hide';
 import { peso } from '~/lib/money';
 import { supabase } from '~/lib/supabase';
@@ -152,9 +152,7 @@ function Wallet({ w, name, payrollId, busy, hide, c, onTick, run }: { w: WalletO
             accessibilityLabel={l.sent ? `${l.name}: ${HOW[l.how ?? 'ticked']}${l.how === 'ticked' ? '. Tap to undo' : ''}` : `Mark ${l.name} sent`}
             style={[s.line, { borderTopColor: c.line }]}
           >
-            <View style={[s.chk, { backgroundColor: l.sent ? c.accent : 'transparent', borderColor: l.sent ? c.accent : c.line }]}>
-              {l.sent ? <Text style={{ color: c.onAccent, fontSize: 14, fontFamily: fonts.bodyBold }}>✓</Text> : null}
-            </View>
+            <Tick on={l.sent} size={28} />
             <View style={{ flex: 1 }}>
               <Text style={{ color: l.sent ? c.muted : c.ink, fontFamily: fonts.bodyBold, fontSize: 15, textDecorationLine: l.sent ? 'line-through' : 'none' }}>{l.name}</Text>
               {l.reimbursed || l.pending ? (
@@ -208,6 +206,5 @@ const s = StyleSheet.create({
   between: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   line: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderTopWidth: 1 },
-  chk: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   btn: { minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
 });

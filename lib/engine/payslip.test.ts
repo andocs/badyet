@@ -77,6 +77,26 @@ describe("payslip builder", () => {
     expect(pay.first.takeHome).toBe(p(25_000 - 2_604.17 - 1_500 - 300));
   });
 
+  it("puts each other deduction on the cutoff it names, with its own amount when on both", () => {
+    const pay = buildMonthPay(salaryFor([]), {
+      ...settings,
+      otherDeductions: [
+        { label: "HMO", cutoff: "first", amount: p(300), amountSecond: null },
+        { label: "Loan", cutoff: "both", amount: p(500), amountSecond: p(800) },
+        { label: "Dues", cutoff: "second", amount: p(100), amountSecond: null },
+      ],
+    }, []);
+    const of = (slip: typeof pay.first) => slip.lines.filter((l) => l.source === "other_deduction").map((l) => [l.label, l.amount]);
+    expect(of(pay.first)).toEqual([["HMO", p(300)], ["Loan", p(500)]]);
+    expect(of(pay.second)).toEqual([["Loan", p(800)], ["Dues", p(100)]]);
+  });
+
+  it("uses the single other deduction only when the list is empty", () => {
+    const withList = buildMonthPay(salaryFor([]), { ...settings, otherDeduction: p(300), otherDeductions: [{ label: "HMO", cutoff: "first", amount: p(100), amountSecond: null }] }, []);
+    expect(withList.second.lines.some((l) => l.source === "other_deduction")).toBe(false);
+    expect(withList.first.lines.find((l) => l.source === "other_deduction")!.amount).toBe(p(100));
+  });
+
   it("includes a taxable monthly allowance in taxable income", () => {
     const taxable: Allowance = { ...allowance2, id: "t", taxable: true, amount: p(5_000) };
     const pay = buildMonthPay(salaryFor([taxable]), settings, []);

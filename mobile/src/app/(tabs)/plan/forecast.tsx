@@ -97,8 +97,8 @@ function build(d: FundsData) {
   const hasExpected = run.some((m) => m.expected);
   const without = hasExpected ? runProjection(input, { includeExpected: false }) : null;
   return {
-    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.fundStart, d.budget.salary.input.settings.savingsPlanFundId ?? null),
-    withoutTotal: without ? totalBalance(forecastRows(without, new Set(), d.fundStart)[59]!) : null,
+    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month))),
+    withoutTotal: without ? totalBalance(forecastRows(without, new Set())[59]!) : null,
   };
 }
 
@@ -108,8 +108,6 @@ export default function Forecast() {
   const { data, error, refreshing, reload } = useLoad(() => loadFunds(supabase));
   const [view, setView] = useState<'chart' | 'years'>('chart');
   const [stacked, setStacked] = useState(true);
-  // "Saved so far" only goes up; "Balance" drops when a fund resets each year.
-  const [basis, setBasis] = useState<'saved' | 'balance'>('saved');
   const [vis, setVis] = useState<Set<string> | null>(null);
   const [year, setYear] = useState<number | null>(null);
   const [sel, setSel] = useState<string | null>(null);
@@ -120,7 +118,7 @@ export default function Forecast() {
   const ready = !!data && hasStart && data.funds.length > 0;
   const built = ready ? build(data) : null;
   const rows = built?.rows ?? [];
-  const funds: FundMeta[] = data ? data.funds.map((f, i) => ({ id: f.id, name: f.name, color: data.colors.get(f.id) ?? PALETTE[i % PALETTE.length]! })) : [];
+  const funds: FundMeta[] = data ? data.funds.map((f, i) => ({ id: f.id, name: f.name, color: data.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, resets: f.rule === 'reset' && f.id !== data.budget.salary.input.settings.savingsPlanFundId })) : [];
   const shownIds = vis ?? new Set(funds.map((f) => f.id));
   const shown = funds.filter((f) => shownIds.has(f.id));
   const last = rows[rows.length - 1];
@@ -183,8 +181,6 @@ export default function Forecast() {
               <View style={s.between}>
                 <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Fund balances</Text>
                 <View style={s.chips}>
-                  <Chip label="Saved so far" on={basis === 'saved'} onPress={() => setBasis('saved')} />
-                  <Chip label="Balance" on={basis === 'balance'} onPress={() => setBasis('balance')} />
                   <Chip label="Stacked" on={stacked} onPress={() => setStacked(true)} />
                   <Chip label="Lines" on={!stacked} onPress={() => setStacked(false)} />
                 </View>
@@ -195,7 +191,7 @@ export default function Forecast() {
                   <Chip key={f.id} label={f.name} on={shownIds.has(f.id)} onPress={() => toggle(f.id)} />
                 ))}
               </View>
-              <ForecastChart rows={rows} funds={shown} stacked={stacked} basis={basis} onPick={setSel} sel={sel} />
+              <ForecastChart rows={rows} funds={shown} stacked={stacked} onPick={setSel} sel={sel} />
               <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>▼ marks a month with an override.</Text>
               
             </Card>

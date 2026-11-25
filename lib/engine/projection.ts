@@ -108,23 +108,23 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
   });
 
   const credits = fundCredits(bonuses);
-  // A payroll savings plan is already out of take-home, so it does not touch the budget; it goes straight into the fund it names.
-  const planFund = input.settings.savingsPlanFundId;
+  // A payroll savings plan is already out of take-home, so it does not touch the budget; it goes straight into the fund it names, in full
+  // (whatever that fund's target), and that fund never resets.
+  const planFund = input.settings.savingsPlanFundId ?? null;
+  const planCredits = new Map<YearMonth, Record<string, Money>>();
   if (planFund) {
     for (const m of months) {
       const pay = regularPay(m);
       const saved = [...pay.first.lines, ...pay.second.lines].filter((l) => l.source === "savings_plan").reduce((t, l) => t + l.amount, 0);
-      if (saved <= 0) continue;
-      const row = { ...(credits.get(m) ?? {}) };
-      row[planFund] = ((row[planFund] ?? 0) + saved) as Money;
-      credits.set(m, row);
+      if (saved > 0) planCredits.set(m, { [planFund]: saved as Money });
     }
   }
   const fundMonths = allocateFunds(
     input.funds,
     input.fundStart,
-    months.map((m, i) => ({ month: m, pool: budgets[i]!.savingsPool, bonusCredits: credits.get(m) })),
+    months.map((m, i) => ({ month: m, pool: budgets[i]!.savingsPool, bonusCredits: credits.get(m), planCredits: planCredits.get(m) })),
     input.overrides ?? [],
+    planFund,
   );
 
   return months.map((m, i) => {

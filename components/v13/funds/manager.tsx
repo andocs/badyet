@@ -24,17 +24,19 @@ export interface FundCard {
   balance: number;
   /** What the payroll savings plan adds to this fund each month, when it is the fund the plan feeds. */
   planMonthly?: number | null;
+  /** This is the fund the payroll savings plan feeds. */
+  planLinked?: boolean;
 }
 
 const RULES: ["steps" | "cap" | "reset" | "fixed", string, string][] = [
   ["steps", "Fill in steps", "One tranche at a time (like an emergency fund)"],
-  ["cap", "Fill to cap", "Keep going until the target is full"],
+  ["cap", "Fill to cap", "Keep going until the cap is full, or with no cap at all"],
   ["reset", "Reset each year", "Starts again every January (like travel)"],
   ["fixed", "Fixed monthly", "Same amount every month until the cap"],
 ];
 const EFFECT: Record<string, string> = {
   steps: "In steps: takes up to your monthly limit until the current tranche is full, then moves on to the next tranche.",
-  cap: "To cap: takes what the pool allows, in priority order, until it hits the cap. Then it drops out.",
+  cap: "To cap: takes what the pool allows, in priority order, until it hits the cap, then drops out. With no cap it keeps taking what the funds above it leave; use Most per month to hold it back.",
   reset: "Resets every January: the balance returns to zero and filling starts over.",
   fixed: "Fixed: the same amount each month if the pool can cover it, until the cap.",
 };
@@ -48,6 +50,8 @@ interface Draft {
   accountId: string;
   shareBp: string;
   startBalance: string;
+  /** The payroll savings plan goes into this fund. Only one fund can have it. */
+  linkPlan: boolean;
   rule: FundCard["rule"];
   target: string;
   max: string;
@@ -64,6 +68,7 @@ const draftOf = (f?: FundCard): Draft => ({
   accountId: f?.linkedAccountId ?? "",
   shareBp: f?.shareBp ? String(f.shareBp / 100) : "",
   startBalance: f ? peso(f.balance) : "",
+  linkPlan: !!f?.planLinked,
   rule: f?.rule ?? "cap",
   target: peso(f?.target ?? null),
   max: peso(f?.maxPerMonth ?? null),
@@ -112,7 +117,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
     start(async () => {
       const r = await saveFund({
         id: d.id, name: d.name, color: d.color, rule: d.rule, target, tranches, maxPerMonth: max, fixedAmount: d.rule === "fixed" ? fixed : null,
-        resetMonth: d.rule === "reset" ? d.resetMonth : null, linkedAccountId: d.linked ? d.accountId || null : null,
+        resetMonth: d.rule === "reset" ? d.resetMonth : null, linkPlan: d.linkPlan, linkedAccountId: d.linked ? d.accountId || null : null,
         shareBp: d.linked && d.shareBp.trim() !== "" ? Math.round(Number(d.shareBp) * 100) : null, startBalance: d.linked ? null : startBalance,
       });
       if (r.error) setError(r.error);
@@ -186,6 +191,15 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
           ) : (
             <label className="v-field">Balance today (₱)<input value={d.startBalance} inputMode="decimal" onChange={(e) => set({ startBalance: e.target.value })} /></label>
           )}
+          <div className="v-row v-sp" style={{ gap: 12 }}>
+            <div>
+              <b>Payroll savings plan goes into this fund</b>
+              <div className="v-xs v-muted">
+                Only one fund can have it{(() => { const other = list.find((x) => x.planLinked && x.id !== d.id); return other && d.linkPlan ? `. Turning it on here moves it from ${other.name}` : ""; })()}. It always lands in full and this fund never resets.
+              </div>
+            </div>
+            <button type="button" className="v-sw" role="switch" aria-checked={d.linkPlan} aria-label="Payroll savings plan goes into this fund" onClick={() => set({ linkPlan: !d.linkPlan })} />
+          </div>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="v-lbl">Fill rule</legend>
             <div className="v-rulegrid">
@@ -193,7 +207,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
             </div>
           </fieldset>
           <div className="v-grid2">
-            <label className="v-field">{d.rule === "steps" ? "Hard cap (optional, ₱)" : "Target or cap (₱)"}<input value={d.target} inputMode="decimal" onChange={(e) => set({ target: e.target.value })} /></label>
+            <label className="v-field">{d.rule === "steps" ? "Hard cap (optional, ₱)" : d.rule === "cap" ? "Cap (₱, empty = no cap)" : "Target or cap (₱)"}<input value={d.target} inputMode="decimal" onChange={(e) => set({ target: e.target.value })} /></label>
             <label className="v-field">Most per month (optional, ₱)<input value={d.max} inputMode="decimal" placeholder="no limit" onChange={(e) => set({ max: e.target.value })} /></label>
           </div>
           {d.rule === "steps" ? <label className="v-field">Tranches (₱, comma separated)<input value={d.tranches} onChange={(e) => set({ tranches: e.target.value })} placeholder="100,000.00" /><span className="v-xs" style={{ fontWeight: 500 }}>Fills the first one, then the next; the last repeats.</span></label> : null}

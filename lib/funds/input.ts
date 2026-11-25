@@ -57,7 +57,9 @@ export function validateFund(input: unknown): Checked<FundInput> {
     if (t.length < 1 || t.length > 20 || !t.every((x) => int(x, 1, MAX))) return { ok: false, error: "Enter at least one tranche, like 100,000." };
     tranches = t as number[];
   }
-  if ((p.rule === "cap" || p.rule === "reset") && (target === null || target <= 0)) return { ok: false, error: "Enter the target to fill to." };
+  // A "fill to cap" fund with no target has no cap: it keeps taking what the funds above it leave.
+  if (p.rule === "reset" && (target === null || target <= 0)) return { ok: false, error: "Enter the target to fill to." };
+  if (p.rule === "cap" && target !== null && target <= 0) return { ok: false, error: "Enter the cap, or leave it empty for no cap." };
   if (p.rule === "fixed" && (fixedAmount === null || fixedAmount <= 0)) return { ok: false, error: "Enter the fixed amount per month." };
   let resetMonth: number | null = null;
   if (p.rule === "reset") {

@@ -70,8 +70,10 @@ export interface FundMonthRow {
   fundId: string;
   /** Taken from the month's pool. */
   amount: Money;
-  /** Money credited straight to this fund this month, not taken from the pool: net bonuses and a payroll savings plan (capped by room). */
+  /** Net bonus money credited straight to this fund this month, not taken from the pool (capped by room). */
   bonus: Money;
+  /** The payroll savings plan's money credited to this fund this month. It is real money out of your pay, so it is never capped. */
+  plan: Money;
   balanceAfter: Money;
   /** Why the fund got what it got: `priority n`, `pinned`, `skipped`, `cap hit`, `pool ran out`, `takes the rest`. */
   reasons: string[];
@@ -92,6 +94,8 @@ export interface FundForecastMonth {
   pool: Money;
   /** Net bonuses assigned to funds, by fund id. They go straight to the fund, not through the pool. */
   bonusCredits?: Readonly<Record<string, Money>>;
+  /** The payroll savings plan's money, by fund id (only the fund the plan feeds). It lands in full, whatever the fund's target. */
+  planCredits?: Readonly<Record<string, Money>>;
 }
 
 function defaultOrder(funds: readonly Fund[]): Fund[] {
@@ -108,6 +112,8 @@ export function allocateFunds(
   start: Readonly<Record<string, Money>>,
   months: readonly FundForecastMonth[],
   overrides: readonly MonthOverride[] = [],
+  /** The fund the payroll savings plan feeds: it never resets, so the plan's money is not wiped each year. */
+  planFundId: string | null = null,
 ): FundMonth[] {
   const funds = defaultOrder(fundsIn.filter((f) => !f.archived));
   const balance: Record<string, Money> = {};
@@ -117,12 +123,12 @@ export function allocateFunds(
 
   for (const m of months) {
     const monthNumber = monthParts(m.month).month;
-    for (const f of funds) if (f.rule === "reset" && f.resetMonth === monthNumber) balance[f.id] = ZERO;
+    for (const f of funds) if (f.rule === "reset" && f.resetMonth === monthNumber && f.id !== planFundId) balance[f.id] = ZERO;
 
     const o = overrideOf.get(m.month);
     const skips = new Set(o?.skips ?? []);
     const pins = o?.pins ?? {};
-    const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, balanceAfter: ZERO, reasons: [] }]));
+    const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, plan: ZERO, balanceAfter: ZERO, reasons: [] }]));
 
     let bonusUnplaced = ZERO;
     for (const [fundId, credit] of Object.entries(m.bonusCredits ?? {})) {
@@ -136,6 +142,17 @@ export function allocateFunds(
       balance[fundId] = (balance[fundId]! + taken) as Money;
       rows.get(fundId)!.bonus = taken;
       bonusUnplaced = (bonusUnplaced + (credit - taken)) as Money;
+    }
+
+    // The payroll savings plan goes in full: it was already taken from your pay, so a full fund does not turn it away.
+    for (const [fundId, credit] of Object.entries(m.planCredits ?? {})) {
+      const f = funds.find((x) => x.id === fundId);
+      if (!f) {
+        bonusUnplaced = (bonusUnplaced + credit) as Money;
+        continue;
+      }
+      balance[fundId] = (balance[fundId]! + credit) as Money;
+      rows.get(fundId)!.plan = credit;
     }
 
     let left = m.pool > 0 ? m.pool : ZERO;

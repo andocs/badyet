@@ -13,9 +13,22 @@ describe('saveFund', () => {
     expect(log).toHaveLength(0);
   });
   it('a new fund goes last in priority', async () => {
-    const { supabase, log } = client({ 'funds:select': { data: { priority: 3 } } });
+    const { supabase, log } = client({ 'funds:select': { data: { priority: 3 } }, 'funds:insert': { data: { id: F1 } } });
     expect(await saveFund(supabase, { name: ' Trip ', rule: 'cap', target: 500_000, color: '#34d399' })).toEqual({ ok: true });
     expect(find(log, 'funds', 'insert')?.args[0]).toMatchObject({ name: 'Trip', rule: 'cap', target: 500_000, priority: 4 });
+  });
+  it('links the payroll savings plan to a new fund when asked, and moves it from another fund', async () => {
+    const { supabase, log } = client({ 'funds:insert': { data: { id: F1 } }, 'pay_settings:select': { data: { user_id: 'u1', savings_plan_fund_id: 'other' } } });
+    expect(await saveFund(supabase, { name: 'Savings', rule: 'cap', target: 500_000, color: '#34d399', linkPlan: true })).toEqual({ ok: true });
+    expect(find(log, 'pay_settings', 'update')?.args[0]).toEqual({ savings_plan_fund_id: F1 });
+  });
+  it('turning the link off only clears it on the fund that has it', async () => {
+    const has = client({ 'pay_settings:select': { data: { user_id: 'u1', savings_plan_fund_id: F1 } } });
+    expect(await saveFund(has.supabase, { id: F1, name: 'Trip', rule: 'cap', target: 500_000, linkPlan: false })).toEqual({ ok: true });
+    expect(find(has.log, 'pay_settings', 'update')?.args[0]).toEqual({ savings_plan_fund_id: null });
+    const other = client({ 'pay_settings:select': { data: { user_id: 'u1', savings_plan_fund_id: 'someone-else' } } });
+    expect(await saveFund(other.supabase, { id: F1, name: 'Trip', rule: 'cap', target: 500_000, linkPlan: false })).toEqual({ ok: true });
+    expect(find(other.log, 'pay_settings', 'update')).toBeUndefined();
   });
   it('updates an existing fund without touching priority', async () => {
     const { supabase, log } = client({});

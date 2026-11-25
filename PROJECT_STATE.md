@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions
-- **Active slice / milestone:** batch 5 done
-- **Gate:** none
-- **Next action:** Batch 5 done. Ask the user for the next revisions (optional: whole-month tab on the pay checklist, styled pickers on other web pages) or finish
+- **Phase:** rev-45 gate
+- **Active slice / milestone:** rev-45 savings-plan-fund
+- **Gate:** awaiting approval (migration 20261225 to apply)
+- **Next action:** Approve rev-45, merge, OTA
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -44,6 +44,15 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
 - 2026-11-25 19:21 | rev-43 | Wants row in Planned vs spent (plan = whatever-is-left + moved to Wants - taken; spent = Wants group categories); Choose dropdown floats (absolute popover, closes outside/Esc); docs/BATCH-5-notes.md and HANDOVER-batch-4.md removed and ignored; pay checklist uses a styled Pick dropdown, tab labels with payday dates. No migration. | 387f82f
 - 2026-11-25 19:23 | rev-43 | Approved; merged to main (a30e9ea); OTA published (group a4ae1f48-ba76-497e-ac73-2c58eaa107b2); Vercel main: success | -
+- 2026-11-25 19:41 | rev-45 | Savings plan fund link (uncapped, never resets), pills removed, Other payroll deduction moved beside payslip builder, salary-based contribution labels. All checks PASS. | f3b61f8
+- 2026-11-25 19:47 | rev-45 | Other deductions list per cutoff (needs migration 20261225000000_other_deductions.sql), no-cap funds, chart stack order. Checks PASS. | -
+- 2026-11-25 19:49 | rev-44 | Merged into rev-45 branch so inbox items (incl. All activity) can be edited | -
+- 2026-11-25 19:52 | rev-45 | Inbox edit now includes category (web, phone). | -
+- 2026-11-25 19:55 | rev-45 | Built-in Credit card payment category (acts like Transfer, shown in pickers). | -
+- 2026-11-25 20:04 | rev-45 | Other-deductions layout; rounded-square tickbox standard (web+phone); skeleton/loading bar; payslip deductions can show under a budget line (panel keeps the rest). | -
+- 2026-11-25 20:07 | rev-45 | Deductions link to a budget category (group), shown as read-only rows in that category. | -
+- 2026-11-25 20:10 | rev-45 | Payslip deductions + savings plan shown in budget categories with Payslip rule and cutoff; panel removed. | -
+- 2026-11-25 20:11 | rev-45 | Credit card payment category hidden from Budget (still in Inbox pickers). | -
 
 ## 4. Open questions
 

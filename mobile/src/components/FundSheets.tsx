@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import type { Fund } from '@/lib/engine/types';
 import type { ForecastRow } from '@/lib/funds/forecast';
@@ -34,7 +34,7 @@ function useRun(onSaved: () => void) {
 }
 
 /** Create or edit a fund, and archive it. */
-export function FundSheet({ fund, color, accounts, onClose, onSaved }: { fund: Fund | null; color: string | null; accounts: { id: string; name: string }[]; onClose: () => void; onSaved: () => void }) {
+export function FundSheet({ fund, color, accounts, planFund, onClose, onSaved }: { fund: Fund | null; color: string | null; accounts: { id: string; name: string }[]; /** The fund the payroll savings plan feeds now, if any. */ planFund: { id: string; name: string } | null; onClose: () => void; onSaved: () => void }) {
   const c = useTheme();
   const [name, setName] = useState(fund?.name ?? '');
   const [col, setCol] = useState<string | null>(color);
@@ -47,6 +47,8 @@ export function FundSheet({ fund, color, accounts, onClose, onSaved }: { fund: F
   const [linked, setLinked] = useState<string | null>(fund?.linkedAccountId ?? null);
   const [share, setShare] = useState(fund?.shareBp ? String(fund.shareBp / 100) : '');
   const [start, setStart] = useState(pesos(fund?.startBalance));
+  // "The payroll savings plan goes into this fund": only one fund can have it.
+  const [linkPlan, setLinkPlan] = useState(!!fund && planFund?.id === fund.id);
   const { problem, busy, run } = useRun(onSaved);
 
   const payload = () => ({
@@ -62,6 +64,7 @@ export function FundSheet({ fund, color, accounts, onClose, onSaved }: { fund: F
     linkedAccountId: linked,
     shareBp: share.trim() === '' ? null : Math.round(Number(share) * 100),
     startBalance: linked ? null : parse(start),
+    linkPlan,
   });
 
   return (
@@ -89,7 +92,7 @@ export function FundSheet({ fund, color, accounts, onClose, onSaved }: { fund: F
         </Field>
       ) : null}
       {rule !== 'fixed' ? (
-        <Field label={rule === 'steps' ? 'Hard cap (₱, optional)' : 'Target (₱)'}>
+        <Field label={rule === 'steps' ? 'Hard cap (₱, optional)' : rule === 'cap' ? 'Cap (₱, empty = no cap)' : 'Target (₱)'}>
           <Input value={target} onChangeText={setTarget} keyboardType="decimal-pad" />
         </Field>
       ) : (
@@ -106,6 +109,14 @@ export function FundSheet({ fund, color, accounts, onClose, onSaved }: { fund: F
           </View>
         </Field>
       ) : null}
+      <Field label="Payroll savings plan">
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13, flex: 1 }}>
+            Goes into this fund, in full, and this fund never resets. Only one fund can have it{planFund && planFund.id !== fund?.id && linkPlan ? `; this moves it from ${planFund.name}` : ''}.
+          </Text>
+          <Switch value={linkPlan} onValueChange={setLinkPlan} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Payroll savings plan goes into this fund" />
+        </View>
+      </Field>
       <Field label="Up to a month (₱, optional)">
         <Input value={maxPer} onChangeText={setMaxPer} keyboardType="decimal-pad" />
       </Field>

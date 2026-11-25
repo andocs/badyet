@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { payrollOnLines, type PayrollRow } from '@/lib/budget/payroll';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
@@ -292,7 +293,7 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
   );
 }
 
-function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+function Board({ groups, data, payroll, onEdit, onAdd }: { payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
@@ -316,6 +317,20 @@ function Board({ groups, data, onEdit, onAdd }: { groups: GroupView[]; data: Bud
             </View>
             {g.lines.map((l) => (
               <LineRow key={l.id} l={l} onPress={() => onEdit(l)} />
+            ))}
+            {(payroll[g.id] ?? []).map((d) => (
+              <View key={`${d.kind}-${d.label}`} style={[s.between, { minHeight: 44 }]}>
+                <View style={{ flex: 1 }}>
+                  <Body bold>{d.label}</Body>
+                  <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{['Payslip', cutoffText(d.cutoff), 'not in the total'].join(' · ')}</Text>
+                </View>
+                <View style={{ alignItems: 'flex-end' }}>
+                  <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 15 }}>{peso(money(d.amount), hide)}</Text>
+                  {d.cutoff === 'both' && d.first !== d.second ? (
+                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>1st {peso(money(d.first), hide)} · 2nd {peso(money(d.second), hide)}</Text>
+                  ) : null}
+                </View>
+              </View>
             ))}
             {firstCategory ? (
               <Pressable onPress={() => onAdd(firstCategory)} accessibilityRole="button" style={[s.add, { backgroundColor: c.soft }]}>
@@ -394,24 +409,6 @@ export default function Budget() {
                 </Notice>
               ) : null}
 
-              {(() => {
-                const lines = [...screen.shown.pay.first.lines, ...screen.shown.pay.second.lines].filter((l) => l.source === 'other_deduction' || l.source === 'savings_plan');
-                if (lines.length === 0) return null;
-                const byName = new Map<string, number[]>();
-                for (const l of lines) byName.set(l.label, [...(byName.get(l.label) ?? []), l.amount]);
-                return (
-                  <Card>
-                    <Label>From your payslip</Label>
-                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Taken before your take-home, so not part of the planned total.</Text>
-                    {[...byName.entries()].map(([name, amounts]) => (
-                      <View key={name} style={s.between}>
-                        <Body>{name}</Body>
-                        <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>{peso(money(Math.max(...amounts)), hide)} a cutoff</Text>
-                      </View>
-                    ))}
-                  </Card>
-                );
-              })()}
               {!fut ? (
                 <Card>
                   <View style={s.between}>
@@ -462,6 +459,7 @@ export default function Budget() {
               <Board
                 groups={cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups}
                 data={data}
+                payroll={payrollOnLines(screen.shown.pay, screen.groups)}
                 onEdit={(l) => setEditing(draftOf(l))}
                 onAdd={(cat) => setEditing(blankDraft(cat))}
               />

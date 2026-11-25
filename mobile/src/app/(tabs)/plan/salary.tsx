@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import type { SalaryEvent, Allowance } from '@/lib/engine/types';
 import { loadSalary } from '@/lib/salary/load';
+import { otherDeductionDrafts } from '@/lib/pay/other-deduction';
 import { eventRows, regularRange, yearOf, yearRows , salaryAt } from '@/lib/salary/view';
 import type { YearMonth } from '@/lib/domain/dates';
 import { PayslipSheet, AllowanceSheet, EventSheet, ProjectedSheet } from '~/components/SalarySheets';
@@ -32,11 +33,12 @@ export default function Salary() {
   const { hide } = useHide();
   const { width } = useWindowDimensions();
   const { data, error, refreshing, reload } = useLoad(async () => {
-    const [salary, funds] = await Promise.all([
+    const [salary, funds, lines] = await Promise.all([
       loadSalary(supabase),
       supabase.from('funds').select('id, name').is('archived_at', null).order('priority'),
+      supabase.from('category_groups').select('id, name').is('archived_at', null).neq('name', 'Transfers').order('sort'),
     ]);
-    return { ...salary, funds: (funds.data ?? []) as { id: string; name: string }[] };
+    return { ...salary, funds: (funds.data ?? []) as { id: string; name: string }[], groups: (lines.data ?? []) as { id: string; name: string }[] };
   });
   const [open, setOpen] = useState<Open | null>(null);
   const [yearIdx, setYearIdx] = useState(0);
@@ -59,7 +61,6 @@ export default function Salary() {
 
       {data && input && hasStart ? (
         <>
-          <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ''} amount={input.settings.otherDeduction} onSaved={reload} />
           <SavingsPlanCard
             plan={{ bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null }}
             funds={data.funds}
@@ -177,6 +178,7 @@ export default function Salary() {
               </View>
             </Card>
           </Pressable>
+          <OtherDeductionCard items={otherDeductionDrafts(input.settings)} groups={data.groups} onSaved={reload} />
         </>
       ) : null}
 

@@ -104,7 +104,7 @@ export default function Funds() {
         </Pressable>
       ) : null}
 
-      {data && open ? <FundSheet fund={open.fund} color={open.fund ? (data.colors.get(open.fund.id) ?? null) : null} accounts={accounts} onClose={() => setOpen(null)} onSaved={done} /> : null}
+      {data && open ? <FundSheet fund={open.fund} color={open.fund ? (data.colors.get(open.fund.id) ?? null) : null} accounts={accounts} planFund={(() => { const id = data.budget.salary.input.settings.savingsPlanFundId; const f = id ? data.funds.find((x) => x.id === id) : undefined; return f ? { id: f.id, name: f.name } : null; })()} onClose={() => setOpen(null)} onSaved={done} /> : null}
     </Screen>
   );
 }

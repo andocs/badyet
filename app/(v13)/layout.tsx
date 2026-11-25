@@ -1,5 +1,7 @@
 import "../v13.css";
+import { Suspense } from "react";
 import { AutoRefresh } from "@/components/v13/auto-refresh";
+import { NavProgress } from "@/components/v13/nav-progress";
 import { V13Shell } from "@/components/v13/shell";
 import { createClient } from "@/lib/supabase/server";
 
@@ -23,6 +25,7 @@ export default async function V13Layout({ children }: { children: React.ReactNod
   }
   return (
     <V13Shell pending={pending} accounts={accounts} categories={categories}>
+      <Suspense fallback={null}><NavProgress /></Suspense>
       <AutoRefresh />
       {children}
     </V13Shell>
