@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-43 Wants and cleanup
-- **Gate:** waiting
-- **Next action:** Gate rev-43; on approve merge to main + OTA publish
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql; force-close and reopen the phone app (up to twice) for the OTA; tell me how your Wants lines are set up (Choose on Planned vs spent); consider making the GitHub repo private
+- **Active slice / milestone:** batch 5 done
+- **Gate:** none
+- **Next action:** Batch 5 done. Ask the user for the next revisions (optional: whole-month tab on the pay checklist, styled pickers on other web pages) or finish
+- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
 
@@ -43,6 +43,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 19:11 | rev-42 | Email dedupe and pairing use the transaction time written inside the email (lib/capture/email-time.ts) instead of the email's receipt time; falls back to arrival time when none found | 8a3f7f5
 - 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
 - 2026-11-25 19:21 | rev-43 | Wants row in Planned vs spent (plan = whatever-is-left + moved to Wants - taken; spent = Wants group categories); Choose dropdown floats (absolute popover, closes outside/Esc); docs/BATCH-5-notes.md and HANDOVER-batch-4.md removed and ignored; pay checklist uses a styled Pick dropdown, tab labels with payday dates. No migration. | 387f82f
+- 2026-11-25 19:23 | rev-43 | Approved; merged to main (a30e9ea); OTA published (group a4ae1f48-ba76-497e-ac73-2c58eaa107b2); Vercel main: success | -
 
 ## 4. Open questions
 
