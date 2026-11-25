@@ -67,7 +67,7 @@ export function NowPage({ data, pending }: { data: Ready; pending: number }) {
             {data.settleOpen > 0 ? (
               <section className="v-card" aria-labelledby="st">
                 <h2 id="st">Settle office days</h2>
-                <div className="v-sm v-muted" style={{ margin: "2px 0 8px" }}>{data.settleOpen} office day{data.settleOpen === 1 ? "" : "s"} ended under or over budget.</div>
+                <div className="v-sm v-muted" style={{ margin: "2px 0 8px" }}>{data.settleOpen} office day{data.settleOpen === 1 ? "" : "s"} to settle: under or over budget, or skipped.</div>
                 <Link className="v-btn v-sm v-pri" href="/budget">Settle in Budget</Link>
               </section>
             ) : null}

@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { AllowanceControls, EventActions, ExpectedPill, OptimisticItem, ProjectedRaises } from "@/components/v13/salary/controls";
 import { PayslipBuilder } from "@/components/v13/salary/payslip-builder";
+import { OtherDeductionCard } from "@/components/v13/salary/other-deduction";
 import { SavingsPlanCard } from "@/components/v13/salary/savings-plan";
 
 export const metadata = { title: "Salary and tax · Bad(yet)" };
@@ -57,6 +58,7 @@ export default async function Pay({ searchParams }: { searchParams: Promise<{ ta
             ) : (
               <>
                 <SavingsPlanCard plan={plan} funds={funds} base={salaryAt(input, thisMonth).base} />
+                <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ""} amount={input.settings.otherDeduction} />
                 <Timeline data={data} />
               </>
             )}

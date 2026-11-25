@@ -27,8 +27,8 @@ export default async function Settings() {
         <PaydaysCard first={row.first_payday_day} second={row.second_payday_day} />
         <section className="v-card v-stack" aria-labelledby="tx">
           <h2 id="tx">Tax and contributions</h2>
-          <div className="v-row v-sp v-top"><div><b>Tables in use</b><div className="v-xs v-muted">Income tax: the 2023 TRAIN schedule. SSS and Pag-IBIG: the amounts you type in the payslip builder. PhilHealth: 2.5% of base, between ₱10,000 and ₱100,000.</div></div><span className="v-pill v-ok">Applied to every year</span></div>
-          <p className="v-xs v-muted" style={{ margin: 0 }}>Overrides for your own SSS, PhilHealth, Pag-IBIG or tax amounts live in the <Link href="/pay?tab=payslip">payslip builder</Link>.</p>
+          <div className="v-row v-sp v-top"><div><b>Tables in use</b><div className="v-xs v-muted">Income tax: the 2023 TRAIN schedule. SSS: 5% of the monthly salary credit (SSS schedule effective January 2025, ₱250 to ₱1,750). Pag-IBIG: 2% of up to ₱10,000 (₱200 at most). PhilHealth: 2.5% of base, between ₱10,000 and ₱100,000. Type your own amount in the payslip builder to override any of them.</div></div><span className="v-pill v-ok">Applied to every year</span></div>
+          <p className="v-xs v-muted" style={{ margin: 0 }}>Your own SSS, PhilHealth, Pag-IBIG or tax amounts go in the <Link href="/pay?tab=payslip">payslip builder</Link>.</p>
         </section>
         <NotificationsCard enabled={row.notif_capture_enabled} rules={rules} />
         <section className="v-card v-stack" aria-labelledby="cp">

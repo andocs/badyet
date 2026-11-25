@@ -3,10 +3,11 @@ import { ensureTransferCategory } from './transfer-category';
 import { findTransferPairs, type PairCandidate } from './pair';
 import type { AccountLite } from './row';
 
-const WINDOW_MS = 30 * 60_000;
+/** How far back to look for the other side: an email can land hours after the alert, and the two sides may be up to an hour apart. */
+const WINDOW_MS = 3 * 60 * 60_000;
 
 /**
- * Looks at what was captured (phone notifications and emails) in the half hour before `now` and links moves between your own accounts (money out of one, the same
+ * Looks at what was captured (phone notifications and emails) in the three hours before `now` and links moves between your own accounts (money out of one, the same
  * amount into another) as a transfer, so they do not count as spending plus income. Paired moves wear the Transfer category.
  * Returns how many pairs it linked. Runs on the phone after capture and on the web after a held capture is answered.
  */

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { money } from '@/lib/domain/money';
+import { savingsPlanPerCutoff } from '@/lib/engine/payslip';
+import { salaryAt } from '@/lib/salary/view';
 import type { Fund } from '@/lib/engine/types';
 import { loadFunds } from '@/lib/funds/load';
 import { FundSheet } from '~/components/FundSheets';
@@ -52,7 +54,11 @@ export default function Funds() {
         const balance = data.fundStart[f.id] ?? money(0);
         const target = f.target ?? null;
         const pct = target && target > 0 ? Math.min(100, (balance / target) * 100) : null;
+        // The payroll savings plan: what it adds each month (both cutoffs) to the fund it feeds.
+        const settings = data.budget.salary.input.settings;
+        const planMonthly = f.id === settings.savingsPlanFundId ? savingsPlanPerCutoff(settings, salaryAt(data.budget.salary.input, data.budget.salary.thisMonth).base) * 2 : 0;
         const bits = [
+          planMonthly > 0 ? `+${peso(money(planMonthly), hide)} a month from your payroll savings plan` : null,
           f.maxPerMonth ? `up to ${peso(f.maxPerMonth, hide)} a month` : null,
           f.fixedAmount ? `${peso(f.fixedAmount, hide)} a month` : null,
           f.rule === 'reset' && f.resetMonth ? `resets in ${MON[f.resetMonth - 1]}` : null,

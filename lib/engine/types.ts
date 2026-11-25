@@ -46,7 +46,7 @@ export interface Assumptions {
   assumedRaiseMonth: number;
 }
 
-/** Payroll settings. null means "standard rate" (PhilHealth) or "none" (SSS and Pag-IBIG are typed by the user). */
+/** Payroll settings. null means the standard amount: PhilHealth's rate, or the official SSS and Pag-IBIG tables. */
 export interface PaySettings {
   sssOverride: Money | null;
   philhealthOverride: Money | null;
@@ -55,6 +55,8 @@ export interface PaySettings {
   taxOverrideSecond: Money | null;
   /** Taken from every cutoff after tax (HMO and the like). */
   otherDeduction: Money;
+  /** What it is called on the payslip, such as "HMO plan"; null = "Other deduction". */
+  otherDeductionLabel?: string | null;
   /** Payroll savings plan, percent of basic per cutoff, basis points. */
   savingsPlanBp: number;
   /** Or a fixed amount per cutoff (wins over the percent when set). */

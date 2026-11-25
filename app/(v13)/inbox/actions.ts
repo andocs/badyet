@@ -21,7 +21,7 @@ const refresh = () => {
  * Confirms a pending row. A normal row needs a category; a transfer does not, and confirming one also confirms its other leg.
  * With `rule`, "always put this merchant under this category" is saved. Only confirmed rows move balances.
  */
-export async function confirmTransaction(input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null }): Promise<FormState> {
+export async function confirmTransaction(input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean }): Promise<FormState> {
   const supabase = await requireAuthed();
   if (!UUID.test(input.id)) return { error: "That transaction was not found." };
   const row = await supabase.from("transactions").select("id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source, amount").eq("id", input.id).maybeSingle();
@@ -40,7 +40,10 @@ export async function confirmTransaction(input: { id: string; categoryId: string
   let categoryId: string | null = null;
   // Picking the Transfer category says it was a move between your own accounts, so it stops counting as spending or income.
   let becomesTransfer = false;
-  if (!isTransfer) {
+  if (!isTransfer && input.asTransfer === true) {
+    // The Transfer button: a move between your own accounts. It needs no category.
+    becomesTransfer = true;
+  } else if (!isTransfer) {
     if (!input.categoryId || !UUID.test(input.categoryId)) return { error: "Pick a category first." };
     const cat = await supabase.from("categories").select("id, name").eq("id", input.categoryId).maybeSingle();
     if (!cat.data) return { error: "That category was not found." };
@@ -54,7 +57,7 @@ export async function confirmTransaction(input: { id: string; categoryId: string
         (accts.data ?? []) as HoldAccount[],
         Date.now(),
       );
-      if (until !== null) return { error: `This may be a transfer between your accounts. Wait until ${manilaTime(until)} for the other side, or file it under ${TRANSFER_CATEGORY}.` };
+      if (until !== null) return { error: `This may be a transfer between your accounts. Wait until ${manilaTime(until)} for the other side, or confirm it as a transfer.` };
     }
   }
 

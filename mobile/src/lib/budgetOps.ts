@@ -50,8 +50,9 @@ export async function setOfficeDay(supabase: SupabaseClient, input: { date: stri
     supabase.from('office_day_overrides').delete().eq('day', input.date),
   ]);
   const poolId = ((pool.data ?? []) as { id: string; budget_line_id: string }[]).find((p) => p.budget_line_id === (contingency.data as { id: string } | null)?.id)?.id;
-  const [, ins] = await Promise.all([
+  const [, , ins] = await Promise.all([
     poolId ? supabase.from('pool_entries').delete().eq('pool_id', poolId).eq('occurred_on', input.date).eq('kind', 'use').eq('note', 'Extra office day') : Promise.resolve(null),
+    poolId ? supabase.from('pool_entries').delete().eq('pool_id', poolId).eq('occurred_on', input.date).in('kind', SETTLE_KINDS) : Promise.resolve(null),
     wantsOverride ? supabase.from('office_day_overrides').insert({ day: input.date, in_office: input.office }) : Promise.resolve(null),
   ]);
   if (ins?.error) return { error: 'Could not save that day. Try again.' };

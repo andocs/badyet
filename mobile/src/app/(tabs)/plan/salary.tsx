@@ -6,6 +6,7 @@ import { eventRows, regularRange, yearOf, yearRows , salaryAt } from '@/lib/sala
 import type { YearMonth } from '@/lib/domain/dates';
 import { PayslipSheet, AllowanceSheet, EventSheet, ProjectedSheet } from '~/components/SalarySheets';
 import { RaiseWizard, type RaiseKind } from '~/components/RaiseWizard';
+import { OtherDeductionCard } from '~/components/OtherDeductionCard';
 import { SavingsPlanCard } from '~/components/SavingsPlanCard';
 
 import { SalaryChart } from '~/components/SalaryChart';
@@ -58,6 +59,7 @@ export default function Salary() {
 
       {data && input && hasStart ? (
         <>
+          <OtherDeductionCard label={input.settings.otherDeductionLabel ?? ''} amount={input.settings.otherDeduction} onSaved={reload} />
           <SavingsPlanCard
             plan={{ bp: input.settings.savingsPlanBp, amount: input.settings.savingsPlanAmount ?? null, fundId: input.settings.savingsPlanFundId ?? null }}
             funds={data.funds}

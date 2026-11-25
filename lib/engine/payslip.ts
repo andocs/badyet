@@ -1,6 +1,7 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { findBracket, taxPerCutoff, type TaxRow } from "@/lib/domain/pay";
 import { divRound, fromRatio, money, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
+import { pagibigEmployee, sssEmployee } from "@/lib/pay/contributions";
 import { philhealthMonthly } from "@/lib/pay/philhealth";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import type { BonusPayment } from "./bonus";
@@ -64,8 +65,11 @@ export interface MonthPay {
  * second cutoff = half the base minus the other half of the tax, SSS, PhilHealth and Pag-IBIG. Allowances are added on the
  * cutoff each allowance says it lands in (the second by default).
  */
-/** Monthly contributions used when no amount is set (decided 2026-11-22): SSS 1,000, Pag-IBIG 200, SSS PenBoost 750. */
-export const STANDARD_CONTRIBUTION = { sss: money(100_000), pagibig: money(20_000), penboost: money(75_000) } as const;
+/**
+ * SSS and Pag-IBIG come from the official tables (lib/pay/contributions.ts) when no amount is typed. SSS PenBoost is your own
+ * choice, so it uses the amount you gave when there is none on the line (decided 2026-11-22: 750 a month).
+ */
+export const STANDARD_CONTRIBUTION = { penboost: money(75_000) } as const;
 
 export function defaultTemplate(cutoff: PayCutoff): PayslipTemplate {
   const common: PayslipLineSpec[] = [
@@ -155,8 +159,8 @@ export function buildMonthPay(
   rows: readonly TaxRow[] = TAX_ROWS,
 ): MonthPay {
   const { base } = salary;
-  const sss = settings.sssOverride ?? STANDARD_CONTRIBUTION.sss;
-  const pagibig = settings.pagibigOverride ?? STANDARD_CONTRIBUTION.pagibig;
+  const sss = settings.sssOverride ?? sssEmployee(base);
+  const pagibig = settings.pagibigOverride ?? pagibigEmployee(base);
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
 
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
@@ -225,7 +229,7 @@ export function buildMonthPay(
     }
     const plan = savingsPlanPerCutoff(settings, base);
     if (plan > 0) lines.push({ kind: "deduction", label: "Savings plan", source: "savings_plan", amount: plan });
-    if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
+    if (settings.otherDeduction > 0) lines.push({ kind: "deduction", label: settings.otherDeductionLabel?.trim() || "Other deduction", source: "other_deduction", amount: settings.otherDeduction });
     for (const b of bonuses) {
       if (b.cutoff !== cutoff) continue;
       // Its tax is inside this cutoff's income tax line. De minimis gets its own line, since it is never taxed.

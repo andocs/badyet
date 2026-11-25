@@ -135,7 +135,15 @@ export function BudgetSide({ data, nowRun, onChanged }: { data: BudgetData; nowR
               key={d.date}
               label={`${weekdayName(d.date)} ${Number(d.date.slice(8))}`}
               on={d.office}
-              onPress={() => act(() => setOfficeDay(supabase, { date: d.date, office: !d.office, usual: d.usual, dayBudget }))}
+              onPress={async () => {
+                // Skipping a usual office day frees its budget: ask where that money goes.
+                const skipping = d.usual && d.office && dayBudget > 0;
+                setProblem(null);
+                const r = await setOfficeDay(supabase, { date: d.date, office: !d.office, usual: d.usual, dayBudget });
+                if ('error' in r) return setProblem(r.error);
+                onChanged();
+                if (skipping) setOpen({ k: 'settle', date: d.date, under: true, diff: dayBudget });
+              }}
             />
           ))}
         </View>

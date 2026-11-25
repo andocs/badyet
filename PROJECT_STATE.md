@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** batch 4 done
+- **Active slice / milestone:** rev-40 Batch 5 fixes
 - **Gate:** none
-- **Next action:** Batch 4 and leftovers done. Ask the user for the next revisions or finish
+- **Next action:** rev-40: RTO deselect prompt, hide Transfer, SSS/Pag-IBIG official, chart default, late emails, deduction sections, savings plan per fund
 - **User to-do now:** Apply migration 20261221000000_savings_and_custom_slots.sql; on the phone force-close and reopen the app (up to twice) to get the OTA update
 
 ## 3. Execution log
@@ -157,8 +157,10 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 ## Slice plan
 
-Batch 4 leftovers, grouped on user request (2026-11-25, migrations 20261217-20261220 applied):
-- rev-39 (one gate): (1) phone Inbox "Pays a bill"; (2) phone budget plans: make/edit/delete; (3) more than one custom ("Other app") source; (4) skipped/under office-day money can go to savings (new pool kind settle_to_savings + migration, adds to that month's savings pool); (5) Bonuses page net uses the payslip tax method; (6) mobile lint warnings cleaned (16).
+Batch 5 (notes in docs/BATCH-5-notes.md, 2026-11-25). Decisions: necessary deductions = tax, SSS, PhilHealth, Pag-IBIG, SSS PenBoost; HMO / savings plan / other stay subtracted from take-home as now, shown in their own payslip section, plus a read-only "from your payslip" card on Budget (not part of the planned total); chart defaults to "saved so far" (never drops) with a balance switch; pay checklist gets mockups first.
+- rev-40 (one gate): (6) prompt when deselecting a usual RTO day (Wants / pool / savings); (7) hide the Transfer category and Transfers group everywhere, add an Inbox "Transfer" button; (4) SSS and Pag-IBIG from the official rules, shown as real values on web and phone; (9) Forecast chart default "saved so far" + balance switch; (2) late transfer emails attach to the existing Inbox item; (5) payslip deduction sections + Budget read-only card; (8) savings plan shown per fund in Forecast and Funds page; (1) Wants in Planned vs spent once the user says how Wants lines are set up (picker saved list? percent/rest lines? feeds-savings group?).
+- rev-41: pay checklist MOCKUPS (web + phone): per-cutoff checklist grouped by wallet with wallet totals, like the sheet's To Transfer tab.
+- rev-42: pay checklist build per the rev-41 choice.
 
 ## Decisions & architecture
 
