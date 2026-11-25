@@ -99,6 +99,8 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   ]);
   // The savings plan's amount and fund are asked for on their own, so a database without that update still loads.
   const planExtra = await supabase.from("pay_settings").select("savings_plan_amount, savings_plan_fund_id").maybeSingle();
+  // The name of the other deduction comes from a newer migration too, so it is asked for separately.
+  const labelExtra = await supabase.from("pay_settings").select("other_deduction_label").maybeSingle();
   // Same for the rev-36 settings: without that update there is no remembered pay account and the panel shows everything.
   const nowExtra = await supabase.from("user_settings").select("pay_account_id, now_categories").maybeSingle();
   const extra = (nowExtra.error ? null : nowExtra.data) as { pay_account_id: string | null; now_categories: string[] | null } | null;
@@ -142,7 +144,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       events: salaryEvents,
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
       assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
-      settings: paySettingsOf(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra)),
+      settings: paySettingsOf(withPlanExtra(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra), labelExtra)),
       bonusRules: [],
       bonusInstances: [],
       lines,

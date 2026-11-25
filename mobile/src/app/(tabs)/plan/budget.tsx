@@ -394,6 +394,24 @@ export default function Budget() {
                 </Notice>
               ) : null}
 
+              {(() => {
+                const lines = [...screen.shown.pay.first.lines, ...screen.shown.pay.second.lines].filter((l) => l.source === 'other_deduction' || l.source === 'savings_plan');
+                if (lines.length === 0) return null;
+                const byName = new Map<string, number[]>();
+                for (const l of lines) byName.set(l.label, [...(byName.get(l.label) ?? []), l.amount]);
+                return (
+                  <Card>
+                    <Label>From your payslip</Label>
+                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Taken before your take-home, so not part of the planned total.</Text>
+                    {[...byName.entries()].map(([name, amounts]) => (
+                      <View key={name} style={s.between}>
+                        <Body>{name}</Body>
+                        <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>{peso(money(Math.max(...amounts)), hide)} a cutoff</Text>
+                      </View>
+                    ))}
+                  </Card>
+                );
+              })()}
               {!fut ? (
                 <Card>
                   <View style={s.between}>

@@ -143,8 +143,9 @@ export async function setOfficeDay(input: { date: string; office: boolean; usual
   const poolId = (pool.data ?? []).find((p) => p.budget_line_id === contingency.data?.id)?.id as string | undefined;
 
   // Remove the previous pool draw for this day while saving the new tap.
-  const [, ins] = await Promise.all([
+  const [, , ins] = await Promise.all([
     poolId ? supabase.from("pool_entries").delete().eq("pool_id", poolId).eq("occurred_on", input.date).eq("kind", "use").eq("note", "Extra office day") : Promise.resolve(null),
+    poolId ? supabase.from("pool_entries").delete().eq("pool_id", poolId).eq("occurred_on", input.date).in("kind", [...SETTLE_KINDS]) : Promise.resolve(null),
     wantsOverride ? supabase.from("office_day_overrides").insert({ day: input.date, in_office: input.office }) : Promise.resolve(null),
   ]);
   if (ins?.error) return { error: "Could not save that day. Try again." };

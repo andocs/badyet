@@ -35,8 +35,12 @@ describe('findTransferPairs', () => {
     const base = [row('o', 'maya', -5_000, 0, 'BPI')];
     expect(findTransferPairs([...base, row('i', 'maya', 5_000, 5, 'BPI')], accounts)).toEqual([]); // same account
     expect(findTransferPairs([...base, row('i', 'bpi', 5_001, 5, 'Maya')], accounts)).toEqual([]); // amount differs
-    expect(findTransferPairs([...base, row('i', 'bpi', 5_000, 11 * 60, 'Maya')], accounts)).toEqual([]); // 11 minutes
+    expect(findTransferPairs([...base, row('i', 'bpi', 5_000, 61 * 60, 'Maya')], accounts)).toEqual([]); // 61 minutes
     expect(findTransferPairs([...base, row('i', 'bpi', -5_000, 5, 'Maya')], accounts)).toEqual([]); // both out
+  });
+
+  it('pairs a bank email that trails the wallet alert by 40 minutes', () => {
+    expect(findTransferPairs([row('o', 'maya', -5_000, 0, 'BPI'), row('i', 'bpi', 5_000, 40 * 60, 'Maya')], accounts)).toEqual([{ outId: 'o', inId: 'i' }]);
   });
 
   it('pairs each row once, closest in time first', () => {

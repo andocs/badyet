@@ -45,6 +45,12 @@ describe("office days", () => {
     // 17 Mar was not an office day; 22 Mar is today (not ended) and on budget.
   });
 
+  it("lists a skipped usual day that is still ahead, so you can place its money now", () => {
+    const days = cutoffOfficeDays(period, [1, 2], new Map([["2027-03-23", false]]));
+    const rows = settleRows({ days, spendByDay: new Map(), dayBudget: p(250), settledDays: new Set(), today: d("2027-03-20") });
+    expect(rows.map((r) => [r.date, r.diff, r.skipped])).toEqual([["2027-03-23", p(250), true]]);
+  });
+
   it("lists a usual office day you skipped, with its whole budget unused, so you can say where it goes", () => {
     const days = cutoffOfficeDays(period, [1, 2], new Map([["2027-03-16", false]]));
     const rows = settleRows({ days, spendByDay: new Map([["2027-03-15", p(250)]]), dayBudget: p(250), settledDays: new Set(), today: d("2027-03-20") });

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { TRANSFER_CATEGORY } from '@/lib/capture/transfer-category';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
@@ -51,7 +50,7 @@ function PendingCard({
   categories: Category[];
   bills: { id: string; name: string }[];
   today: ReturnType<typeof isoDate>;
-  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null) => void;
+  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null, asTransfer: boolean) => void;
   onIgnore: (t: InboxTxn) => void;
 }) {
   const c = useTheme();
@@ -59,6 +58,8 @@ function PendingCard({
   const [rule, setRule] = useState(t.guess === 'rule');
   const [note, setNote] = useState(t.note ?? '');
   const [billId, setBillId] = useState<string | null>(null);
+  // "Transfer" is a button, not a category: a move between your own accounts.
+  const [asT, setAsT] = useState(false);
   const isTransfer = t.kind === 'transfer';
   const chosen = categories.find((x) => x.id === categoryId)?.name;
   // A transfer-looking item waits a few minutes for its other side; meanwhile it can only be filed as a Transfer.
@@ -69,7 +70,7 @@ function PendingCard({
     return () => clearInterval(timer);
   }, [t.holdUntil]);
   const holding = t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
-  const canConfirm = isTransfer || (categoryId !== null && (!holding || chosen === TRANSFER_CATEGORY));
+  const canConfirm = isTransfer || asT || (categoryId !== null && !holding);
 
   return (
     <Card>
@@ -88,13 +89,14 @@ function PendingCard({
       ) : (
         <>
           <View style={s.chips}>
+            <Chip label="↔ Transfer" on={asT} onPress={() => setAsT((v) => !v)} />
             {categories.map((x) => (
-              <Chip key={x.id} label={x.name} on={x.id === categoryId} onPress={() => setCategoryId(x.id)} />
+              <Chip key={x.id} label={x.name} on={!asT && x.id === categoryId} onPress={() => { setAsT(false); setCategoryId(x.id); }} />
             ))}
           </View>
           {holding ? (
             <Text accessibilityRole="alert" style={{ color: c.ink, fontFamily: fonts.body, fontSize: 13 }}>
-              May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Pick {TRANSFER_CATEGORY} now, or confirm it as {t.amount < 0 ? 'spending' : 'income'} after that.
+              May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Tap Transfer now, or confirm it as {t.amount < 0 ? 'spending' : 'income'} after that.
             </Text>
           ) : null}
           {t.guess && categoryId === t.categoryId ? (
@@ -149,7 +151,7 @@ function PendingCard({
 
       <View style={s.row}>
         <Pressable
-          onPress={() => onConfirm(t, isTransfer ? null : categoryId, rule && !isTransfer, note, isTransfer ? null : billId)}
+          onPress={() => onConfirm(t, isTransfer || asT ? null : categoryId, rule && !isTransfer && !asT, note, isTransfer || asT ? null : billId, asT)}
           disabled={!canConfirm}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canConfirm }}
@@ -266,7 +268,7 @@ export default function Inbox() {
                 categories={data.categories}
                 bills={data.bills}
                 today={today}
-                onConfirm={(row, categoryId, rule, note, billId) =>
+                onConfirm={(row, categoryId, rule, note, billId, asTransfer) =>
                   act(row, 'confirm', () =>
                     confirmTransaction(supabase, {
                       id: row.id,
@@ -274,6 +276,7 @@ export default function Inbox() {
                       rule,
                       note,
                       billId,
+                      asTransfer,
                     }),
                   )
                 }

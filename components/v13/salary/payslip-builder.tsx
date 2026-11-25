@@ -268,7 +268,10 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
 
   const idx = slip.lines.map((_, i) => i);
   const earn = idx.filter((i) => slip.lines[i]!.kind === "earning");
-  const ded = idx.filter((i) => slip.lines[i]!.kind === "deduction");
+  // Necessary deductions (tax, SSS, PhilHealth, Pag-IBIG, PenBoost) apart from the others (HMO plan, savings plan, your own lines).
+  const NECESSARY = new Set(["income_tax", "sss", "philhealth", "pagibig", "penboost"]);
+  const ded = idx.filter((i) => slip.lines[i]!.kind === "deduction" && NECESSARY.has(slip.lines[i]!.source));
+  const otherDed = idx.filter((i) => slip.lines[i]!.kind === "deduction" && !NECESSARY.has(slip.lines[i]!.source));
   return (
     <details className="v-slip" open>
       <summary className="v-pbsum">
@@ -279,8 +282,10 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
       <div className="v-pl">
         <h3 className="v-pgh">Earnings</h3>
         {earn.map(row)}
-        <h3 className="v-pgh">Deductions</h3>
+        <h3 className="v-pgh">Necessary deductions</h3>
         {ded.map(row)}
+        {otherDed.length > 0 ? <h3 className="v-pgh">Other deductions</h3> : null}
+        {otherDed.map(row)}
         <div className="v-addl2">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="+ Add a line, e.g. Salary loan" aria-label={`New line name, ${name2}`} maxLength={60} />
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="₱ amount" aria-label={`New line amount, ${name2}`} />

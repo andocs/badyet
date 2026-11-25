@@ -122,7 +122,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   // The Transfer category exists from the first visit, so a move between your own accounts can be filed under it.
   await ensureTransferCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, billsRes] = await Promise.all([
-    supabase.from('categories').select('id, name').is('archived_at', null).order('sort'),
+    supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').order('sort'),
     supabase.from('accounts').select('id, name, institution, archived_at'),
     supabase.from('merchant_rules').select('id, pattern, category_id, account_id, priority'),
     supabase.from('transactions').select(COLS).eq('status', 'pending').order('occurred_at', { ascending: false }),
@@ -148,7 +148,7 @@ export type Result = { ok: true } | { error: string };
  */
 export async function confirmTransaction(
   supabase: SupabaseClient,
-  input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null },
+  input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean },
 ): Promise<Result> {
   if (!UUID.test(input.id)) return { error: 'That transaction was not found.' };
   const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source, amount').eq('id', input.id).maybeSingle();
@@ -167,7 +167,10 @@ export async function confirmTransaction(
   let categoryId: string | null = null;
   // Picking the Transfer category says it was a move between your own accounts, so it stops counting as spending or income.
   let becomesTransfer = false;
-  if (!isTransfer) {
+  if (!isTransfer && input.asTransfer === true) {
+    // The Transfer button: a move between your own accounts. It needs no category.
+    becomesTransfer = true;
+  } else if (!isTransfer) {
     if (!input.categoryId || !UUID.test(input.categoryId)) return { error: 'Pick a category first.' };
     const cat = await supabase.from('categories').select('id, name').eq('id', input.categoryId).is('archived_at', null).maybeSingle();
     if (!cat.data) return { error: 'That category was not found.' };
@@ -183,7 +186,7 @@ export async function confirmTransaction(
       );
       if (until !== null) {
         const at = new Date(until).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' });
-        return { error: `This may be a transfer between your accounts. Wait until ${at} for the other side, or file it under ${TRANSFER_CATEGORY}.` };
+        return { error: `This may be a transfer between your accounts. Wait until ${at} for the other side, or confirm it as a transfer.` };
       }
     }
   }

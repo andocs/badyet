@@ -22,6 +22,8 @@ export interface FundCard {
   shareBp: number | null;
   /** Balance now (from the linked account, or typed in). */
   balance: number;
+  /** What the payroll savings plan adds to this fund each month, when it is the fund the plan feeds. */
+  planMonthly?: number | null;
 }
 
 const RULES: ["steps" | "cap" | "reset" | "fixed", string, string][] = [
@@ -139,7 +141,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
               <button type="button" className="v-fund v-grow" aria-pressed={sel === f.id} onClick={() => pick(f.id)}>
                 <span className="v-n">{i + 1}</span>
                 <i className="v-dot" style={{ background: f.color, width: 14, height: 14 }} />
-                <span className="v-grow"><b>{f.name}</b><span className="v-xs v-muted" style={{ display: "block" }}>{RULES.find((r) => r[0] === f.rule)![1]}</span>
+                <span className="v-grow"><b>{f.name}</b><span className="v-xs v-muted" style={{ display: "block" }}>{RULES.find((r) => r[0] === f.rule)![1]}</span>{f.planMonthly ? <span className="v-xs v-ok" style={{ display: "block" }}>+ <Money value={money(f.planMonthly)} /> a month from your payroll savings plan</span> : null}
                   <div className="v-bar" role="img" aria-label={`${f.name} ${Math.round(p)} percent of target`}><i style={{ width: `${p}%`, background: f.color }} /></div></span>
                 <span style={{ textAlign: "right" }}><b className="v-num"><Money value={money(f.balance)} /></b>{cap(f) > 0 ? <span className="v-xs v-muted v-num" style={{ display: "block" }}>of <Money value={money(cap(f))} /></span> : null}</span>
               </button>

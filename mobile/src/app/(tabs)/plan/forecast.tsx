@@ -54,6 +54,7 @@ function MonthSheet({ row, funds, onClose, onChange }: { row: ForecastRow; funds
                     <Body bold>{f.name}</Body>
                   </View>
                   <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{cell.reasons.map(WHY).join(' · ') || 'Nothing this month'}</Text>
+                  {cell.plan > 0 ? <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 12 }}>+ {peso(cell.plan, hide)} from your payroll savings plan</Text> : null}
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
                   <Amount value={money(cell.amount + cell.bonus)} />
@@ -96,8 +97,8 @@ function build(d: FundsData) {
   const hasExpected = run.some((m) => m.expected);
   const without = hasExpected ? runProjection(input, { includeExpected: false }) : null;
   return {
-    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month))),
-    withoutTotal: without ? totalBalance(forecastRows(without, new Set())[59]!) : null,
+    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.fundStart, d.budget.salary.input.settings.savingsPlanFundId ?? null),
+    withoutTotal: without ? totalBalance(forecastRows(without, new Set(), d.fundStart)[59]!) : null,
   };
 }
 
@@ -107,6 +108,8 @@ export default function Forecast() {
   const { data, error, refreshing, reload } = useLoad(() => loadFunds(supabase));
   const [view, setView] = useState<'chart' | 'years'>('chart');
   const [stacked, setStacked] = useState(true);
+  // "Saved so far" only goes up; "Balance" drops when a fund resets each year.
+  const [basis, setBasis] = useState<'saved' | 'balance'>('saved');
   const [vis, setVis] = useState<Set<string> | null>(null);
   const [year, setYear] = useState<number | null>(null);
   const [sel, setSel] = useState<string | null>(null);
@@ -180,6 +183,8 @@ export default function Forecast() {
               <View style={s.between}>
                 <Text style={[s.h2, { color: c.ink, fontFamily: fonts.display }]}>Fund balances</Text>
                 <View style={s.chips}>
+                  <Chip label="Saved so far" on={basis === 'saved'} onPress={() => setBasis('saved')} />
+                  <Chip label="Balance" on={basis === 'balance'} onPress={() => setBasis('balance')} />
                   <Chip label="Stacked" on={stacked} onPress={() => setStacked(true)} />
                   <Chip label="Lines" on={!stacked} onPress={() => setStacked(false)} />
                 </View>
@@ -190,7 +195,7 @@ export default function Forecast() {
                   <Chip key={f.id} label={f.name} on={shownIds.has(f.id)} onPress={() => toggle(f.id)} />
                 ))}
               </View>
-              <ForecastChart rows={rows} funds={shown} stacked={stacked} onPick={setSel} sel={sel} />
+              <ForecastChart rows={rows} funds={shown} stacked={stacked} basis={basis} onPick={setSel} sel={sel} />
               <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>▼ marks a month with an override.</Text>
               
             </Card>

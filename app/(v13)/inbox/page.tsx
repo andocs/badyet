@@ -37,7 +37,7 @@ export default async function Inbox() {
 
   const cols = "id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, dedupe_hash, note";
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts, billsRes] = await Promise.all([
-    supabase.from("categories").select("id, name").is("archived_at", null).order("sort"),
+    supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").order("sort"),
     supabase.from("accounts").select("id, name, institution, archived_at"),
     supabase.from("merchant_rules").select("id, pattern, category_id, account_id, priority"),
     supabase.from("transactions").select(cols).eq("status", "pending").order("occurred_at", { ascending: false }),

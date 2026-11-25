@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { YearMonth } from '@/lib/domain/dates';
-import { formatPesos, money, parsePesos } from '@/lib/domain/money';
+import { formatPesos, money, parsePesos, type Money } from '@/lib/domain/money';
 import { monthRange } from '@/lib/engine/months';
-import { STANDARD_CONTRIBUTION, templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
+import { buildMonthPay, templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
 import type { Allowance, PayCutoff, SalaryEvent } from '@/lib/engine/types';
-import type { SalaryInput } from '@/lib/salary/view';
+import { salaryAt, type SalaryInput } from '@/lib/salary/view';
 import { Chip } from '~/components/ui';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import { useHide } from '~/lib/hide';
@@ -137,6 +137,35 @@ export function ProjectedSheet({ on: onIn, pctBp, month: monthIn, onClose, onSav
   );
 }
 
+/**
+ * An amount box that shows what the line really comes to: your typed amount, else the computed one. Clearing it, or typing the
+ * computed amount, goes back to computed so the line keeps following your pay.
+ */
+function AmountField({ override, fallback, placeholder, onChange }: { override: Money | null; fallback: Money | null; placeholder: string; onChange: (v: Money | null) => void }) {
+  const show = (v: Money | null) => (v == null ? '' : formatPesos(v, { symbol: false }));
+  const [text, setText] = useState(show(override ?? fallback));
+  return (
+    <Input
+      value={text}
+      onChangeText={(t) => {
+        setText(t);
+        if (t.trim() === '') return onChange(null);
+        const v = parsePesos(t.trim());
+        if (v !== undefined) onChange(money(v));
+      }}
+      onBlur={() => {
+        const v = text.trim() === '' ? null : parsePesos(text.trim());
+        if (v === null || v === undefined || (fallback !== null && money(v) === fallback)) {
+          onChange(null);
+          setText(show(fallback));
+        }
+      }}
+      keyboardType="decimal-pad"
+      placeholder={placeholder}
+    />
+  );
+}
+
 interface Draft {
   key: string;
   spec: PayslipLineSpec;
@@ -181,12 +210,13 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
     setNewLabel('');
     setNewAmount('');
   };
-  // What an empty box means: the saved setting or the standard amount for contributions, otherwise the engine's own figure.
-  const defaultHint = (source: PayslipLineSpec['source']): string => {
-    const st = input.settings;
-    const v = source === 'sss' ? (st.sssOverride ?? STANDARD_CONTRIBUTION.sss) : source === 'pagibig' ? (st.pagibigOverride ?? STANDARD_CONTRIBUTION.pagibig) : source === 'penboost' ? STANDARD_CONTRIBUTION.penboost : null;
-    return v == null ? 'computed' : `${formatPesos(v, { symbol: false })} (default)`;
-  };
+  // What the contribution lines come to with nothing typed: SSS and Pag-IBIG from the official tables, PhilHealth from the base, PenBoost's usual amount.
+  const defaults = useMemo(() => {
+    const pay = buildMonthPay(salaryAt(input, month), input.settings, [], []);
+    const out: Partial<Record<PayslipLineSpec['source'], Money>> = {};
+    for (const l of [...pay.first.lines, ...pay.second.lines]) if (['sss', 'philhealth', 'pagibig', 'penboost'].includes(l.source) && !(l.source in out)) out[l.source as PayslipLineSpec['source']] = l.amount;
+    return out;
+  }, [input, month]);
   const lines = (cutoff: PayCutoff) => drafts[cutoff].map((d) => ({ kind: d.spec.kind, label: d.spec.label, source: d.spec.source, shareBp: d.spec.shareBp ?? null, amountOverride: d.spec.amountOverride ?? null }));
 
   return (
@@ -217,14 +247,12 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
                   </Field>
                 ) : null}
                 <Field label={sp.source === 'custom' ? 'Amount (₱)' : 'Override amount (₱, empty = computed)'}>
-                  <Input
-                    value={sp.amountOverride == null ? '' : formatPesos(sp.amountOverride, { symbol: false })}
-                    onChangeText={(t) => {
-                      const v = t.trim() === '' ? null : parsePesos(t.trim());
-                      patch(cutoff, d.key, { amountOverride: v === undefined ? sp.amountOverride : v === null ? null : money(v) });
-                    }}
-                    keyboardType="decimal-pad"
-                    placeholder={hide ? '' : defaultHint(sp.source)}
+                  <AmountField
+                    key={d.key}
+                    override={sp.amountOverride ?? null}
+                    fallback={defaults[sp.source] ?? null}
+                    placeholder={hide ? '' : 'computed'}
+                    onChange={(v) => patch(cutoff, d.key, { amountOverride: v })}
                   />
                 </Field>
                 <View style={s.chips}>

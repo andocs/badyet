@@ -52,13 +52,25 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
   });
   const shown = st.days;
   const [tapErr, setTapErr] = useState<string | null>(null);
+  // Skipping a usual office day frees its budget: ask where that money goes.
+  const [prompt, setPrompt] = useState<{ date: string; label: string } | null>(null);
   const [, startTap] = useTransition();
   const toggleDay = (d: DayView) =>
     startTap(async () => {
       setTapErr(null);
+      setPrompt(null);
       apply({ type: "day", date: d.date, office: !d.office });
       const r = await setOfficeDay({ date: d.date, office: !d.office, usual: d.usual, dayBudget });
       if (r.error) setTapErr(r.error);
+      else if (d.usual && d.office && dayBudget > 0) setPrompt({ date: d.date, label: dayText(d.date, d.weekday) });
+    });
+  const placeSkipped = (to: "wants" | "pool" | "savings") =>
+    startTap(async () => {
+      if (!prompt) return;
+      setTapErr(null);
+      const r = await settleDay({ date: prompt.date, under: true, to, amount: dayBudget });
+      if (r.error) setTapErr(r.error);
+      else setPrompt(null);
     });
   const toggleWeekday = (day: number) =>
     startTap(async () => {
@@ -109,6 +121,17 @@ export function RtoCard({ usual, days, today, dayBudget, contingency, extraUsed,
           <span className="v-pill v-warn">{contingencyName ?? "No contingency line"}</span>
         </div>
         <p className="v-xs v-muted" style={{ margin: "10px 0 0" }}>The app works out a day&apos;s budget (<Money value={money(dayBudget)} /> now) from your RTO lines and the usual days. Change which lines count in a line&apos;s editor.</p>
+        {prompt ? (
+          <div className="v-stl" role="group" aria-label={`Where ${prompt.label}'s money goes`} style={{ marginTop: 12 }}>
+            <div className="v-sm"><b>{prompt.label}</b> skipped. <b><Money value={money(dayBudget)} /> unused.</b> Put it in:</div>
+            <div className="v-row v-wrap" style={{ gap: 8, marginTop: 8 }}>
+              <button type="button" className="v-btn v-sm v-pri" onClick={() => placeSkipped("wants")}>Wants</button>
+              <button type="button" className="v-btn v-sm" onClick={() => placeSkipped("pool")}>Contingency pool</button>
+              <button type="button" className="v-btn v-sm" onClick={() => placeSkipped("savings")}>Savings</button>
+              <button type="button" className="v-btn v-sm v-ghost" onClick={() => setPrompt(null)}>Decide later</button>
+            </div>
+          </div>
+        ) : null}
         <Err error={tapErr} />
       </div>
     </section>

@@ -20,14 +20,18 @@ function mentions(text: string | null, account: AccountLite): boolean {
 }
 
 /**
- * Finds moves between your own accounts that arrived as two separate notifications: money out of one account and the same
- * amount into another, a few minutes apart, where at least one side names the other account. Each is paired once, closest
+ * Finds moves between your own accounts that arrived as two separate notifications or emails: money out of one account and the same
+ * amount into another, within an hour of each other (a bank email can trail the wallet alert by a long while), where at least one side
+ * names the other account. Each is paired once, closest
  * in time first. The pair then counts as a transfer instead of spending plus income.
  */
+/** How far apart the two sides of one transfer may be. An email from the bank can arrive long after the wallet notification. */
+export const PAIR_WINDOW_MS = 60 * 60_000;
+
 export function findTransferPairs(
   rows: readonly PairCandidate[],
   accounts: readonly AccountLite[],
-  windowMs = 10 * 60_000,
+  windowMs = PAIR_WINDOW_MS,
 ): { outId: string; inId: string }[] {
   const acct = new Map(accounts.map((a) => [a.id, a]));
   const outs = rows.filter((r) => r.amount < 0);

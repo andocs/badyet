@@ -2,7 +2,6 @@
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from "react";
 import { confirmTransaction, ignoreTransaction } from "@/app/(v13)/inbox/actions";
-import { TRANSFER_CATEGORY } from "@/lib/capture/transfer-category";
 import type { IsoDate } from "@/lib/domain/dates";
 import { money } from "@/lib/domain/money";
 import { relativeDay, timeLabel } from "@/lib/now/format";
@@ -72,14 +71,15 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
     const timer = setInterval(tick, 15_000);
     return () => { clearTimeout(first); clearInterval(timer); };
   }, []);
-  const transferCat = categories.find((c) => c.name === TRANSFER_CATEGORY)?.id ?? null;
+  // "Transfer" is a button, not a category: a move between your own accounts.
+  const [asT, setAsT] = useState<Record<string, boolean>>({});
   const holding = (t: InboxTxn) => t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
 
   const open = txns.find((t) => t.id === openId) ?? null;
   const pick = (t: InboxTxn) => (t.id in picks ? picks[t.id]! : t.categoryId);
   const ruleOn = (t: InboxTxn) => (t.id in rules ? rules[t.id]! : t.guess === "rule");
   // While a transfer-looking item waits for its other side, it can only be filed as a Transfer.
-  const canConfirm = (t: InboxTxn) => t.kind === "transfer" || (pick(t) !== null && (!holding(t) || pick(t) === transferCat));
+  const canConfirm = (t: InboxTxn) => t.kind === "transfer" || asT[t.id] === true || (pick(t) !== null && !holding(t));
 
   function openDetail(id: string) {
     setOpenId(id);
@@ -92,10 +92,11 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   function confirm(t: InboxTxn) {
     setError(null);
     startTransition(async () => {
-      const categoryId = pick(t);
+      const asTransfer = asT[t.id] === true;
+      const categoryId = asTransfer ? null : pick(t);
       apply({ type: "confirm", id: t.id, categoryId, categoryName: categories.find((c) => c.id === categoryId)?.name ?? null });
       closeDetail();
-      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "", billId: billPicks[t.id] || null });
+      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "", billId: billPicks[t.id] || null, asTransfer });
       if (r.error) setError(r.error);
     });
   }
@@ -111,8 +112,9 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
 
   const chips = (t: InboxTxn) => (
     <div className="v-cats" role="group" aria-label={`Category for ${t.who}`}>
+      <button type="button" aria-pressed={asT[t.id] === true} onClick={() => setAsT((a) => ({ ...a, [t.id]: !a[t.id] }))}>↔ Transfer</button>
       {categories.map((c) => (
-        <button key={c.id} type="button" aria-pressed={pick(t) === c.id} onClick={() => setPicks((p) => ({ ...p, [t.id]: c.id }))}>
+        <button key={c.id} type="button" aria-pressed={asT[t.id] !== true && pick(t) === c.id} onClick={() => { setAsT((a) => ({ ...a, [t.id]: false })); setPicks((p) => ({ ...p, [t.id]: c.id })); }}>
           {c.name}
         </button>
       ))}
@@ -141,7 +143,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   const holdNote = (t: InboxTxn) =>
     holding(t) ? (
       <div className="v-guess v-warnt" role="status">
-        May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. File it under {TRANSFER_CATEGORY} now, or confirm it as {t.amount < 0 ? "spending" : "income"} after that.
+        May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Tap Transfer now, or confirm it as {t.amount < 0 ? "spending" : "income"} after that.
       </div>
     ) : null;
 

@@ -14,6 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Money } from "@/components/v13/money";
 import { BudgetBoard } from "@/components/v13/budget/board";
 import { PlanBar } from "@/components/v13/budget/plan-bar";
+import { PayrollDeductionsCard } from "@/components/v13/budget/payroll-card";
 import { YearMonths } from "@/components/v13/budget/year-months";
 import { CategoriesCard, PoolsCard, RtoCard, SettleCard } from "@/components/v13/budget/side-cards";
 
@@ -62,6 +63,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
               {fut ? <FutureYears year={year} thisYear={Number(thisMonth.slice(0, 4))} month={month} run={yearRun!} without={yearWithout} cmp={cmp} link={link} groupsList={data.groups} colors={colors} /> : null}
               {!fut ? <PlanBar plans={screen.plan.list} selected={screen.plan.selected} activeNow={screen.plan.activeNow} thisMonth={thisMonth} /> : null}
               <Summary screen={screen} data={data} />
+              {shown ? <PayrollDeductionsCard pay={shown.pay} /> : null}
               {!fut ? (
                 <div className="v-seg" role="group" aria-label="Show" style={{ alignSelf: "flex-start" }}>
                   <Link href={`/budget${keepPlan("?")}`} className="v-segl" aria-current={view === null ? "true" : undefined}>Whole month</Link>

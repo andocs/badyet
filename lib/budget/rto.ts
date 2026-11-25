@@ -40,7 +40,8 @@ export interface SettleRow {
  */
 export function settleRows(input: { days: readonly OfficeDay[]; spendByDay: ReadonlyMap<string, Money>; dayBudget: Money; settledDays: ReadonlySet<string>; today: IsoDate }): SettleRow[] {
   return input.days
-    .filter((d) => d.date < input.today && ((d.office && input.spendByDay.has(d.date)) || d.skipped))
+    // Skipped days count as soon as you skip them, even if they are still ahead; office days only once they have ended with spending.
+    .filter((d) => d.skipped || (d.date < input.today && d.office && input.spendByDay.has(d.date)))
     .map((d) => {
       const spent = input.spendByDay.get(d.date) ?? money(0);
       return { date: d.date, spent, budget: input.dayBudget, diff: money(input.dayBudget - spent), settled: input.settledDays.has(d.date), skipped: d.skipped };

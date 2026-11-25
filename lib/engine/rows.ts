@@ -46,6 +46,8 @@ export interface PaySettingsRow {
   tax_override_first: number | null;
   tax_override_second: number | null;
   other_deduction: number;
+  /** Added in rev-40; absent on a database without that update. */
+  other_deduction_label?: string | null;
   savings_plan_bp: number;
   /** From a newer migration; absent until it is applied. */
   savings_plan_amount?: number | null;
@@ -110,6 +112,7 @@ export const paySettingsOf = (r: PaySettingsRow | null): PaySettings =>
         taxOverrideFirst: m(r.tax_override_first),
         taxOverrideSecond: m(r.tax_override_second),
         otherDeduction: money(r.other_deduction),
+        otherDeductionLabel: r.other_deduction_label ?? null,
         savingsPlanBp: r.savings_plan_bp,
         savingsPlanAmount: m(r.savings_plan_amount ?? null),
         savingsPlanFundId: r.savings_plan_fund_id ?? null,
@@ -237,4 +240,4 @@ export function templatesOf(templates: readonly TemplateRow[], lines: readonly T
 
 /** Lays the savings plan's amount and fund over the pay settings row. They come from a newer migration, so they are asked for on their own and ignored if that fails. */
 export const withPlanExtra = (row: PaySettingsRow | null, extra: { data: unknown; error: unknown }): PaySettingsRow | null =>
-  row && !extra.error && extra.data ? { ...row, ...(extra.data as Pick<PaySettingsRow, "savings_plan_amount" | "savings_plan_fund_id">) } : row;
+  row && !extra.error && extra.data ? { ...row, ...(extra.data as Partial<PaySettingsRow>) } : row;
