@@ -41,8 +41,8 @@ export interface ProjectionInput {
   tightBelow?: Money;
   /** Office-day money settled to savings, by budget month (adds to that month's savings pool). */
   extraSavings?: Readonly<Record<string, Money>>;
-  /** Lines whose reimbursement has not arrived, by budget month (see lib/budget/reimburse.ts). */
-  awaitedReimbursements?: Readonly<Record<string, readonly string[]>>;
+  /** What counts as paid back, by budget month and line (see lib/budget/reimburse.ts). */
+  reimbursementOverrides?: Readonly<Record<string, Readonly<Record<string, { cutoff: PayCutoff; amount: Money }>>>>;
   /** Budget plans over date ranges (each cutoff uses the plan in force, else the normal budget). */
   plans?: readonly PlanSpan[];
   /** Budget page: show one budget (a plan id, or null for the normal one) whatever the dates say. */
@@ -106,7 +106,7 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
       plans: input.plans,
       forcePlan: input.forcePlan,
       extraSavings: input.extraSavings?.[m],
-      awaitedReimbursements: input.awaitedReimbursements?.[m],
+      reimbursementOverrides: input.reimbursementOverrides?.[m],
     });
   });
 

@@ -263,7 +263,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-function LineRow({ l, moves, status, onMark, onPress }: { l: LineView; moves: MoveNote[]; status?: ReimbursementStatus; onMark: (input: { lineId: string; month: string; cutoff: 'first' | 'second'; received: boolean }) => void; onPress: () => void }) {
+function LineRow({ l, moves, status, onMark, onPress }: { l: LineView; moves: MoveNote[]; status?: ReimbursementStatus; onMark: (input: MarkInput) => void; onPress: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
@@ -292,15 +292,22 @@ function LineRow({ l, moves, status, onMark, onPress }: { l: LineView; moves: Mo
         {status && status.state !== 'expected' ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             <Text style={{ color: status.state === 'received' ? c.accentText : c.gold, fontFamily: fonts.bodyBold, fontSize: 12 }}>
-              {status.state === 'received' ? 'Received' : 'Waiting for'} {peso(money(status.amount), hide)}
+              {status.state === 'received' ? 'Received' : status.state === 'postponed' ? 'Postponed' : 'Waiting for'} {peso(money(status.amount), hide)}
+              {status.state === 'postponed' ? ' to next month' : status.carried > 0 ? ' (incl. postponed)' : ''}
             </Text>
-            <Pressable
-              onPress={() => onMark({ lineId: status.lineId, month: status.month, cutoff: status.cutoff, received: status.state !== 'received' })}
-              accessibilityRole="button"
-              style={{ minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999, backgroundColor: c.soft }}
-            >
-              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 12 }}>{status.state === 'received' ? 'Not yet' : 'Mark received'}</Text>
-            </Pressable>
+            {(status.state === 'waiting'
+              ? [['Mark received', true, false], ['Postponed?', false, true]] as const
+              : [[status.state === 'received' ? 'Not yet' : 'Undo', false, false]] as const
+            ).map(([text, received, postponed]) => (
+              <Pressable
+                key={text}
+                onPress={() => onMark({ lineId: status.lineId, month: status.month, cutoff: status.cutoff, received, postponed })}
+                accessibilityRole="button"
+                style={{ minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999, backgroundColor: c.soft }}
+              >
+                <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 12 }}>{text}</Text>
+              </Pressable>
+            ))}
           </View>
         ) : l.reimburse ? (
           <Text style={{ color: c.accentText, fontFamily: fonts.body, fontSize: 12 }}>
@@ -315,7 +322,9 @@ function LineRow({ l, moves, status, onMark, onPress }: { l: LineView; moves: Mo
   );
 }
 
-function Board({ reimbursements, onMark, moved, groups, data, payroll, cut, onEdit, onAdd }: { reimbursements: ReimbursementStatus[]; onMark: (input: { lineId: string; month: string; cutoff: 'first' | 'second'; received: boolean }) => void; moved: MovedBudget; cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+type MarkInput = { lineId: string; month: string; cutoff: 'first' | 'second'; received: boolean; postponed: boolean };
+
+function Board({ reimbursements, onMark, moved, groups, data, payroll, cut, onEdit, onAdd }: { reimbursements: ReimbursementStatus[]; onMark: (input: MarkInput) => void; moved: MovedBudget; cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
