@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import { formatPesos, money } from "@/lib/domain/money";
-import { madeLegFor } from "@/lib/capture/claim";
-import { BUILTIN_FORMATS, pairCheck, readSample, simulate, suggestPattern, type Channel, type SampleOutcome, type SampleSetup } from "@/lib/capture/explain";
+import { BUILTIN_FORMATS, readSample, suggestPattern, type Channel, type SampleSetup } from "@/lib/capture/explain";
+import { describeOther, describeSample, type ResultBox } from "@/lib/capture/result-view";
 import type { CapturePattern } from "@/lib/capture/patterns";
-import type { AccountLite } from "@/lib/capture/row";
-import { SOURCE_INFO, type CaptureRule, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
+import { SOURCE_INFO, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
 import { PatternsSection } from "./capture-patterns";
 import { Money } from "./money";
 
@@ -92,20 +91,23 @@ export function Reading({ source, setSource, options, configs, patterns, channel
   );
 }
 
-const Mark = ({ state }: { state: "ok" | "bad" | "off" }) => <span className={`v-mark${state === "ok" ? "" : ` v-${state}`}`} aria-hidden="true">{state === "ok" ? "✓" : state === "bad" ? "✕" : "–"}</span>;
-const Line = ({ state, title, sub }: { state: "ok" | "bad" | "off"; title: React.ReactNode; sub?: React.ReactNode }) => (
-  <div className="v-markline"><Mark state={state} /><div>{sub ? <><b>{title}</b><div className="v-xs v-muted">{sub}</div></> : <div className="v-sm">{title}</div>}</div></div>
-);
-
-const KIND = { expense: "Spending", income: "Income", transfer: "Transfer" } as const;
-
-function Entry({ name, kind, amount }: { name: string; kind: string; amount: number }) {
+function Box({ box }: { box: ResultBox }) {
   return (
-    <div className="v-entry"><span>{name}<br /><small className="v-muted">{kind}</small></span><b className="v-num"><Money value={money(amount)} signed /></b></div>
+    <div className="v-testbox" role="status">
+      {box.lines.map((l) => (
+        <div key={l.title} className="v-markline">
+          <span className={`v-mark${l.state === "ok" ? "" : ` v-${l.state}`}`} aria-hidden="true">{l.state === "ok" ? "✓" : l.state === "bad" ? "✕" : "–"}</span>
+          <div><span className="v-sr">{l.state === "ok" ? "Yes: " : "No: "}</span>{l.sub ? <><b>{l.title}</b><div className="v-xs v-muted">{l.sub}</div></> : <div className="v-sm">{l.title}</div>}</div>
+        </div>
+      ))}
+      {box.heading ? <div className="v-lab">{box.heading}</div> : null}
+      {box.entries.map((e, i) => (
+        <div key={i} className="v-entry"><span>{e.name}<br /><small className="v-muted">{e.kind}</small></span><b className="v-num"><Money value={money(e.amount)} signed /></b></div>
+      ))}
+      {box.foot ? <div className="v-xs v-muted">{box.foot}</div> : null}
+    </div>
   );
 }
-
-const SKIPPED = { "source-off": "This source is switched off.", "under-minimum": "It is under the source's minimum.", "ignore-rule": "An ignore rule matches it." } as const;
 
 /** Step 5: what the sample would do, and (optionally) whether the other account's message belongs with it. */
 export function Result({ setup, sample, configs, allPatterns, ruleId, ruleNames, categoryName }: {
@@ -117,94 +119,28 @@ export function Result({ setup, sample, configs, allPatterns, ruleId, ruleNames,
 }) {
   const [otherSource, setOtherSource] = useState<SourceKey>(setup.source);
   const [otherText, setOtherText] = useState("");
-  const label = labelOf(configs, setup.source);
-  const accounts: readonly AccountLite[] = setup.accounts;
-  const nameOf = (id: string | null) => (id ? (accounts.find((a) => a.id === id)?.name ?? "Account") : "You'll be asked which account");
-
   if (sample.trim() === "") return <div className="v-testbox"><div className="v-xs v-muted">Paste a sample in step 2 to see what it would do.</div></div>;
-  const out: SampleOutcome = simulate(sample, setup);
-  if (out.kind === "unreadable") {
-    return <div className="v-testbox" role="status"><Line state="bad" title="Nothing is saved" sub={`${label} can't read the sample, so the rules are not checked. Nothing shows in the Inbox either. Add a pattern in step 2.`} /></div>;
-  }
-  if (out.kind === "skipped") {
-    return <div className="v-testbox" role="status"><Line state="ok" title="It can be read" /><Line state="bad" title="Nothing is saved" sub={SKIPPED[out.reason]} /></div>;
-  }
-
-  const status = out.decision.status === "confirmed" && out.accountId ? "confirmed at once" : "waiting in the Inbox";
-  const matched = out.decision.ruleId;
-  const matchedName = matched ? ruleNames.get(matched) : undefined;
-  const kindOf = (e: (typeof out.entries)[number]) => {
-    if (e.kind !== "expense") return KIND[e.kind];
-    if (out.decision.move) return "Payment · choose the other account in the Inbox";
-    return `Spending · ${out.decision.categoryId ? (categoryName.get(out.decision.categoryId) ?? "category") : "choose a category"}`;
-  };
-
-  const other = otherText.trim() === "" ? null : (() => {
-    const config = configs.find((c) => c.source === otherSource);
-    return config ? simulate(otherText, { ...setup, source: otherSource, config, patterns: allPatterns, channels: undefined, from: undefined }) : null;
-  })();
-  const madeBoth = out.entries.length === 2;
-
+  const { box, outcome } = describeSample(sample, setup, { source: labelOf(configs, setup.source), ruleId, rules: ruleNames, categories: categoryName });
+  const otherConfig = configs.find((c) => c.source === otherSource);
+  const otherBox = otherConfig ? describeOther(outcome, otherText, { ...setup, source: otherSource, config: otherConfig, patterns: allPatterns, channels: undefined, from: undefined }, otherConfig.label) : null;
   return (
     <div className="v-stack" style={{ gap: 10 }}>
-      <div className="v-testbox" role="status">
-        <Line state="ok" title="It can be read" />
-        <Line state="ok" title={`${label} is on and it is not under the minimum`} />
-        {ruleId ? (
-          matched === ruleId ? <Line state="ok" title={`This rule matches${matchedName ? `: ${matchedName}` : ""}`} /> : <Line state="bad" title="This rule does not decide this sample" sub={matched ? `"${matchedName ?? "Another rule"}" matches first.` : "Its words or places do not match, so \"Everything else\" applies."} />
-        ) : matched ? <Line state="ok" title={`A rule catches this one first: ${matchedName ?? "a rule"}`} /> : <Line state="ok" title="No rule matches, so these settings apply" />}
-        <div className="v-lab">{out.entries.length === 2 ? "It saves two linked entries" : "It saves one entry"}, {status}</div>
-        {out.entries.map((e, i) => <Entry key={i} name={nameOf(e.accountId)} kind={kindOf(e)} amount={e.amount} />)}
-        {madeBoth ? <div className="v-xs v-muted">Not counted as spending or income. Confirming one confirms both.</div> : null}
-      </div>
-
-      <div className="v-shared">
-        <div className="v-grid2">
-          <label className="v-field">Other side from
-            <select value={otherSource} onChange={(e) => setOtherSource(e.target.value as SourceKey)}>
-              {configs.map((c) => <option key={c.source} value={c.source}>{c.label}{c.source === setup.source ? " (this source)" : ""}</option>)}
-            </select>
-          </label>
-          <div className="v-xs v-muted" style={{ alignSelf: "end", paddingBottom: 6 }}>Each message is read by its own source&apos;s patterns and reader.</div>
-        </div>
-        <label className="v-field">The other side&apos;s message (optional)<textarea rows={3} maxLength={1500} value={otherText} onChange={(e) => setOtherText(e.target.value)} placeholder="Paste what the other account sends, if it sends anything" /></label>
-        {otherText.trim() === "" ? null : <ReadPills source={otherSource} label={labelOf(configs, otherSource)} text={otherText} patterns={allPatterns} />}
-      </div>
-
-      {other === null ? null : other.kind !== "kept" ? (
-        <div className="v-testbox" role="status">
-          <Line state="bad" title={madeBoth ? "The second message changes nothing" : "These would not pair"} sub={other.kind === "unreadable" ? `${labelOf(configs, otherSource)} can't read it, so the app would ignore it. Is it the right source?` : SKIPPED[other.reason]} />
-        </div>
-      ) : madeBoth ? (() => {
-        const first = out.entries[1]!;
-        const again = madeLegFor(
-          { accountId: other.accountId ?? "", amount: other.entries[0]!.amount, at: 0, counterparty: other.read.parsed.counterparty },
-          [{ id: "made", accountId: first.accountId ?? "", amount: first.amount, at: 0, peerAccountId: out.accountId ?? "" }],
-          accounts,
-        );
-        return (
-          <div className="v-testbox" role="status">
-            {again ? <Line state="ok" title="It would not be added again" sub="It is recognised as the entry the rule already made, if it arrives within an hour." /> : <Line state="bad" title="It would be added as another entry" sub="Its account, amount or the name in it does not match the entry the rule made. Check the amount in both messages." />}
+      <Box box={box} />
+      {outcome.kind === "kept" ? (
+        <div className="v-shared">
+          <div className="v-grid2">
+            <label className="v-field">Other side from
+              <select value={otherSource} onChange={(e) => setOtherSource(e.target.value as SourceKey)}>
+                {configs.map((c) => <option key={c.source} value={c.source}>{c.label}{c.source === setup.source ? " (this source)" : ""}</option>)}
+              </select>
+            </label>
+            <div className="v-xs v-muted" style={{ alignSelf: "end", paddingBottom: 6 }}>Each message is read by its own source&apos;s patterns and reader.</div>
           </div>
-        );
-      })() : (() => {
-        const { pairs, checks } = pairCheck(out, other, accounts);
-        return (
-          <div className="v-testbox" role="status">
-            <Line state={pairs ? "ok" : "bad"} title={pairs ? "These two would pair" : "Both can be read, but they would not pair"} sub={pairs ? "They must also arrive within an hour of each other. A sample can't check that." : undefined} />
-            {checks.map((c) => <Line key={c.label} state={c.ok ? "ok" : "bad"} title={c.label} />)}
-            <div className="v-lab">{pairs ? "One linked transfer, waiting in the Inbox" : "Two separate entries"}</div>
-            {[out, other].map((o, i) => <Entry key={i} name={nameOf(o.accountId)} kind={pairs ? "Transfer" : o.entries[0]!.amount < 0 ? "Spending" : "Income"} amount={o.entries[0]!.amount} />)}
-          </div>
-        );
-      })()}
+          <label className="v-field">The other side&apos;s message (optional)<textarea rows={3} maxLength={1500} value={otherText} onChange={(e) => setOtherText(e.target.value)} placeholder="Paste what the other account sends, if it sends anything" /></label>
+          {otherText.trim() === "" ? null : <ReadPills source={otherSource} label={labelOf(configs, otherSource)} text={otherText} patterns={allPatterns} />}
+        </div>
+      ) : null}
+      {otherBox ? <Box box={otherBox} /> : null}
     </div>
   );
-}
-
-/** A draft rule, placed where it would be tried, for the sample test. */
-export function rulesWithDraft(saved: readonly CaptureRule[], draft: CaptureRule): CaptureRule[] {
-  const at = saved.findIndex((r) => r.id === draft.id);
-  if (at < 0) return [...saved, { ...draft, position: Math.max(0, ...saved.map((r) => r.position ?? 0)) + 1 }];
-  return saved.map((r, i) => (i === at ? { ...draft, position: r.position } : r));
 }

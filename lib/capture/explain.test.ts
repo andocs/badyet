@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BUILTIN_FORMATS, groupRules, pairCheck, readSample, simulate, suggestPattern, type Channel, type SampleSetup } from './explain';
 import { parseWithPatterns } from './parsers';
+import { describeOther, describeSample } from './result-view';
 import type { AccountLite } from './row';
 import { defaultConfig, type CaptureRule, type SourceKey } from './sources';
 
@@ -73,5 +74,23 @@ describe('groupRules', () => {
     expect(g.groups.map((x) => [x.source, x.rules.map((r) => r.id)])).toEqual([['gcash', ['d']], ['maya', ['a']]]);
     expect(g.shared.map((r) => r.id)).toEqual(['b', 'c', 'e']);
     expect(g.numberOf.get('d')).toBe(4);
+  });
+});
+
+describe('step 5 as the editors draw it', () => {
+  const names = { source: 'Maya', ruleId: null, rules: new Map<string, string>(), categories: new Map<string, string>() };
+  it('names the entry saved, then says the two messages would pair', () => {
+    const { box, outcome } = describeSample(PAID, setup(), names);
+    expect(box.heading).toBe('It saves one entry, waiting in the Inbox');
+    expect(box.entries).toEqual([{ name: 'Maya', kind: 'Spending · choose a category', amount: -500_000 }]);
+    const other = describeOther(outcome, CARD, setup(), 'Maya')!;
+    expect(other.lines[0]!.title).toBe('These two would pair');
+    expect(other.entries.map((e) => [e.name, e.kind])).toEqual([['Maya', 'Transfer'], ['Maya Black', 'Transfer']]);
+  });
+  it('says the second message will not be added again when a rule records both sides', () => {
+    const rule = { id: 'r', source: null, matchText: 'to maya black', action: 'record', kind: 'payment', categoryId: null, fromAccountId: 'wallet', toAccountId: 'black' } as CaptureRule;
+    const { box, outcome } = describeSample(PAID, setup({ rules: [rule] }), { ...names, ruleId: 'r' });
+    expect(box.entries).toHaveLength(2);
+    expect(describeOther(outcome, CARD, setup({ rules: [rule] }), 'Maya')!.lines[0]!.title).toBe('It would not be added again');
   });
 });

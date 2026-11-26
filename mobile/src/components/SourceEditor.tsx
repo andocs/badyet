@@ -1,3 +1,5 @@
+import { Reading, Result, Step } from '~/components/RuleSteps';
+import type { TestData } from '~/components/RuleEditor';
 import { seenPackages } from '@modules/notification-listener';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
@@ -26,8 +28,10 @@ type Option = { id: string; name: string };
 
 /** Edits one source (GCash, Maya, ...): its apps, senders, usual account and category. Moved here from the old Capture rules screen. */
 export function SourceEditor({
-  cfg, accounts, categories, onClose, onSaved,
+  cfg, accounts, categories, test, onPatternsChanged, onClose, onSaved,
 }: {
+  test: TestData;
+  onPatternsChanged: () => void | Promise<void>;
   cfg: SourceConfig;
   accounts: Option[];
   categories: Option[];
@@ -54,6 +58,7 @@ export function SourceEditor({
     }
   });
   const [problem, setProblem] = useState<string | null>(null);
+  const [sample, setSample] = useState('');
   const [busy, setBusy] = useState(false);
 
 
@@ -84,7 +89,13 @@ export function SourceEditor({
     ]);
   const notif = canParse(cfg.source);
   const email = canParseEmail(cfg.source);
-  const reader = notif && email ? 'Built-in reader for notifications and emails.' : notif ? 'Built-in reader for notifications. Add a pattern (Rules > Your patterns) to read its emails.' : email ? 'Built-in reader for emails. Add a pattern to read its notifications.' : 'No built-in reader: add a pattern under Your patterns, or nothing from it can be read.';
+  const reader = notif && email ? 'Built-in reader for notifications and emails.' : notif ? 'Built-in reader for notifications. Add a pattern in step 2 to read its emails.' : email ? 'Built-in reader for emails. Add a pattern to read its notifications.' : 'No built-in reader: add a pattern in step 2, or nothing from it can be read.';
+
+  // The settings as they are on screen, so the sample shows what saving them would do.
+  const lines = (t: string) => t.split(/[\s,]+/).filter(Boolean);
+  const typedMin = Number(minAmount.replace(/,/g, ''));
+  const draft: SourceConfig = { ...cfg, label: info.label, enabled, packages: lines(packages), senders: lines(senders), accountId, categoryId, autoConfirm, minAmount: Number.isFinite(typedMin) && typedMin > 0 ? Math.round(typedMin * 100) : 0 };
+  const configs = test.configs.map((x) => (x.source === cfg.source ? draft : x));
 
   const input = [s.input, { color: c.ink, backgroundColor: c.soft, fontFamily: fonts.body }];
   return (
@@ -107,6 +118,7 @@ export function SourceEditor({
             </Field>
           ) : null}
 
+          <Step n={1} title="Where to listen" summary={`${draft.packages.length} app${draft.packages.length === 1 ? '' : 's'} · ${draft.senders.length} sender${draft.senders.length === 1 ? '' : 's'}`}>
           <Field label="Apps on this phone (one per line)">
             <TextInput value={packages} onChangeText={setPackages} multiline autoCapitalize="none" autoCorrect={false} placeholder="com.example.app" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />
             {seen.length > 0 ? (
@@ -125,6 +137,17 @@ export function SourceEditor({
             <TextInput value={senders} onChangeText={setSenders} multiline autoCapitalize="none" autoCorrect={false} keyboardType="email-address" placeholder="name@bank.com or @bank.com" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />
           </Field>
 
+          </Step>
+
+          <Step n={2} title="How it's read" summary={`Shared by all of ${info.label}`} startOpen>
+            <Reading source={cfg.source} configs={configs} patterns={test.patterns} sample={sample} setSample={setSample} onPatternsChanged={onPatternsChanged} />
+          </Step>
+
+          <Step n={3} title="Which messages" summary="All that no rule caught">
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Everything from {info.label} that no rule caught. It has no words: it is the fallback.</Text>
+          </Step>
+
+          <Step n={4} title="What to do" summary={accountId ? `Goes to ${accounts.find((a) => a.id === accountId)?.name ?? 'an account'}` : 'Account read from the message'}>
           <Field label="Usual account">
             <View style={s.chips}>
               <Chip label="Decide in Inbox" on={accountId === null} onPress={() => setAccountId(null)} />
@@ -143,6 +166,10 @@ export function SourceEditor({
             </View>
           </Field>
 
+          {accountId ? (
+            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Everything from {info.label} will go to this account, whatever the message says. Leave it on Inbox if one app speaks for several accounts, such as a wallet and its card.</Text>
+          ) : null}
+          <Label>Applies to all of {info.label}, including its rules</Label>
           <Field label="Ignore amounts below (₱)">
             <TextInput value={minAmount} onChangeText={setMinAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={c.muted} style={input} />
           </Field>
@@ -154,6 +181,13 @@ export function SourceEditor({
             </View>
             <Switch value={autoConfirm} onValueChange={setAutoConfirm} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Confirm without asking" />
           </View>
+
+          </Step>
+
+          <Step n={5} title="What happens with the sample" summary={sample.trim() ? 'Tap to see the result' : 'Paste a sample in step 2'}>
+            <Result sample={sample} configs={configs} allPatterns={test.patterns} ruleId={null} ruleNames={new Map(test.rules.map((r) => [r.id, r.name || r.words?.[0] || r.matchText]))} categoryName={new Map(categories.map((x) => [x.id, x.name]))}
+              setup={{ source: cfg.source, config: draft, rules: test.rules, patterns: test.patterns, accounts: test.accounts }} />
+          </Step>
 
           {problem ? <Text style={{ color: c.err, fontFamily: fonts.body, fontSize: 14 }}>{problem}</Text> : null}
           <View style={s.between}>
