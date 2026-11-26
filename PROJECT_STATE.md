@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-47 gate
+- **Phase:** rev-48 gate
 - **Active slice / milestone:** rev-45 savings-plan-fund
 - **Gate:** awaiting approval
-- **Next action:** Approve rev-47: merge + OTA; apply migration 20261226000000
+- **Next action:** Approve rev-47+48: merge + OTA; apply migration 20261226000000
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -44,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 09:44 | rev-46 | Budget totals include payslip deductions + savings plan again (hero, fixed pill, category totals). Checks PASS. Not merged yet. | -
 - 2026-11-26 10:17 | rev-46 | Merged to main (c81bbad); OTA published (group 8e4fbac8). | c81bbad
 - 2026-11-26 11:12 | rev-47 | Bonus overflow carries to next priority; per-month override (migration 20261226000000); override spacing fix. Checks and build PASS. Not merged. | -
+- 2026-11-26 11:27 | rev-48 | General savings bonus destination, January reset-first order, year pills on top. Includes rev-47. Checks and build PASS. Not merged. | -
 
 ## 4. Open questions
 
