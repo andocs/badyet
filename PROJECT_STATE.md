@@ -49,6 +49,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 20:37 | rev-59 | Mockups for consolidated Rules editor: docs/mockups/v13-rules-unified.html and docs/mockups/phone/rules-unified.html. Not built. | -
 - 2026-11-26 20:41 | rev-59 | Mockup updated: built-in reader panel (examples checked against the real GCash reader). | -
 - 2026-11-26 20:53 | rev-59 | Mockup updated: other side's message box with paired and unreadable results. Awaiting approval. | -
+- 2026-11-26 21:01 | rev-59 | Mockup updated: other-side source choice, won't-pair result, demo switch out of step 5. Awaiting approval. | -
 
 ## 4. Open questions
 
