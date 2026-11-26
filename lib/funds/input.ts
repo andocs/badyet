@@ -27,6 +27,8 @@ export interface OverrideInput {
   note: string | null;
   /** Where bonus money a full fund cannot take goes: null = next in priority, "none" = nowhere, or a fund id. */
   overflow: string | null;
+  /** Change only the fill order: each month keeps its own pins, skips, bonus choice and note. */
+  orderOnly?: boolean;
 }
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -104,5 +106,5 @@ export function validateOverride(input: unknown): Checked<OverrideInput> {
   const note = typeof p.note === "string" && p.note.trim() !== "" ? p.note.trim().slice(0, 200) : null;
   const overflow = p.overflow == null || p.overflow === "" ? null : p.overflow;
   if (overflow !== null && overflow !== "none" && (typeof overflow !== "string" || !UUID.test(overflow))) return { ok: false, error: "Pick where the extra goes from the list." };
-  return { ok: true, value: { months: [...new Set(months as string[])].sort(), order, pins, skips, note, overflow } };
+  return { ok: true, value: { months: [...new Set(months as string[])].sort(), order, pins, skips, note, overflow, orderOnly: p.orderOnly === true } };
 }

@@ -3,7 +3,7 @@ import { allowance2, p, settings, startEvent, ym } from '@/lib/engine/fixtures';
 import { buildMonthPay, defaultTemplate } from '@/lib/engine/payslip';
 import { salaryAt } from '@/lib/salary/view';
 import type { PayslipEdit } from '@/lib/engine/types';
-import { changedKeys, monthChanges, type BuilderLayout } from './month-edits';
+import { changedKeys, monthChanges, strandedEdits, type BuilderLayout } from './month-edits';
 
 const input = { events: [startEvent], allowances: [allowance2], assumptions: { on: false, assumedRaiseOn: false, assumedRaiseBp: 0, assumedRaiseMonth: 7, cipMultiplierNum: 100 }, settings, templates: [], bonusRules: [], bonusInstances: [] } as never;
 const pay = (month: string, edits: PayslipEdit[]) => buildMonthPay(salaryAt(input, ym(month)), { ...settings, monthEdits: edits }, []);
@@ -48,5 +48,33 @@ describe('monthChanges', () => {
     expect(monthChanges(layout(), layout())).toMatchObject({ ok: false });
     const moved = { ...layout(), second: layout().second.slice(1) };
     expect(monthChanges(layout(), moved)).toMatchObject({ ok: false });
+  });
+});
+
+describe('a one-month change after its line is moved to the other cutoff', () => {
+  const swap = (from: 'first' | 'second') => {
+    const to = from === 'first' ? 'second' : 'first';
+    const t = { first: [...defaultTemplate('first').lines], second: [...defaultTemplate('second').lines] };
+    const moved = t[from].find((l) => l.source === 'philhealth')!;
+    t[from] = t[from].filter((l) => l !== moved);
+    t[to] = [...t[to], moved];
+    return (['first', 'second'] as const).map((cutoff) => ({ cutoff, effectiveMonth: ym('2027-01'), lines: t[cutoff] }));
+  };
+
+  it('moves with the line, remembers where it was saved, and the tax follows it', () => {
+    const m = buildMonthPay(salaryAt(input, ym('2027-03')), { ...settings, monthEdits: [edit('philhealth', 900)] }, [], swap('second'));
+    expect(line(m, 'first', 'philhealth')).toMatchObject({ amount: p(900), edited: true, editedFrom: 'second' });
+    expect(m.second.lines.some((l) => l.source === 'philhealth')).toBe(false);
+    const plain = buildMonthPay(salaryAt(input, ym('2027-03')), settings, [], swap('second'));
+    expect(m.taxableFirst).toBe(plain.taxableFirst + line(plain, 'first', 'philhealth').amount - p(900));
+  });
+  it('gives way to a change saved on the new cutoff, and the old one is cleared with that save', () => {
+    const edits = [edit('philhealth', 900), edit('philhealth', 700, { cutoff: 'first' })];
+    const m = buildMonthPay(salaryAt(input, ym('2027-03')), { ...settings, monthEdits: edits }, [], swap('second'));
+    expect(line(m, 'first', 'philhealth')).toMatchObject({ amount: p(700), editedFrom: 'first' });
+    const [a, b] = swap('second');
+    const saved: BuilderLayout = { first: a!.lines, second: b!.lines };
+    expect(strandedEdits(edits, '2027-03', saved, new Set(['first|philhealth']))).toEqual([edits[0]]);
+    expect(strandedEdits(edits, '2027-03', saved, new Set(['second|sss']))).toEqual([]);
   });
 });

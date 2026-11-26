@@ -2,7 +2,7 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { removeMonthEditsAction, resetTemplates, saveMonthEditsAction, saveTemplates, setAllowance } from "@/app/(v13)/pay/actions";
-import { changedKeys, editKey, monthChanges, type BuilderLayout } from "@/lib/pay/month-edits";
+import { changedKeys, editKey, monthChanges, strandedEdits, type BuilderLayout } from "@/lib/pay/month-edits";
 import type { YearMonth } from "@/lib/domain/dates";
 import { money, parsePesos, type Money as MoneyValue } from "@/lib/domain/money";
 import { planBonuses } from "@/lib/engine/bonus";
@@ -112,6 +112,11 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
       return setError(c.error);
     }
     act(async () => {
+      const left = strandedEdits(input.settings.monthEdits ?? [], month, savedLayout, changedKeys(savedLayout, onScreen));
+      if (left.length > 0) {
+        const gone = await removeMonthEditsAction({ month, lines: left.map((e) => ({ cutoff: e.cutoff, source: e.source, label: e.label })) });
+        if (gone.error) return gone;
+      }
       const r = await saveMonthEditsAction({ month, edits: c.value });
       // The saved layout is unchanged, so the screen goes back to it; the one-month amounts show on top.
       if (!r.error) setDrafts(fresh(input.templates, month));
@@ -124,7 +129,7 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
       async () => {
         // An amount you are saving from this month on must not stay hidden behind an old one-month change.
         const changed = changedKeys(savedLayout, onScreen);
-        const stale = (input.settings.monthEdits ?? []).filter((e) => e.month === month && changed.has(editKey(e)));
+        const stale = [...(input.settings.monthEdits ?? []).filter((e) => e.month === month && changed.has(editKey(e))), ...strandedEdits(input.settings.monthEdits ?? [], month, savedLayout, changed)];
         if (stale.length > 0) {
           const r = await removeMonthEditsAction({ month, lines: stale.map((e) => ({ cutoff: e.cutoff, source: e.source, label: e.label })) });
           if (r.error) return r;
@@ -194,7 +199,7 @@ export function PayslipBuilder({ input, paydays, month, months }: { input: Salar
           {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
           {note ? <p className="v-flag" role="status" style={{ background: "var(--tint)", color: "var(--accent-text)" }}>{note}</p> : null}
           {(["first", "second"] as const).map((c) => (
-            <Slip key={c} cutoff={c} slip={pay[c]} payday={paydays[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} onRemoveEdit={(source, label) => removeEdit(c, source, label)} />
+            <Slip key={c} cutoff={c} slip={pay[c]} payday={paydays[c]} drafts={drafts[c]} salary={salary} onAllowance={changeAllowance} onChange={(k, ch) => update(c, k, ch)} onMove={(k) => move(c, k)} onRemove={(k) => remove(c, k)} onAdd={(spec) => add(c, spec)} onRemoveEdit={(source, label, savedOn) => removeEdit(savedOn ?? c, source, label)} />
           ))}
         </div>
         <aside className="v-card v-pbsum2" aria-labelledby="pbs">
@@ -246,7 +251,7 @@ const fmt = (m: MoneyValue | number) => `₱${(Number(m) / 100).toLocaleString("
 
 function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onMove, onRemove, onAdd, onRemoveEdit }: {
   cutoff: PayCutoff; slip: Payslip; payday: number; drafts: Draft[]; salary: ReturnType<typeof salaryAt>; onAllowance: (id: string, change: { cutoff?: PayCutoff; taxable?: boolean }) => void;
-  onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void; onRemoveEdit: (source: string, label: string) => void;
+  onChange: (key: string, change: Partial<PayslipLineSpec>) => void; onMove: (key: string) => void; onRemove: (key: string) => void; onAdd: (spec: PayslipLineSpec) => void; onRemoveEdit: (source: string, label: string, savedOn?: PayCutoff) => void;
 }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -265,7 +270,7 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
       return (
         <div key={d.key} className="v-plr">
           <div className="v-grow v-nm"><b>{line.label}</b>
-            {line.edited ? <small><span className="v-pill v-warn">This month only</span> <button type="button" className="v-btn v-sm v-ghost" onClick={() => onRemoveEdit(d.spec.source, d.spec.label)}>Remove</button></small> : null}
+            {line.edited ? <small><span className="v-pill v-warn">This month only</span> <button type="button" className="v-btn v-sm v-ghost" onClick={() => onRemoveEdit(d.spec.source, d.spec.label, line.editedFrom)}>Remove</button></small> : null}
             <small>
               {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.source === "custom" ? "your line" : d.spec.amountOverride != null ? "your own value, not from your salary" : d.spec.source === "sss" ? `SSS table, regular SS: 5% of salary credit ${fmt(money(Math.min(sssMonthlySalaryCredit(salary.base), SSS_REGULAR_MAX_MSC)))} a month` : d.spec.source === "penboost" ? `SSS table, MPF: 5% of the ${fmt(money(Math.max(0, sssMonthlySalaryCredit(salary.base) - SSS_REGULAR_MAX_MSC)))} of salary credit above ${fmt(money(SSS_REGULAR_MAX_MSC))} a month` : d.spec.source === "pagibig" ? "2% of your salary, up to ₱10,000" : d.spec.source === "philhealth" ? "2.5% of your base pay" : "from your payroll settings"}
             </small>

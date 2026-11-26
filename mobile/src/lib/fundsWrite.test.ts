@@ -90,3 +90,19 @@ describe('overrides', () => {
     expect(await bulkOverride(supabase, { months: ['2026-12'], op: 'pin', fundId: F1 })).toEqual({ error: 'Enter the amount to pin.' });
   });
 });
+
+describe('saveOverride, order only ("Apply order")', () => {
+  it('changes the order and keeps the month’s pins, skips and note', async () => {
+    const { supabase, log } = client({
+      'funds:select': { data: [{ id: F1 }, { id: F2 }] },
+      'month_overrides:select': { data: { id: OV, fund_order: null, note: 'trip', overflow_to: 'none' } },
+      'month_fund_overrides:select': { data: [{ fund_id: F1, pin_amount: 5_000, skip: false }, { fund_id: F2, pin_amount: null, skip: true }] },
+    });
+    expect(await saveOverride(supabase, { months: ['2026-12'], order: [F2, F1], pins: {}, skips: [], note: null, orderOnly: true })).toEqual({ ok: true });
+    expect(find(log, 'month_overrides', 'update')?.args[0]).toEqual({ fund_order: [F2, F1], note: 'trip' });
+    expect(find(log, 'month_fund_overrides', 'insert')?.args[0]).toEqual([
+      { override_id: OV, fund_id: F1, pin_amount: 5_000, skip: false },
+      { override_id: OV, fund_id: F2, pin_amount: null, skip: true },
+    ]);
+  });
+});

@@ -34,6 +34,8 @@ export interface PayslipLine {
   ref?: string;
   /** The amount was changed for this month only. */
   edited?: boolean;
+  /** The cutoff that one-month change was saved on; it differs from the line's cutoff after the line is moved. */
+  editedFrom?: PayCutoff;
 }
 
 export interface Payslip {
@@ -140,6 +142,24 @@ export function oneTimeIncomeTax(rows: readonly TaxRow[], regularMonthlyTaxable:
   return fromRatio(taxScaled(rows, withExtra) - taxScaled(rows, annual), 10_000n);
 }
 
+/**
+ * The one-month change that applies to a payslip line: the one saved on its own cutoff, or else the one saved on the other cutoff
+ * when the line is no longer there (you moved it), so the change moves with it. `edits` are one month's.
+ */
+export function findEdit<E extends { cutoff: PayCutoff; source: string; label: string }>(
+  edits: readonly E[],
+  cutoff: PayCutoff,
+  line: { source: string; label: string },
+  linesOn: (cutoff: PayCutoff) => readonly { source: string; label: string }[],
+): E | undefined {
+  if (line.source === "base_share") return undefined;
+  const same = (a: { source: string; label: string }) => a.source === line.source && (line.source !== "custom" || a.label === line.label);
+  const own = edits.find((e) => e.cutoff === cutoff && same(e));
+  if (own) return own;
+  const other: PayCutoff = cutoff === "first" ? "second" : "first";
+  return linesOn(other).some(same) ? undefined : edits.find((e) => e.cutoff === other && same(e));
+}
+
 function slip(cutoff: PayCutoff, lines: PayslipLine[]): Payslip {
   const earnings = sum(lines.filter((l) => l.kind === "earning").map((l) => l.amount));
   const deductions = sum(lines.filter((l) => l.kind === "deduction").map((l) => l.amount));
@@ -166,8 +186,7 @@ export function buildMonthPay(
 
   // "This month only" changes, which win over the layout's typed amounts and over a tax amount set for every month.
   const edits = (settings.monthEdits ?? []).filter((e) => e.month === salary.month);
-  const editFor = (cutoff: PayCutoff, spec: PayslipLineSpec) =>
-    spec.source === "base_share" ? undefined : edits.find((e) => e.cutoff === cutoff && e.source === spec.source && (spec.source !== "custom" || e.label === spec.label));
+  const editFor = (cutoff: PayCutoff, spec: PayslipLineSpec) => findEdit(edits, cutoff, spec, (c) => templateFor(templates, c, salary.month).lines);
 
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
   // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
@@ -234,7 +253,7 @@ export function buildMonthPay(
       const e = editFor(cutoff, spec);
       if (!e) return;
       const calculated = spec.source === "income_tax" ? (override ?? (cutoff === "first" ? taxFirst : taxSecond)) : spec.source === "custom" ? (spec.amountOverride ?? ZERO) : sourceAmount[spec.source]!;
-      lines[i] = { ...lines[i]!, amount: e.amount ?? calculated, edited: true };
+      lines[i] = { ...lines[i]!, amount: e.amount ?? calculated, edited: true, editedFrom: e.cutoff };
     });
 
     for (const a of salary.allowances) {

@@ -1,10 +1,10 @@
-import { changedKeys, editKey, monthChanges, removeMonthEdits, saveMonthEdits, type BuilderLayout } from '@/lib/pay/month-edits';
+import { changedKeys, editKey, monthChanges, removeMonthEdits, saveMonthEdits, strandedEdits, type BuilderLayout } from '@/lib/pay/month-edits';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { YearMonth } from '@/lib/domain/dates';
 import { formatPesos, money, parsePesos, type Money } from '@/lib/domain/money';
 import { monthRange } from '@/lib/engine/months';
-import { buildMonthPay, templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
+import { buildMonthPay, findEdit, templateFor, type PayslipLineSpec } from '@/lib/engine/payslip';
 import type { Allowance, PayCutoff, SalaryEvent } from '@/lib/engine/types';
 import { salaryAt, type SalaryInput } from '@/lib/salary/view';
 import { Chip } from '~/components/ui';
@@ -272,7 +272,7 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
                   />
                 </Field>
                 {(() => {
-                  const e = (input.settings.monthEdits ?? []).find((x) => x.month === month && editKey(x) === editKey({ cutoff, source: sp.source, label: sp.label }));
+                  const e = findEdit((input.settings.monthEdits ?? []).filter((x) => x.month === month), cutoff, sp, (side) => drafts[side].map((x) => x.spec));
                   if (!e) return null;
                   return (
                     <View style={s.between}>
@@ -316,7 +316,7 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
           run(async () => {
             // An amount saved from this month on must not stay hidden behind an old one-month change.
             const changed = changedKeys(savedLayout(), onScreen());
-            const stale = (input.settings.monthEdits ?? []).filter((e) => e.month === month && changed.has(editKey(e)));
+            const stale = [...(input.settings.monthEdits ?? []).filter((e) => e.month === month && changed.has(editKey(e))), ...strandedEdits(input.settings.monthEdits ?? [], month, savedLayout(), changed)];
             if (stale.length > 0) {
               const r = await removeMonthEdits(supabase, { month, lines: stale.map((e) => ({ cutoff: e.cutoff, source: e.source, label: e.label })) });
               if ('error' in r) return r;
@@ -333,7 +333,13 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
         onPress={() =>
           void run(async () => {
             const c = monthChanges(savedLayout(), onScreen());
-            return c.ok ? saveMonthEdits(supabase, { month, edits: c.value }) : { error: c.error };
+            if (!c.ok) return { error: c.error };
+            const left = strandedEdits(input.settings.monthEdits ?? [], month, savedLayout(), changedKeys(savedLayout(), onScreen()));
+            if (left.length > 0) {
+              const gone = await removeMonthEdits(supabase, { month, lines: left.map((e) => ({ cutoff: e.cutoff, source: e.source, label: e.label })) });
+              if ('error' in gone) return gone;
+            }
+            return saveMonthEdits(supabase, { month, edits: c.value });
           })
         }
       />

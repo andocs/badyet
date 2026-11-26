@@ -1,3 +1,4 @@
+import { loadReimbursements, type ReimbursementStatus } from "./reimburse";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
 import { money, type Money } from "@/lib/domain/money";
@@ -41,6 +42,8 @@ export interface BudgetData {
   spentByCategory: Map<string, Money>;
   sentLineIds: Set<string>;
   spendByDay: Map<string, Money>;
+  /** This budget month's reimbursements: received, waiting, or still ahead. */
+  reimbursements: ReimbursementStatus[];
 }
 
 interface LineDb {
@@ -129,7 +132,10 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
     }
   }
 
+  const reimbursements = await loadReimbursements(supabase, { lines, plans, month: budgetMonth, current: period.which === 1 ? "first" : "second", paydays });
+
   return {
+    reimbursements,
     salary,
     today,
     paydays,

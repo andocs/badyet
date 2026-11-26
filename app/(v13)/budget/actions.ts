@@ -1,5 +1,6 @@
 "use server";
 
+import { setReimbursementMark } from "@/lib/budget/reimburse";
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import { validateCategory, validateLine } from "@/lib/budget/line-input";
@@ -13,6 +14,16 @@ const refresh = () => {
   revalidatePath("/");
 };
 const monthStart = (m: string | null) => (m ? `${m}-01` : null);
+
+/** "Mark received" or "Not yet" on a line's reimbursement. */
+export async function markReimbursement(input: unknown): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await setReimbursementMark(supabase, input);
+  if ("error" in r) return { error: r.error };
+  refresh();
+  revalidatePath("/forecast");
+  return { ok: true };
+}
 
 /** Creates or updates a budget line. Only one line can be the RTO contingency; choosing another moves the role. */
 export async function saveLine(input: unknown): Promise<FormState> {

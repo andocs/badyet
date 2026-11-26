@@ -82,6 +82,24 @@ interface Plan {
   note: string | null;
 }
 
+/** What a month's override holds now: its order, pins, skips, note and bonus choice. A month with none reads as empty. */
+async function readOverride(supabase: SupabaseClient, month: string): Promise<Plan> {
+  const ov = await supabase.from("month_overrides").select("id, fund_order, note").eq("month", `${month}-01`).maybeSingle();
+  const row = ov.data as { id: string; fund_order: string[] | null; note: string | null } | null;
+  const pins: Record<string, number> = {};
+  const skips: string[] = [];
+  if (!row) return { order: null, pins, skips, note: null, overflow: null };
+  const kept = await supabase.from("month_fund_overrides").select("fund_id, pin_amount, skip").eq("override_id", row.id);
+  for (const r of (kept.data ?? []) as { fund_id: string; pin_amount: number | null; skip: boolean }[]) {
+    if (r.skip) skips.push(r.fund_id);
+    else if (r.pin_amount !== null) pins[r.fund_id] = r.pin_amount;
+  }
+  // The bonus choice is a newer column: without that database update there is none to keep.
+  const had = await supabase.from("month_overrides").select("overflow_to").eq("id", row.id).maybeSingle();
+  const overflow = (had?.data as { overflow_to?: string | null } | null | undefined)?.overflow_to ?? null;
+  return { order: row.fund_order, pins, skips, note: row.note, overflow };
+}
+
 /** Writes one month's override, replacing what was there. An empty override removes the month's row. */
 async function writeOverride(supabase: SupabaseClient, month: string, plan: Plan): Promise<string | null> {
   const first = `${month}-01`;
@@ -127,7 +145,9 @@ export async function saveOverride(input: unknown): Promise<FormState> {
     if ((found.data ?? []).length !== ids.length) return { error: "One of those funds was not found." };
   }
   for (const month of o.months) {
-    const err = await writeOverride(supabase, month, { order: o.order, pins: o.pins, skips: o.skips, note: o.note, overflow: o.overflow });
+    // "Apply order" keeps what each month already had besides its order.
+    const plan = o.orderOnly ? { ...(await readOverride(supabase, month)), order: o.order } : { order: o.order, pins: o.pins, skips: o.skips, note: o.note, overflow: o.overflow };
+    const err = await writeOverride(supabase, month, plan);
     if (err) return { error: err };
   }
   refresh();

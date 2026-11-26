@@ -1,3 +1,4 @@
+import { awaitedByMonth } from "@/lib/budget/reimburse";
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthParts } from "@/lib/domain/dates";
 import { money, sum, type Money } from "@/lib/domain/money";
@@ -15,6 +16,7 @@ export function forecastInput(d: FundsData, start: YearMonth, months = 60): Proj
     lines: d.budget.lines,
     plans: d.budget.plans,
     extraSavings: savingsByMonth(d.budget.pools, d.budget.paydays),
+    awaitedReimbursements: awaitedByMonth(d.budget.reimbursements),
     allocations: d.budget.allocations,
     funds: d.funds,
     fundStart: d.fundStart,

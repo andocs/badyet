@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { applyMoves, type MovedBudget, type MoveNote } from '@/lib/budget/moves';
+import { setReimbursementMark, type ReimbursementStatus } from '@/lib/budget/reimburse';
 import { payrollOnLines, withPayroll, type PayrollRow } from '@/lib/budget/payroll';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
@@ -262,7 +263,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-function LineRow({ l, moves, onPress }: { l: LineView; moves: MoveNote[]; onPress: () => void }) {
+function LineRow({ l, moves, status, onMark, onPress }: { l: LineView; moves: MoveNote[]; status?: ReimbursementStatus; onMark: (input: { lineId: string; month: string; cutoff: 'first' | 'second'; received: boolean }) => void; onPress: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
@@ -288,7 +289,20 @@ function LineRow({ l, moves, onPress }: { l: LineView; moves: MoveNote[]; onPres
             1st {peso(l.perCutoff.first, hide)} · 2nd {peso(l.perCutoff.second, hide)}
           </Text>
         ) : null}
-        {l.reimburse ? (
+        {status && status.state !== 'expected' ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Text style={{ color: status.state === 'received' ? c.accentText : c.gold, fontFamily: fonts.bodyBold, fontSize: 12 }}>
+              {status.state === 'received' ? 'Received' : 'Waiting for'} {peso(money(status.amount), hide)}
+            </Text>
+            <Pressable
+              onPress={() => onMark({ lineId: status.lineId, month: status.month, cutoff: status.cutoff, received: status.state !== 'received' })}
+              accessibilityRole="button"
+              style={{ minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 999, backgroundColor: c.soft }}
+            >
+              <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 12 }}>{status.state === 'received' ? 'Not yet' : 'Mark received'}</Text>
+            </Pressable>
+          </View>
+        ) : l.reimburse ? (
           <Text style={{ color: c.accentText, fontFamily: fonts.body, fontSize: 12 }}>
             paid back {peso(l.reimburse.amount, hide)}
             {l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === 'first' ? '1st' : '2nd'} cutoff`}
@@ -301,7 +315,7 @@ function LineRow({ l, moves, onPress }: { l: LineView; moves: MoveNote[]; onPres
   );
 }
 
-function Board({ moved, groups, data, payroll, cut, onEdit, onAdd }: { moved: MovedBudget; cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+function Board({ reimbursements, onMark, moved, groups, data, payroll, cut, onEdit, onAdd }: { reimbursements: ReimbursementStatus[]; onMark: (input: { lineId: string; month: string; cutoff: 'first' | 'second'; received: boolean }) => void; moved: MovedBudget; cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
@@ -324,7 +338,7 @@ function Board({ moved, groups, data, payroll, cut, onEdit, onAdd }: { moved: Mo
               <View style={{ width: `${g.share}%`, height: 6, borderRadius: 3, backgroundColor: c.accent }} />
             </View>
             {g.lines.map((l) => (
-              <LineRow key={l.id} l={l} moves={moved.notes[l.id] ?? []} onPress={() => onEdit(l)} />
+              <LineRow key={l.id} l={l} moves={moved.notes[l.id] ?? []} status={reimbursements.find((x) => x.lineId === l.id)} onMark={onMark} onPress={() => onEdit(l)} />
             ))}
             {(moved.rows[g.id] ?? []).map((r) => (
               <View key={r.key} style={[s.between, { minHeight: 44 }]}>
@@ -490,6 +504,12 @@ export default function Budget() {
                   cut,
                 )}
                 cut={cut}
+                reimbursements={screen.reimbursements}
+                onMark={async (input) => {
+                  const r = await setReimbursementMark(supabase, input);
+                  if ('error' in r) Alert.alert('Reimbursement', r.error);
+                  else void reload();
+                }}
                 data={data}
                 payroll={payrollOnLines(screen.shown.pay, screen.groups)}
                 onEdit={(l) => setEditing(draftOf(l))}

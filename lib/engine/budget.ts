@@ -33,6 +33,8 @@ export interface BudgetInput {
   /** Office-day money settled to savings in this month: it adds to the savings pool. */
   extraSavings?: Money;
   includeDrafts?: boolean;
+  /** Lines whose reimbursement has not arrived yet in this month: it is not part of what you have. */
+  awaitedReimbursements?: readonly string[];
   /** Budget plans: each cutoff uses the lines of the plan in force for it, or the normal budget's lines when none is. */
   plans?: readonly PlanSpan[];
   /** Show one budget for both cutoffs whatever the dates say: a plan's id, or null for the normal budget (Budget page). */
@@ -87,7 +89,7 @@ export function evaluateBudget(input: BudgetInput): BudgetMonth {
   const planned: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   const reimbursed: Record<PayCutoff, Money> = { first: ZERO, second: ZERO };
   for (const line of lines) {
-    if (line.reimburse && line.reimburse.amount > 0 && (line.planId ?? null) === active[line.reimburse.cutoff]) reimbursed[line.reimburse.cutoff] = (reimbursed[line.reimburse.cutoff] + line.reimburse.amount) as Money;
+    if (line.reimburse && line.reimburse.amount > 0 && !input.awaitedReimbursements?.includes(line.id) && (line.planId ?? null) === active[line.reimburse.cutoff]) reimbursed[line.reimburse.cutoff] = (reimbursed[line.reimburse.cutoff] + line.reimburse.amount) as Money;
     const row: LineAmount = { lineId: line.id, name: line.name, first: ZERO, second: ZERO, total: ZERO, topUps: [] };
     result.set(line.id, row);
     if (line.rule === "rest") continue;
