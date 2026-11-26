@@ -528,7 +528,8 @@ details.v-old .v-in{padding:0 18px 16px;border-top:1px solid var(--line)}
 .v-fr.v-pinned{border-color:var(--accent)}
 .v-fr .v-grip{cursor:grab;color:var(--muted);display:grid;place-items:center;width:28px;height:36px;background:none;border:0;padding:0}
 .v-fr .v-rk{width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px var(--font-display)}
-.v-fr .v-tools{display:flex;gap:6px;align-items:center}
+.v13 .v-fr .v-tools{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;align-items:center;margin-top:0;border-top:0;padding-top:0}
+.v-cols7 section>[aria-live]+.v-note{margin-top:6px}
 .v-fr .v-sub{grid-column:3 / span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .v-pinin{width:130px;font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;min-height:36px}
 @media(max-width:759px){.v-fr{grid-template-columns:auto auto minmax(0,1fr)}.v-fr .v-tools{grid-column:1 / -1;justify-content:flex-end}.v-fr .v-sub{grid-column:1 / -1}}

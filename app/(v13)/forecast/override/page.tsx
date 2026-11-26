@@ -41,7 +41,7 @@ export default async function Override({ searchParams }: { searchParams: Promise
     funds: d.funds,
     start: Object.fromEntries(d.funds.map((f) => [f.id, d.fundStart[f.id] ?? 0])),
     months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusCredits: r.bonusCredits })),
-    overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [] })),
+    overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [], overflow: o.overflow ?? null })),
   };
   return (
     <main className="v-main">
@@ -51,7 +51,7 @@ export default async function Override({ searchParams }: { searchParams: Promise
         funds={funds}
         defaultOrder={defaultOrder}
         sim={sim}
-        existing={own ? { order: own.order ?? null, pins: own.pins ?? {}, skips: own.skips ?? [], note: d.notes.get(month) ?? "" } : null}
+        existing={own ? { order: own.order ?? null, pins: own.pins ?? {}, skips: own.skips ?? [], note: d.notes.get(month) ?? "", overflow: own.overflow ?? null } : null}
         months={months}
       />
     </main>

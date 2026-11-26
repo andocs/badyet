@@ -153,7 +153,7 @@ export function FundSheet({ fund, color, accounts, planFund, onClose, onSaved }:
 
 /** Change one month: the order funds fill in, amounts pinned, funds skipped, and a note. Or put it back to the default. */
 export function OverrideSheet({
-  row, funds, order: orderIn, pins: pinsIn, skips: skipsIn, note: noteIn, onClose, onSaved,
+  row, funds, order: orderIn, pins: pinsIn, skips: skipsIn, note: noteIn, overflow: overflowIn, onClose, onSaved,
 }: {
   row: ForecastRow;
   funds: { id: string; name: string }[];
@@ -161,11 +161,14 @@ export function OverrideSheet({
   pins: Record<string, number>;
   skips: string[];
   note: string;
+  /** Where bonus money a full fund cannot take goes: null = next in priority, 'none' = nowhere, or a fund id. */
+  overflow: string | null;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const c = useTheme();
   const { hide } = useHide();
+  const [overflow, setOverflow] = useState<string | null>(overflowIn);
   const [order, setOrder] = useState<string[]>(orderIn ?? funds.map((f) => f.id));
   const [custom, setCustom] = useState(orderIn !== null);
   const [pins, setPins] = useState<Record<string, string>>(Object.fromEntries(Object.entries(pinsIn).map(([k, v]) => [k, pesos(v)])));
@@ -189,7 +192,7 @@ export function OverrideSheet({
       const v = t.trim() === '' ? undefined : parsePesos(t.trim());
       if (v !== undefined && !skips.includes(id)) pinMap[id] = v;
     }
-    return run(() => saveOverride(supabase, { months: [row.month], order: custom ? order : null, pins: pinMap, skips, note }));
+    return run(() => saveOverride(supabase, { months: [row.month], order: custom ? order : null, pins: pinMap, skips, note, overflow }));
   };
 
   return (
@@ -219,6 +222,15 @@ export function OverrideSheet({
             {!skips.includes(f.id) ? <Input value={pins[f.id] ?? ''} onChangeText={(t) => setPins((p) => ({ ...p, [f.id]: t }))} keyboardType="decimal-pad" placeholder="Pin ₱ (empty = by the rule)" /> : null}
           </View>
         ))}
+      </Field>
+      <Field label="When a bonus fills a fund, the extra goes to">
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          <Chip label="Next in priority" on={overflow === null} onPress={() => setOverflow(null)} />
+          {funds.map((f) => (
+            <Chip key={f.id} label={`${f.name} first`} on={overflow === f.id} onPress={() => setOverflow(f.id)} />
+          ))}
+          <Chip label="Nowhere" on={overflow === 'none'} onPress={() => setOverflow('none')} />
+        </View>
       </Field>
       <Field label="Note (optional)">
         <Input value={note} onChangeText={setNote} maxLength={200} />

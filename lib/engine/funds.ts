@@ -104,7 +104,7 @@ function defaultOrder(funds: readonly Fund[]): Fund[] {
 
 /**
  * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, credit bonus money
- * (capped by room), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
+ * (capped by room; what does not fit carries over down the month's order), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
  * priority), each taking min(demand, what is left). Skipped funds get nothing; a fund is never both pinned and skipped.
  */
 export function allocateFunds(
@@ -131,6 +131,8 @@ export function allocateFunds(
     const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, plan: ZERO, balanceAfter: ZERO, reasons: [] }]));
 
     let bonusUnplaced = ZERO;
+    // Bonus money a full fund cannot take; it carries over to other funds below.
+    let overflow = ZERO;
     for (const [fundId, credit] of Object.entries(m.bonusCredits ?? {})) {
       const f = funds.find((x) => x.id === fundId);
       if (!f) {
@@ -141,7 +143,7 @@ export function allocateFunds(
       const taken = r === null ? credit : min(credit, r);
       balance[fundId] = (balance[fundId]! + taken) as Money;
       rows.get(fundId)!.bonus = taken;
-      bonusUnplaced = (bonusUnplaced + (credit - taken)) as Money;
+      overflow = (overflow + (credit - taken)) as Money;
     }
 
     // The payroll savings plan goes in full: it was already taken from your pay, so a full fund does not turn it away.
@@ -154,6 +156,28 @@ export function allocateFunds(
       balance[fundId] = (balance[fundId]! + credit) as Money;
       rows.get(fundId)!.plan = credit;
     }
+
+    const listed = (o?.order ?? []).map((id) => funds.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
+    const order = [...listed, ...funds.filter((f) => !listed.includes(f))];
+
+    // What a full fund could not take goes down this month's priority order (a chosen fund first, if the month names one), passing
+    // over skipped and full funds. "none" keeps it out of every fund.
+    if (o?.overflow !== "none") {
+      const first = funds.find((f) => f.id === o?.overflow);
+      for (const f of first ? [first, ...order.filter((x) => x !== first)] : order) {
+        if (overflow <= 0) break;
+        if (skips.has(f.id)) continue;
+        const r = room(f, balance[f.id]!);
+        const taken = r === null ? overflow : min(overflow, r);
+        if (taken <= 0) continue;
+        balance[f.id] = (balance[f.id]! + taken) as Money;
+        const row = rows.get(f.id)!;
+        row.bonus = (row.bonus + taken) as Money;
+        row.reasons.push("extra carried over");
+        overflow = sub(overflow, taken);
+      }
+    }
+    bonusUnplaced = (bonusUnplaced + overflow) as Money;
 
     let left = m.pool > 0 ? m.pool : ZERO;
     const pinned = new Set<string>();
@@ -169,8 +193,6 @@ export function allocateFunds(
       pinned.add(f.id);
     }
 
-    const listed = (o?.order ?? []).map((id) => funds.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
-    const order = [...listed, ...funds.filter((f) => !listed.includes(f))];
     order.forEach((f, i) => {
       const row = rows.get(f.id)!;
       if (skips.has(f.id)) {

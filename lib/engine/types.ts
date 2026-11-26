@@ -183,4 +183,6 @@ export interface MonthOverride {
   order?: string[] | null;
   pins?: Record<string, Money>;
   skips?: string[];
+  /** Where bonus money a full fund cannot take goes: null = the next funds in this month's order, "none" = nowhere, or a fund id to try first. */
+  overflow?: string | null;
 }

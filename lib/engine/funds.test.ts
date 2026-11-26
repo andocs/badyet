@@ -54,8 +54,8 @@ describe("fund allocator", () => {
     expect(row(m!, "ef").balanceAfter).toBe(p(100_000));
   });
 
-  it("credits bonus money straight to the fund, capped by room; the overflow is unplaced and the pool is untouched", () => {
-    const [m] = allocateFunds(funds, {}, [{ month: ym("2026-12"), pool: p(0), bonusCredits: { travel: p(70_000) } }]);
+  it("credits bonus money straight to the fund, capped by room; the overflow can be kept unplaced and the pool is untouched", () => {
+    const [m] = allocateFunds(funds, {}, [{ month: ym("2026-12"), pool: p(0), bonusCredits: { travel: p(70_000) } }], [{ month: ym("2026-12"), overflow: "none" }]);
     expect(row(m!, "travel")).toMatchObject({ bonus: p(50_000), balanceAfter: p(50_000), amount: 0 });
     expect(m!.bonusUnplaced).toBe(p(20_000));
   });
@@ -113,5 +113,34 @@ describe("payroll savings plan fund", () => {
   it("money for a fund that no longer exists is left unplaced, not lost silently", () => {
     const [m] = allocateFunds([wants], {}, [{ month: ym("2026-12"), pool: p(0), planCredits: { gone: p(1_000) } }], [], "gone");
     expect(m!.bonusUnplaced).toBe(p(1_000));
+  });
+});
+
+describe("a bonus that overfills a fund", () => {
+  const funds = [
+    { id: "a", name: "A", priority: 1, rule: "cap" as const, target: p(1_000) },
+    { id: "b", name: "B", priority: 2, rule: "cap" as const, target: p(500) },
+    { id: "c", name: "C", priority: 3, rule: "cap" as const, target: null },
+  ];
+  const month = "2027-01" as const;
+  const run = (override?: { overflow?: string | null; skips?: string[]; order?: string[] }) =>
+    allocateFunds(funds, {}, [{ month: month as never, pool: p(0), bonusCredits: { a: p(2_000) } }], override ? [{ month: month as never, ...override }] : [])[0]!;
+  const got = (m: ReturnType<typeof run>) => Object.fromEntries(m.funds.map((f) => [f.fundId, f.bonus]));
+
+  it("carries the extra down the priority order", () => {
+    const m = run();
+    expect(got(m)).toEqual({ a: p(1_000), b: p(500), c: p(500) });
+    expect(m.bonusUnplaced).toBe(0);
+    expect(m.funds.find((f) => f.fundId === "b")!.reasons).toContain("extra carried over");
+  });
+  it("follows the month's order and passes over skipped funds", () => {
+    expect(got(run({ skips: ["b"] }))).toEqual({ a: p(1_000), b: 0, c: p(1_000) });
+    expect(got(run({ order: ["c", "b", "a"] }))).toEqual({ a: p(1_000), b: 0, c: p(1_000) });
+  });
+  it("can be sent to a chosen fund first, or kept out of every fund", () => {
+    expect(got(run({ overflow: "c" }))).toEqual({ a: p(1_000), b: 0, c: p(1_000) });
+    const none = run({ overflow: "none" });
+    expect(got(none)).toEqual({ a: p(1_000), b: 0, c: 0 });
+    expect(none.bonusUnplaced).toBe(p(1_000));
   });
 });

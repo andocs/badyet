@@ -15,26 +15,28 @@ import type { FundMeta } from "./forecast-view";
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const without = <T,>(o: Record<string, T>, id: string): Record<string, T> => Object.fromEntries(Object.entries(o).filter(([k]) => k !== id));
 const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
-const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r);
+const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r === "extra carried over" ? "Extra carried over" : r);
 
 export interface Sim {
   funds: Fund[];
   start: Record<string, number>;
   months: { month: string; pool: number; bonusCredits: Record<string, number> }[];
-  overrides: { month: string; order: string[] | null; pins: Record<string, number>; skips: string[] }[];
+  overrides: { month: string; order: string[] | null; pins: Record<string, number>; skips: string[]; overflow: string | null }[];
 }
 
 const toMonths = (s: Sim): FundForecastMonth[] => s.months.map((m) => ({ month: m.month as FundForecastMonth["month"], pool: money(m.pool), bonusCredits: Object.fromEntries(Object.entries(m.bonusCredits).map(([k, v]) => [k, money(v)])) }));
-const toOverrides = (o: Sim["overrides"]): MonthOverride[] => o.map((x) => ({ month: x.month as MonthOverride["month"], order: x.order, pins: Object.fromEntries(Object.entries(x.pins).map(([k, v]) => [k, money(v)])), skips: x.skips }));
+const toOverrides = (o: Sim["overrides"]): MonthOverride[] => o.map((x) => ({ month: x.month as MonthOverride["month"], order: x.order, pins: Object.fromEntries(Object.entries(x.pins).map(([k, v]) => [k, money(v)])), skips: x.skips, overflow: x.overflow }));
 
 /** Change one month: reorder, pin an amount or skip a fund, with the effect on this month and five years later worked out live. */
 export function OverrideMonth({ month, funds, defaultOrder, sim, existing, months }: {
-  month: string; funds: FundMeta[]; defaultOrder: string[]; sim: Sim; existing: { order: string[] | null; pins: Record<string, number>; skips: string[]; note: string } | null; months: string[];
+  month: string; funds: FundMeta[]; defaultOrder: string[]; sim: Sim; existing: { order: string[] | null; pins: Record<string, number>; skips: string[]; note: string; overflow: string | null } | null; months: string[];
 }) {
   const [order, setOrder] = useState<string[]>(existing?.order ?? defaultOrder);
   const [pins, setPins] = useState<Record<string, string>>(Object.fromEntries(Object.entries(existing?.pins ?? {}).map(([k, v]) => [k, (v / 100).toFixed(2)])));
   const [skips, setSkips] = useState<string[]>(existing?.skips ?? []);
   const [pinOpen, setPinOpen] = useState<string | null>(null);
+  // Where bonus money a full fund cannot take goes; empty = the next funds in priority.
+  const [overflow, setOverflow] = useState(existing?.overflow ?? "");
   const [note, setNote] = useState(existing?.note ?? "");
   const [to, setTo] = useState(month);
   const toast = useToast();
@@ -42,8 +44,8 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
   const meta = new Map(funds.map((f) => [f.id, f]));
 
   const pinsNum = useMemo(() => Object.fromEntries(Object.entries(pins).map(([k, v]) => [k, parsePesos(v) ?? 0])), [pins]);
-  const isDefault = order.join() === defaultOrder.join() && Object.keys(pins).length === 0 && skips.length === 0;
-  const current = useMemo<Sim["overrides"][number]>(() => ({ month, order: order.join() === defaultOrder.join() ? null : order, pins: pinsNum, skips }), [month, order, defaultOrder, pinsNum, skips]);
+  const isDefault = order.join() === defaultOrder.join() && Object.keys(pins).length === 0 && skips.length === 0 && overflow === "";
+  const current = useMemo<Sim["overrides"][number]>(() => ({ month, order: order.join() === defaultOrder.join() ? null : order, pins: pinsNum, skips, overflow: overflow || null }), [month, order, defaultOrder, pinsNum, skips, overflow]);
 
   const result = useMemo(() => {
     const others = sim.overrides.filter((o) => o.month !== month);
@@ -57,7 +59,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
   const move = (id: string, by: -1 | 1) => setOrder((o) => { const n = [...o]; const i = n.indexOf(id); [n[i], n[i + by]] = [n[i + by]!, n[i]!]; return n; });
   const idx = months.indexOf(month);
   const run = (fn: () => Promise<{ ok?: boolean; error?: string }>, ok: string) => start(async () => { const r = await fn(); toast(r.error ?? ok, r.error ? "bad" : "ok"); });
-  const payload = (monthsList: string[], orderOnly = false) => ({ months: monthsList, order: current.order, pins: orderOnly ? {} : Object.fromEntries(Object.entries(pinsNum).filter(([k]) => !skips.includes(k))), skips: orderOnly ? [] : skips, note: note || null });
+  const payload = (monthsList: string[], orderOnly = false) => ({ months: monthsList, order: current.order, pins: orderOnly ? {} : Object.fromEntries(Object.entries(pinsNum).filter(([k]) => !skips.includes(k))), skips: orderOnly ? [] : skips, note: note || null, overflow: orderOnly ? null : current.overflow });
   const range = months.slice(months.indexOf(month), months.indexOf(to) + 1);
 
   return (
@@ -110,12 +112,22 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
             })}
           </div>
           <div className="v-note">Use the arrows to reorder. Pinned amounts come out of the pool first; the rest fill top to bottom.</div>
+          <section className="v-card v-stack" style={{ marginTop: 14, gap: 8 }}>
+            <label className="v-field">When a bonus fills a fund, the extra goes to
+              <select value={overflow} onChange={(e) => setOverflow(e.target.value)}>
+                <option value="">The next fund in priority (default)</option>
+                {funds.map((f) => <option key={f.id} value={f.id}>{f.name} first, then by priority</option>)}
+                <option value="none">Nowhere (leave it unplaced)</option>
+              </select>
+            </label>
+            <div className="v-xs v-muted">{result.now.bonusUnplaced > 0 ? <><Money value={money(result.now.bonusUnplaced)} /> of bonus money is not placed in any fund this month.</> : "Skipped and full funds are passed over."}</div>
+          </section>
           <section className="v-card" style={{ marginTop: 14 }}>
             <h3>Save, reset or copy</h3>
             <label className="v-field" style={{ marginTop: 10 }}>Note (optional)<input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} placeholder="Trip in March" /></label>
             <div className="v-row v-wrap" style={{ marginTop: 10, gap: 10 }}>
               <button type="button" className="v-btn v-pri" disabled={busy || isDefault} onClick={() => run(() => saveOverride(payload([month])), "Saved.")}>Save this month</button>
-              <button type="button" className="v-btn" disabled={busy} onClick={() => { setOrder(defaultOrder); setPins({}); setSkips([]); run(() => resetMonths([month]), "Back to the default."); }}>Reset month to default</button>
+              <button type="button" className="v-btn" disabled={busy} onClick={() => { setOrder(defaultOrder); setPins({}); setSkips([]); setOverflow(""); run(() => resetMonths([month]), "Back to the default."); }}>Reset month to default</button>
             </div>
             <hr className="v-hr" style={{ margin: "14px 0" }} />
             <div className="v-row v-wrap" style={{ gap: 10 }}>

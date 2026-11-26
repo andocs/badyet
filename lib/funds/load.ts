@@ -65,6 +65,8 @@ export async function loadFunds(supabase: SupabaseClient): Promise<FundsData> {
   ]);
   const fundRows = rows<FundDb>(fundRes);
   const funds = fundRows.map(fundOf);
+  // Where a full fund's extra goes is a newer column, asked for on its own so a database without that update still loads.
+  const overflowOf = new Map(rows<{ id: string; overflow_to: string | null }>(await supabase.from("month_overrides").select("id, overflow_to")).map((o) => [o.id, o.overflow_to]));
   const pins = rows<{ override_id: string; fund_id: string; pin_amount: number | null; skip: boolean }>(pinRes);
   const notes = new Map<string, string>();
   const overrides: MonthOverride[] = rows<{ id: string; month: string; fund_order: string[] | null; note: string | null }>(ovRes).map((o) => {
@@ -76,6 +78,7 @@ export async function loadFunds(supabase: SupabaseClient): Promise<FundsData> {
       order: o.fund_order,
       pins: Object.fromEntries(mine.filter((p) => p.pin_amount !== null && !p.skip).map((p) => [p.fund_id, money(p.pin_amount!)])),
       skips: mine.filter((p) => p.skip).map((p) => p.fund_id),
+      overflow: overflowOf.get(o.id) ?? null,
     };
   });
   return {

@@ -12,7 +12,7 @@ export interface FundMeta { id: string; name: string; color: string; blurb: stri
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
-const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r);
+const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r === "extra carried over" ? "Extra carried over" : r);
 
 /** 60 months of fund balances: a chart, a year ladder with month cards, and a month sheet that tells the story. */
 export interface PlanMeta { perMonth: number; fund: string | null; fundSet: boolean }
