@@ -95,7 +95,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
                     <span className="v-rk">{i + 1}</span>
                     <span><b className="v-nm"><i className="v-dot" style={{ background: f.color }} /> {f.name}</b><span className="v-xs v-muted" style={{ display: "block" }}>{f.blurb}</span></span>
                     <span style={{ textAlign: "right" }}><b className="v-num"><Money value={money((cell?.amount ?? 0) + (cell?.bonus ?? 0))} /></b><span className="v-xs v-muted" style={{ display: "block" }}>{(cell?.reasons ?? []).map(WHY).join(" · ")}</span></span>
-                    <span className="v-sub"><span className="v-tools" style={{ marginLeft: "auto" }}>
+                    <span className="v-sub"><span className="v-frtools">
                       <button type="button" className="v-iconbtn v-s" disabled={i === 0} onClick={() => move(id, -1)} aria-label={`Move ${f.name} up`}>↑</button>
                       <button type="button" className="v-iconbtn v-s" disabled={i === order.length - 1} onClick={() => move(id, 1)} aria-label={`Move ${f.name} down`}>↓</button>
                       <button type="button" className="v-btn v-sm" aria-pressed={pinned} onClick={() => { if (pinned) { setPins((p) => without(p, id)); setPinOpen(null); } else { setPinOpen(pinOpen === id ? null : id); setSkips((s) => s.filter((x) => x !== id)); } }}>{pinned ? "Pinned" : "Pin amount"}</button>

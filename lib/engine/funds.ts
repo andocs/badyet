@@ -49,13 +49,29 @@ function room(f: Fund, balance: Money): Money | null {
   return hasTarget(f) ? atLeastZero(sub(f.target, balance)) : null;
 }
 
+/**
+ * The balance a fund that fills in steps stops at this month: the end of the step it starts the month on (never past its hard cap).
+ * null = no stop (not a step fund, or no steps given).
+ */
+function stepStop(f: Fund, balance: Money): Money | null {
+  if (f.rule !== "steps") return null;
+  const b = boundaryAfter(balance, f.tranches ?? []);
+  return b === null ? null : hasTarget(f) ? min(b, f.target) : b;
+}
+
+/** How much the fund can take before it must pass the rest on this month: its cap, or this month's step. null = no limit. */
+function monthRoom(f: Fund, balance: Money, stop: Money | null): Money | null {
+  const r = room(f, balance);
+  if (stop === null) return r;
+  const toStop = atLeastZero(sub(stop, balance));
+  return r === null ? toStop : min(r, toStop);
+}
+
 /** What the fund asks of the pool this month. null = takes whatever is left. */
-function demand(f: Fund, balance: Money): Money | null {
+function demand(f: Fund, balance: Money, stop: Money | null): Money | null {
   let d: Money | null;
   if (f.rule === "steps") {
-    const b = boundaryAfter(balance, f.tranches ?? []);
-    const cap = hasTarget(f) && balance >= f.target ? ZERO : b === null ? null : hasTarget(f) ? min(b, f.target) : b;
-    d = cap === null ? room(f, balance) : atLeastZero(sub(cap, balance));
+    d = monthRoom(f, balance, stop);
   } else if (f.rule === "fixed") {
     const r = room(f, balance);
     d = r === null ? (f.fixedAmount ?? ZERO) : min(f.fixedAmount ?? ZERO, r);
@@ -114,7 +130,7 @@ export function monthOrder<T extends { id: string; rule: Fund["rule"] }>(inPrior
 
 /**
  * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, add the payroll
- * savings plan, pour bonus savings down the month's order (each fund up to its cap), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
+ * savings plan, pour bonus savings down the month's order (each fund up to its cap, or the step it is on), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
  * priority), each taking min(demand, what is left). Skipped funds get nothing; a fund is never both pinned and skipped.
  */
 export function allocateFunds(
@@ -141,6 +157,8 @@ export function allocateFunds(
     const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, plan: ZERO, balanceAfter: ZERO, reasons: [] }]));
 
     let bonusUnplaced = ZERO;
+    // Fixed at the start of the month, so a step filled by bonus savings is not followed by the next step the same month.
+    const stops = new Map(funds.map((f) => [f.id, stepStop(f, balance[f.id]!)]));
 
     // The payroll savings plan goes in full: it was already taken from your pay, so a full fund does not turn it away.
     for (const [fundId, credit] of Object.entries(m.planCredits ?? {})) {
@@ -164,7 +182,7 @@ export function allocateFunds(
       for (const f of first ? [first, ...order.filter((x) => x !== first)] : order) {
         if (waiting <= 0) break;
         if (skips.has(f.id)) continue;
-        const r = room(f, balance[f.id]!);
+        const r = monthRoom(f, balance[f.id]!, stops.get(f.id)!);
         const taken = r === null ? waiting : min(waiting, r);
         if (taken <= 0) continue;
         balance[f.id] = (balance[f.id]! + taken) as Money;
@@ -198,7 +216,7 @@ export function allocateFunds(
       }
       if (pinned.has(f.id)) return;
       row.reasons.push(`priority ${i + 1}`);
-      const d = demand(f, balance[f.id]!);
+      const d = demand(f, balance[f.id]!, stops.get(f.id)!);
       const taken = d === null ? left : min(d, left);
       balance[f.id] = (balance[f.id]! + taken) as Money;
       row.amount = taken;

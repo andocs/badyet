@@ -528,11 +528,12 @@ details.v-old .v-in{padding:0 18px 16px;border-top:1px solid var(--line)}
 .v-fr.v-pinned{border-color:var(--accent)}
 .v-fr .v-grip{cursor:grab;color:var(--muted);display:grid;place-items:center;width:28px;height:36px;background:none;border:0;padding:0}
 .v-fr .v-rk{width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px var(--font-display)}
-.v13 .v-fr .v-tools{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px;align-items:center;margin-top:0;border-top:0;padding-top:0}
+.v-fr .v-frtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
 .v-cols7 section>[aria-live]+.v-note{margin-top:6px}
 .v-fr .v-sub{grid-column:3 / span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .v-pinin{width:130px;font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;min-height:36px}
-@media(max-width:759px){.v-fr{grid-template-columns:auto auto minmax(0,1fr)}.v-fr .v-tools{grid-column:1 / -1;justify-content:flex-end}.v-fr .v-sub{grid-column:1 / -1}}
+@media(min-width:1200px){.v-fr{grid-template-columns:auto auto minmax(0,1fr) auto auto}.v-fr .v-sub{grid-column:auto;margin-left:12px}}
+@media(max-width:759px){.v-fr{grid-template-columns:auto auto minmax(0,1fr) auto}.v-fr .v-sub{grid-column:1 / -1}}
 .v-row-actions{display:flex;gap:8px;flex-wrap:wrap}
 .v-gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
@@ -544,11 +545,11 @@ table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
 .v-mh label{display:flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}
 .v-mh input{width:18px;height:18px}
 /* One tickbox everywhere: a rounded square, accent green when ticked, with a check mark. Native checkboxes get the same look as .v-chk. */
-.v13 input[type=checkbox]{appearance:none;-webkit-appearance:none;width:22px;height:22px;min-height:0;padding:0;margin:0;flex:none;border:2px solid var(--muted);border-radius:7px;background:none;display:inline-grid;place-content:center;cursor:pointer;vertical-align:middle}
-.v13 input[type=checkbox]::after{content:"";width:11px;height:6px;border:solid var(--on-accent);border-width:0 0 3px 3px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
-.v13 input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
-.v13 input[type=checkbox]:checked::after{opacity:1}
-.v13 input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:22px;height:22px;min-height:0;padding:0;margin:0;flex:none;border:2px solid var(--muted);border-radius:7px;background:none;display:inline-grid;place-content:center;cursor:pointer;vertical-align:middle}
+input[type=checkbox]::after{content:"";width:11px;height:6px;border:solid var(--on-accent);border-width:0 0 3px 3px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:checked::after{opacity:1}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .v-field input[type=checkbox]{width:22px;min-height:0;padding:0}
 .v-cell{display:block;width:100%;min-height:52px;background:none;border:0;cursor:pointer;color:var(--ink);font:600 13px var(--font-body);font-variant-numeric:tabular-nums;padding:4px 2px;position:relative}
 .v-cell:hover{background:var(--soft)}

@@ -168,3 +168,31 @@ describe("January order", () => {
     expect(of("ef").amount).toBe(p(2_000));
   });
 });
+
+describe("a step fund stops at the step it is on", () => {
+  const funds = [
+    { id: "ef", name: "Emergency", priority: 1, rule: "steps" as const, tranches: [p(100_000)], target: p(500_000) },
+    { id: "next", name: "Next", priority: 2, rule: "cap" as const, target: p(60_000) },
+    { id: "long", name: "Long term", priority: 3, rule: "cap" as const, target: null },
+  ];
+  const run = (month: { pool?: number; bonus?: number }) =>
+    allocateFunds(funds, { ef: p(95_000) }, [
+      { month: "2027-02" as never, pool: p(month.pool ?? 0), bonusSavings: p(month.bonus ?? 0) },
+      { month: "2027-03" as never, pool: p(10_000) },
+    ]);
+  const of = (m: ReturnType<typeof run>[number], id: string) => m.funds.find((f) => f.fundId === id)!;
+
+  it("of 100k savings, gives only the 5k to the step and passes the rest on", () => {
+    const [feb] = run({ pool: 100_000 });
+    expect([of(feb!, "ef").amount, of(feb!, "next").amount, of(feb!, "long").amount]).toEqual([p(5_000), p(60_000), p(35_000)]);
+  });
+  it("does the same with bonus savings", () => {
+    const [feb] = run({ bonus: 100_000 });
+    expect([of(feb!, "ef").bonus, of(feb!, "next").bonus, of(feb!, "long").bonus]).toEqual([p(5_000), p(60_000), p(35_000)]);
+  });
+  it("does not start the next step in the same month when the bonus filled this one, but does the month after", () => {
+    const [feb, mar] = run({ bonus: 5_000, pool: 20_000 });
+    expect([of(feb!, "ef").bonus, of(feb!, "ef").amount, of(feb!, "next").amount]).toEqual([p(5_000), 0, p(20_000)]);
+    expect(of(mar!, "ef").amount).toBe(p(10_000));
+  });
+});
