@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 - **Phase:** 3 Revisions
 - **Active slice / milestone:** rev-59 unified rules build
-- **Gate:** none
-- **Next action:** Build: logic, web editor, phone editor, then gate
-- **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private (history still holds the old notes)
+- **Gate:** waiting
+- **Next action:** Approve rev-59: merge to main + OTA
+- **User to-do now:** Try the Rules page on the Vercel preview before approving; compare real Maya wallet and card messages in the editor's sample boxes
 
 ## 3. Execution log
 
@@ -50,6 +50,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 20:41 | rev-59 | Mockup updated: built-in reader panel (examples checked against the real GCash reader). | -
 - 2026-11-26 20:53 | rev-59 | Mockup updated: other side's message box with paired and unreadable results. Awaiting approval. | -
 - 2026-11-26 21:01 | rev-59 | Mockup updated: other-side source choice, won't-pair result, demo switch out of step 5. Awaiting approval. | -
+- 2026-11-26 21:17 | rev-59 | Built unified Rules editor (web + phone), one-account fix, repeat-entry safeguard, Inbox Other account, sample and other-side tests. Checks, builds, Vercel PASS. Not tried on a signed-in page or a phone. No migration. | 64572ee
 
 ## 4. Open questions
 
@@ -90,7 +91,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 |  |
+| **Cumulative** | 5,517,367 | 24,733,779 | 936,579 | 10,589,270 | 1,074,672,209 | 4,137,168 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -156,6 +157,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-41 | 0 | 0 | 0 | 16,704 | 1,519,405 | 14,361 |  |
 | rev-42 | 47,003 | 183,558 | 8,760 | 61,365 | 13,044,241 | 46,014 |  |
 | rev-43 | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 | no mark 'rev-43': all-time |
+| Rev 59 | 0 | 0 | 0 | 137,748 | 23,672,160 | 81,419 |  |
 
 <!-- END SUMMARY -->
 
