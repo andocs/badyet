@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-59 unified rules build
-- **Gate:** waiting
-- **Next action:** Approve rev-59: merge to main + OTA
-- **User to-do now:** Try the Rules page on the Vercel preview before approving; compare real Maya wallet and card messages in the editor's sample boxes
+- **Phase:** rev-59 merged
+- **Active slice / milestone:** rev-59 unified rules
+- **Gate:** none
+- **Next action:** Next revision
+- **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; try the new Rules page and the sample boxes with real Maya wallet and card messages; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private
 
 ## 3. Execution log
 
@@ -51,6 +51,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 20:53 | rev-59 | Mockup updated: other side's message box with paired and unreadable results. Awaiting approval. | -
 - 2026-11-26 21:01 | rev-59 | Mockup updated: other-side source choice, won't-pair result, demo switch out of step 5. Awaiting approval. | -
 - 2026-11-26 21:17 | rev-59 | Built unified Rules editor (web + phone), one-account fix, repeat-entry safeguard, Inbox Other account, sample and other-side tests. Checks, builds, Vercel PASS. Not tried on a signed-in page or a phone. No migration. | 64572ee
+- 2026-11-26 21:22 | rev-59 | Approved. Merged to main (88b0bf8); OTA published (group 87e576dd). No migration. | 88b0bf8
 
 ## 4. Open questions
 
