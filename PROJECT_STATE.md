@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-51 gate
+- **Phase:** rev-52 gate
 - **Active slice / milestone:** rev-45 savings-plan-fund
 - **Gate:** awaiting approval
-- **Next action:** Approve rev-47..51: merge + OTA; apply migration 20261226000000
+- **Next action:** Approve rev-47..52: merge + OTA; apply migration 20261226000000
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -48,6 +48,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 11:45 | rev-49 | Override layout fixed (verified by screenshot), tickbox CSS fixed, step funds stop at current step. Includes rev-47/48. Checks PASS. Not merged. | -
 - 2026-11-26 11:49 | rev-50 | EF later steps wait for all other capped funds to be full. Includes rev-47..49. Checks PASS. Not merged. | -
 - 2026-11-26 11:52 | rev-51 | Savings plan fund excluded from general savings. Includes rev-47..50. Checks PASS. Not merged. | -
+- 2026-11-26 12:35 | rev-52 | SSS/Pag-IBIG 0 overrides treated as unset. Includes rev-47..51. Checks PASS. Not merged. User's payslip also shows HMO Plan twice (payslip custom line + other deductions). | -
 
 ## 4. Open questions
 
