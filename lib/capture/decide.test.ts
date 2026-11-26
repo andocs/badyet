@@ -134,3 +134,18 @@ describe('decide with Rules page rules', () => {
     expect(decide(cap(), cfg(), r)).toMatchObject({ categoryId: CAT });
   });
 });
+
+describe('a transfer or payment rule with only one account set', () => {
+  const config = { source: 'maya', label: 'Maya', enabled: true, packages: [], senders: [], accountId: 'fallback', categoryId: 'cat', autoConfirm: true, minAmount: 0, removed: false } as never;
+  const rule = (over: object) => ({ id: 'r', source: null, matchText: 'card', words: ['card'], action: 'record', kind: 'payment', categoryId: null, autoConfirm: true, ...over }) as never;
+  const msg = (direction: 'in' | 'out') => ({ source: 'maya' as const, amount: 100, direction, text: 'paid the card' });
+
+  it('uses the account it names for this side, and never confirms by itself', () => {
+    expect(decide(msg('out'), config, [rule({ fromAccountId: 'wallet' })])).toMatchObject({ keep: true, status: 'pending', accountId: 'wallet', categoryId: null, move: { own: 'wallet', other: null } });
+    expect(decide(msg('in'), config, [rule({ toAccountId: 'black' })])).toMatchObject({ accountId: 'black', move: { own: 'black', other: null } });
+  });
+  it('remembers the named account as the other side when the message is on the unnamed one', () => {
+    expect(decide(msg('out'), config, [rule({ toAccountId: 'black' })])).toMatchObject({ status: 'pending', move: { own: null, other: 'black' } });
+    expect(decide(msg('in'), config, [rule({ fromAccountId: 'wallet' })])).toMatchObject({ move: { own: null, other: 'wallet' } });
+  });
+});

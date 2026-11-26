@@ -76,6 +76,8 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   }, []);
   // "Transfer" is a button, not a category: a move between your own accounts.
   const [asT, setAsT] = useState<Record<string, boolean>>({});
+  // With Transfer picked: the account on the other side, when only this side sent a message.
+  const [others, setOthers] = useState<Record<string, string>>({});
   const holding = (t: InboxTxn) => t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
 
   const open = txns.find((t) => t.id === openId) ?? null;
@@ -101,7 +103,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
       const categoryId = asTransfer ? null : pick(t);
       apply({ type: "confirm", id: t.id, categoryId, categoryName: categories.find((c) => c.id === categoryId)?.name ?? null });
       closeDetail();
-      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "", billId: billPicks[t.id] || null, asTransfer });
+      const r = await confirmTransaction({ id: t.id, categoryId, rule: ruleOn(t), note: notes[t.id] ?? t.note ?? "", billId: billPicks[t.id] || null, asTransfer, otherAccountId: asTransfer ? others[t.id] || null : null });
       if (r.error) setError(r.error);
     });
   }
@@ -116,6 +118,7 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
   }
 
   const chips = (t: InboxTxn) => (
+    <>
     <div className="v-cats" role="group" aria-label={`Category for ${t.who}`}>
       <button type="button" aria-pressed={asT[t.id] === true} onClick={() => setAsT((a) => ({ ...a, [t.id]: !a[t.id] }))}>↔ Transfer</button>
       {categories.map((c) => (
@@ -124,6 +127,17 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
         </button>
       ))}
     </div>
+    {asT[t.id] === true ? (
+      <label className="v-field">
+        {t.amount < 0 ? "Other account (where it arrived)" : "Other account (where it came from)"}
+        <select value={others[t.id] ?? ""} onChange={(e) => setOthers((o) => ({ ...o, [t.id]: e.target.value }))}>
+          <option value="">Only this side</option>
+          {accounts.filter((a) => a.id !== t.accountId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+        </select>
+        <span className="v-xs" style={{ fontWeight: 500 }}>Pick one to add the other side too, if it did not send its own message.</span>
+      </label>
+    ) : null}
+    </>
   );
   const guessLine = (t: InboxTxn) =>
     t.guess === "rule" && pick(t) === t.categoryId ? (

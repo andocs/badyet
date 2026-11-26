@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { addOtherSide, checkOtherAccount } from '@/lib/capture/other-side';
 import { ensureCardPaymentCategory, ensureTransferCategory, isMoveCategory } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
 import { transferHoldUntil, type HoldAccount } from '@/lib/capture/hold';
@@ -154,7 +155,7 @@ export type Result = { ok: true } | { error: string };
  */
 export async function confirmTransaction(
   supabase: SupabaseClient,
-  input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean },
+  input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean; otherAccountId?: string | null; newId?: string },
 ): Promise<Result> {
   if (!UUID.test(input.id)) return { error: 'That transaction was not found.' };
   const row = await supabase.from('transactions').select('id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source, amount').eq('id', input.id).maybeSingle();
@@ -197,6 +198,13 @@ export async function confirmTransaction(
     }
   }
 
+  // "Other account": checked before anything changes, then the missing side is added after confirming.
+  const other = becomesTransfer && !row.data.transfer_peer_id ? (input.otherAccountId ?? null) : null;
+  if (other) {
+    const ok = await checkOtherAccount(supabase, row.data.account_id as string, other);
+    if ('error' in ok) return { error: ok.error };
+  }
+
   const note = input.note.trim().slice(0, 200) || null;
   const ids = [row.data.id as string, ...(isTransfer && row.data.transfer_peer_id ? [row.data.transfer_peer_id as string] : [])];
   const upd = await supabase
@@ -205,6 +213,10 @@ export async function confirmTransaction(
     .in('id', ids)
     .eq('status', 'pending');
   if (upd.error) return { error: 'Could not confirm that. Try again.' };
+  if (other) {
+    const done = await addOtherSide(supabase, { id: row.data.id as string, otherAccountId: other, newId: input.newId ?? '' });
+    if ('error' in done) return { error: done.error };
+  }
   if (billId) {
     const link = await supabase.from('transactions').update({ budget_line_id: billId }).eq('id', row.data.id);
     if (link.error) return { error: 'Confirmed, but it was not linked to the bill. Mark the bill sent on Now.' };

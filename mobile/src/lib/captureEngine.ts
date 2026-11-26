@@ -18,6 +18,8 @@ import { uploadDiag } from './diagUpload';
 import { withLimit } from './http';
 import { syncHeld } from './heldSync';
 import { pairRecent } from './pairing';
+import type { MadeLeg } from '@/lib/capture/claim';
+import { PAIR_WINDOW_MS } from '@/lib/capture/pair';
 import { supabase } from './supabase';
 
 // Everything capture does that is not a screen, so the app, the 15 minute background task and the headless notification task share it.
@@ -112,6 +114,32 @@ async function loadContext(): Promise<RunContext | null> {
 
 const hash = (text: string) => Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, text);
 
+/** Other sides the app made itself (no message yet) on this account for this money, within an hour either way. */
+async function madeLegs(row: TxnInsert): Promise<MadeLeg[]> {
+  const at = Date.parse(row.occurred_at);
+  const { data } = await supabase
+    .from('transactions')
+    .select('id, account_id, amount, occurred_at, transfer_peer_id')
+    .eq('account_id', row.account_id)
+    .eq('amount', row.amount)
+    .eq('kind', 'transfer')
+    .in('source', ['notification', 'import'])
+    .is('dedupe_hash', null)
+    .not('transfer_peer_id', 'is', null)
+    .neq('status', 'ignored')
+    .gte('occurred_at', new Date(at - PAIR_WINDOW_MS).toISOString())
+    .lte('occurred_at', new Date(at + PAIR_WINDOW_MS).toISOString());
+  const legs = (data ?? []) as { id: string; account_id: string; amount: number; occurred_at: string; transfer_peer_id: string }[];
+  if (legs.length === 0) return [];
+  const peers = await supabase.from('transactions').select('id, account_id').in('id', legs.map((l) => l.transfer_peer_id));
+  const accountOf = new Map(((peers.data ?? []) as { id: string; account_id: string }[]).map((p) => [p.id, p.account_id]));
+  return legs.map((l) => ({ id: l.id, accountId: l.account_id, amount: l.amount, at: Date.parse(l.occurred_at), peerAccountId: accountOf.get(l.transfer_peer_id) ?? '' }));
+}
+
+async function claimLeg(id: string, key: string): Promise<void> {
+  await supabase.from('transactions').update({ dedupe_hash: key }).eq('id', id).is('dedupe_hash', null);
+}
+
 /** The same money movement already recorded within 3 minutes in the same account (the phone alert usually comes first). */
 async function isDuplicate(row: TxnInsert): Promise<boolean> {
   const at = Date.parse(row.occurred_at);
@@ -178,6 +206,8 @@ const captureDeps: RunDeps = {
   newId: () => Crypto.randomUUID(),
   transferCategoryId: () => ensureTransferCategory(supabase).catch(() => null),
   isDuplicate,
+  madeLegs,
+  claimLeg,
   readRecent: () => read<Recent[]>(RECENT_KEY, []),
   writeRecent: (r) => write(RECENT_KEY, r),
 };

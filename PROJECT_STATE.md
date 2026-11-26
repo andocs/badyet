@@ -8,9 +8,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-59 rules mockups
-- **Gate:** waiting
-- **Next action:** Approve rules mockups, then build (include Q29 one-account bug fix)
+- **Active slice / milestone:** rev-59 unified rules build
+- **Gate:** none
+- **Next action:** Build: logic, web editor, phone editor, then gate
 - **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -53,7 +53,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 4. Open questions
 
-- [ ] Q29: REMIND USER: capture rule with only one of 'Money leaves'/'Money arrives in' set ignores that account and saves ordinary spending/income (captureRun place(), decide()). Fix offered with matching the source and rule editor layouts.
 - [x] Q3: (blocking Gate 1) Which design direction? Pick v2-a-score, v2-b-route-board, or v2-c-side-a-side-b (docs/mockups/v2-*.html); old a-passbook, b-signal, c-quiet-ledger were rejected 2026-11-19. -> Resolved: Night Emerald chosen at Gate 1 (DESIGN.md); v2 mockups superseded. Redesign round chose direction A (v11-a payday ritual) on 2026-11-20.
 - [x] Q1: (non-blocking) CONFIRM items carried over from D:\badyet\docs\financial-logic-spec.md, e.g. cutoff days vs pay dates. -> User 2026-11-20: paydays are the 10th and 25th. Cutoffs are payday-to-payday (old spec: P1 = days 11-24, P2 = 25 to 10 next month), so the calendar split by one start day cannot model it. Building as rev-24 (assumption: first = paid 10th covering 11-24, second = paid 25th covering 25 to 10; a period belongs to the month it starts in).
 - [x] Q2: (non-blocking) 2027 CIP tax exemption rule: V-W4 unverified in the old app. -> User 2026-11-20: CIP counts toward the 90,000 cap. CIP and the one-time September bonus each carry their own de minimis exemption (example: 120k CIP has 12k de minimis); the excess goes into the pool that is checked against the 90,000 cap, and anything above the cap is taxable. 13th month has NO de minimis. Building as rev-25 (per-event de minimis amount; 13th month locked to 0). Still need: September bonus de minimis amount.
@@ -82,6 +81,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - [x] Q26: T5: do reimbursements arrive on your payslip (taxed or not), as a separate deposit, or both? Is the utility reimbursement a fixed monthly amount, and which cutoff does each land in? -> Separate deposit; utility fixed monthly on the 17th; wifi pay 2,099 and reimbursed; reallocation needed.
 - [x] Q27: T3: are installments card plans (a purchase split over months with a monthly charge) or loans, and do you want them to reduce Wants or sit as their own budget lines? -> Mostly card plans, also loans; each its own budget line.
 - [x] Q28: rev-37 plan design -> A plan replaces the whole budget (copied, then edited); start and end picked as cutoffs; no overlaps
+- [x] Q29: REMIND USER: capture rule with only one of 'Money leaves'/'Money arrives in' set ignores that account and saves ordinary spending/income (captureRun place(), decide()). Fix offered with matching the source and rule editor layouts. -> Approved: fix as part of rev-59 build
 
 ## 5. Token & usage ledger
 

@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { isoDate } from '@/lib/domain/dates';
@@ -47,16 +48,20 @@ function PendingCard({
   onConfirm,
   onIgnore,
   onEdit,
+  accounts,
 }: {
+  accounts: { id: string; name: string }[];
   t: InboxTxn;
   categories: Category[];
   bills: { id: string; name: string }[];
   today: ReturnType<typeof isoDate>;
-  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null, asTransfer: boolean) => void;
+  onConfirm: (t: InboxTxn, categoryId: string | null, rule: boolean, note: string, billId: string | null, asTransfer: boolean, otherAccountId: string | null) => void;
   onIgnore: (t: InboxTxn) => void;
   onEdit: (t: InboxTxn) => void;
 }) {
   const c = useTheme();
+  // With Transfer picked: the account on the other side, when only this side sent a message.
+  const [otherId, setOtherId] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(t.categoryId);
   const [rule, setRule] = useState(t.guess === 'rule');
   const [note, setNote] = useState(t.note ?? '');
@@ -97,6 +102,18 @@ function PendingCard({
               <Chip key={x.id} label={x.name} on={!asT && x.id === categoryId} onPress={() => { setAsT(false); setCategoryId(x.id); }} />
             ))}
           </View>
+          {asT ? (
+            <View style={{ gap: 6 }}>
+              <Text style={{ color: c.muted, fontFamily: fonts.bodyBold, fontSize: 12 }}>{t.amount < 0 ? 'Other account (where it arrived)' : 'Other account (where it came from)'}</Text>
+              <View style={s.chips}>
+                <Chip label="Only this side" on={otherId === null} onPress={() => setOtherId(null)} />
+                {accounts.filter((a) => a.id !== t.accountId).map((a) => (
+                  <Chip key={a.id} label={a.name} on={otherId === a.id} onPress={() => setOtherId(a.id)} />
+                ))}
+              </View>
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Pick one to add the other side too, if it did not send its own message.</Text>
+            </View>
+          ) : null}
           {holding ? (
             <Text accessibilityRole="alert" style={{ color: c.ink, fontFamily: fonts.body, fontSize: 13 }}>
               May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Tap Transfer now, or confirm it as {t.amount < 0 ? 'spending' : 'income'} after that.
@@ -154,7 +171,7 @@ function PendingCard({
 
       <View style={s.row}>
         <Pressable
-          onPress={() => onConfirm(t, isTransfer || asT ? null : categoryId, rule && !isTransfer && !asT, note, isTransfer || asT ? null : billId, asT)}
+          onPress={() => onConfirm(t, isTransfer || asT ? null : categoryId, rule && !isTransfer && !asT, note, isTransfer || asT ? null : billId, asT, asT ? otherId : null)}
           disabled={!canConfirm}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canConfirm }}
@@ -273,9 +290,10 @@ export default function Inbox() {
                 key={item.t!.id}
                 t={item.t!}
                 categories={data.categories}
+                accounts={data.accounts}
                 bills={data.bills}
                 today={today}
-                onConfirm={(row, categoryId, rule, note, billId, asTransfer) =>
+                onConfirm={(row, categoryId, rule, note, billId, asTransfer, otherAccountId) =>
                   act(row, 'confirm', () =>
                     confirmTransaction(supabase, {
                       id: row.id,
@@ -284,6 +302,8 @@ export default function Inbox() {
                       note,
                       billId,
                       asTransfer,
+                      otherAccountId,
+                      newId: Crypto.randomUUID(),
                     }),
                   )
                 }

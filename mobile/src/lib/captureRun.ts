@@ -1,5 +1,6 @@
 import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
+import { madeLegFor, type MadeLeg } from '@/lib/capture/claim';
 import { counterLeg } from '@/lib/capture/held';
 import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
@@ -50,6 +51,10 @@ export interface RunDeps {
   transferCategoryId?: () => Promise<string | null>;
   /** True when the same money movement is already recorded (for example the same transfer seen in a notification and an email). */
   isDuplicate?: (row: TxnInsert) => Promise<boolean>;
+  /** Entries the app itself made for the other side of a move, on this account and amount, that no message has claimed yet. */
+  madeLegs?: (row: TxnInsert) => Promise<MadeLeg[]>;
+  /** Marks such an entry as the one a message is about. */
+  claimLeg?: (id: string, hash: string) => Promise<void>;
   /** What notifications and emails saw recently, so an alert is not added when its email came first. */
   readRecent?: () => Recent[];
   writeRecent?: (recent: Recent[]) => void;
@@ -80,12 +85,19 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
   const seen = new Set<string>();
   let recent = d.readRecent?.() ?? [];
   const cfgOf = (s: SourceKey) => ctx.configs.find((c) => c.source === s);
+  // Other sides made in this pass, which the database does not have yet.
+  let madeHere: MadeLeg[] = [];
   const place = async (h: Held): Promise<boolean> => {
     const cfg = cfgOf(h.parsed.source);
-    // A transfer or card payment rule names both accounts, so this side is already known.
-    const plan = h.decision.transfer;
-    const accountId = plan ? h.decision.accountId : cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null;
+    // A transfer or card payment rule names the accounts it can; what it names is used.
+    let plan = h.decision.transfer;
+    const half = h.decision.move;
+    const accountId = plan ? h.decision.accountId : (half?.own ?? (cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null));
     if (!accountId) return false;
+    // Only the other side was named, and the message says whose this one is: both are known after all.
+    if (!plan && half?.other && half.other !== accountId) {
+      plan = h.parsed.direction === 'out' ? { fromAccountId: accountId, toAccountId: half.other } : { fromAccountId: half.other, toAccountId: accountId };
+    }
     let row = buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
     if (plan) row = { ...row, kind: 'transfer', category_id: (await d.transferCategoryId?.()) ?? null };
     // Emails usually arrive after the phone alert for the same event. Only emails are checked, so two real purchases of the same amount in a row are both kept.
@@ -93,9 +105,23 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
       sum.skipped += 1;
       return true;
     }
+    // This account may already have the entry, made when the other side's message arrived first.
+    const later = { accountId: row.account_id, amount: row.amount, at: Date.parse(row.occurred_at), counterparty: h.parsed.counterparty };
+    const here = madeLegFor(later, madeHere, ctx.accounts);
+    const made = here ?? madeLegFor(later, (await d.madeLegs?.(row).catch(() => [])) ?? [], ctx.accounts);
+    if (made) {
+      if (here) madeHere = madeHere.filter((l) => l.id !== here.id);
+      else await d.claimLeg?.(made.id, h.hash).catch(() => {});
+      sum.skipped += 1;
+      return true;
+    }
     await d.enqueue(row);
     // The other account gets its half too, sent right after (see counterLeg).
-    if (plan) await d.enqueue(counterLeg(row, row.account_id === plan.fromAccountId ? plan.toAccountId : plan.fromAccountId, d.newId()));
+    if (plan) {
+      const leg = counterLeg(row, row.account_id === plan.fromAccountId ? plan.toAccountId : plan.fromAccountId, d.newId());
+      await d.enqueue(leg);
+      madeHere.push({ id: leg.id, accountId: leg.account_id, amount: leg.amount, at: Date.parse(leg.occurred_at), peerAccountId: row.account_id });
+    }
     sum.added += 1;
     return true;
   };
