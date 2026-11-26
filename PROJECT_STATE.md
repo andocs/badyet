@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-58 merged
-- **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** none
-- **Next action:** Next revision
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-59 rules mockups
+- **Gate:** waiting
+- **Next action:** Approve rules mockups, then build (include Q29 one-account bug fix)
 - **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -46,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 19:32 | rev-58 | Postponed reimbursements carry to next month's reimbursement day. Checks PASS. Not merged. Migrations 20261228 and 20261229. | -
 - 2026-11-26 19:37 | rev-58 | Merged to main (99ae92a); OTA published (group c4c2e934). User reports migrations applied. | 99ae92a
 - 2026-11-26 19:39 | cleanup | Deleted 72 merged rev/* and slice/* branches, local and on GitHub; only main remains. | -
+- 2026-11-26 20:37 | rev-59 | Mockups for consolidated Rules editor: docs/mockups/v13-rules-unified.html and docs/mockups/phone/rules-unified.html. Not built. | -
 
 ## 4. Open questions
 
