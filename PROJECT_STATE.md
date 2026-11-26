@@ -47,6 +47,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 19:37 | rev-58 | Merged to main (99ae92a); OTA published (group c4c2e934). User reports migrations applied. | 99ae92a
 - 2026-11-26 19:39 | cleanup | Deleted 72 merged rev/* and slice/* branches, local and on GitHub; only main remains. | -
 - 2026-11-26 20:37 | rev-59 | Mockups for consolidated Rules editor: docs/mockups/v13-rules-unified.html and docs/mockups/phone/rules-unified.html. Not built. | -
+- 2026-11-26 20:41 | rev-59 | Mockup updated: built-in reader panel (examples checked against the real GCash reader). | -
 
 ## 4. Open questions
 
