@@ -12,17 +12,18 @@ const row = (m: ReturnType<typeof allocateFunds>[number], id: string) => m.funds
 describe("fund allocator", () => {
   it("fills funds in priority order, each taking min(demand, what is left), with reasons", () => {
     const [m] = allocateFunds(funds, { ef: p(90_000) }, [{ month: ym("2027-02"), pool: p(30_000) }]);
-    expect(row(m!, "ef")).toMatchObject({ amount: p(10_000), balanceAfter: p(100_000), reasons: ["priority 1", "cap hit"] });
+    expect(row(m!, "ef")).toMatchObject({ amount: p(10_000), balanceAfter: p(100_000), reasons: ["priority 1", "cap hit", "waits for other funds"] });
     expect(row(m!, "travel")).toMatchObject({ amount: p(20_000), reasons: ["priority 2", "pool ran out"] });
     expect(row(m!, "wants")).toMatchObject({ amount: 0, reasons: ["priority 3", "pool ran out"] });
     expect(m!.unplaced).toBe(0);
   });
 
-  it("steps repeat the last tranche: the next month asks for the next step", () => {
+  it("a step fund with nothing else to fill goes on into its later steps", () => {
     const f: Fund = { id: "ef", name: "EF", priority: 1, rule: "steps", tranches: [p(100_000), p(200_000)] };
     const months = allocateFunds([f], {}, [{ month: ym("2027-01"), pool: p(500_000) }, { month: ym("2027-02"), pool: p(500_000) }, { month: ym("2027-03"), pool: p(500_000) }]);
-    expect(months.map((m) => row(m, "ef").balanceAfter)).toEqual([p(100_000), p(300_000), p(500_000)]);
-    expect(months[0]!.unplaced).toBe(p(400_000)); // one step a month; the rest is not placed
+    // With no other fund to fill first, the later steps take the rest the same month.
+    expect(months.map((m) => row(m, "ef").balanceAfter)).toEqual([p(500_000), p(1_000_000), p(1_500_000)]);
+    expect(months[0]!.unplaced).toBe(0);
   });
 
   it("a hard cap stops steps, and a fund with no cap takes the rest", () => {
@@ -169,30 +170,41 @@ describe("January order", () => {
   });
 });
 
-describe("a step fund stops at the step it is on", () => {
+describe("a step fund's later steps wait for every other capped fund", () => {
   const funds = [
     { id: "ef", name: "Emergency", priority: 1, rule: "steps" as const, tranches: [p(100_000)], target: p(500_000) },
-    { id: "next", name: "Next", priority: 2, rule: "cap" as const, target: p(60_000) },
-    { id: "long", name: "Long term", priority: 3, rule: "cap" as const, target: null },
+    { id: "travel", name: "Travel", priority: 2, rule: "reset" as const, target: p(60_000), resetMonth: 1 },
+    { id: "fun", name: "Fun", priority: 3, rule: "reset" as const, target: p(50_000), resetMonth: 1 },
+    { id: "long", name: "Long term", priority: 4, rule: "cap" as const, target: null },
   ];
-  const run = (month: { pool?: number; bonus?: number }) =>
-    allocateFunds(funds, { ef: p(95_000) }, [
-      { month: "2027-02" as never, pool: p(month.pool ?? 0), bonusSavings: p(month.bonus ?? 0) },
-      { month: "2027-03" as never, pool: p(10_000) },
-    ]);
-  const of = (m: ReturnType<typeof run>[number], id: string) => m.funds.find((f) => f.fundId === id)!;
+  type Row = { pool?: number; bonus?: number };
+  const run = (start: Record<string, number>, months: Row[], from = 2) =>
+    allocateFunds(funds, Object.fromEntries(Object.entries(start).map(([k, v]) => [k, p(v)])), months.map((m, i) => ({ month: `2027-${String(from + i).padStart(2, "0")}` as never, pool: p(m.pool ?? 0), bonusSavings: p(m.bonus ?? 0) })));
+  const got = (m: ReturnType<typeof run>[number], k: "amount" | "bonus" = "amount") => m.funds.map((f) => f[k]);
 
-  it("of 100k savings, gives only the 5k to the step and passes the rest on", () => {
-    const [feb] = run({ pool: 100_000 });
-    expect([of(feb!, "ef").amount, of(feb!, "next").amount, of(feb!, "long").amount]).toEqual([p(5_000), p(60_000), p(35_000)]);
+  it("of 100k with EF at 95k, gives EF 5k and the rest to the next funds", () => {
+    expect(got(run({ ef: 95_000 }, [{ pool: 100_000 }])[0]!)).toEqual([p(5_000), p(60_000), p(35_000), 0]);
+    expect(got(run({ ef: 95_000 }, [{ bonus: 100_000 }])[0]!, "bonus")).toEqual([p(5_000), p(60_000), p(35_000), 0]);
   });
-  it("does the same with bonus savings", () => {
-    const [feb] = run({ bonus: 100_000 });
-    expect([of(feb!, "ef").bonus, of(feb!, "next").bonus, of(feb!, "long").bonus]).toEqual([p(5_000), p(60_000), p(35_000)]);
+  it("keeps the next step waiting month after month until the other capped funds are full", () => {
+    const [feb, mar, apr] = run({ ef: 100_000 }, [{ pool: 40_000 }, { pool: 40_000 }, { pool: 40_000 }]);
+    expect(got(feb!)).toEqual([0, p(40_000), 0, 0]);
+    expect(got(mar!)).toEqual([0, p(20_000), p(20_000), 0]);
+    expect(got(apr!)).toEqual([p(10_000), 0, p(30_000), 0]);
+    expect(feb!.funds[0]!.reasons).toContain("waits for other funds");
+    expect(apr!.funds[0]!.reasons).toContain("next step");
   });
-  it("does not start the next step in the same month when the bonus filled this one, but does the month after", () => {
-    const [feb, mar] = run({ bonus: 5_000, pool: 20_000 });
-    expect([of(feb!, "ef").bonus, of(feb!, "ef").amount, of(feb!, "next").amount]).toEqual([p(5_000), 0, p(20_000)]);
-    expect(of(mar!, "ef").amount).toBe(p(10_000));
+  it("waits again after the yearly reset, even partway through a later step", () => {
+    const [jan, feb] = run({ ef: 150_000, travel: 60_000, fun: 50_000 }, [{ pool: 40_000 }, { pool: 40_000 }], 1);
+    expect(got(jan!)).toEqual([0, p(40_000), 0, 0]);
+    expect(got(feb!)).toEqual([0, p(20_000), p(20_000), 0]);
+  });
+  it("puts the next step ahead of funds with no cap, which can never be full", () => {
+    expect(got(run({ ef: 100_000, travel: 60_000, fun: 50_000 }, [{ pool: 30_000 }])[0]!)).toEqual([p(30_000), 0, 0, 0]);
+    expect(got(run({ ef: 500_000, travel: 60_000, fun: 50_000 }, [{ pool: 30_000 }])[0]!)).toEqual([0, 0, 0, p(30_000)]);
+    // While the next step is locked, the fund with no cap gets what the others cannot take.
+    const limited = funds.map((f) => (f.id === "travel" ? { ...f, maxPerMonth: p(10_000) } : f));
+    const m = allocateFunds(limited, { ef: p(100_000), fun: p(50_000) }, [{ month: "2027-02" as never, pool: p(30_000) }])[0]!;
+    expect(got(m)).toEqual([0, p(10_000), 0, p(20_000)]);
   });
 });

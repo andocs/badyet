@@ -83,7 +83,6 @@ describe("projection", () => {
     expect(dec.pay.second.lines.some((l) => l.label === "13th month")).toBe(true);
     const ef = dec.funds.funds.find((f) => f.fundId === "ef")!;
     expect(ef.bonus).toBeGreaterThan(0);
-    expect(ef.balanceAfter % p(100_000)).toBe(0); // it stops at the end of its step
     expect(dec.funds.funds.reduce((t, f) => t + f.bonus, 0) + dec.funds.bonusUnplaced).toBe(dec.bonuses[0]!.net);
     expect(cmp.without[11]!.bonuses[0]!.gross).toBe(p(50_000));
   });

@@ -50,28 +50,41 @@ function room(f: Fund, balance: Money): Money | null {
 }
 
 /**
- * The balance a fund that fills in steps stops at this month: the end of the step it starts the month on (never past its hard cap).
- * null = no stop (not a step fund, or no steps given).
+ * A fund that fills in steps has priority only up to its first step. Its later steps wait until every other fund with a cap is full
+ * (see `othersFull`). This is where its priority ends; null = not a step fund, or no steps given.
  */
-function stepStop(f: Fund, balance: Money): Money | null {
+function firstStop(f: Fund): Money | null {
   if (f.rule !== "steps") return null;
-  const b = boundaryAfter(balance, f.tranches ?? []);
+  const b = boundaryAfter(ZERO, f.tranches ?? []);
   return b === null ? null : hasTarget(f) ? min(b, f.target) : b;
 }
 
-/** How much the fund can take before it must pass the rest on this month: its cap, or this month's step. null = no limit. */
-function monthRoom(f: Fund, balance: Money, stop: Money | null): Money | null {
+/** How much the fund can take while it has priority: up to its cap, or for a step fund up to its first step. null = no limit. */
+function priorityRoom(f: Fund, balance: Money): Money | null {
   const r = room(f, balance);
+  const stop = firstStop(f);
   if (stop === null) return r;
   const toStop = atLeastZero(sub(stop, balance));
   return r === null ? toStop : min(r, toStop);
 }
 
-/** What the fund asks of the pool this month. null = takes whatever is left. */
-function demand(f: Fund, balance: Money, stop: Money | null): Money | null {
+/** Whether every other fund with a cap is full, so a step fund may go past its first step. Funds with no cap can never be full. */
+function othersFull(self: Fund, funds: readonly Fund[], balance: Readonly<Record<string, Money>>, skips: ReadonlySet<string>): boolean {
+  return funds.every((f) => f === self || f.rule === "steps" || skips.has(f.id) || !hasTarget(f) || balance[f.id]! >= f.target);
+}
+
+/** A step fund that still has steps after its first one. Only then do the funds with no cap wait their turn behind it. */
+function hasLaterSteps(f: Fund, balance: Money): boolean {
+  if (firstStop(f) === null) return false;
+  const r = room(f, balance);
+  return r === null || r > priorityRoom(f, balance)!;
+}
+
+/** What the fund asks of the pool this month while it has priority. null = takes whatever is left. */
+function demand(f: Fund, balance: Money): Money | null {
   let d: Money | null;
   if (f.rule === "steps") {
-    d = monthRoom(f, balance, stop);
+    d = priorityRoom(f, balance);
   } else if (f.rule === "fixed") {
     const r = room(f, balance);
     d = r === null ? (f.fixedAmount ?? ZERO) : min(f.fixedAmount ?? ZERO, r);
@@ -130,7 +143,7 @@ export function monthOrder<T extends { id: string; rule: Fund["rule"] }>(inPrior
 
 /**
  * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, add the payroll
- * savings plan, pour bonus savings down the month's order (each fund up to its cap, or the step it is on), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
+ * savings plan, pour bonus savings down the month's order (each fund up to its cap; see the passes below), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
  * priority), each taking min(demand, what is left). Skipped funds get nothing; a fund is never both pinned and skipped.
  */
 export function allocateFunds(
@@ -157,8 +170,6 @@ export function allocateFunds(
     const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, plan: ZERO, balanceAfter: ZERO, reasons: [] }]));
 
     let bonusUnplaced = ZERO;
-    // Fixed at the start of the month, so a step filled by bonus savings is not followed by the next step the same month.
-    const stops = new Map(funds.map((f) => [f.id, stepStop(f, balance[f.id]!)]));
 
     // The payroll savings plan goes in full: it was already taken from your pay, so a full fund does not turn it away.
     for (const [fundId, credit] of Object.entries(m.planCredits ?? {})) {
@@ -174,23 +185,30 @@ export function allocateFunds(
     const listed = (o?.order ?? []).map((id) => funds.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
     const order = [...listed, ...monthOrder(funds, m.month, planFundId).filter((f) => !listed.includes(f))];
 
-    // Bonus savings fill funds down this month's order (a chosen fund first, if the month names one): each takes up to its cap and the
-    // rest flows to the next, passing over skipped and full funds. "none" keeps it out of every fund.
+    // Bonus savings fill funds down this month's order (a chosen fund first, if the month names one), passing over skipped and full
+    // funds, in three passes: every fund with a limit (a step fund only to its first step); then, once every other capped fund is
+    // full, the later steps; then the funds with no cap take what is left (they only wait like this while a step fund has later
+    // steps). "none" keeps it out of every fund.
     let waiting = m.bonusSavings ?? ZERO;
     if (o?.overflow !== "none") {
       const first = funds.find((f) => f.id === o?.overflow);
-      for (const f of first ? [first, ...order.filter((x) => x !== first)] : order) {
-        if (waiting <= 0) break;
-        if (skips.has(f.id)) continue;
-        const r = monthRoom(f, balance[f.id]!, stops.get(f.id)!);
-        const taken = r === null ? waiting : min(waiting, r);
-        if (taken <= 0) continue;
+      const queue = (first ? [first, ...order.filter((x) => x !== first)] : order).filter((f) => !skips.has(f.id));
+      const pour = (f: Fund, upTo: Money | null) => {
+        const taken = upTo === null ? waiting : min(waiting, upTo);
+        if (taken <= 0) return;
         balance[f.id] = (balance[f.id]! + taken) as Money;
         const row = rows.get(f.id)!;
         row.bonus = (row.bonus + taken) as Money;
-        row.reasons.push("bonus savings");
+        if (!row.reasons.includes("bonus savings")) row.reasons.push("bonus savings");
         waiting = sub(waiting, taken);
-      }
+      };
+      // The fund you chose to fill first takes up to its cap, whatever the passes would say.
+      if (first && !skips.has(first.id)) pour(first, room(first, balance[first.id]!));
+      const stepping = queue.some((f) => hasLaterSteps(f, balance[f.id]!));
+      const noCap = (f: Fund) => priorityRoom(f, balance[f.id]!) === null;
+      for (const f of queue) if (!(stepping && noCap(f))) pour(f, priorityRoom(f, balance[f.id]!));
+      for (const f of queue) if (firstStop(f) !== null && othersFull(f, funds, balance, skips)) pour(f, room(f, balance[f.id]!));
+      for (const f of queue) if (noCap(f)) pour(f, null);
     }
     bonusUnplaced = (bonusUnplaced + waiting) as Money;
 
@@ -208,6 +226,14 @@ export function allocateFunds(
       pinned.add(f.id);
     }
 
+    const give = (f: Fund, taken: Money) => {
+      balance[f.id] = (balance[f.id]! + taken) as Money;
+      const row = rows.get(f.id)!;
+      row.amount = (row.amount + taken) as Money;
+      left = sub(left, taken);
+    };
+    const takesTheRest: Fund[] = [];
+    const stepping = order.some((f) => !skips.has(f.id) && !pinned.has(f.id) && hasLaterSteps(f, balance[f.id]!));
     order.forEach((f, i) => {
       const row = rows.get(f.id)!;
       if (skips.has(f.id)) {
@@ -216,15 +242,40 @@ export function allocateFunds(
       }
       if (pinned.has(f.id)) return;
       row.reasons.push(`priority ${i + 1}`);
-      const d = demand(f, balance[f.id]!, stops.get(f.id)!);
-      const taken = d === null ? left : min(d, left);
-      balance[f.id] = (balance[f.id]! + taken) as Money;
-      row.amount = taken;
-      left = sub(left, taken);
-      if (d === null) row.reasons.push("takes the rest");
-      else if (taken < d) row.reasons.push("pool ran out");
-      else row.reasons.push("cap hit");
+      const d = demand(f, balance[f.id]!);
+      if (d === null) {
+        if (stepping) takesTheRest.push(f);
+        else {
+          give(f, left);
+          row.reasons.push("takes the rest");
+        }
+        return;
+      }
+      const taken = min(d, left);
+      give(f, taken);
+      row.reasons.push(taken < d ? "pool ran out" : "cap hit");
     });
+    // Later steps, only once every other capped fund is full. A monthly limit still counts what the fund already got.
+    for (const f of order) {
+      if (firstStop(f) === null || skips.has(f.id) || pinned.has(f.id)) continue;
+      const row = rows.get(f.id)!;
+      const r = room(f, balance[f.id]!);
+      if (r !== null && r <= 0) continue;
+      if (!othersFull(f, funds, balance, skips)) {
+        if (balance[f.id]! >= firstStop(f)!) row.reasons.push("waits for other funds");
+        continue;
+      }
+      const monthly = f.maxPerMonth != null ? atLeastZero(sub(f.maxPerMonth, row.amount)) : null;
+      const can = r === null ? (monthly ?? left) : monthly === null ? r : min(r, monthly);
+      const taken = min(can, left);
+      if (taken <= 0) continue;
+      give(f, taken);
+      row.reasons.push("next step");
+    }
+    for (const f of takesTheRest) {
+      give(f, left);
+      rows.get(f.id)!.reasons.push("takes the rest");
+    }
 
     for (const f of funds) rows.get(f.id)!.balanceAfter = balance[f.id]!;
     out.push({ month: m.month, pool: m.pool, unplaced: left, bonusUnplaced, funds: funds.map((f) => rows.get(f.id)!) });

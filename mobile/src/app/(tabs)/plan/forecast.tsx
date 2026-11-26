@@ -20,7 +20,7 @@ const PALETTE = ['#34D399', '#7FA8FF', '#F6C453', '#C4A0FF', '#5CD0E6', '#F28BC8
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const WHY = (r: string) =>
-  r.startsWith('priority') ? `Priority ${r.slice(9)}` : r === 'cap hit' ? 'Cap reached' : r === 'pool ran out' ? 'Pool ran out' : r === 'takes the rest' ? 'Takes the rest' : r === 'pinned' ? 'Pinned' : r === 'skipped' ? 'Skipped' : r === 'bonus savings' ? 'Bonus savings' : r;
+  r.startsWith('priority') ? `Priority ${r.slice(9)}` : r === 'cap hit' ? 'Cap reached' : r === 'pool ran out' ? 'Pool ran out' : r === 'takes the rest' ? 'Takes the rest' : r === 'pinned' ? 'Pinned' : r === 'skipped' ? 'Skipped' : r === 'bonus savings' ? 'Bonus savings' : r === 'next step' ? 'Next step' : r === 'waits for other funds' ? 'Next step waits for other funds' : r;
 
 function MonthSheet({ row, funds, onClose, onChange }: { row: ForecastRow; funds: FundMeta[]; onClose: () => void; onChange: () => void }) {
   const c = useTheme();
