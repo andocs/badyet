@@ -45,6 +45,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 19:18 | rev-56..57 | Merged to main (00fc37e); OTA published (group 43e4cbf7). All three open items closed. User to apply migration 20261228000000. | 00fc37e
 - 2026-11-26 19:32 | rev-58 | Postponed reimbursements carry to next month's reimbursement day. Checks PASS. Not merged. Migrations 20261228 and 20261229. | -
 - 2026-11-26 19:37 | rev-58 | Merged to main (99ae92a); OTA published (group c4c2e934). User reports migrations applied. | 99ae92a
+- 2026-11-26 19:39 | cleanup | Deleted 72 merged rev/* and slice/* branches, local and on GitHub; only main remains. | -
 
 ## 4. Open questions
 
