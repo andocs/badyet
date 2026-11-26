@@ -25,3 +25,13 @@ describe("row mapping", () => {
     expect(assumptionsOf({ cip_multiplier_num: 100, assumed_raise_on: true, assumed_raise_bp: 300, assumed_raise_month: 4 }).assumedRaiseMonth).toBe(4);
   });
 });
+
+describe("paySettingsOf: SSS and Pag-IBIG", () => {
+  const row = { sss_override: 0, philhealth_override: null, pagibig_override: 0, tax_override_first: null, tax_override_second: null, other_deduction: 0, savings_plan_bp: 0 };
+  it("treats a stored 0 as nothing typed, so they come from your salary", () => {
+    expect(paySettingsOf(row)).toMatchObject({ sssOverride: null, pagibigOverride: null });
+  });
+  it("keeps an amount you did set", () => {
+    expect(paySettingsOf({ ...row, sss_override: 175_000, pagibig_override: 20_000 })).toMatchObject({ sssOverride: 175_000, pagibigOverride: 20_000 });
+  });
+});
