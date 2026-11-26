@@ -11,7 +11,7 @@ import { Money } from "./money";
 import { useAct } from "./settings";
 
 /** Your own notification patterns: wording with placeholders, tried on a sample message. The phone turns each into a regex. */
-export function PatternsSection({ patterns: patternsIn, only }: { patterns: CapturePattern[]; /** Show and add patterns for this source only (the source editor). */ only?: SourceKey }) {
+export function PatternsSection({ patterns: patternsIn, only, seed }: { patterns: CapturePattern[]; /** Show and add patterns for this source only (the source editor). */ only?: SourceKey; /** A first draft to fill the add form with (made from a sample). */ seed?: { template: string; sample: string; direction: "in" | "out" } }) {
   const ask = useConfirm();
   const toast = useToast();
   const add = useAct();
@@ -19,9 +19,9 @@ export function PatternsSection({ patterns: patternsIn, only }: { patterns: Capt
   const [, startDrop] = useTransition();
   const [picked, setSource] = useState<SourceKey>("custom");
   const source = only ?? picked;
-  const [direction, setDirection] = useState<"in" | "out">("in");
-  const [template, setTemplate] = useState("");
-  const [sample, setSample] = useState("");
+  const [direction, setDirection] = useState<"in" | "out">(seed?.direction ?? "in");
+  const [template, setTemplate] = useState(seed?.template ?? "");
+  const [sample, setSample] = useState(seed?.sample ?? "");
 
   const result = template.trim() !== "" && sample.trim() !== "" ? testPattern(template, direction, sample) : null;
 
@@ -29,7 +29,7 @@ export function PatternsSection({ patterns: patternsIn, only }: { patterns: Capt
     <div className="v-stack">
       <h3 className="v-capsec">{only ? "My patterns · tried first" : "Your own patterns"}</h3>
       <div className="v-xs v-muted">
-        Teach the app a notification without waiting for an update. Write the wording with placeholders: <code>{"{amount}"}</code> the amount (required), <code>{"{name}"}</code> who it was with,
+        Write the wording with placeholders: <code>{"{amount}"}</code> the amount (required), <code>{"{name}"}</code> who it was with,
         {" "}<code>{"{last4}"}</code> the last digits of your account, <code>{"{ref}"}</code> a reference number, <code>{"{any}"}</code> anything to skip. Yours are tried before the built-in readers, on notifications and on emails.
       </div>
       {patterns.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No patterns yet.</p> : (
@@ -47,8 +47,10 @@ export function PatternsSection({ patterns: patternsIn, only }: { patterns: Capt
         </div>
       )}
 
+      {/* Folded until you want it; a draft made from a sample opens it. */}
+      <details className="v-addpat" open={seed ? true : undefined}>
+        <summary>+ Add a pattern</summary>
       <div className="v-cappanel">
-        <h3 className="v-capsec">Add a pattern</h3>
         <div className="v-grid2">
           {only ? null : (
             <label className="v-field">For
@@ -84,6 +86,7 @@ export function PatternsSection({ patterns: patternsIn, only }: { patterns: Capt
           }, "Pattern added.")}>Save pattern</button>
         </div>
       </div>
+      </details>
     </div>
   );
 }

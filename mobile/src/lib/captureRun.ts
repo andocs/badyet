@@ -1,8 +1,9 @@
 import { decide, type Decision } from '@/lib/capture/decide';
 import { canParse, matchText, parseNotification, type Parsed } from '@/lib/capture/parsers';
 import { madeLegFor, type MadeLeg } from '@/lib/capture/claim';
+import { placeCapture } from '@/lib/capture/place';
 import { counterLeg } from '@/lib/capture/held';
-import { buildRow, dedupeKey, resolveAccount, type AccountLite, type TxnInsert } from '@/lib/capture/row';
+import { buildRow, dedupeKey, type AccountLite, type TxnInsert } from '@/lib/capture/row';
 import type { CapturePattern } from '@/lib/capture/patterns';
 import { isRepeat, remember, type DedupeRule, type Recent } from '@/lib/capture/recent';
 import { sourceForPackage, type CaptureRule, type SourceConfig, type SourceKey } from '@/lib/capture/sources';
@@ -89,15 +90,8 @@ export async function runCapture(d: RunDeps): Promise<RunSummary> {
   let madeHere: MadeLeg[] = [];
   const place = async (h: Held): Promise<boolean> => {
     const cfg = cfgOf(h.parsed.source);
-    // A transfer or card payment rule names the accounts it can; what it names is used.
-    let plan = h.decision.transfer;
-    const half = h.decision.move;
-    const accountId = plan ? h.decision.accountId : (half?.own ?? (cfg ? resolveAccount(cfg, h.parsed, ctx.accounts) : null));
+    const { accountId, plan } = placeCapture(h.decision, h.parsed, cfg, ctx.accounts);
     if (!accountId) return false;
-    // Only the other side was named, and the message says whose this one is: both are known after all.
-    if (!plan && half?.other && half.other !== accountId) {
-      plan = h.parsed.direction === 'out' ? { fromAccountId: accountId, toAccountId: half.other } : { fromAccountId: half.other, toAccountId: accountId };
-    }
     let row = buildRow({ id: d.newId(), parsed: h.parsed, decision: h.decision, accountId, postTime: h.postTime, hash: h.hash, source: h.origin });
     if (plan) row = { ...row, kind: 'transfer', category_id: (await d.transferCategoryId?.()) ?? null };
     // Emails usually arrive after the phone alert for the same event. Only emails are checked, so two real purchases of the same amount in a row are both kept.
