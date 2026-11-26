@@ -48,11 +48,11 @@ describe("payslip builder", () => {
     expect(pay.second.takeHome).toBe(p(27_000 - 1_864.17 - 3_200 - 500));
   });
 
-  it("takes SSS and Pag-IBIG from the official tables, and PenBoost 750, when no amount is set", () => {
+  it("takes regular SS, the MPF part (PenBoost) and Pag-IBIG from the official tables when no amount is set", () => {
     const pay = buildMonthPay(salaryFor([]), { ...settings, sssOverride: null, pagibigOverride: null }, []);
     const amt = (src: string) => pay.second.lines.find((l) => l.source === src)?.amount;
-    // Base 50,000: SSS monthly salary credit is the 35,000 maximum, so 5% = 1,750; Pag-IBIG is 2% of the 10,000 cap.
-    expect([amt("sss"), amt("pagibig"), amt("penboost")]).toEqual([p(1_750), p(200), p(750)]);
+    // Base 50,000: the salary credit is the 35,000 maximum, so 5% = 1,750, split into 1,000 regular SS and 750 MPF; Pag-IBIG is 2% of the 10,000 cap.
+    expect([amt("sss"), amt("pagibig"), amt("penboost")]).toEqual([p(1_000), p(200), p(750)]);
   });
 
   it("lets the income tax line take a typed amount", () => {

@@ -143,10 +143,10 @@ export function ProjectedSheet({ on: onIn, pctBp, month: monthIn, onClose, onSav
  */
 /** What a contribution line is worked from, so it reads as based on your salary rather than "default". */
 const BASIS: Partial<Record<PayslipLineSpec['source'], string>> = {
-  sss: 'SSS table, from your salary',
+  sss: 'SSS table: regular SS, from your salary',
   pagibig: 'Pag-IBIG: 2% of your salary, up to ₱10,000',
   philhealth: 'PhilHealth: 2.5% of your base pay',
-  penboost: 'PenBoost: your usual amount, not from salary',
+  penboost: 'SSS table: MPF part, from your salary',
   income_tax: "Tax on this cutoff's taxable pay",
 };
 
@@ -219,7 +219,7 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
     setNewLabel('');
     setNewAmount('');
   };
-  // What the contribution lines come to with nothing typed: SSS and Pag-IBIG from the official tables, PhilHealth from the base, PenBoost's usual amount.
+  // What the contribution lines come to with nothing typed: SSS and Pag-IBIG from the official tables, PhilHealth from the base. PenBoost is the SSS MPF part.
   const defaults = useMemo(() => {
     const pay = buildMonthPay(salaryAt(input, month), input.settings, [], []);
     const out: Partial<Record<PayslipLineSpec['source'], Money>> = {};

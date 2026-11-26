@@ -170,7 +170,7 @@ export function SetupWizard({ thisMonth, rerun, existing }: { thisMonth: YearMon
                     <label className="v-field">Grade (optional)<input value={grade} maxLength={30} onChange={(e) => setGrade(e.target.value)} /></label>
                   </div>
                   <div className="v-two">
-                    <label className="v-field">SSS per month (₱, leave empty for the official table)<input value={sss} inputMode="decimal" onChange={(e) => setSss(e.target.value)} placeholder="From the SSS table" /></label>
+                    <label className="v-field">SSS per month, without the MPF part that is your PenBoost (₱, leave empty for the official table)<input value={sss} inputMode="decimal" onChange={(e) => setSss(e.target.value)} placeholder="From the SSS table" /></label>
                     <label className="v-field">Pag-IBIG per month (₱, leave empty for the official rate)<input value={pagibig} inputMode="decimal" onChange={(e) => setPagibig(e.target.value)} placeholder="2% up to ₱200" /></label>
                   </div>
                   <div className="v-note"><b>Your payslips differ between the 10th and the 25th?</b> You can place income tax, contributions and allowances on each cutoff in the payslip builder after setup. Raises and bonuses are added later from Salary and tax and Bonuses.</div>

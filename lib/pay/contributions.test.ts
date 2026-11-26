@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { p } from "@/lib/engine/fixtures";
-import { pagibigEmployee, sssEmployee, sssMonthlySalaryCredit } from "./contributions";
+import { pagibigEmployee, sssEmployee, sssMonthlySalaryCredit, sssMpf, sssRegular } from "./contributions";
 
 // Rows read off SSS Circular No. 2024-006 (effective January 2025): [pay, MSC, employee total].
 const SSS_ROWS: [number, number, number][] = [
@@ -23,6 +23,20 @@ describe("SSS employee share", () => {
   it.each(SSS_ROWS)("pay %s -> MSC %s, employee %s", (pay, msc, ee) => {
     expect(sssMonthlySalaryCredit(p(pay))).toBe(p(msc));
     expect(sssEmployee(p(pay))).toBe(p(ee));
+  });
+});
+
+describe("SSS employee share, split as the table splits it", () => {
+  it.each([
+    [10_000, 500, 0],
+    [20_000, 1_000, 0],
+    [20_250, 1_000, 25],
+    [25_000, 1_000, 250],
+    [61_115, 1_000, 750],
+  ])("pay %s -> regular SS %s, MPF %s", (pay, regular, mpf) => {
+    expect(sssRegular(p(pay))).toBe(p(regular));
+    expect(sssMpf(p(pay))).toBe(p(mpf));
+    expect(sssRegular(p(pay)) + sssMpf(p(pay))).toBe(sssEmployee(p(pay)));
   });
 });
 

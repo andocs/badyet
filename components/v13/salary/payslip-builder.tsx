@@ -7,7 +7,7 @@ import { money, parsePesos, type Money as MoneyValue } from "@/lib/domain/money"
 import { planBonuses } from "@/lib/engine/bonus";
 import { buildMonthPay, defaultTemplate, taxBreakdown, templateFor, type Payslip, type PayslipLineSpec, type PayslipTemplate } from "@/lib/engine/payslip";
 import type { PayCutoff } from "@/lib/engine/types";
-import { sssMonthlySalaryCredit } from "@/lib/pay/contributions";
+import { SSS_REGULAR_MAX_MSC, sssMonthlySalaryCredit } from "@/lib/pay/contributions";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import { salaryAt, type SalaryInput } from "@/lib/salary/view";
 import { Money } from "../money";
@@ -231,7 +231,7 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
         <div key={d.key} className="v-plr">
           <div className="v-grow v-nm"><b>{line.label}</b>
             <small>
-              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.source === "custom" ? "your line" : d.spec.source === "penboost" ? (d.spec.amountOverride != null ? "your usual amount, not from your salary" : "usual amount, not from your salary") : d.spec.amountOverride != null ? "your own value, not from your salary" : d.spec.source === "sss" ? `SSS table: 5% of salary credit ${fmt(sssMonthlySalaryCredit(salary.base))} a month` : d.spec.source === "pagibig" ? "2% of your salary, up to ₱10,000" : d.spec.source === "philhealth" ? "2.5% of your base pay" : "from your payroll settings"}
+              {d.spec.source === "base_share" ? <>{(d.spec.shareBp ?? 5000) / 100}% of <span className="amt">{fmt(salary.base)}</span></> : d.spec.source === "income_tax" ? "on this cutoff's own taxable pay" : d.spec.source === "custom" ? "your line" : d.spec.amountOverride != null ? "your own value, not from your salary" : d.spec.source === "sss" ? `SSS table, regular SS: 5% of salary credit ${fmt(money(Math.min(sssMonthlySalaryCredit(salary.base), SSS_REGULAR_MAX_MSC)))} a month` : d.spec.source === "penboost" ? `SSS table, MPF: 5% of the ${fmt(money(Math.max(0, sssMonthlySalaryCredit(salary.base) - SSS_REGULAR_MAX_MSC)))} of salary credit above ${fmt(money(SSS_REGULAR_MAX_MSC))} a month` : d.spec.source === "pagibig" ? "2% of your salary, up to ₱10,000" : d.spec.source === "philhealth" ? "2.5% of your base pay" : "from your payroll settings"}
             </small>
           </div>
           <div className="v-pla">

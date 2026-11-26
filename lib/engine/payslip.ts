@@ -1,7 +1,7 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { findBracket, taxPerCutoff, type TaxRow } from "@/lib/domain/pay";
 import { divRound, fromRatio, money, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
-import { pagibigEmployee, sssEmployee } from "@/lib/pay/contributions";
+import { pagibigEmployee, sssMpf, sssRegular } from "@/lib/pay/contributions";
 import { philhealthMonthly } from "@/lib/pay/philhealth";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import type { BonusPayment } from "./bonus";
@@ -67,11 +67,6 @@ export interface MonthPay {
  * second cutoff = half the base minus the other half of the tax, SSS, PhilHealth and Pag-IBIG. Allowances are added on the
  * cutoff each allowance says it lands in (the second by default).
  */
-/**
- * SSS and Pag-IBIG come from the official tables (lib/pay/contributions.ts) when no amount is typed. SSS PenBoost is your own
- * choice, so it uses the amount you gave when there is none on the line (decided 2026-11-22: 750 a month).
- */
-export const STANDARD_CONTRIBUTION = { penboost: money(75_000) } as const;
 
 export function defaultTemplate(cutoff: PayCutoff): PayslipTemplate {
   const common: PayslipLineSpec[] = [
@@ -161,13 +156,15 @@ export function buildMonthPay(
   rows: readonly TaxRow[] = TAX_ROWS,
 ): MonthPay {
   const { base } = salary;
-  const sss = settings.sssOverride ?? sssEmployee(base);
+  // The SSS table splits your share in two: regular SS is the SSS line, and the MPF part is the SSS PenBoost line.
+  const sss = settings.sssOverride ?? sssRegular(base);
+  const penboost = sssMpf(base);
   const pagibig = settings.pagibigOverride ?? pagibigEmployee(base);
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
 
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
   // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
-  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost: STANDARD_CONTRIBUTION.penboost };
+  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost };
   const mandatoryIn = (cutoff: PayCutoff): Money =>
     sum(
       templateFor(templates, cutoff, salary.month)
@@ -215,7 +212,7 @@ export function buildMonthPay(
       else if (spec.source === "sss") amount = sss;
       else if (spec.source === "philhealth") amount = philhealth;
       else if (spec.source === "pagibig") amount = pagibig;
-      else if (spec.source === "penboost") amount = STANDARD_CONTRIBUTION.penboost;
+      else if (spec.source === "penboost") amount = penboost;
       else amount = ZERO;
       lines.push({ kind: spec.kind, label: spec.label, source: spec.source, amount });
     }
