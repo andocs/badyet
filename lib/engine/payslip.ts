@@ -32,6 +32,8 @@ export interface PayslipLine {
   amount: Money;
   /** An other deduction set to show under a budget category: that category group's id. */
   ref?: string;
+  /** The amount was changed for this month only. */
+  edited?: boolean;
 }
 
 export interface Payslip {
@@ -162,6 +164,11 @@ export function buildMonthPay(
   const pagibig = settings.pagibigOverride ?? pagibigEmployee(base);
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
 
+  // "This month only" changes, which win over the layout's typed amounts and over a tax amount set for every month.
+  const edits = (settings.monthEdits ?? []).filter((e) => e.month === salary.month);
+  const editFor = (cutoff: PayCutoff, spec: PayslipLineSpec) =>
+    spec.source === "base_share" ? undefined : edits.find((e) => e.cutoff === cutoff && e.source === spec.source && (spec.source !== "custom" || e.label === spec.label));
+
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
   // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
   const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost };
@@ -169,7 +176,10 @@ export function buildMonthPay(
     sum(
       templateFor(templates, cutoff, salary.month)
         .lines.filter((l) => l.kind === "deduction" && l.source in sourceAmount)
-        .map((l) => l.amountOverride ?? sourceAmount[l.source]!),
+        .map((l) => {
+          const e = editFor(cutoff, l);
+          return e ? (e.amount ?? sourceAmount[l.source]!) : (l.amountOverride ?? sourceAmount[l.source]!);
+        }),
     );
   const baseIn = (cutoff: PayCutoff): Money =>
     mulBp(base, templateFor(templates, cutoff, salary.month).lines.find((l) => l.source === "base_share")?.shareBp ?? 5000);
@@ -219,6 +229,13 @@ export function buildMonthPay(
     // Tax overrides replace the tax line of that cutoff.
     const override = cutoff === "first" ? settings.taxOverrideFirst : settings.taxOverrideSecond;
     if (override !== null) for (const l of lines) if (l.source === "income_tax") l.amount = override;
+    // The template lines are first in `lines`, in the template's order.
+    template.lines.forEach((spec, i) => {
+      const e = editFor(cutoff, spec);
+      if (!e) return;
+      const calculated = spec.source === "income_tax" ? (override ?? (cutoff === "first" ? taxFirst : taxSecond)) : spec.source === "custom" ? (spec.amountOverride ?? ZERO) : sourceAmount[spec.source]!;
+      lines[i] = { ...lines[i]!, amount: e.amount ?? calculated, edited: true };
+    });
 
     for (const a of salary.allowances) {
       if (a.allowance.payslipCutoff === cutoff) lines.push({ kind: "earning", label: a.allowance.name, source: "allowance", amount: a.amount });

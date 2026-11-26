@@ -57,7 +57,19 @@ export interface OtherDeductionItem {
   groupId?: string | null;
 }
 
+/** A payslip line's amount changed for one month ("This month only"). */
+export interface PayslipEdit {
+  month: YearMonth;
+  cutoff: PayCutoff;
+  source: string;
+  /** Tells your own lines apart; the others there is one of per cutoff. */
+  label: string;
+  /** null = the calculated amount that month, even if the layout has a typed one. */
+  amount: Money | null;
+}
+
 export interface PaySettings {
+  monthEdits?: readonly PayslipEdit[];
   sssOverride: Money | null;
   philhealthOverride: Money | null;
   pagibigOverride: Money | null;

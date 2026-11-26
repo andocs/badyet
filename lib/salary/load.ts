@@ -1,3 +1,4 @@
+import { monthEditsOf } from "@/lib/pay/month-edits";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isoDate, type YearMonth } from "@/lib/domain/dates";
 import {
@@ -66,6 +67,8 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
   const labelExtra = await supabase.from("pay_settings").select("other_deduction_label").maybeSingle();
   // The list of other deductions is a newer migration still.
   const listExtra = await supabase.from("pay_settings").select("other_deductions").maybeSingle();
+  // "This month only" payslip changes; a database without that update has none.
+  const editRes = await supabase.from("payslip_month_edits").select("month, cutoff, source, label, amount");
 
   const ps = us.data as { first_payday_day: number; second_payday_day: number } | null;
 
@@ -85,7 +88,7 @@ export async function loadSalary(supabase: SupabaseClient): Promise<SalaryData> 
       events: rows<SalaryEventRow>(events).map(salaryEventOf),
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
       assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
-      settings: paySettingsOf(withPlanExtra(withPlanExtra(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra), labelExtra), listExtra)),
+      settings: { ...paySettingsOf(withPlanExtra(withPlanExtra(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra), labelExtra), listExtra)), monthEdits: monthEditsOf(editRes.error ? [] : ((editRes.data ?? []) as Parameters<typeof monthEditsOf>[0])) },
       templates: templatesOf(rows<TemplateRow>(templates), rows<TemplateLineRow>(tlines)),
       bonusRules: bonusRulesOf(ruleRows, rows<BonusSplitRow>(bsplits), instanceRows),
       bonusInstances: bonusInstancesOf(instanceRows, rows<BonusInstanceSplitRow>(binstSplits)),
