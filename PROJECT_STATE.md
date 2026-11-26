@@ -52,6 +52,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 21:01 | rev-59 | Mockup updated: other-side source choice, won't-pair result, demo switch out of step 5. Awaiting approval. | -
 - 2026-11-26 21:17 | rev-59 | Built unified Rules editor (web + phone), one-account fix, repeat-entry safeguard, Inbox Other account, sample and other-side tests. Checks, builds, Vercel PASS. Not tried on a signed-in page or a phone. No migration. | 64572ee
 - 2026-11-26 21:22 | rev-59 | Approved. Merged to main (88b0bf8); OTA published (group 87e576dd). No migration. | 88b0bf8
+- 2026-11-26 21:24 | cleanup | Deleted merged rev/59 branches, local and on GitHub; only main remains. | -
 
 ## 4. Open questions
 
