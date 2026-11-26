@@ -1411,6 +1411,33 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
     <div class="v-row v-sp"><button class="v-btn v-sm v-ghost">Remove GCash</button><div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div></div>
   </div></div></div>
 
+
+  <!-- 4. Testing both sides of one payment -->
+  <div class="m-frame"><div class="v-lab">4 · Test both sides (wallet pays the card)</div>
+  <div class="m-phone"><div class="m-screen">
+    <div class="v-row v-sp"><h2>Everything else from Maya</h2><span class="v-pill">Fallback</span></div>
+    <details class="m-acc"><summary><span class="m-step">2</span><span><b>How it's read</b><small>₱5,000.00 · money out · to Maya Black</small></span></summary><div><label class="v-field">Sample message<textarea rows="2">You paid ₱5,000.00 to Maya Black.</textarea></label>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money out</span><span class="v-pill v-ok">To Maya Black</span><span class="v-pill">Account: Maya</span></div><details class="m-acc"><summary><span class="v-pill v-warn">Built-in</span><span><b>Maya notification reader</b><small>4 message types</small></span></summary><div><div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Card payment</span><div class="v-sm">Payment of <mark>{amount}</mark> received on your <mark>{card name}</mark></div><div class="v-xs v-muted">Money in. The card name picks the account</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money sent</span><div class="v-sm">You transferred <mark>{amount}</mark> to <mark>{name}</mark>.</div><div class="v-xs v-muted">Money out. Also "paid" or "sent"</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money in</span><div class="v-sm">You received <mark>{amount}</mark> from <mark>{name}</mark></div><div class="v-xs v-muted">Money in, who sent it</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Wallet top-up</span><div class="v-sm">You received <mark>{amount}</mark> in your wallet via <mark>{channel}</mark></div><div class="v-xs v-muted">Money in. "via …" is optional</div></div></div></details></div></details>
+    <div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
+    <div class="m-shared">
+            <label class="v-field">The other side's message (optional)<textarea rows="2" data-other>Payment of ₱5,000.00 received on your Maya Black</textarea></label>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span></div>
+          </div>
+    <div class="v-testbox" role="status">
+            <div class="m-line"><span class="m-mark">✓</span><div><b>These two would pair</b></div></div>
+            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">Same amount, one out and one in, two different accounts</div></div>
+            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">"To Maya Black" names the other account</div></div>
+            <div class="m-line"><span class="m-mark m-off">⏱</span><div class="v-sm">They must also arrive within an hour of each other. A sample can't check that.</div></div>
+            <div class="v-lab">One linked transfer, waiting in the Inbox</div>
+              <div class="m-entry"><span>Maya<br><small class="v-muted">Transfer</small></span><b class="v-num">−₱5,000.00</b></div>
+              <div class="m-entry"><span>Maya Black<br><small class="v-muted">Transfer · lowers what you owe</small></span><b class="v-num">+₱5,000.00</b></div>
+            <div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>
+          </div>
+  </div></div></div>
+
 </div>
 <div class="m-bar"><button class="v-btn v-sm" id="theme">Light / dark</button></div>
 </div>

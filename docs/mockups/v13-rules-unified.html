@@ -1351,14 +1351,55 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 
           <div class="m-group">
             <div class="m-ghead"><b>Maya</b><span class="v-row" style="gap:8px"><span class="v-pill v-warn">Built-in reader</span><button class="v-sw" role="switch" aria-checked="true" aria-label="Maya on or off"></button></span></div>
-            <button class="m-item m-else" data-go="else"><span class="m-no">…</span><span><b>Everything else from Maya</b><small>Asks for the account and category</small></span></button>
+            <button class="m-item m-else" data-go="maya"><span class="m-no">…</span><span><b>Everything else from Maya</b><small>Asks for the account and category</small></span></button>
           </div>
           <button class="v-btn v-sm">+ Another app or bank</button>
         </section>
       </div>
 
+      <div id="editors">
+      <section class="v-card v-stack" id="maya-ed" hidden style="gap:14px">
+        <div class="v-row v-sp"><h2>Everything else from Maya</h2><span class="v-pill">Fallback</span></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">1</span><h3>Where to listen</h3></div><div class="v-chips"><span class="v-pill v-ok">com.paymaya ✕</span><button class="v-btn v-sm">+ App</button><button class="v-btn v-sm">+ Sender</button></div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">2</span><h3>How it's read</h3><span class="v-pill">Shared by all of Maya</span></div><div class="m-shared"><details class="m-acc"><summary><span class="v-pill v-warn">Built-in</span><span><b>Maya notification reader</b><small>4 message types</small></span></summary><div><div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Card payment</span><div class="v-sm">Payment of <mark>{amount}</mark> received on your <mark>{card name}</mark></div><div class="v-xs v-muted">Money in. The card name picks the account</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money sent</span><div class="v-sm">You transferred <mark>{amount}</mark> to <mark>{name}</mark>.</div><div class="v-xs v-muted">Money out. Also "paid" or "sent"</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money in</span><div class="v-sm">You received <mark>{amount}</mark> from <mark>{name}</mark></div><div class="v-xs v-muted">Money in, who sent it</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Wallet top-up</span><div class="v-sm">You received <mark>{amount}</mark> in your wallet via <mark>{channel}</mark></div><div class="v-xs v-muted">Money in. "via …" is optional</div></div></div></details><label class="v-field">Sample message<textarea rows="2">You paid ₱5,000.00 to Maya Black.</textarea></label>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money out</span><span class="v-pill v-ok">To Maya Black</span><span class="v-pill">Account: Maya</span></div></div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">3</span><h3>Which messages</h3></div><div class="m-note">Everything from Maya that no rule caught.</div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">4</span><h3>What to do</h3></div>
+          <div class="v-grid2"><label class="v-field">Account<select><option>Read from the message, ask if unclear</option></select></label><label class="v-field">Category<select><option>Ask me in the Inbox</option></select></label></div>
+          <div class="v-xs v-muted">Keep Account on automatic: one account here would receive both sides.</div>
+        </div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
+          <div class="v-seg" role="group" aria-label="Mockup: other side" style="align-self:flex-start"><button type="button" aria-pressed="true" data-side="ok">Readable other side</button><button type="button" aria-pressed="false" data-side="bad">Unreadable other side</button></div>
+          <div data-pane="ok" class="v-stack" style="gap:10px"><div class="m-shared">
+            <label class="v-field">The other side's message (optional)<textarea rows="2" data-other>Payment of ₱5,000.00 received on your Maya Black</textarea></label>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span></div>
+          </div><div class="v-testbox" role="status">
+            <div class="m-line"><span class="m-mark">✓</span><div><b>These two would pair</b></div></div>
+            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">Same amount, one out and one in, two different accounts</div></div>
+            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">"To Maya Black" names the other account</div></div>
+            <div class="m-line"><span class="m-mark m-off">⏱</span><div class="v-sm">They must also arrive within an hour of each other. A sample can't check that.</div></div>
+            <div class="v-lab">One linked transfer, waiting in the Inbox</div>
+              <div class="m-entry"><span>Maya<br><small class="v-muted">Transfer</small></span><b class="v-num">−₱5,000.00</b></div>
+              <div class="m-entry"><span>Maya Black<br><small class="v-muted">Transfer · lowers what you owe</small></span><b class="v-num">+₱5,000.00</b></div>
+            <div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>
+          </div></div>
+          <div data-pane="bad" class="v-stack" style="gap:10px" hidden><div class="m-shared">
+            <label class="v-field">The other side's message (optional)<textarea rows="2">You paid your Maya Black bill of ₱5,000.00.</textarea></label>
+            <span class="v-pill v-bad" style="align-self:flex-start">No amount can be read</span><button type="button" class="v-btn v-sm v-pri" style="align-self:flex-start">+ Make a pattern from this message</button>
+          </div><div class="v-testbox" role="status">
+            <div class="m-line"><span class="m-mark m-bad">✕</span><div><b>These would not pair</b><div class="v-xs v-muted">The second message can't be read, so the app would ignore it.</div></div></div>
+            <div class="v-lab">Only the wallet side is saved</div>
+            <div class="m-entry"><span>Maya<br><small class="v-muted">Spending · choose a category</small></span><b class="v-num">−₱5,000.00</b></div>
+            <div class="v-xs v-muted">Maya Black would not go down. Add a pattern for the second message.</div>
+          </div></div>
+        </div>
+        <div class="v-row v-sp"><button class="v-btn v-sm v-ghost">Remove Maya</button><div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div></div>
+      </section>
       <!-- EDITOR: the same five sections for a rule and for "Everything else" -->
-      <section class="v-card v-stack" aria-labelledby="edh" style="gap:14px">
+      <section class="v-card v-stack" aria-labelledby="edh" id="main-ed" style="gap:14px">
         <div class="v-row v-sp"><h2 id="edh">Sample card payment</h2><span class="v-row" style="gap:8px"><span class="v-pill" id="kindpill">Rule 1</span><span class="v-pill v-ok">Saved</span></span></div>
         <div class="v-row v-sp v-wrap" data-rule style="gap:10px"><span class="v-row" style="gap:10px"><button class="v-sw" role="switch" aria-checked="true" aria-label="This rule on or off"></button><b class="v-sm">This rule is on</b></span><span class="v-row" style="gap:6px"><span class="v-xs v-muted">Order</span><button class="v-iconbtn v-s" aria-label="Try this rule earlier">↑</button><button class="v-iconbtn v-s" aria-label="Try this rule later">↓</button></span></div>
         <label class="v-field" data-rule>What is it for<input value="Sample card payment"></label>
@@ -1471,6 +1512,7 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
           <div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div>
         </div>
       </section>
+      </div>
     </div>
   </div>
   </main>
@@ -1491,6 +1533,8 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
   var $=function(q){return Array.prototype.slice.call(document.querySelectorAll(q));};
   var id=function(i){return document.getElementById(i);};
   function paint(){
+    id('maya-ed').hidden=view!=='maya';id('main-ed').hidden=view==='maya';id('bad').hidden=view==='maya';
+    if(view==='maya')return;
     $('[data-rule]').forEach(function(e){e.hidden=view!=='rule';});
     $('[data-else]').forEach(function(e){e.hidden=view!=='else';});
     id('edh').textContent=view==='rule'?'Sample card payment':'Everything else from GCash';
@@ -1519,11 +1563,14 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
   id('sample').insertAdjacentHTML('afterend','<button type="button" class="v-btn v-sm v-ghost" id="back" style="align-self:flex-start">Back to my sample</button>');
   id('back').onclick=function(){sampleKey='mine';unreadable=false;paint();};
   id('to').onchange=paint;
+  $('[data-side]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-side');$('[data-side]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});$('[data-pane]').forEach(function(p){p.hidden=p.getAttribute('data-pane')!==k;});};});
+  if(location.hash.indexOf('#maya')===0){view='maya';$('[data-go]').forEach(function(x){if(x.getAttribute('data-go')==='maya')x.setAttribute('aria-current','true');else x.removeAttribute('aria-current');});}
   id('bad').onclick=function(){unreadable=!unreadable;paint();};
   id('theme').onclick=function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');};
   if(location.hash==='#pay'){sampleKey='pay';}
   if(location.hash==='#bad'){unreadable=true;} if(location.hash==='#else'){view='else';}
   paint();
+  if(location.hash==='#maya-bad'){document.querySelector('[data-side="bad"]').click();}
 })();
 </script>
 </body>
