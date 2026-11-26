@@ -141,6 +141,12 @@ export function monthOrder<T extends { id: string; rule: Fund["rule"] }>(inPrior
   return [...inPriority.filter(resets), ...inPriority.filter((f) => !resets(f))];
 }
 
+/** A saved month order limited to the funds that can still be ordered, with any it does not name added at the end. */
+export function cleanOrder(saved: readonly string[], current: readonly string[]): string[] {
+  const kept = saved.filter((id) => current.includes(id));
+  return [...kept, ...current.filter((id) => !kept.includes(id))];
+}
+
 /**
  * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, add the payroll
  * savings plan, pour bonus savings down the month's order (each fund up to its cap; see the passes below), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
@@ -151,10 +157,15 @@ export function allocateFunds(
   start: Readonly<Record<string, Money>>,
   months: readonly FundForecastMonth[],
   overrides: readonly MonthOverride[] = [],
-  /** The fund the payroll savings plan feeds: it never resets, so the plan's money is not wiped each year. */
+  /**
+   * The fund the payroll savings plan feeds. It is separate from general savings: it gets only the plan's money (none of the pool or of
+   * bonus savings), never resets, and never makes a step fund wait.
+   */
   planFundId: string | null = null,
 ): FundMonth[] {
   const funds = defaultOrder(fundsIn.filter((f) => !f.archived));
+  /** The funds general savings (the pool and bonus savings) can go to. */
+  const general = funds.filter((f) => f.id !== planFundId);
   const balance: Record<string, Money> = {};
   for (const f of funds) balance[f.id] = start[f.id] ?? ZERO;
   const overrideOf = new Map(overrides.map((o) => [o.month, o]));
@@ -182,8 +193,9 @@ export function allocateFunds(
       rows.get(fundId)!.plan = credit;
     }
 
-    const listed = (o?.order ?? []).map((id) => funds.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
-    const order = [...listed, ...monthOrder(funds, m.month, planFundId).filter((f) => !listed.includes(f))];
+    for (const f of funds) if (f.id === planFundId) rows.get(f.id)!.reasons.push("Payroll savings plan only");
+    const listed = (o?.order ?? []).map((id) => general.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
+    const order = [...listed, ...monthOrder(general, m.month).filter((f) => !listed.includes(f))];
 
     // Bonus savings fill funds down this month's order (a chosen fund first, if the month names one), passing over skipped and full
     // funds, in three passes: every fund with a limit (a step fund only to its first step); then, once every other capped fund is
@@ -191,7 +203,7 @@ export function allocateFunds(
     // steps). "none" keeps it out of every fund.
     let waiting = m.bonusSavings ?? ZERO;
     if (o?.overflow !== "none") {
-      const first = funds.find((f) => f.id === o?.overflow);
+      const first = general.find((f) => f.id === o?.overflow);
       const queue = (first ? [first, ...order.filter((x) => x !== first)] : order).filter((f) => !skips.has(f.id));
       const pour = (f: Fund, upTo: Money | null) => {
         const taken = upTo === null ? waiting : min(waiting, upTo);
@@ -207,14 +219,14 @@ export function allocateFunds(
       const stepping = queue.some((f) => hasLaterSteps(f, balance[f.id]!));
       const noCap = (f: Fund) => priorityRoom(f, balance[f.id]!) === null;
       for (const f of queue) if (!(stepping && noCap(f))) pour(f, priorityRoom(f, balance[f.id]!));
-      for (const f of queue) if (firstStop(f) !== null && othersFull(f, funds, balance, skips)) pour(f, room(f, balance[f.id]!));
+      for (const f of queue) if (firstStop(f) !== null && othersFull(f, general, balance, skips)) pour(f, room(f, balance[f.id]!));
       for (const f of queue) if (noCap(f)) pour(f, null);
     }
     bonusUnplaced = (bonusUnplaced + waiting) as Money;
 
     let left = m.pool > 0 ? m.pool : ZERO;
     const pinned = new Set<string>();
-    for (const f of funds) {
+    for (const f of general) {
       const pin = pins[f.id];
       if (pin === undefined || skips.has(f.id)) continue;
       const r = room(f, balance[f.id]!);
@@ -261,7 +273,7 @@ export function allocateFunds(
       const row = rows.get(f.id)!;
       const r = room(f, balance[f.id]!);
       if (r !== null && r <= 0) continue;
-      if (!othersFull(f, funds, balance, skips)) {
+      if (!othersFull(f, general, balance, skips)) {
         if (balance[f.id]! >= firstStop(f)!) row.reasons.push("waits for other funds");
         continue;
       }

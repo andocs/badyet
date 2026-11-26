@@ -133,7 +133,9 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
   const inPriority = (fundRows.data ?? []) as { id: string; rule: 'steps' | 'cap' | 'reset' | 'fixed' }[];
   const plan = await supabase.from('pay_settings').select('savings_plan_fund_id').maybeSingle();
   const planFundId = (plan?.data as { savings_plan_fund_id?: string | null } | null | undefined)?.savings_plan_fund_id ?? null;
-  const defaultOrder = inPriority.map((f) => f.id);
+  // The payroll savings plan's fund is separate from general savings: it is never ordered, pinned or skipped.
+  const general = inPriority.filter((f) => f.id !== planFundId);
+  const defaultOrder = general.map((f) => f.id);
   if (!defaultOrder.includes(input.fundId)) return { error: 'That fund was not found.' };
 
   for (const month of input.months) {
@@ -149,7 +151,7 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
       else if (r.pin_amount !== null) pins[r.fund_id] = r.pin_amount;
     }
     let order = row?.fund_order ?? null;
-    if (input.op === 'first') order = [input.fundId, ...(order ?? monthOrder(inPriority, month, planFundId).map((f) => f.id)).filter((id) => id !== input.fundId)];
+    if (input.op === 'first') order = [input.fundId, ...(order ?? monthOrder(general, month).map((f) => f.id)).filter((id) => id !== input.fundId)];
     if (input.op === 'pin') {
       pins[input.fundId] = input.amount as number;
       const i = skips.indexOf(input.fundId);

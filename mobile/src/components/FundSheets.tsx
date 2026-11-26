@@ -112,7 +112,7 @@ export function FundSheet({ fund, color, accounts, planFund, onClose, onSaved }:
       <Field label="Payroll savings plan">
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13, flex: 1 }}>
-            Goes into this fund, in full, and this fund never resets. Only one fund can have it{planFund && planFund.id !== fund?.id && linkPlan ? `; this moves it from ${planFund.name}` : ''}.
+            Goes into this fund, in full. This fund never resets and gets none of your general savings. Only one fund can have it{planFund && planFund.id !== fund?.id && linkPlan ? `; this moves it from ${planFund.name}` : ''}.
           </Text>
           <Switch value={linkPlan} onValueChange={setLinkPlan} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Payroll savings plan goes into this fund" />
         </View>

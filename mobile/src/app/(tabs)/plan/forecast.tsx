@@ -1,4 +1,4 @@
-import { monthOrder } from '@/lib/engine/funds';
+import { cleanOrder, monthOrder } from '@/lib/engine/funds';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -298,8 +298,11 @@ export default function Forecast() {
       {data && editing && rows.find((r) => r.month === editing) ? (
         <OverrideSheet
           row={rows.find((r) => r.month === editing)!}
-          funds={monthOrder(data.funds, editing, data.budget.salary.input.settings.savingsPlanFundId ?? null).map((f) => ({ id: f.id, name: f.name }))}
-          order={data.overrides.find((o) => o.month === editing)?.order ?? null}
+          funds={monthOrder(data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId), editing).map((f) => ({ id: f.id, name: f.name }))}
+          order={(() => {
+            const saved = data.overrides.find((o) => o.month === editing)?.order;
+            return saved ? cleanOrder(saved, monthOrder(data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId), editing).map((f) => f.id)) : null;
+          })()}
           pins={Object.fromEntries(Object.entries(data.overrides.find((o) => o.month === editing)?.pins ?? {}).map(([k, v]) => [k, v as number]))}
           skips={data.overrides.find((o) => o.month === editing)?.skips ?? []}
           note={data.notes.get(editing) ?? ''}
@@ -315,7 +318,7 @@ export default function Forecast() {
       {data && bulk ? (
         <BulkSheet
           months={rows.filter((r) => r.year === shownYear).map((r) => r.month)}
-          funds={data.funds.map((f) => ({ id: f.id, name: f.name }))}
+          funds={data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId).map((f) => ({ id: f.id, name: f.name }))}
           onClose={() => setBulk(false)}
           onSaved={() => {
             setBulk(false);

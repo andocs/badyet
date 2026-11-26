@@ -208,3 +208,28 @@ describe("a step fund's later steps wait for every other capped fund", () => {
     expect(got(m)).toEqual([0, p(10_000), 0, p(20_000)]);
   });
 });
+
+describe("the payroll savings plan fund is separate from general savings", () => {
+  const funds = [
+    { id: "ef", name: "Emergency", priority: 1, rule: "steps" as const, tranches: [p(100_000)], target: p(500_000) },
+    { id: "plan", name: "Long term", priority: 2, rule: "fixed" as const, fixedAmount: p(5_000), target: p(900_000) },
+    { id: "travel", name: "Travel", priority: 3, rule: "cap" as const, target: p(20_000) },
+  ];
+  const month = (over: Record<string, unknown> = {}) => ({ month: "2027-02" as never, pool: p(50_000), bonusSavings: p(10_000), planCredits: { plan: p(4_000) }, ...over });
+  const of = (m: ReturnType<typeof allocateFunds>[number], id: string) => m.funds.find((f) => f.fundId === id)!;
+
+  it("gets only the plan's money: nothing from the pool or from bonus savings", () => {
+    const [m] = allocateFunds(funds, {}, [month()], [], "plan");
+    expect(of(m!, "plan")).toMatchObject({ amount: 0, bonus: 0, plan: p(4_000), balanceAfter: p(4_000), reasons: ["Payroll savings plan only"] });
+    expect(of(m!, "ef").amount + of(m!, "ef").bonus + of(m!, "travel").amount + of(m!, "travel").bonus + m!.unplaced + m!.bonusUnplaced).toBe(p(60_000));
+  });
+  it("never makes the emergency fund wait, even though it has a cap it has not reached", () => {
+    const [m] = allocateFunds(funds, { ef: p(100_000), travel: p(20_000) }, [month({ bonusSavings: p(0) })], [], "plan");
+    expect(of(m!, "ef").amount).toBe(p(50_000));
+  });
+  it("ignores an old order, pin or chosen-first that names it", () => {
+    const [m] = allocateFunds(funds, {}, [month()], [{ month: "2027-02" as never, order: ["plan", "travel", "ef"], pins: { plan: p(9_000) }, overflow: "plan" }], "plan");
+    expect([of(m!, "plan").amount, of(m!, "plan").bonus]).toEqual([0, 0]);
+    expect(of(m!, "travel").bonus + of(m!, "travel").amount).toBe(p(20_000));
+  });
+});
