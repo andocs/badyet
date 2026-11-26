@@ -1,0 +1,1594 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rules, one editor · mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@500;600;700&family=Gabarito:wght@700;800&display=swap" rel="stylesheet">
+<style>/* Design tokens: see DESIGN.md. Dark is the default theme. */
+:root,
+:root[data-theme="dark"] {
+  --bg: #0a1320;
+  --surface: #101c2e;
+  --soft: #17263b;
+  --ink: #e8eef7;
+  --muted: #93a5bd;
+  --line: #223349;
+  --accent: #34d399;
+  --on-accent: #04281c;
+  --accent-text: #5ee6b4;
+  --err: #ff8a8a;
+  --tint: #0f3a33;
+  --accent-2: #7fa8ff;
+  --rail: #0c1726;
+  --bucket-1: #34d399;
+  --bucket-2: #7fa8ff;
+  --bucket-3: #f6c453;
+  --w-gcash: #7fa8ff;
+  --w-maya: #34d399;
+  --w-bpi: #ff8a8a;
+  --w-vybe: #c4a0ff;
+  --hero: linear-gradient(135deg, #10294a, #0b5a4e);
+  --glow: rgba(52, 211, 153, 0.35);
+  --shadow: none;
+}
+:root[data-theme="light"] {
+  --bg: #f2f5f9;
+  --surface: #ffffff;
+  --soft: #e8eef5;
+  --ink: #0e1b2e;
+  --muted: #556579;
+  --line: #e1e8f0;
+  --accent: #087a5a;
+  --on-accent: #ffffff;
+  --accent-text: #087a5a;
+  --err: #c23a3a;
+  --tint: #ddf5ec;
+  --accent-2: #2f5bd7;
+  --rail: #ffffff;
+  --bucket-1: #087a5a;
+  --bucket-2: #2f5bd7;
+  --bucket-3: #c9871a;
+  --w-gcash: #2f5bd7;
+  --w-maya: #087a5a;
+  --w-bpi: #c23a3a;
+  --w-vybe: #7a3fb8;
+  --hero: linear-gradient(135deg, #0f2a4a, #0b6b5c);
+  --glow: rgba(52, 211, 153, 0.4);
+  --shadow: 0 6px 20px rgba(14, 27, 46, 0.05);
+}
+:root {
+  --radius-card: 10px;
+  --radius-hero: 14px;
+  --radius-ctl: 999px;
+  --radius-sm: 8px;
+  --card-1: #2f5bd7;
+  --card-2: #087a5a;
+  --card-3: #b03030;
+  --card-4: #7a3fb8;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font: 500 15px/1.45 var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--accent); color: var(--on-accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, .disp { font-family: var(--font-display), system-ui, sans-serif; font-weight: 800; letter-spacing: -0.025em; }
+h1 { font-size: 30px; line-height: 1.12; margin: 0; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+.num { font-variant-numeric: tabular-nums; font-weight: 700; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.lab { font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* shell */
+.shell { display: grid; grid-template-columns: 232px 1fr; min-height: 100vh; }
+.rail { background: var(--rail); border-right: 1px solid var(--line); padding: 22px 14px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+.brand { display: flex; align-items: center; gap: 9px; font: 800 20px var(--font-display), sans-serif; letter-spacing: -0.02em; padding: 0 10px 18px; }
+.brand i { width: 26px; height: 26px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: block; }
+.rail nav { flex: 1; }
+.rail .grp { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 16px 12px 6px; }
+.rail .grp:first-child { padding-top: 4px; }
+.rail a, .rail .off { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-sm); color: var(--muted); text-decoration: none; font-weight: 600; margin-bottom: 2px; }
+.rail a:hover { background: var(--soft); color: var(--ink); }
+.rail a[aria-current="page"] { background: var(--tint); color: var(--accent-text); font-weight: 700; box-shadow: inset 3px 0 0 var(--accent); }
+.rail .off { opacity: 0.55; cursor: default; }
+.ico { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tools { border-top: 1px solid var(--line); padding-top: 12px; display: grid; gap: 6px; }
+.tool { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); font: 600 14px var(--font-body), system-ui, sans-serif; cursor: pointer; text-align: left; }
+.tool:hover { background: var(--soft); color: var(--ink); }
+.tool .ico { width: 18px; height: 18px; }
+.rail .signout { margin: 0; }
+.content { min-width: 0; }
+.main { padding: 32px 32px 64px; width: 100%; max-width: 1680px; margin: 0 auto; }
+.mnav { display: none; }
+
+/* primitives */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-card); padding: 20px; box-shadow: var(--shadow); }
+.btn { font: 700 14px var(--font-display), sans-serif; background: var(--accent); color: var(--on-accent); border: 0; border-radius: var(--radius-ctl); padding: 10px 20px; min-height: 42px; cursor: pointer; transition: transform 0.14s cubic-bezier(0.16, 1, 0.3, 1), filter 0.14s; }
+.btn:hover { filter: brightness(1.06); transform: translateY(-1px); }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+.btn.ghost { background: var(--soft); color: var(--ink); }
+.pill { display: inline-flex; align-items: center; font-weight: 700; font-size: 12px; border-radius: var(--radius-ctl); padding: 4px 10px; background: var(--tint); color: var(--accent-text); white-space: nowrap; }
+.pill.quiet { background: var(--soft); color: var(--muted); }
+.bar { height: 10px; background: var(--soft); border-radius: var(--radius-ctl); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: var(--radius-ctl); background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.row { display: flex; justify-content: space-between; gap: 10px; align-items: center; min-height: 46px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: 8px; }
+.head { display: flex; justify-content: space-between; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 24px; }
+.split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 24px; align-items: start; }
+.stack { display: grid; gap: 24px; }
+.mt { margin-top: 24px; }
+
+/* hero */
+.hero { background: var(--hero); color: #fff; border-radius: var(--radius-hero); padding: 28px; position: relative; overflow: hidden; margin-bottom: 18px; }
+.hero::before { content: ""; position: absolute; right: -70px; top: -90px; width: 360px; height: 360px; border-radius: 50%; background: radial-gradient(circle, var(--glow), transparent 65%); }
+.hero > * { position: relative; }
+.hero .lab, .hero .sub { color: #b9d4e8; }
+.hero .pill { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.hero .bar { background: rgba(255, 255, 255, 0.18); max-width: 380px; }
+.hero-inner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.balance { font: 800 52px/1.05 var(--font-display), sans-serif; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin: 8px 0 12px; }
+.balance small { font-size: 0.5em; opacity: 0.8; margin-right: 4px; }
+.hero-actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; flex-wrap: wrap; }
+.pip { width: 120px; height: 120px; flex: none; animation: bob 3.2s ease-in-out infinite; }
+.pip .smile-big { display: none; }
+.pip.happy .smile { display: none; }
+.pip.happy .smile-big { display: inline; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(-2deg); } }
+
+/* wallet cards */
+.wallets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.wcard { border-radius: var(--radius-card); padding: 16px; color: #fff; background: linear-gradient(135deg, var(--k), color-mix(in srgb, var(--k) 55%, #000)); position: relative; overflow: hidden; min-height: 128px; display: flex; flex-direction: column; justify-content: space-between; }
+.wcard::after { content: ""; position: absolute; right: -30px; top: -30px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255, 255, 255, 0.12); }
+.wcard .top { display: flex; justify-content: space-between; align-items: center; }
+.wcard .chip { width: 30px; height: 22px; border-radius: 4px; background: linear-gradient(135deg, #f6d98b, #d9a73f); }
+.wcard .amt { font: 800 21px var(--font-display), sans-serif; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.wcard small { opacity: 0.85; }
+
+/* transfers */
+.tx { display: grid; grid-template-columns: 44px 1fr auto; gap: 14px; align-items: center; min-height: 62px; border-top: 1px solid var(--line); }
+.tx:first-child { border-top: 0; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font: 800 15px var(--font-display), sans-serif; color: var(--c); background: color-mix(in srgb, var(--c) 16%, transparent); }
+.tx .name { font-weight: 700; }
+.tx .right { text-align: right; display: grid; gap: 4px; justify-items: end; }
+.tx .right .num { font-size: 16px; }
+.tx button.mark { all: unset; cursor: pointer; }
+.tx button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius-ctl); }
+.empty { padding: 18px 0 4px; color: var(--muted); display: flex; gap: 12px; align-items: center; }
+
+/* charts */
+.chart { width: 100%; height: auto; display: block; }
+.chart text { font-family: var(--font-body), sans-serif; font-weight: 600; font-size: 11px; fill: var(--muted); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.ring-wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+/* motion: one authored moment on load */
+.rise { animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.draw { stroke-dasharray: 1; animation: draw 1.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.grow { transform-box: fill-box; transform-origin: bottom; animation: growy 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes growy { from { transform: scaleY(0); } }
+.confetti { position: fixed; width: 9px; height: 14px; border-radius: 2px; pointer-events: none; z-index: 50; animation: fall 1.2s ease-out forwards; }
+@keyframes fall { to { transform: translate(var(--dx), var(--dy)) rotate(540deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* phone */
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { display: none; }
+  .main { padding: 16px 14px 96px; }
+  h1 { font-size: 25px; }
+  .balance { font-size: 40px; }
+  .hero { padding: 20px; }
+  .pip { width: 84px; height: 84px; }
+  .split { grid-template-columns: 1fr; }
+  .wallets { grid-template-columns: 1fr 1fr; }
+  .mnav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); z-index: 10; }
+  .mnav a, .mnav span { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; padding: 8px 2px; font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: none; min-height: 56px; }
+  .mnav .ico { width: 22px; height: 22px; }
+  .mnav [aria-current="page"] { color: var(--accent-text); font-weight: 800; box-shadow: inset 0 3px 0 var(--accent); }
+}
+
+/* forms, login, plans */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { width: min(420px, 100%); display: grid; gap: 14px; text-align: center; padding: 28px; }
+.login-card .pip { margin: 0 auto; }
+.form { display: grid; gap: 14px; text-align: left; }
+.field { display: grid; gap: 6px; }
+.input { font: inherit; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 10px 12px; min-height: 42px; width: 100%; }
+.input:hover { border-color: var(--muted); }
+.notice { padding: 10px 12px; border-radius: var(--radius-sm); margin: 0; text-align: left; font-weight: 600; }
+.notice.err { background: color-mix(in srgb, var(--err) 14%, transparent); color: var(--err); }
+.notice.ok { background: var(--tint); color: var(--accent-text); }
+.form-row { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+.plan { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; padding: 14px 0; border-top: 1px solid var(--line); }
+.plan:first-of-type { border-top: 0; }
+.plan-name { font-weight: 700; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.plan-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.plan-actions form { margin: 0; }
+.btn.sm { min-height: 34px; padding: 6px 14px; font-size: 13px; }
+.btn.danger { background: transparent; color: var(--err); border: 1px solid var(--err); }
+a.btn { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* links: our own look, never the browser's default violet. Text links in copy get a growing underline and an arrow. */
+a { color: var(--accent-text); text-decoration: none; }
+.main p a:not(.btn) { font-weight: 700; background: linear-gradient(var(--accent), var(--accent)) 0 100% / 0 2px no-repeat; padding-bottom: 1px; transition: background-size 0.2s; }
+.main p a:not(.btn):hover { background-size: 100% 2px; }
+.main p a:not(.btn)::after { content: " \2192"; opacity: 0.7; }
+
+/* plan picker: the list floats, so opening it never moves the Compare plans button */
+.planpick { position: relative; }
+.planpick > summary { list-style: none; }
+.planpick > summary::-webkit-details-marker { display: none; }
+.planpick > ul { position: absolute; top: 100%; left: 0; z-index: 20; min-width: 240px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); }
+.planpick a { color: var(--ink); }
+.planpick a[aria-current="page"] { background: var(--tint); color: var(--accent-text); }
+
+/* loading skeleton */
+.skel { background: var(--soft); border-radius: var(--radius-card); animation: skel 1.2s ease-in-out infinite alternate; }
+@keyframes skel { from { opacity: 0.5; } to { opacity: 1; } }
+
+/* payday strip at the top of the Left to spend panel */
+.paystrip { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: -28px -28px 20px; padding: 10px 28px; background: rgba(255, 255, 255, 0.12); border-bottom: 1px solid rgba(255, 255, 255, 0.16); }
+.paystrip .dotg { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgba(52, 211, 153, 0.3); }
+.paystrip .btn { min-height: 34px; padding: 6px 14px; font-size: 13px; }
+.paystrip-actions { display: flex; gap: 8px; }
+.paystrip-hide { margin-left: auto; }
+.hero .herotop { position: absolute; top: 16px; right: 20px; z-index: 1; }
+.iconbtn { display: inline-grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.16); color: #fff; cursor: pointer; }
+.iconbtn:hover { background: rgba(255, 255, 255, 0.26); }
+.iconbtn .ico { width: 18px; height: 18px; }
+/* Pip sits at the bottom right so the eye button above it has room */
+.hero .hero-inner .pip { align-self: flex-end; }
+@media (max-width: 760px) { .paystrip { margin: -20px -20px 16px; padding: 10px 20px; } }
+@media (max-width: 760px) { .form-row { grid-template-columns: 1fr; } }
+
+/* pay */
+.paytable { width: 100%; border-collapse: collapse; }
+.paytable th, .paytable td { padding: 10px 0; border-top: 1px solid var(--line); text-align: right; }
+.paytable thead th { border-top: 0; color: var(--muted); font-size: 13px; font-weight: 600; }
+.paytable tbody th { text-align: left; font-weight: 600; }
+.paytable tr.strong th, .paytable tr.strong td { font-weight: 800; border-top: 2px solid var(--ink); }
+.notice.warn { background: color-mix(in srgb, var(--bucket-3) 16%, transparent); color: var(--ink); }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* pay wizard */
+.steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0 0 4px; flex-wrap: wrap; }
+.steps li { padding: 4px 12px; border-radius: var(--radius-ctl); background: var(--soft); color: var(--muted); font-weight: 600; font-size: 13px; }
+.steps li[aria-current="step"] { background: var(--tint); color: var(--accent-text); }
+.steps li.done { color: var(--ink); }
+.segmented { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-ctl); overflow: hidden; width: fit-content; }
+.segmented button { font: inherit; font-weight: 700; border: 0; background: transparent; color: var(--muted); padding: 9px 20px; min-height: 40px; cursor: pointer; }
+.segmented button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+.wizard-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 6px; }
+.form h2 { margin: 0; }
+
+/* budget */
+.segmented a { font-weight: 700; color: var(--muted); padding: 9px 20px; min-height: 40px; display: inline-flex; align-items: center; text-decoration: none; }
+.segmented a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+.budget-state { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border-radius: var(--radius-sm); font-weight: 700; border: 1px solid var(--line); }
+.budget-state.ok { color: var(--accent-text); border-color: var(--accent-text); }
+.budget-state.over { color: var(--err); border-color: var(--err); }
+.split-bar { display: flex; height: 14px; border-radius: var(--radius-sm); overflow: hidden; gap: 2px; margin-top: 12px; background: var(--soft); }
+.bline { display: grid; grid-template-columns: minmax(0, 1fr) 9rem 8rem auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line); margin: 0; }
+.bline.add { border-top: 1px dashed var(--line); }
+.bline .input.num { text-align: right; }
+@media (max-width: 760px) { .bline { grid-template-columns: minmax(0, 1fr) 7rem; } .bline .btn { grid-column: auto; } .bline select { grid-column: 1 / -1; } }
+
+/* transfer */
+.head-tools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.segmented .seg-label { padding: 9px 14px; font-weight: 700; display: inline-flex; align-items: center; min-height: 40px; }
+.segmented a[aria-label] { padding: 9px 14px; }
+.trow { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 8px; align-items: center; min-height: 54px; border-top: 1px solid var(--line); margin: 0; }
+.trow .tname { font-weight: 600; }
+.trow.done .tname { color: var(--muted); text-decoration: line-through; }
+.trow.done .num { color: var(--muted); }
+.check { width: 44px; height: 44px; border: 0; background: transparent; cursor: pointer; position: relative; border-radius: 50%; }
+.check::before { content: ""; position: absolute; inset: 10px; border-radius: 50%; border: 2px solid var(--muted); transition: background 0.15s, border-color 0.15s; }
+.check[aria-pressed="true"]::before { background: var(--accent); border-color: var(--accent); }
+.check[aria-pressed="true"]::after { content: ""; position: absolute; left: 17px; top: 13px; width: 6px; height: 12px; border: solid var(--on-accent); border-width: 0 2.5px 2.5px 0; transform: rotate(40deg); }
+
+/* installments and subscriptions */
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .form-grid { grid-template-columns: 1fr; } }
+
+/* savings forecast */
+.forecast th, .forecast td { text-align: left; vertical-align: top; white-space: nowrap; }
+.forecast thead th { text-align: left; }
+.ovr { display: flex; gap: 6px; align-items: center; }
+.ovr .input { min-width: 9.5rem; }
+
+/* more (phone menu) */
+.more-group { margin-bottom: 18px; max-width: 640px; }
+.more-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.more-item:first-of-type { border-top: 0; }
+.more-item b { display: block; }
+.more-item:hover { color: var(--accent-text); }
+.more-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.more-actions form { margin: 0; }
+.input::placeholder { color: var(--muted); opacity: 1; }
+
+/* Now: the payday ritual (one decision per screen) */
+.now .steps { display: flex; gap: 6px; }
+.now .steps i { flex: 1; height: 5px; border-radius: var(--radius-ctl); background: var(--soft); }
+.now .steps i.on { background: var(--accent); }
+.now .steps i.now { background: linear-gradient(90deg, var(--accent) 50%, var(--soft) 50%); }
+.now .stage { display: flex; flex-direction: column; gap: 14px; max-width: 640px; margin: 12px auto 0; padding-bottom: 96px; }
+.now .stage h1 { font-size: clamp(26px, 5vw, 34px); line-height: 1.1; }
+.now .stage.done { align-items: center; text-align: center; padding-top: 12px; }
+.now .stage.done .pip { width: 96px; height: 96px; }
+.ritual-actions { display: flex; gap: 10px; position: sticky; bottom: 0; padding: 12px 0; background: linear-gradient(transparent, var(--bg) 30%); width: 100%; }
+.ritual-actions .btn { flex: 1; min-height: 48px; }
+.wal { border: 1px solid var(--line); border-radius: var(--radius-card); background: var(--surface); overflow: hidden; }
+.wal.open { border-color: var(--accent); }
+.wal-hd, .wal-ln { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; min-height: 56px; cursor: pointer; color: var(--ink); }
+.wal-ln { border-top: 1px solid var(--line); }
+.wal-ln.done b, .wal-ln.done .num { color: var(--muted); }
+.wal-hd:focus-visible, .wal-ln:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.wal-all { margin: 10px 14px 14px; }
+.chk { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; font-weight: 800; font-size: 14px; color: var(--on-accent); }
+.chk.on { background: var(--accent); border-color: var(--accent); }
+@media (max-width: 760px) { .ritual-actions { bottom: 52px; } .now .stage { padding-bottom: 130px; } }
+
+/* Set by components/hide-amounts.tsx. */
+/* Hide amounts: the figure is replaced by asterisks (the real text is made invisible, then ***** drawn over it). */
+html[data-hide="1"] :is(.num, .balance, .amt) { position: relative; display: inline-block; width: 3em; max-width: 100%; overflow: clip; white-space: nowrap; -webkit-text-fill-color: transparent; user-select: none; }
+html[data-hide="1"] :is(.balance, div.num) { display: block; }
+html[data-hide="1"] :is(td, th).num { display: table-cell; width: auto; overflow: visible; }
+html[data-hide="1"] :is(.num, .balance, .amt)::after { content: "*****"; position: absolute; inset: 0; text-align: inherit; white-space: nowrap; -webkit-text-fill-color: currentColor; font-family: ui-monospace, monospace; font-weight: 700; letter-spacing: 0; }
+html[data-hide="1"] svg text.amt { fill: transparent; -webkit-text-fill-color: transparent; }
+html[data-hide="1"] input[inputmode="decimal"] { -webkit-text-security: disc; }
+html[data-hide="1"] input[inputmode="decimal"]::placeholder { color: transparent; }
+
+/* Budget lines: read at a glance, tap to edit (components/budget-line.tsx) */
+.line-view { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); cursor: pointer; color: var(--ink); }
+.line-view .line-name { flex: 1; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.line-view:hover .line-name { color: var(--accent-text); }
+.line-view:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--radius-sm); }
+.line-edit { display: grid; grid-template-columns: minmax(0, 1fr) 9rem 8rem auto auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--accent); }
+.line-edit .input.num { text-align: right; }
+.line-status { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--accent-text); min-height: 1em; }
+.line-status.err { color: var(--err); }
+@media (max-width: 760px) { .line-edit { grid-template-columns: 1fr 1fr; } .line-edit input:first-child { grid-column: 1 / -1; } }
+.line-auto { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 0; border-top: 1px solid var(--line); }
+.line-auto .line-name { flex: 1; font-weight: 600; }
+
+/* Generated from docs/mockups/v13-shared.css (Night Emerald). Every class is prefixed v- and scoped under .v13 so the old pages are untouched until slice 7. */
+.v13{--blue:#7FA8FF;--gold:#F6C453;--gold-text:#F6C453;--gold-tint:#3a2f12;--red:#FF8A8A;--red-tint:#3b1f26;--violet:#C4A0FF;--teal:#5CD0E6;--pink:#F28BC8;--hero-a:#10294A;--hero-b:#0B5A4E;background:var(--bg);color:var(--ink);font:500 15px/1.45 var(--font-body),system-ui,sans-serif;min-height:100vh}
+:root[data-theme=light] .v13{--blue:#2F5BD7;--gold:#C9871A;--gold-text:#8A5A00;--gold-tint:#FBEFD2;--red:#C23A3A;--red-tint:#FBE4E4;--violet:#7A3FB8;--teal:#0F7A95;--pink:#B83A86;--hero-a:#0F2A4A;--hero-b:#0B6B5C}
+.v13 *{box-sizing:border-box}
+.v13 h1,.v13 h2,.v13 h3,.v13 .v-big,.v13 .v-disp{font-family:var(--font-display),system-ui,sans-serif;font-weight:800;letter-spacing:-.025em;margin:0;text-wrap:balance}
+.v13 h1{font-size:30px;line-height:1.12}.v13 h2{font-size:18px}.v13 h3{font-size:15px}
+.v13 a{color:var(--accent-text);font-weight:700;text-decoration:none}.v13 a:hover{text-decoration:underline;text-underline-offset:3px}
+.v13 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.v13 button{font:inherit;color:inherit}
+.v13 .v-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.v13 .v-muted{color:var(--muted)}.v13 .v-sm{font-size:13px}.v13 .v-xs{font-size:12px}
+.v13 .v-i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.v13 .v-num,.v13 .v-big{font-variant-numeric:tabular-nums}
+.v13 [hidden]{display:none!important}
+.v13{
+/* shell */
+.v-app{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}
+.v-rail{background:var(--rail);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column;gap:2px;position:sticky;top:0;height:100vh;align-self:start}
+.v-logo{display:flex;align-items:center;gap:10px;font:800 20px var(--font-display);padding:2px 10px 16px;letter-spacing:-.03em}
+.v-rail .v-grp{font-size:12px;font-weight:700;color:var(--muted);padding:14px 10px 4px;letter-spacing:.04em;text-transform:uppercase}
+.v-rail a,.v-tabs a{display:flex;align-items:center;gap:10px;color:var(--muted);font-weight:700}
+.v-rail a{padding:9px 10px;border-radius:8px;min-height:40px}
+.v-rail a:hover{background:var(--soft);text-decoration:none;color:var(--ink)}
+.v-rail a[aria-current]{background:var(--tint);color:var(--accent-text)}
+.v-rail .v-badge,.v-tabs .v-badge{margin-left:auto;background:var(--accent);color:var(--on-accent);border-radius:999px;font-size:12px;min-width:22px;height:22px;display:grid;place-items:center;padding:0 6px;font-weight:800}
+.v-rail .v-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:10px}
+.v-main{padding:24px clamp(16px,3vw,48px) 56px;width:100%;max-width:none}
+.v-narrow{max-width:600px;margin-inline:auto}
+.v-tabs{display:none}
+.v-subnav{display:flex;gap:6px;overflow-x:auto;margin:0 0 18px;padding-bottom:2px}
+.v-subnav a{flex:none;padding:7px 14px;border-radius:999px;background:var(--soft);color:var(--muted);font-size:13px;min-height:36px;display:inline-flex;align-items:center}
+.v-subnav a[aria-current]{background:var(--accent);color:var(--on-accent)}
+.v-subnav a:hover{text-decoration:none}
+@media(min-width:760px){.v-subnav{display:none}}
+@media(max-width:759px){
+ .v-app{display:block}.v-rail{display:none}
+ .v-main{padding:16px 14px 100px}
+ .v-tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;bottom:0;left:0;right:0;z-index:40;background:var(--rail);border-top:1px solid var(--line);padding-bottom:6px}
+ .v-tabs a{flex-direction:column;gap:2px;justify-content:center;padding:8px 2px 4px;font-size:12px;min-height:56px;position:relative}
+ .v-tabs a[aria-current]{color:var(--accent-text)}
+ .v-tabs .v-badge{position:absolute;top:4px;left:calc(50% + 4px);margin:0;min-width:18px;height:18px;font-size:11px}
+ .v-tabs .v-add{margin-top:-18px}.v-tabs .v-add span.v-fab{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;border:4px solid var(--bg)}
+ h1{font-size:25px}
+}
+/* controls: round */
+.v-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700;min-height:44px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:8px 18px;cursor:pointer;text-decoration:none}
+.v-btn:hover{border-color:var(--muted);text-decoration:none}
+.v-btn.v-pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.v-btn.v-ghost{background:none}
+.v-btn.v-sm{min-height:36px;padding:4px 14px;font-size:13px}
+.v-btn[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.v-iconbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--soft);display:grid;place-items:center;cursor:pointer;flex:none}
+.v-iconbtn.v-s{width:36px;height:36px}
+.v-iconbtn:hover{border-color:var(--muted)}
+.v-iconbtn[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.v-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.v-pill.v-ok{background:var(--tint);color:var(--accent-text)}.v-pill.v-warn{background:var(--gold-tint);color:var(--gold-text)}.v-pill.v-bad{background:var(--red-tint);color:var(--red)}
+.v-pill.v-est{border:1px dashed var(--muted);background:none}
+.v-seg{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;max-width:100%;overflow-x:auto}
+.v-seg button{border:0;background:none;color:var(--muted);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;min-height:36px;cursor:pointer;white-space:nowrap}
+.v-seg button[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+.v-chk{width:28px;height:28px;border-radius:8px;border:2px solid var(--muted);display:grid;place-items:center;flex:none;background:none;cursor:pointer;color:transparent;padding:0}
+.v-chk[aria-checked=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.v-chk .v-i{width:16px;height:16px;stroke-width:3}
+.v-field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.v-field input,.v-field select,.v-field textarea{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.v-field input:focus,.v-field select:focus,.v-field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.v-field input[type=range]{padding:0;accent-color:var(--accent)}
+.v-sw{position:relative;width:46px;height:28px;border-radius:999px;background:var(--soft);border:1px solid var(--line);cursor:pointer;flex:none;padding:0}
+.v-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .15s}
+.v-sw[aria-checked=true]{background:var(--accent);border-color:var(--accent)}.v-sw[aria-checked=true]::after{transform:translateX(18px);background:var(--on-accent)}
+/* structure: near square */
+.v-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;box-shadow:var(--shadow)}
+.v-card.v-flat{box-shadow:none;background:none}
+.v-stack{display:flex;flex-direction:column;gap:14px}.v-stack.v-l{gap:24px}
+.v-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.v-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:759px){.v-grid2,.v-grid3{grid-template-columns:1fr}}
+.v-row{display:flex;align-items:center;gap:12px}.v-row.v-top{align-items:flex-start}.v-sp{justify-content:space-between}.v-wrap{flex-wrap:wrap}.v-grow{flex:1;min-width:0}
+.v-hero{border-radius:14px;padding:20px;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));color:#E8EEF7;position:relative;overflow:hidden}
+.v-hero::after{content:"";position:absolute;right:-40px;top:-50px;width:200px;height:200px;background:radial-gradient(circle,rgba(52,211,153,.35),transparent 70%);pointer-events:none}
+.v-hero .v-muted,.v-hero .v-lbl{color:#B9C9DD}
+.v-hero .v-pill{background:rgba(255,255,255,.14);color:#E8EEF7}
+.v-hero .v-bar{background:rgba(255,255,255,.18)}.v-hero .v-bar i{background:#5EE6B4}
+.v-hero .v-btn{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff}
+.v-hero .v-btn.v-pri{background:#34D399;border-color:#34D399;color:#04281C}
+.v-lbl{font-size:13px;font-weight:600;color:var(--muted)}
+.v-big{font-size:44px;line-height:1.05}.v-big.v-xl{font-size:52px}
+@media(max-width:759px){.v-big{font-size:38px}.v-big.v-xl{font-size:40px}}
+.v-bar{height:8px;border-radius:999px;background:var(--soft);overflow:hidden;position:relative}.v-bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.v-bar.v-warn i{background:var(--gold)}.v-bar.v-bad i{background:var(--red)}
+.v-bar.v-t{height:12px}
+.v-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.v-pos{color:var(--accent-text)}.v-neg{color:var(--red)}.v-warnt{color:var(--gold-text)}
+.v-hr{border:0;border-top:1px solid var(--line);margin:0}
+/* lists */
+.v-list{list-style:none;margin:0;padding:0}
+.v-list>li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);min-height:56px}
+.v-list>li:last-child{border-bottom:0}
+.v-av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 14px var(--font-display);color:#fff;flex:none}
+.v-av.v-g{background:#2F5BD7}.v-av.v-m{background:#087A5A}.v-av.v-b{background:#B03030}.v-av.v-v{background:#7A3FB8}
+/* sheets */
+.v-sheet{background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 0 0;padding:18px;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+.v-sheet .v-grab{width:44px;height:5px;border-radius:999px;background:var(--line);margin:-6px auto 14px}
+.v-scrim{position:fixed;inset:0;background:rgba(5,10,18,.6);z-index:60;display:none}
+.v-scrim.v-on{display:block}
+.v-sheetfix{position:fixed;left:0;right:0;bottom:0;z-index:61;max-height:88vh;overflow:auto;display:none}
+.v-sheetfix.v-on{display:block}
+@media(min-width:760px){.v-sheetfix{left:auto;right:0;top:0;bottom:0;width:440px;border-radius:0;max-height:none;border-width:0 0 0 1px}.v-sheetfix .v-grab{display:none}}
+/* callouts */
+.v-note{border:1px dashed var(--line);border-radius:10px;padding:12px 14px;color:var(--muted);font-size:13px}
+.v-note b{color:var(--ink)}
+.v-flag{display:flex;gap:10px;align-items:flex-start;background:var(--gold-tint);color:var(--gold-text);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px}
+.v-flag.v-bad{background:var(--red-tint);color:var(--red)}
+.v-pip{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#FFE08A,#E5A91E);display:grid;place-items:center;position:relative;flex:none;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+.v-pip::before{content:"";position:absolute;top:-8px;left:24px;width:8px;height:12px;border-radius:8px 0 8px 0;background:#34D399}
+.v-pip::after{content:"";position:absolute;top:20px;left:15px;width:22px;height:11px;border-bottom:3px solid #6a4a00;border-radius:0 0 22px 22px}
+/* charts */
+svg.v-chart{width:100%;height:auto;display:block;overflow:visible}
+svg.v-chart text{font:600 11px var(--font-body),sans-serif;fill:var(--muted)}
+svg.v-chart .v-grid{stroke:var(--line);stroke-width:1}
+svg.v-chart .v-axis{stroke:var(--muted);stroke-width:1}
+svg.v-chart .v-hit{fill:transparent;cursor:pointer}
+svg.v-chart .v-hit:focus-visible,svg.v-chart .v-hit:hover{fill:var(--ink);fill-opacity:.08;outline:none}
+.v-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:600}
+.v-legend span{display:inline-flex;align-items:center;gap:6px}
+.v-sw-dash{width:18px;height:0;border-top:2px dashed currentColor;display:inline-block}
+@media (prefers-reduced-motion:no-preference){.v-bar i{animation:v13grow .6s cubic-bezier(.16,1,.3,1)}}
+/* account cards: one flat brand colour per account */
+.v-acard{position:relative;overflow:hidden;border-radius:12px;padding:14px;color:#fff;background:var(--c,#4A5568);display:flex;flex-direction:column;gap:2px;min-height:118px;text-decoration:none;border:0;text-align:left;cursor:pointer;width:100%}
+.v-acard::before{content:"";position:absolute;right:-30px;top:-34px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.09)}
+.v-acard::after{content:"";position:absolute;right:30px;bottom:-60px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.06)}
+.v-acard>*{position:relative;z-index:1}
+.v-acard:hover{text-decoration:none;filter:brightness(1.07)}
+.v-acard .v-an{font:800 15px var(--font-display);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.v-acard .v-ak{font-size:12px;font-weight:600;opacity:.92}
+.v-acard .v-ab{font:800 22px var(--font-display);margin-top:auto;padding-top:10px;font-variant-numeric:tabular-nums}
+.v-acard .v-as{font-size:12px;opacity:.92;font-weight:600}
+.v-acard .v-tagx{font-size:11px;font-weight:700;background:rgba(255,255,255,.2);border-radius:999px;padding:1px 8px}
+.v-acards{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
+@media(max-width:759px){.v-acards.v-snap{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -14px;padding:0 14px 6px}.v-acards.v-snap>*{flex:0 0 72%;scroll-snap-align:start}}
+/* hero chart sits on the dark gradient in both themes */
+.v-hero svg.v-chart text{fill:#B9C9DD}.v-hero svg.v-chart .v-grid{stroke:rgba(255,255,255,.16)}
+/* envelopes */
+details.v-env{border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow)}
+details.v-env summary{list-style:none;cursor:pointer;padding:14px 16px;min-height:44px}
+details.v-env summary::-webkit-details-marker{display:none}
+details.v-env[open] summary{border-bottom:1px solid var(--line)}
+.v-pace{position:relative}.v-pace u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink);opacity:.8;border-radius:2px}
+.v-envleft{font:800 22px var(--font-display);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+details.v-env .v-tx{padding:2px 16px 6px}
+.v-chev{transition:transform .15s}details[open] .v-chev{transform:rotate(90deg)}
+.v-day{font-size:12px;font-weight:700;color:var(--muted);padding:12px 0 2px}
+.v-pend{background:var(--gold-tint);border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700;color:var(--gold-text)}
+.v-hscroll{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 12px;margin:0 -2px}
+.v-hscroll:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+.v-hscroll>.v-acard{flex:0 0 clamp(220px,20vw,270px);scroll-snap-align:start;width:auto}
+.v-seg.v-fit{align-self:flex-start}
+[hidden]{display:none!important}
+.v-top2{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v-top2{grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:stretch}}
+.v-row2{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v-row2{grid-template-columns:minmax(0,3fr) minmax(0,1fr);align-items:start}}
+.v-row2>section{display:flex;flex-direction:column}.v-row2>section .v-envgrid{flex:1}
+.v-bl-i{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}.v-bl-i:last-child{border-bottom:0}
+.v-bl-i .v-chk{width:22px;height:22px;cursor:default}.v-bl-i .v-chk .v-i{width:13px;height:13px}
+.v-bl-w{border-bottom:1px solid var(--line)}.v-bl-w:last-of-type{border-bottom:0}.v-bl-w>.v-bl-i{border-bottom:0}
+.v-bl-f{gap:10px;padding:2px 0 14px 32px}
+@media(max-width:520px){.v-bl-f{padding-left:0}}
+.v-hero .v-big{margin:6px 0 2px}
+.v-hero .v-top3{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.v-envgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));align-items:start}
+.v-envc{border:1px solid var(--line);border-radius:10px;background:var(--surface);display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.v-envh{padding:14px 16px;border-bottom:1px solid var(--line)}
+.v-envc .v-tx{padding:2px 16px 6px;flex:1}
+.v-recent{display:flex;flex-direction:column}
+}
+
+/* Additions for the real app (not in the mockups) */
+.v13 .v-content{min-width:0}
+.v13 .v-rtx{padding:10px 0;border-bottom:1px solid var(--line);min-height:56px}
+.v13 .v-rail .v-off{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;min-height:40px;color:var(--muted);font-weight:700;opacity:.45;cursor:not-allowed}
+.v13 .v-railbtn{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;min-height:40px;background:none;color:var(--muted);font-weight:700;cursor:pointer;text-align:left}
+.v13 .v-railbtn:hover{background:var(--soft);color:var(--ink)}
+.v13 .v-railbtn[aria-pressed=true]{background:var(--tint);color:var(--accent-text)}
+.v13 .v-tools{display:flex;flex-direction:column;gap:2px;margin-top:6px;border-top:1px solid var(--line);padding-top:8px}
+.v13 .v-tabs button.v-add{display:flex;flex-direction:column;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:var(--muted);font-size:12px;min-height:56px;padding:8px 2px 4px}
+.v13 .v-dlg{border:0;padding:0;background:transparent;color:var(--ink);width:min(440px,100vw);max-width:100vw;max-height:88vh;margin:auto auto 0;overflow:visible}
+.v13 .v-dlg::backdrop{background:rgba(5,10,18,.6)}
+.v13 .v-qa{background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 0 0;padding:18px;box-shadow:0 -10px 30px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:14px;color:var(--ink)}
+.v13 .v-grab{width:44px;height:5px;border-radius:999px;background:var(--line);margin:-6px auto 2px}
+.v13 .v-frm{display:grid;gap:14px}
+.v13 .v-frm .v-two{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:559px){.v13 .v-frm .v-two{grid-template-columns:1fr}}
+.v13 .v-field{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.v13 .v-field input,.v13 .v-field select,.v13 .v-field textarea{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%}
+.v13 .v-field input:focus,.v13 .v-field select:focus,.v13 .v-field textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.v13 .v-btn:disabled{opacity:.6;cursor:progress}
+@media(min-width:760px){.v13 .v-dlg{margin:0 0 0 auto;height:100vh;max-height:100vh}.v13 .v-qa{height:100%;border-radius:0;border-width:0 0 0 1px}.v13 .v-grab{display:none}}
+@media(prefers-reduced-motion:reduce){.v13 *{animation:none!important;transition:none!important}}
+
+/* Inbox and Accounts (from the v13-inbox and v13-accounts mockups) */
+.v13 .v-narrow{max-width:600px;margin-inline:auto}
+.v13 .v-itx{padding:18px;display:flex;flex-direction:column;gap:14px}
+.v13 .v-th{display:flex;align-items:center;gap:12px}
+.v13 .v-th .v-av{width:44px;height:44px}
+.v13 .v-who{font:800 22px var(--font-display),system-ui;white-space:nowrap}
+.v13 .v-nmb{all:unset;cursor:pointer;font:800 18px var(--font-display),system-ui;flex:1;min-width:0;line-height:1.15;color:var(--ink)}
+.v13 .v-nmb:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.v13 .v-ts{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:-6px}
+.v13 .v-tp{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.v13 .v-ta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:auto}
+.v13 .v-ta .v-btn{white-space:nowrap}
+.v13 .v-ar{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.v13 .v-src{display:inline-flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);font-weight:600}
+.v13 .v-cats{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.v13 .v-cats button{min-height:40px;border-radius:999px;border:1px solid var(--line);background:var(--soft);padding:6px 14px;font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.v13 .v-cats button[aria-pressed=true]{border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.v13 .v-guess{font-size:12px;font-weight:700}
+.v13 .v-pair{display:flex;align-items:center;gap:10px;margin:10px 0;font-weight:700;flex-wrap:wrap}
+.v13 .v-empty{text-align:center;padding:36px 14px}
+.v13 .v-alert{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap;background:var(--tint);border-radius:10px;padding:10px 14px;font-weight:700}
+.v13 .v-kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;margin:12px 0;font-size:14px}
+.v13 .v-kv dt{color:var(--muted)}.v13 .v-kv dd{margin:0;text-align:right;font-weight:700;overflow-wrap:anywhere}
+.v13 .v-arow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 4px;min-height:60px;cursor:pointer;color:inherit}
+.v13 .v-arow:hover{background:var(--soft)}
+.v13 .v-inbox .v-wide{display:none}
+.v13 .v-inbox .v-colL,.v13 .v-inbox .v-colR{display:none}
+.v13 .v-inbox[data-view=p] .v-colL{display:flex}
+.v13 .v-inbox[data-view=a] .v-colR{display:block}
+.v13 .v-inbox[data-view=a] .v-alert{display:flex}
+.v13 .v-inbox[data-view=p] .v-alert{display:none}
+@media(min-width:960px){
+ .v13 .v-inbox .v-inline,.v13 .v-inbox .v-seg-wrap{display:none!important}
+ .v13 .v-inbox .v-wide{display:flex}
+ .v13 .v-inbox .v-alert{display:none!important}
+ .v13 .v-dcols{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:18px;align-items:start}
+ .v13 .v-inbox .v-colL{display:flex}.v13 .v-inbox .v-colR{display:block;position:sticky;top:16px}
+ .v13 .v-pgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+ .v13 .v-pgrid .v-itx{cursor:pointer}.v13 .v-pgrid .v-itx:hover{border-color:var(--muted)}
+ .v13 .v-ta{border-top:1px solid var(--line);padding-top:14px}
+ .v13 .v-ta .v-btn{min-height:36px;padding:4px 14px;font-size:13px}
+ .v13 .v-itx .v-pair{margin:0}
+}
+.v13 .v-cols{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.v13 .v-cols{grid-template-columns:minmax(0,1fr) 400px;align-items:start}.v13 .v-cols .v-detail{position:sticky;top:16px}}
+.v13 .v-acard[aria-current=true]{outline:3px solid var(--ink);outline-offset:2px}
+.v13 .v-calc{background:var(--soft);border-radius:8px;padding:12px 14px;margin:12px 0}
+.v13 .v-calc .v-r{display:flex;justify-content:space-between;gap:12px;padding:3px 0;font-size:14px}
+.v13 .v-calc .v-r.v-t{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;font-weight:800}
+.v13 .v-qrbox{display:flex;gap:14px;align-items:center;border:1px dashed var(--line);border-radius:10px;padding:12px}
+.v13 .v-qrimg{background:#fff;padding:8px;border-radius:8px;flex:none;line-height:0}
+.v13 .v-qrimg img{width:104px;height:104px;display:block;object-fit:contain}
+.v13 .v-qrdlg{border:0;background:transparent;padding:20px;max-width:100vw;max-height:100vh;color:#fff;margin:auto}
+.v13 .v-qrdlg::backdrop{background:rgba(5,10,18,.86)}
+.v13 .v-qrdlg .v-qrimg{padding:18px;border-radius:14px}.v13 .v-qrdlg .v-qrimg img{width:min(78vw,340px);height:min(78vw,340px)}
+.v13 .v-fdlg{border:0;padding:0;background:transparent;color:var(--ink);width:min(440px,100vw);max-width:100vw;max-height:92vh;margin:auto auto 0;overflow:visible}
+.v13 .v-fdlg::backdrop{background:rgba(5,10,18,.6)}
+.v13 .v-chips{display:flex;gap:8px;flex-wrap:wrap}
+.v13 .v-swatch{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;padding:0}
+.v13 .v-swatch[aria-pressed=true]{border-color:var(--ink)}
+@media(min-width:760px){.v13 .v-fdlg{margin:auto}.v13 .v-fdlg .v-qa{border-radius:14px;height:auto;border-width:1px}}
+
+/* Salary and tax (from the v13-salary mockup) */
+.v13{
+/* payslip */
+.v-slip{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.v-slip .v-hd{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap;padding:16px 18px;border-bottom:2px solid var(--ink)}
+.v-slip .v-sec{padding:4px 18px 8px}
+.v-slip .v-sec h3{font:700 12px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:12px 0 4px}
+.v-slip .v-ln{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:14px}
+.v-slip .v-ln.v-t{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;font-weight:800}
+.v-slip .v-ln .v-m{color:var(--muted);font-size:12px;display:block;font-weight:500}
+.v-slip .v-net{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:16px 18px;background:var(--tint);border-radius:0 0 9px 9px}
+.v-slip .v-net b.v-n{font:800 30px var(--font-display);letter-spacing:-.02em;color:var(--accent-text)}
+.v-slip table td,.v-slip table th{padding:6px 8px;font-size:13px;white-space:nowrap}
+.v-tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.v-tabs2 button{background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font-weight:700;padding:10px 16px;min-height:44px;cursor:pointer;font-size:15px}
+.v-tabs2 button[aria-selected=true]{color:var(--accent-text);border-bottom-color:var(--accent)}
+.v-cols2{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.v-cols2{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start}}
+.v-ev{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.v-ev:last-child{border-bottom:0}
+.v-ev .v-when{width:62px;flex:none;font:800 15px var(--font-display)}
+.v-ev .v-when small{display:block;font:600 12px var(--font-body);color:var(--muted)}
+.v-ev .v-delta{font:800 18px var(--font-display);letter-spacing:-.02em}
+tr.v-est td{color:var(--muted)}
+tr.v-est td:first-child::after{content:" (assumed)";font-size:12px}
+.v-alw{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.v-alw:last-child{border-bottom:0}
+table.v-br td,table.v-br th{padding:6px 8px;font-size:13px}
+table.v-br tr.v-hit td{background:var(--soft)}
+/* payslip builder */
+.v-pair2{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v-pair2{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}}
+table.v-pt{table-layout:auto}
+table.v-pt th{padding:8px 14px}
+table.v-pt td{padding:8px 14px;vertical-align:middle}
+table.v-pt td:first-child{text-align:left;width:100%}
+table.v-pt tr.v-grp td{font:700 12px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:14px;border-bottom:0}
+.v-pt .v-nm small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v-pt .v-tx{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);font-weight:600}
+.v-sw.v-s{width:36px;height:22px}.v-sw.v-s::after{width:16px;height:16px;top:2px;left:2px}.v-sw.v-s[aria-checked=true]::after{transform:translateX(14px)}
+.v-pt input.v-v{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:112px;min-height:40px;text-align:right;font-variant-numeric:tabular-nums}
+.v-pt .v-fixedv{font-weight:700;font-variant-numeric:tabular-nums;padding-right:9px}
+.v-pt .v-mv{min-height:34px;padding:2px 10px;font-size:12px;white-space:nowrap}
+.v-pt .v-acts{display:flex;gap:6px;justify-content:flex-end;align-items:center}
+.v-pt tr.v-addr td{padding:12px 14px;background:var(--soft)}
+.v-addl2{display:grid;grid-template-columns:minmax(0,1fr) 100px 120px auto;gap:8px;align-items:center}
+.v-addl2 input,.v-addl2 select{font:inherit;font-weight:600;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:40px;width:100%}
+@media(max-width:759px){.v-addl2{grid-template-columns:1fr 1fr}}
+}
+.v13 .v-lbl-in{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:44px}
+.v13 .v-scrollx{overflow-x:auto}
+.v13 table{width:100%;border-collapse:collapse;font-size:14px}
+.v13 th{font-size:12px;font-weight:700;color:var(--muted);text-align:right;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.v13 th:first-child,.v13 td:first-child{text-align:left}
+.v13 td{padding:10px;text-align:right;border-bottom:1px solid var(--line)}
+.v13 tr:last-child td{border-bottom:0}
+.v13 .v-legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;font-weight:600}
+.v13 .v-legend span{display:inline-flex;align-items:center;gap:6px}
+.v13 .v-slip .v-hd{padding:16px 18px}
+.v13 .v-seg.v-fit{align-self:flex-start}
+.v13 .v-tabs2{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.v13 .v-tabs2 .v-tab2{border-bottom:3px solid transparent;color:var(--muted);font-weight:700;padding:10px 16px;min-height:44px;font-size:15px;display:inline-flex;align-items:center;text-decoration:none}
+.v13 .v-tabs2 .v-tab2[aria-selected=true]{color:var(--accent-text);border-bottom-color:var(--accent)}
+
+/* Wizard (from the v13 wizard mockups) */
+.v13{
+/* wizard */
+.v-wz{max-width:min(1400px,92%);margin:0 auto;padding:20px 0 70px}
+.v-wzhead{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.v-wzhead .v-logo{padding:0}
+.v-steps{display:flex;gap:4px;list-style:none;margin:0;padding:0;flex:1;min-width:0;overflow-x:auto}
+.v-steps .v-st{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.v-steps .v-st b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--soft);font:800 12px var(--font-display);flex:none}
+.v-steps .v-st b .v-i{width:14px;height:14px;stroke-width:3}
+.v-steps li[aria-current=step] .v-st{background:var(--tint);color:var(--accent-text)}
+.v-steps li[aria-current=step] .v-st b,.v-steps li.v-done .v-st b{background:var(--accent);color:var(--on-accent)}
+@media(max-width:759px){.v-steps li:not([aria-current=step]) .v-tx{display:none}.v-steps .v-st{padding:6px 4px}}
+.v-wzgrid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:960px){.v-wzgrid{grid-template-columns:minmax(0,1fr) 470px;align-items:start}.v-wzslip{position:sticky;top:56px}}
+.v-wzcard{padding:24px}
+.v-wzfoot{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px;align-items:center}
+.v-wzfoot .v-gap{flex:1}
+.v-choice{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.v-choice label{border:1px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;display:block;font-weight:700;background:var(--surface);position:relative}
+.v-choice input{position:absolute;opacity:0}
+.v-choice label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.v-choice label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.v-choice small{display:block;font-weight:500;color:var(--muted);font-size:13px;margin-top:2px}
+.v-choice label:has(input:checked) small{color:var(--accent-text)}
+.v-frm{display:grid;gap:14px}
+.v-frm .v-two{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:559px){.v-frm .v-two{grid-template-columns:1fr}}
+.v-pre{margin-top:4px;padding:12px 14px;background:var(--tint);border-radius:8px;color:var(--accent-text);font-weight:700}
+.v-dif{color:var(--muted);white-space:nowrap}.v-dif.v-up{color:var(--accent-text)}.v-dif.v-dn{color:var(--red)}
+.v-slip table.v-cmp td,.v-slip table.v-cmp th{padding:6px 10px}.v-slip table.v-cmp td:first-child,.v-slip table.v-cmp th:first-child{padding-left:18px}.v-slip table.v-cmp td:last-child,.v-slip table.v-cmp th:last-child{padding-right:18px}.v-cmp tr.v-tot td{font-weight:800;border-top:1px solid var(--line)}
+}
+
+/* Budget (from the v13-budget mockup) */
+.v13{
+.v-cols3{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1040px){.v-cols3{grid-template-columns:minmax(0,1fr) 330px;align-items:start}}
+.v-grp h2{display:flex;align-items:center;gap:8px}
+.v-gh{padding-bottom:12px;border-bottom:2px solid var(--g)}
+.v-gh h2{font-size:20px}.v-big2{font:800 22px var(--font-display);letter-spacing:-.02em}
+.v-gh .v-bar{margin:10px 0 6px;height:10px}
+.v-bl,.v-blh{display:grid;grid-template-columns:minmax(0,1fr) 150px 58px 150px;gap:4px 14px;align-items:center}
+.v-blh{padding:8px 4px;font-size:12px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line)}
+.v-bl{width:100%;text-align:left;cursor:pointer;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 4px;min-height:64px}
+.v-bl:hover{background:var(--soft)}.v-bl:last-of-type{border-bottom:0}
+.v-bn{display:flex;gap:10px;align-items:flex-start;min-width:0}.v-bn .v-dot{margin-top:6px}
+.v-bn b{font-weight:700;display:block}.v-bn small{display:block;font-size:12px;color:var(--muted);font-weight:600}
+.v-bn .v-pill{margin:3px 4px 0 0;font-size:11px;padding:1px 8px}
+.v-ba{text-align:right}.v-ba b{font:800 17px var(--font-display);display:block}
+.v-ba .v-bar{height:6px;margin:5px 0 2px}.v-ba small{font-size:11px;color:var(--muted);font-weight:600}
+.v-cutp{display:inline-flex;gap:3px}.v-cutp i{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font:700 11px var(--font-body);font-style:normal;color:var(--muted)}
+.v-cutp i.v-on{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.v-rl{font-weight:700}
+.v-nmbtn{all:unset;cursor:pointer;font-weight:700}.v-nmbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.v-bd{display:flex;align-items:center;gap:8px}.v-bd .v-xs{display:none}
+@media(max-width:759px){.v-bd .v-xs{display:inline}}
+.v-dy{border:1px solid var(--line);background:var(--soft);border-radius:10px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:60px;color:var(--muted);font-weight:700;font-size:12px}
+.v-dy b{font:800 16px var(--font-display);color:var(--ink)}
+.v-dy.v-on{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}.v-dy.v-x{border-style:dashed}.v-dy.v-today{outline:2px solid var(--ink);outline-offset:1px}
+.v-wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.v-wk button{min-height:44px;padding:0;border-radius:999px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer}
+.v-wk button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+@media(max-width:759px){.v-blh{display:none}.v-bl{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n a" "r c"}.v-bn{grid-area:n}.v-ba{grid-area:a}.v-br{grid-area:r}.v-bcut{grid-area:c;justify-self:end}}
+.v-bcut{display:inline-flex;justify-self:start}
+.v-cl{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.v-cl:last-of-type{border-bottom:0}
+.v-months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.v-mcol{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 2px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;min-height:150px;justify-content:flex-end;color:var(--muted);font-size:11px;font-weight:700;position:relative}
+.v-mcol[aria-pressed=true]{border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.v-mcol .v-stk{background:var(--soft);border-radius:3px;width:70%;display:flex;flex-direction:column-reverse;gap:1px;height:96px;justify-content:flex-start}
+.v-mcol .v-stk i{display:block;width:100%}
+.v-mcol .v-fl{position:absolute;top:4px;font-size:12px}
+@media(max-width:759px){.v-months{grid-template-columns:repeat(6,1fr)}}
+.v-cat{display:flex;align-items:center;gap:8px;padding:6px 0}
+.v-sw-c{width:22px;height:22px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line)}
+.v-rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+.v-rulegrid label{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;font-weight:700;font-size:14px}
+.v-rulegrid input{position:absolute;opacity:0}
+.v-rulegrid label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.v-rulegrid label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.v-rulegrid small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.v-rtof{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;align-items:end}
+.v-dgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.v-dgrid .v-dy{min-height:62px;padding:6px 2px}
+.v-dy .v-tag{font-size:10px;font-weight:700;min-height:12px;line-height:12px}
+.v-legend2{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--muted);margin:10px 0 0;font-weight:600}
+.v-legend2 i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.v-legend2 .v-k1{background:var(--tint);border:1px solid var(--accent)}.v-legend2 .v-k2{border:1px dashed var(--accent)}
+.v-rtosum{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.v-stat3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.v-stat3 div{background:var(--soft);border-radius:8px;padding:10px 10px 8px}
+.v-stat3 .v-xs{display:block}.v-stat3 b{display:block;font:800 16px var(--font-display);font-variant-numeric:tabular-nums;margin-top:2px}
+.v-pool{padding:14px 0;border-top:1px solid var(--line)}.v-pool:first-of-type{border-top:0}
+.v-pool .v-amtin2{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:100px;min-height:40px;text-align:right}
+.v-pbar{position:relative;height:10px;border-radius:999px;background:var(--soft);margin:10px 0 4px}.v-pbar i{display:block;height:100%;border-radius:999px;background:var(--accent)}.v-pbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:2px}
+.v-stl{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--soft)}
+.v-stl.v-done{display:flex;align-items:center;gap:8px;background:none}
+.v-plog{font-size:12px;color:var(--muted);margin-top:8px}
+}
+
+/* Bonuses (from the v13-bonus mockup) */
+.v13{
+.v-cols4{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1040px){.v-cols4{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.v-stk{display:flex;height:16px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.18);gap:2px}
+.v-stk i{display:block;height:100%}
+.v-hero .v-stk i:first-child{border-radius:999px 0 0 999px}
+.v-dl{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px 18px;margin-top:12px}
+.v-dl div{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+.v-dl b{margin-left:auto;font-variant-numeric:tabular-nums}
+.v-bc{border:1px solid var(--line);border-radius:10px;background:var(--surface);box-shadow:var(--shadow)}
+.v-bc .v-hd{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line)}
+.v-bc .v-hd h2{display:flex;align-items:center;gap:10px}
+.v-bc .v-body{display:grid;grid-template-columns:minmax(0,1fr);gap:0}
+@media(min-width:1280px){.v-bc .v-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.v-bc .v-body>*+*{border-left:1px solid var(--line)}}
+.v-bc .v-pane{padding:14px 18px 18px}
+.v-wf .v-r{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.v-wf .v-r:last-child{border-bottom:0}
+.v-wf .v-r.v-res{border-top:2px solid var(--ink);border-bottom:0;margin-top:4px;padding-top:12px}
+.v-wf .v-r.v-res b{font:800 26px var(--font-display)}
+.v-why{font-size:12px;color:var(--muted);display:block;font-weight:500}
+.v-sr-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);min-height:56px}
+.v-sr-row:last-of-type{border-bottom:0}
+.v-sr-row.v-ed{flex-wrap:wrap;row-gap:8px;padding:12px 0}
+.v-sr-row.v-ed>.v-grow{flex:1 1 0;min-width:0}
+.v-sr-row.v-ed>input,.v-sr-row.v-ed>.v-iconbtn{flex:none}
+.v-sr-row.v-ed>.v-chk{margin-top:4px}
+.v-sr-row.v-ed>.v-seg{margin-left:40px}
+.v-sr-row.v-done .v-nm{text-decoration:line-through;color:var(--muted)}
+.v-sr-row input{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:76px;min-height:40px;text-align:right}
+.v-addbox{margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:10px}
+.v-lbl-in{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-height:40px;width:min(200px,100%)}
+.v-tkn{display:inline-flex;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;background:var(--soft);color:var(--muted)}
+.v-mini{height:12px;border-radius:999px;overflow:hidden;display:flex;background:var(--soft);margin:8px 0 4px}.v-mini i{display:block}
+.v-rule{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.v-rule:last-child{border-bottom:0}
+details.v-old{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+details.v-old summary{cursor:pointer;list-style:none;display:flex;gap:12px;justify-content:space-between;align-items:center;min-height:56px;padding:10px 18px;flex-wrap:wrap}
+details.v-old summary::-webkit-details-marker{display:none}
+details.v-old .v-in{padding:0 18px 16px;border-top:1px solid var(--line)}
+.v-vs{font-size:13px;font-weight:700}
+}
+.v13 .v-seg .v-segl{border:0;background:none;color:var(--muted);font-weight:700;font-size:13px;padding:7px 14px;border-radius:999px;min-height:36px;display:inline-flex;align-items:center;white-space:nowrap;text-decoration:none}
+.v13 .v-seg .v-segl[aria-current=true]{background:var(--accent);color:var(--on-accent)}
+.v13 a.v-mcol{text-decoration:none}
+.v13 .v-months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.v13 .v-neg{color:var(--red)}
+
+/* Funds, Forecast and Override (from the v13 mockups) */
+.v13{
+.v-cols5{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.v-cols5{grid-template-columns:minmax(0,420px) minmax(0,1fr);align-items:start}}
+.v-fund{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:8px;width:100%;text-align:left;cursor:pointer;min-height:72px}
+.v-fund[aria-pressed=true]{border-color:var(--accent);background:var(--tint)}
+.v-fund .v-n{width:26px;height:26px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px var(--font-display);flex:none}
+.v-fund .v-bar{margin-top:6px}
+.v-mv{display:flex;flex-direction:column;gap:4px}
+.v-rulegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0 12px}
+@media(max-width:520px){.v-rulegrid{grid-template-columns:1fr}}
+.v-rulegrid label{border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;display:block;font-weight:700;font-size:14px;position:relative}
+.v-rulegrid input{position:absolute;opacity:0}
+.v-rulegrid label:has(input:checked){border-color:var(--accent);background:var(--tint);color:var(--accent-text)}
+.v-rulegrid label:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.v-rulegrid small{display:block;font-weight:500;color:var(--muted);font-size:12px}
+.v-sw-c{width:24px;height:24px;border-radius:50%;border:2px solid var(--surface);outline:1px solid var(--line);cursor:pointer;padding:0}
+.v-sw-c[aria-pressed=true]{outline:2px solid var(--ink)}
+.v-cols6{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v-cols6{grid-template-columns:minmax(0,1fr) 320px;align-items:start}}
+.v-fx{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+@media(max-width:759px){.v-fx{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.v-fx div{background:rgba(255,255,255,.1);border-radius:10px;padding:10px 12px}
+.v-fx b{display:block;font:800 18px var(--font-display);font-variant-numeric:tabular-nums}
+.v-ovl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.v-ovl:last-child{border-bottom:0}
+.v-ovl button{all:unset;cursor:pointer;flex:1;min-width:0}.v-ovl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.v-tri{width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:10px solid var(--ink);margin-top:5px;flex:none}
+.v-ladder{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media(max-width:759px){.v-ladder{grid-template-columns:1fr}}
+.v-yr{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px;text-align:left;cursor:pointer;color:inherit;width:100%;display:block;box-shadow:var(--shadow)}
+.v-yr[aria-expanded=true]{border-color:var(--accent);background:var(--tint)}
+.v-yr.v-est{border-style:dashed}
+.v-yr .v-t{font:800 22px var(--font-display);letter-spacing:-.02em}
+.v-yr .v-stk{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:10px 0 8px;background:var(--soft)}
+.v-yr .v-stk i{display:block;height:100%}
+@media(max-width:759px){.v-yr{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center}}
+.v-mgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+@media(max-width:759px){.v-mgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.v-mc{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:10px;text-align:left;cursor:pointer;color:inherit;min-height:104px;display:flex;flex-direction:column;gap:6px}
+.v-mc:hover{border-color:var(--muted)}.v-mc.v-ov{border-color:var(--ink)}
+.v-mc .v-m{display:flex;justify-content:space-between;font-weight:800;font-size:14px}
+.v-mc .v-stk{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--soft)}.v-mc .v-stk i{display:block}
+.v-mc .v-p{font:800 15px var(--font-display);font-variant-numeric:tabular-nums}
+.v-mc .v-tags{display:flex;gap:4px;flex-wrap:wrap}.v-mc .v-tags .v-pill{font-size:11px;padding:1px 8px}
+.v-pillrow button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:6px 14px;min-height:40px;font-weight:700;font-size:14px;cursor:pointer}
+.v-pillrow button[aria-pressed=true]{background:var(--tint);border-color:var(--accent);color:var(--accent-text)}
+.v-pillrow button[aria-pressed=false]{color:var(--muted)}
+.v-cols7{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1000px){.v-cols7{grid-template-columns:minmax(0,1fr) 360px;align-items:start}}
+.v-fr{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px 12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:8px}
+.v-fr.v-drag{opacity:.5}.v-fr.v-over-t{border-color:var(--accent)}
+.v-fr.v-skip{background:var(--gold-tint)}.v-fr.v-skip .v-nm{text-decoration:line-through}
+.v-fr.v-pinned{border-color:var(--accent)}
+.v-fr .v-grip{cursor:grab;color:var(--muted);display:grid;place-items:center;width:28px;height:36px;background:none;border:0;padding:0}
+.v-fr .v-rk{width:28px;height:28px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:800 13px var(--font-display)}
+.v-fr .v-frtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.v-cols7 section>[aria-live]+.v-note{margin-top:6px}
+.v-fr .v-sub{grid-column:3 / span 2;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.v-pinin{width:130px;font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--accent);border-radius:8px;padding:6px 10px;min-height:36px}
+@media(min-width:1200px){.v-fr{grid-template-columns:auto auto minmax(0,1fr) auto auto}.v-fr .v-sub{grid-column:auto;margin-left:12px}}
+@media(max-width:759px){.v-fr{grid-template-columns:auto auto minmax(0,1fr) auto}.v-fr .v-sub{grid-column:1 / -1}}
+.v-row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.v-gridwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table.v-g{min-width:980px;border-collapse:separate;border-spacing:0}
+.v-g th,.v-g td{padding:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:center;font-size:13px}
+.v-g th:first-child,.v-g td:first-child{position:sticky;left:0;background:var(--surface);z-index:2;text-align:left;padding:0 12px;min-width:148px}
+.v-g thead th{background:var(--surface);padding:6px 4px;vertical-align:bottom}
+.v-g th.v-sel{background:var(--tint)}
+.v-mh{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:800}
+.v-mh label{display:flex;align-items:center;gap:6px;cursor:pointer;min-height:32px}
+.v-mh input{width:18px;height:18px}
+/* One tickbox everywhere: a rounded square, accent green when ticked, with a check mark. Native checkboxes get the same look as .v-chk. */
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:22px;height:22px;min-height:0;padding:0;margin:0;flex:none;border:2px solid var(--muted);border-radius:7px;background:none;display:inline-grid;place-content:center;cursor:pointer;vertical-align:middle}
+input[type=checkbox]::after{content:"";width:11px;height:6px;border:solid var(--on-accent);border-width:0 0 3px 3px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:checked::after{opacity:1}
+input[type=checkbox]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.v-field input[type=checkbox]{width:22px;min-height:0;padding:0}
+.v-cell{display:block;width:100%;min-height:52px;background:none;border:0;cursor:pointer;color:var(--ink);font:600 13px var(--font-body);font-variant-numeric:tabular-nums;padding:4px 2px;position:relative}
+.v-cell:hover{background:var(--soft)}
+.v-cell small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.v-cell.v-pin{box-shadow:inset 0 0 0 2px var(--accent);border-radius:6px}
+.v-cell.v-skip{background:var(--gold-tint);color:var(--gold-text);text-decoration:line-through}
+.v-cell.v-sel{outline:2px solid var(--ink);outline-offset:-2px}
+.v-ordc{font-size:11px;font-weight:700;color:var(--muted)}
+.v-ordc.v-c{color:var(--accent-text)}
+.v-tot td{font-weight:800;background:var(--soft)}
+.v-actions{position:sticky;bottom:12px;z-index:30;display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--surface);border:1px solid var(--accent);box-shadow:0 10px 28px rgba(0,0,0,.3)}
+.v-actions select,.v-actions input{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 10px;min-height:40px}
+.v-actions input{width:110px}
+@media(max-width:759px){.v-actions{bottom:78px}}
+}
+
+/* First-run wizard */
+.v13{
+.v-rowf{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 84px minmax(0,1fr) 44px;gap:8px;align-items:end;padding:8px 0;border-bottom:1px solid var(--line)}
+@media(max-width:759px){.v-rowf{grid-template-columns:1fr 1fr}.v-rowf .v-rm{justify-self:end}}
+.v-ln2{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.v-ln2s{grid-column:2;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.8fr) minmax(0,1.1fr);gap:8px}
+.v-ln2.v-off2 input,.v-ln2.v-off2 select{opacity:.5}
+.v-ln2 select,.v-ln2 input{font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px;min-height:44px;width:100%}
+.v-fundopt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:inherit;cursor:pointer}
+.v-fundopt:hover{border-color:var(--muted)}
+.v-fundopt[aria-checked=true]{border-color:var(--accent);background:var(--tint)}
+.v-fundopt[aria-checked=true] .v-chk{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.v-gh3{font:800 13px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:16px 0 2px}
+}
+
+@keyframes v13grow{from{width:0}}
+
+/* Loading skeleton */
+.v13 .v-skel{background:linear-gradient(90deg,var(--soft),var(--line),var(--soft));background-size:200% 100%;border-radius:10px;animation:v13shimmer 1.2s ease-in-out infinite}
+@keyframes v13shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.v13 .v-skel{animation:none}}
+
+/* Micro-interactions. Small and quick; all of it is off for people who ask for reduced motion. */
+@keyframes v13rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes v13sheet{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes v13fade{from{opacity:0}to{opacity:1}}
+@keyframes v13pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes v13glow{from{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}to{box-shadow:0 0 0 10px transparent}}
+@media (prefers-reduced-motion:no-preference){
+  .v13 .v-btn,.v13 .v-iconbtn,.v13 .v-seg button,.v13 .v-seg .v-segl,.v13 .v-cats button,.v13 .v-pillrow button,.v13 .v-swatch,.v13 .v-wk button,.v13 .v-tabs a,.v13 .v-tabs button,.v13 .v-rail a,.v13 .v-railbtn{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease,filter .15s ease}
+  .v13 .v-btn:active,.v13 .v-iconbtn:active,.v13 .v-seg button:active,.v13 .v-cats button:active,.v13 .v-pillrow button:active,.v13 .v-wk button:active,.v13 .v-dy:active,.v13 .v-tabs a:active,.v13 .v-tabs button:active,.v13 .v-railbtn:active{transform:scale(.96)}
+  .v13 .v-btn.v-pri:hover{filter:brightness(1.08)}
+  .v13 .v-acard,.v13 .v-fund,.v13 .v-mc,.v13 .v-yr,.v13 .v-itx,.v13 .v-bc,.v13 .v-card{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease}
+  .v13 .v-acard:hover,.v13 .v-fund:hover,.v13 .v-mc:hover,.v13 .v-yr:hover{transform:translateY(-2px)}
+  .v13 .v-main>.v-stack>*,.v13 .v-main>.v-narrow>*{animation:v13rise .24s cubic-bezier(.16,1,.3,1) both}
+  .v13 .v-main>.v-stack>*:nth-child(2){animation-delay:.03s}.v13 .v-main>.v-stack>*:nth-child(3){animation-delay:.06s}.v13 .v-main>.v-stack>*:nth-child(4){animation-delay:.09s}.v13 .v-main>.v-stack>*:nth-child(n+5){animation-delay:.12s}
+  .v13 .v-itx,.v13 .v-bc,.v13 .v-ev,.v13 .v-alw,.v13 .v-rule,.v13 .v-rulecard,.v13 .v-stl,.v13 .v-pool,.v13 .v-fr{animation:v13rise .22s cubic-bezier(.16,1,.3,1) both}
+  .v13 .v-qa{animation:v13sheet .26s cubic-bezier(.16,1,.3,1) both}
+  .v13 dialog::backdrop{animation:v13fade .2s ease both}
+  .v13 .v-dy,.v13 .v-mcol{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .12s ease}
+  .v13 .v-bar i,.v13 .v-pbar i,.v13 .v-stk i,.v13 .v-mini i{transition:width .35s cubic-bezier(.16,1,.3,1),background-color .2s ease}
+  .v13 .v-chk[aria-checked=true]{animation:v13pop .28s ease}
+  .v13 .v-sw::after{transition:transform .18s cubic-bezier(.34,1.4,.64,1),background-color .15s ease}
+  .v13 .v-flag[role=status],.v13 .v-flag[role=alert]{animation:v13rise .2s ease both}
+  .v13 .v-pill.v-ok{animation:v13fade .25s ease both}
+  .v13 .v-btn.v-pri:focus-visible{animation:v13glow .5s ease-out}
+  .v13 .v-big{transition:color .2s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  .v13 *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* Revision batch: login, phone nav sheet, inbox header, runway chart, half-year month strip */
+.v13 .v-login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.v13 .v-logincard{width:min(420px,100%);padding:28px}
+.v13 .v-logincard .v-flag{margin-top:6px}
+.v13 .v-ihead{flex-wrap:nowrap}
+.v13 .v-ihead .v-seg-wrap{flex:none}
+.v13 svg.v-chart.v-nar{display:none}
+.v13 .v-mnav{display:none}
+.v13 .v-more{display:flex;flex-direction:column;gap:2px}
+.v13 .v-more a{display:flex;align-items:center;gap:12px;padding:10px 8px;border-radius:8px;min-height:48px;color:var(--ink);font-weight:700}
+.v13 .v-more a[aria-current]{background:var(--tint);color:var(--accent-text)}
+.v13 .v-more .v-hr{margin:6px 0}
+.v13 .v-tabs button.v-moretab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:0;cursor:pointer;color:var(--muted);font-size:12px;font-weight:700;min-height:56px;padding:8px 2px 4px}
+.v13 .v-tabs button.v-moretab[aria-current]{color:var(--accent-text)}
+@media(max-width:759px){
+ .v13 svg.v-chart.v-wid{display:none}
+ .v13 svg.v-chart.v-nar{display:block}
+ .v13 .v-mnav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+ .v13 .v-months{grid-template-columns:repeat(6,minmax(0,1fr))}
+ .v13 .v-months[data-half="0"] .v-mcol:nth-child(n+7){display:none}
+ .v13 .v-months[data-half="1"] .v-mcol:nth-child(-n+6){display:none}
+}
+.v13 .v-tabs .v-more a{flex-direction:row;justify-content:flex-start;font-size:15px;padding:10px 8px;min-height:48px;gap:12px}
+
+/* Revision batch 2: link underline, file inputs, spacing, tablet and phone layouts */
+/* Links: an underline draws in from the left on hover. Buttons, tabs, rails and cards keep their own hover. */
+.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)){background:linear-gradient(currentColor,currentColor) 0 100%/0 1.5px no-repeat;padding-bottom:1px;transition:background-size .28s cubic-bezier(.16,1,.3,1)}
+.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)):hover,.v13 a:where(:not(.v-btn,.v-segl,.v-mcol,.v-acard,.v-iconbtn)):focus-visible{background-size:100% 1.5px;text-decoration:none}
+.v13 .v-rail a,.v13 .v-tabs a,.v13 .v-more a,.v13 .v-subnav a,.v13 .v-tabs2 a{background-image:none;padding-bottom:initial}
+.v13 .v-rail a{padding-bottom:9px}.v13 .v-more a,.v13 .v-subnav a{padding-bottom:10px}
+/* File inputs: the native button matches the round v-btn */
+.v13 input[type=file]{padding:6px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer}
+.v13 input[type=file]::file-selector-button{font:inherit;font-weight:700;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 16px;margin-right:12px;min-height:36px;cursor:pointer;transition:border-color .15s,background .15s}
+.v13 input[type=file]::file-selector-button:hover{border-color:var(--muted);background:var(--tint)}
+/* Headers and their subheaders */
+.v13 h1+.v-lbl,.v13 h2+.v-lbl,.v13 h3+.v-lbl,.v13 h1+p,.v13 h2+p,.v13 h3+p{margin-top:6px}
+.v13 .v-steps{margin-top:16px}
+.v13 .v-hrow{flex-wrap:nowrap;align-items:flex-start}
+.v13 .v-hrow>div{min-width:0}
+.v13 .v-hrow>.v-pip{flex:none}
+/* Tablet: charts are drawn at 800 to 960 wide and scaled down, so their text is set larger to stay readable */
+@media(min-width:760px) and (max-width:1099px){
+ .v13 svg.v-chart.v-wid text{font-size:17px}
+}
+@media(min-width:1100px) and (max-width:1399px){
+ .v13 svg.v-chart.v-wid text{font-size:13px}
+}
+@media(max-width:759px){
+ .v13 h1+.v-lbl,.v13 h2+.v-lbl,.v13 h3+.v-lbl{margin-top:8px}
+ .v13 .v-wzhead{row-gap:16px;margin-bottom:26px}
+ .v13 .v-steps{margin-top:20px;margin-bottom:6px}
+ .v13 .v-wzcard{padding:18px}
+ .v13 .v-wzcard h2{margin-bottom:8px}
+ .v13 .v-hrow .v-pip{width:42px;height:42px}
+ .v13 .v-hrow .v-pip::before{left:18px;top:-7px}
+ .v13 .v-hrow .v-pip::after{left:11px;top:16px;width:20px;height:10px}
+}
+
+/* Payslip builder: controls bar, collapsible cutoff cards with plain rows, summary beside them */
+.v13 .v-pbgrid{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.v13 .v-pbgrid{grid-template-columns:minmax(0,1fr) 320px;align-items:start}.v13 .v-pbsum2{position:sticky;top:16px}}
+.v13 .v-pbsum2 .v-ln{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.v13 .v-pbtake{display:flex;flex-direction:column;gap:2px;background:var(--tint);border-radius:10px;padding:14px;margin:14px 0}
+.v13 .v-pbtake b{font:800 26px var(--font-display);letter-spacing:-.02em;color:var(--accent-text)}
+.v13 .v-pbsum{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;list-style:none;border-bottom:1px solid var(--line);background:var(--soft);border-radius:9px 9px 0 0}
+.v13 .v-pbsum::-webkit-details-marker{display:none}
+.v13 .v-pbsum::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 2px 0 4px;flex:none;transition:transform .2s}
+.v13 details.v-slip[open]>.v-pbsum::after{transform:rotate(225deg);margin-top:4px}
+.v13 details.v-slip:not([open])>.v-pbsum{border-bottom:0;border-radius:9px}
+.v13 .v-pbtk{text-align:right}
+.v13 .v-pbtk b{font:800 22px var(--font-display);letter-spacing:-.02em;color:var(--accent-text)}
+.v13 .v-pl{padding:2px 18px 16px}
+.v13 .v-pgh{font:700 12px var(--font-body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:16px 0 4px}
+.v13 .v-plr{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--line)}
+.v13 .v-plr>.v-nm{flex:1 1 140px;min-width:0}
+.v13 .v-plr .v-nm b{display:block;font-weight:700}
+.v13 .v-plr .v-nm small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 .v-plr .v-tx{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:12px;color:var(--muted);font-weight:600}
+.v13 .v-pla{flex:none}
+.v13 .v-plr input.v-v{font:inherit;font-weight:700;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:6px 8px;width:112px;min-height:40px;text-align:right;font-variant-numeric:tabular-nums}
+.v13 .v-plr .v-fixedv{font-weight:700;font-variant-numeric:tabular-nums}
+.v13 .v-plr .v-acts{display:flex;gap:6px;align-items:center;justify-content:flex-end;flex:none}
+.v13 .v-plr .v-mv{min-height:34px;padding:2px 12px;font-size:12px;white-space:nowrap}
+.v13 .v-pl .v-addl2{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line)}
+@media(max-width:759px){
+ .v13 .v-pbhead{flex-direction:column;align-items:stretch;gap:12px}
+ .v13 .v-pbhead>label{justify-content:space-between}
+ .v13 .v-pbact .v-btn{flex:1 1 100%}
+ .v13 .v-pbsum{padding:12px 14px}
+ .v13 .v-pl{padding:2px 14px 14px}
+ .v13 .v-addl2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .v13 .v-addl2>input:first-child,.v13 .v-addl2>.v-btn{grid-column:1/-1}
+ /* Bottom sheets (budget line editor, quick add) stay inside the visible screen so the save button is reachable */
+ .v13 .v-dlg,.v13 .v-fdlg{max-height:96dvh}
+ .v13 .v-qa{max-height:94dvh;overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+}
+.v13 .v-qa{overflow-y:auto}
+
+/* Payslip builder bar: total and actions on top, then the base pay and income tax splits with a vertical line between each pair */
+.v13 .v-pbbar{container-type:inline-size;display:flex;flex-direction:column;gap:16px}
+.v13 .v-pbtop{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap}
+.v13 .v-pbact{display:flex;gap:8px;flex-wrap:wrap}
+.v13 .v-pbgroups{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}
+.v13 .v-pbgrp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.v13 .v-pbf{display:flex;flex-direction:column;gap:6px;padding:0 14px}
+.v13 .v-pbf:first-child{padding-left:0}
+.v13 .v-pbf+.v-pbf{border-left:1px solid var(--line)}
+@container (max-width:419px){
+ .v13 .v-pbact{width:100%}
+ .v13 .v-pbact .v-btn{flex:1 1 100%}
+ .v13 .v-pbf .v-lbl-in{width:100%!important}
+}
+/* Tablet: one column of cutoff cards, summary as a strip, rows get a little more room */
+@media(min-width:760px) and (max-width:1099px){
+ .v13 .v-pbsum2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 18px;align-items:start}
+ .v13 .v-pbsum2>h2,.v13 .v-pbsum2>p{grid-column:1/-1}
+ .v13 .v-pbsum2>.v-ln{border-bottom:0;flex-direction:column;gap:2px}
+ .v13 .v-pbtake{margin:0}
+ .v13 .v-pbsum2>h2{margin-bottom:6px}
+ .v13 .v-pbsum2>p{margin-top:12px!important}
+}
+
+/* Salary and tax timeline: events, projected raises and allowances in one row; each item stays on a single line */
+.v13 .v-tl3{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));align-items:start}
+@media(min-width:1100px){.v13 .v-tl3{grid-template-columns:minmax(0,2fr) minmax(0,2fr) minmax(0,1fr)}}
+.v13 .v-tl3>section:last-child .v-grid2{grid-template-columns:minmax(0,1fr)}
+.v13 .v-ev,.v13 .v-alw{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0}
+.v13 .v-ev .v-when{width:48px}
+.v13 .v-ev>.v-grow,.v13 .v-alw>.v-grow{flex:1 1 0;min-width:0}
+.v13 .v-evt{display:flex;align-items:center;gap:6px;min-width:0}
+.v13 .v-one{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-evt b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-ev .v-delta{flex:none;font-size:16px;line-height:1.2}
+.v13 .v-ev .v-pill{flex:none}
+.v13 .v-alw .v-seg{flex:none}
+.v13 .v-rowerr{flex-basis:100%;margin:0}
+
+/* Revision batch 3: confirm dialog, toasts, date pickers, setup wizard rows */
+.v13 .v-btn.v-danger{background:var(--red-tint);border-color:var(--red);color:var(--red)}
+.v13 .v-btn.v-danger:hover{background:var(--red);color:var(--bg)}
+.v13 .v-cfm{width:min(420px,100vw)}
+.v13 .v-toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:80;display:flex;flex-direction:column;gap:8px;align-items:stretch;pointer-events:none;width:min(420px,calc(100vw - 28px))}
+.v13 .v-toast{pointer-events:auto;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.28);font-weight:600;font-size:14px}
+.v13 .v-toast::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.v13 .v-toast.v-bad::before{background:var(--red)}
+@media(prefers-reduced-motion:no-preference){.v13 .v-toast{animation:v13rise .25s cubic-bezier(.16,1,.3,1)}}
+@media(max-width:759px){.v13 .v-toasts{bottom:92px}}
+.v13 .v-pickbtn{display:flex;align-items:center;justify-content:space-between;width:100%;text-align:left;font:inherit;font-weight:600;color:var(--ink);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;cursor:pointer}
+.v13 .v-pickbtn:hover{border-color:var(--muted)}
+.v13 .v-pickbtn::after{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 2px 0 8px;flex:none}
+.v13 .v-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.v13 .v-pg.v-days{grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.v13 .v-pg button,.v13 .v-moy button{min-height:48px;border-radius:10px;border:1px solid var(--line);background:var(--soft);font-weight:700;cursor:pointer;color:var(--ink)}
+.v13 .v-pg.v-days button{min-height:44px;border-radius:999px}
+.v13 .v-pg button:hover:not(:disabled),.v13 .v-moy button:hover:not(:disabled){border-color:var(--muted)}
+.v13 .v-pg button[aria-pressed=true],.v13 .v-moy button[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.v13 .v-pg button:disabled,.v13 .v-moy button:disabled{opacity:.35;cursor:not-allowed}
+
+/* Calendar-style popover for the month and day pickers (replaces the full sheet) */
+.v13 .v-popp{position:fixed;inset:auto;margin:0;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 12px 36px rgba(0,0,0,.35);display:none;flex-direction:column;gap:12px}
+.v13 .v-popp:popover-open{display:flex}
+.v13 .v-pophd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.v13 .v-yearbtn{font:800 16px var(--font-display);color:var(--ink);background:none;border:0;border-radius:999px;padding:8px 16px;cursor:pointer;min-height:40px}
+.v13 .v-yearbtn::after{content:"";display:inline-block;width:6px;height:6px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 0 0 8px;vertical-align:middle;transition:transform .15s}
+.v13 .v-yearbtn[aria-expanded=true]::after{transform:rotate(225deg);margin-top:2px}
+.v13 .v-yearbtn:hover{background:var(--soft)}
+.v13 .v-pg.v-months3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v13 .v-pg.v-years{grid-template-columns:repeat(3,minmax(0,1fr));max-height:232px;overflow-y:auto;padding:2px}
+.v13 .v-popp .v-pg button{min-height:42px;font-size:14px}
+
+/* Revision batch 4: picker text, budget sheet row, bonus destinations */
+.v13 .v-pickbtn span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-pickbtn:disabled{opacity:.5;cursor:not-allowed}
+.v13 .v-grid2.v-keep2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@keyframes v13spin{to{transform:rotate(360deg)}}
+.v13 .v-spin{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:v13spin .7s linear infinite}
+.v13 .v-chk[aria-busy=true]{opacity:1}
+.v13 .v-addbox{container-type:inline-size}
+.v13 .v-addform{display:grid;gap:12px;margin-top:8px}
+.v13 .v-addform>.v-seg{display:flex;width:100%}
+.v13 .v-addform>.v-seg button{flex:1}
+.v13 .v-addfields{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.v13 .v-amtrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.v13 .v-addform .v-lbl-in{width:100%}
+.v13 .v-addpre{min-height:18px}
+.v13 .v-addgo{width:100%}
+@container (min-width:540px){
+ .v13 .v-addfields{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .v13 .v-addform>.v-seg{width:fit-content}
+ .v13 .v-addgo{width:auto;justify-self:start}
+}
+.v13 .v-sr-row .v-nm .v-dot{margin-right:8px;vertical-align:1px}
+.v13 .v-sr-row{gap:12px}
+.v13 .v-sr-row .v-nm .v-tkn{margin-left:6px;vertical-align:1px}
+@media(max-width:759px){
+ .v13 .v-bc .v-pane{padding:14px 14px 16px}
+ .v13 .v-sr-row{padding:12px 0}
+ .v13 .v-sr-row.v-ed{flex-wrap:nowrap}
+ .v13 .v-sr-row.v-ed>input{width:96px!important}
+}
+@media(prefers-reduced-motion:reduce){.v13 .v-spin{animation:none;border-right-color:currentColor;opacity:.6}}
+
+/* Capture rules */
+.v-field textarea{resize:vertical;line-height:1.4;min-height:64px}
+.v-capsrc{display:flex;flex-direction:column;gap:10px}
+details.v-env.v-capitem summary{padding:12px 14px}
+details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:column;gap:12px}
+.v-caprules{display:flex;flex-direction:column;gap:8px}
+.v-caprule{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+.v-cappanel{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:10px;background:var(--soft);border:1px solid var(--line)}
+.v-cappanel .v-field input,.v-cappanel .v-field select{background:var(--surface)}
+.v-capsec{font:800 16px var(--font-display);margin:0}
+/* Rules page */
+.v-rsplit{display:grid;grid-template-columns:minmax(320px,2fr) 3fr;gap:16px;align-items:start}
+@media(max-width:820px){.v-rsplit{grid-template-columns:1fr}}
+.v-rulecard{display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);text-align:left;color:var(--ink);font:inherit;width:100%}
+.v-rulecard[aria-current=true]{border-color:var(--accent)}.v-rulecard.v-off{opacity:.65}
+.v-rulecard:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.v-lab{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.v-testbox{background:var(--soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.v-testbox .v-field textarea{background:var(--surface)}
+.v-plist{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
+.v-plist:last-child{border-bottom:1px solid var(--line)}
+.v-plistbox{max-height:min(46vh,420px);overflow:auto;overscroll-behavior:contain}
+.v-plistbox>p{padding:12px 4px;margin:0}
+.v-plist input{width:20px;height:20px;flex:none}
+.v-xdlg{border:0;padding:0;background:transparent;color:var(--ink);width:min(520px,calc(100vw - 24px));max-height:90vh;margin:auto}
+.v-xdlg::backdrop{background:rgba(5,10,18,.6)}
+.v-xdlg .v-qa{border-radius:14px;max-height:88vh;overflow:auto}
+/* rev-13: account cards about three to a row, no sideways scrollbar, link pending shimmer, envelopes at most three to a row */
+.v-acards{grid-template-columns:repeat(auto-fill,minmax(max(168px,calc((100% - 22px)/3)),1fr))}
+.v-acards .v-acard{min-height:140px;padding:16px}
+.v-acards .v-acard .v-ab{font-size:26px}
+.v-hscroll{scrollbar-width:none}.v-hscroll::-webkit-scrollbar{display:none}
+.v-hs{position:relative}
+.v-hsb{position:absolute;top:calc(50% - 6px);transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:var(--shadow);display:grid;place-items:center;cursor:pointer}
+.v-hsb .v-i{width:16px;height:16px}
+.v-hsb.v-prev{left:-10px}.v-hsb.v-prev .v-i{transform:rotate(180deg)}.v-hsb.v-next{right:-10px}
+.v-hsb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(hover:none){.v-hsb{display:none}}
+.v-acard>.v-lpend{position:absolute;inset:0;z-index:2;opacity:0;pointer-events:none;transition:opacity .12s;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.28),rgba(255,255,255,0));background-size:200% 100%}
+.v-acard>.v-lpend.v-on{opacity:1;animation:v13shimmer 1s linear infinite}
+@media(prefers-reduced-motion:reduce){.v-acard>.v-lpend.v-on{animation:none;background:rgba(255,255,255,.22)}}
+/* rev-18: account cards are the size of a bank card (85.6 x 54 mm, about 1.586:1), a little smaller; grouped by kind; planned vs spent is three across on desktop */
+.v-acards{grid-template-columns:repeat(auto-fill,minmax(min(100%,230px),230px));justify-content:start;gap:14px}
+.v-acards .v-acard,.v-hscroll>.v-acard{aspect-ratio:1.586;min-height:0;padding:14px}
+.v-acards .v-acard .v-ab{font-size:22px;padding-top:6px}
+.v-hscroll>.v-acard{flex:0 0 230px;align-self:flex-start}
+.v-acslot{cursor:grab}.v-acslot.v-drag{opacity:.45}
+.v-acslot.v-over .v-acard{outline:3px solid var(--accent);outline-offset:3px}
+.v-acard[aria-pressed="true"]{box-shadow:0 0 0 3px var(--bg,#fff),0 0 0 6px var(--accent)}
+.v-agroup{display:grid;gap:8px}.v-agh{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0}
+.v13 .v-envgrid{grid-template-columns:minmax(0,1fr)}
+@media(min-width:640px){.v13 .v-envgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1000px){.v13 .v-envgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* the standard account card: one size everywhere (Accounts and Now) */
+.v13{--acard-w:230px}
+.v13 .v-acards{grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--acard-w)),var(--acard-w)))}
+.v13 .v-acards .v-acard,.v13 .v-hscroll>.v-acard{width:var(--acard-w);max-width:100%;aspect-ratio:1.586;min-height:0;height:auto}
+.v13 .v-hscroll>.v-acard{flex:0 0 var(--acard-w)}
+.v13 .v-acslot{width:var(--acard-w);max-width:100%}
+.v-saving{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.v-agroup.v-busy .v-acslot{opacity:.7}
+.v-acslot.v-moved .v-acard{animation:v13shimmer 1s linear infinite;background-image:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.18),rgba(255,255,255,0));background-size:200% 100%}
+@media(prefers-reduced-motion:reduce){.v-acslot.v-moved .v-acard{animation:none}}
+
+/* rev-42: pay checklist */
+.v-ckgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.v-wal{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:14px;display:flex;flex-direction:column;gap:8px}.v-wal.v-dn{border-color:var(--accent)}
+.v-ckl{display:flex;align-items:center;gap:12px;min-height:48px;border-top:1px solid var(--line)}.v-ckl:first-child{border-top:0}
+.v-ckl.v-dn .v-ckn{color:var(--muted);text-decoration:line-through}
+.v-ckb{width:28px;height:28px;border-radius:14px;border:1.5px solid var(--line);background:transparent;display:grid;place-items:center;color:transparent;cursor:pointer;flex:none;padding:0}
+.v-ckb .v-i{width:14px;height:14px}
+.v-ckb[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#04281c}
+.v-ckb:disabled{cursor:default}.v-ckb:not([aria-pressed=true]):disabled{opacity:.5}
+
+/* Dropdown that matches the app (components/v13/pick.tsx) */
+.v-pk{width:100%;min-height:40px;border-radius:10px;background:var(--soft);border:1px solid var(--line);color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 12px;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.v-pk:hover,.v-pk[aria-expanded=true]{border-color:var(--accent)}.v-pk:disabled{opacity:.6;cursor:default}
+.v-pk .v-ph{color:var(--muted)}.v-pk .v-cr{color:var(--muted);font-size:12px;flex:none}
+.v-pkm{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:100%;width:max-content;max-width:min(320px,86vw);max-height:min(50vh,320px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px;box-shadow:0 12px 30px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:2px}
+.v-pko{min-height:40px;border:0;border-radius:8px;background:transparent;color:var(--ink);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px;font:inherit;font-weight:600;text-align:left;cursor:pointer}
+.v-pko:hover,.v-pko:focus-visible{background:var(--soft)}.v-pko[aria-selected=true]{color:var(--accent-text,var(--accent))}.v-pko .v-i{width:14px;height:14px}
+
+/* A thin loading bar across the top while a picked page or tab loads */
+.v13 .v-navbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:100;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:v13nav 1s ease-in-out infinite}
+@keyframes v13nav{from{background-position:-40% 0}to{background-position:140% 0}}
+@media(prefers-reduced-motion:reduce){.v13 .v-navbar{animation:none;background:var(--accent)}}
+
+:root{--font-display:'Gabarito';--font-body:'Atkinson Hyperlegible Next'}
+.v13 .m-bar{position:fixed;right:14px;bottom:14px;z-index:60;display:flex;gap:8px;align-items:center;background:var(--surface);border:1px dashed var(--muted);border-radius:999px;padding:6px 8px 6px 14px}
+.v13 .m-group{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface)}
+.v13 .m-ghead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px}
+.v13 .m-ghead b{font:800 16px var(--font-display)}
+.v13 .m-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;cursor:pointer;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:left;width:100%}
+.v13 .m-item[aria-current=true]{border-color:var(--accent);background:var(--tint)}
+.v13 .m-no{width:26px;height:26px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:800 12px var(--font-display)}
+.v13 .m-item b{display:block}.v13 .m-item small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 .m-else{background:none;border-style:dashed}
+.v13 .m-sec{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.v13 .m-sech{display:flex;align-items:center;gap:10px}
+.v13 .m-sech h3{flex:1}
+.v13 .m-step{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:800 13px var(--font-display);flex:none}
+.v13 .m-shared{border:1px solid var(--line);border-left:1px solid var(--line);border-radius:10px;background:var(--soft);padding:12px;display:flex;flex-direction:column;gap:10px}
+.v13 .m-shared .v-field input,.v13 .m-shared .v-field textarea,.v13 .m-shared .v-field select{background:var(--surface)}
+.v13 .m-pattern{display:flex;justify-content:space-between;gap:10px;align-items:center;background:var(--surface);border-radius:8px;padding:8px 10px}
+.v13 .m-pattern code{font-size:12px;overflow-wrap:anywhere}
+.v13 .m-line{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.v13 .m-mark{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--accent);color:var(--on-accent)}
+.v13 .m-mark.m-bad{background:var(--red-tint);color:var(--red)}.v13 .m-mark.m-warn{background:var(--gold-tint);color:var(--gold-text)}.v13 .m-mark.m-off{background:var(--surface);color:var(--muted)}
+.v13 .m-entry{display:flex;justify-content:space-between;gap:12px;background:var(--surface);border-radius:8px;padding:10px 12px}
+.v13 .m-note{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.v13 details.m-acc{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.v13 details.m-acc>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;min-height:52px}
+.v13 details.m-acc>summary::-webkit-details-marker{display:none}
+.v13 details.m-acc>summary small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 details.m-acc>summary::after{content:"⌄";color:var(--muted)}
+.v13 details.m-acc[open]>summary::after{content:"⌃"}
+.v13 details.m-acc>div{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
+.v13 .m-format{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px}
+.v13 .m-format mark{background:var(--tint);color:var(--accent-text);border-radius:5px;padding:1px 5px;font-weight:700;font-size:12px}
+.v13 .m-pick{border:0;cursor:pointer;min-height:34px;padding:0 12px}
+.v13 .m-pick[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
+</style>
+</head>
+<body>
+<div class="v13">
+<div class="v-app">
+  <nav class="v-rail" aria-label="Main">
+    <div class="v-logo">Bad(yet)</div>
+    <div class="v-grp">Today</div><a href="#">Now</a><a href="#">Inbox <span class="v-badge">2</span></a><a href="#">Accounts</a>
+    <div class="v-grp">Plan</div><a href="#">Budget</a><a href="#">Salary and tax</a><a href="#">Bonuses</a><a href="#">Funds</a><a href="#">Forecast</a><a href="#">Installments</a>
+    <div class="v-foot"><a href="#" aria-current="page">Rules</a><a href="#">Settings</a></div>
+  </nav>
+
+  <div class="v-content">
+  <main class="v-main">
+  <div class="v-stack" style="max-width:1100px">
+    <div><h1>Rules</h1><div class="v-muted v-sm">What the app listens for, and what it does with it.</div></div>
+    <div class="v-seg v-fit" role="group" aria-label="Rule types" style="align-self:flex-start"><button aria-pressed="true">Capture rules</button><button aria-pressed="false">Duplicate rules</button></div>
+
+    <div class="v-rsplit">
+      <!-- LIST: one list, grouped by source -->
+      <div class="v-stack">
+        <section class="v-card v-stack">
+          <div class="v-row v-sp"><h2>Where messages come from</h2><button class="v-btn v-sm v-pri">+ New rule</button></div>
+          <div class="v-xs v-muted">Numbers are the order rules are tried, across every source. The first match decides. Ignore rules always win. If none matches, "Everything else" applies.</div>
+
+          <div class="m-group">
+            <div class="m-ghead"><b>GCash</b><span class="v-row" style="gap:8px"><span class="v-pill v-warn">Built-in + 1 pattern</span><button class="v-sw" role="switch" aria-checked="true" aria-label="GCash on or off"></button></span></div>
+            <button class="m-item" data-go="rule" aria-current="true"><span class="m-no">1</span><span><b>Sample card payment</b><small>"sample card" → Payment · GCash → Sample Card</small></span></button>
+            <button class="m-item" data-go="rule"><span class="m-no">2</span><span><b>Skip promos</b><small>"promo", "voucher" → Ignored</small></span></button>
+            <button class="m-item m-else" data-go="else"><span class="m-no">…</span><span><b>Everything else from GCash</b><small>Asks for the category · waits in the Inbox</small></span></button>
+          </div>
+
+          <div class="m-group">
+            <div class="m-ghead"><b>BPI</b><span class="v-row" style="gap:8px"><span class="v-pill v-warn">Built-in reader</span><button class="v-sw" role="switch" aria-checked="true" aria-label="BPI on or off"></button></span></div>
+            <button class="m-item" data-go="rule"><span class="m-no">3</span><span><b>Move to savings</b><small>"sample savings" → Transfer · BPI → asks in the Inbox</small></span></button>
+            <button class="m-item m-else" data-go="else"><span class="m-no">…</span><span><b>Everything else from BPI</b><small>Reads the account from the message</small></span></button>
+          </div>
+
+          <div class="m-group">
+            <div class="m-ghead"><b>Several or any source</b></div>
+            <button class="m-item" data-go="rule"><span class="m-no">4</span><span><b>Groceries</b><small>GCash, Maya · "sample mart" → Spending · Groceries</small></span></button>
+          </div>
+
+          <div class="m-group">
+            <div class="m-ghead"><b>Maya</b><span class="v-row" style="gap:8px"><span class="v-pill v-warn">Built-in reader</span><button class="v-sw" role="switch" aria-checked="true" aria-label="Maya on or off"></button></span></div>
+            <button class="m-item m-else" data-go="maya"><span class="m-no">…</span><span><b>Everything else from Maya</b><small>Asks for the account and category</small></span></button>
+          </div>
+          <button class="v-btn v-sm">+ Another app or bank</button>
+        </section>
+      </div>
+
+      <div id="editors">
+      <section class="v-card v-stack" id="maya-ed" hidden style="gap:14px">
+        <div class="v-row v-sp"><h2>Everything else from Maya</h2><span class="v-pill">Fallback</span></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">1</span><h3>Where to listen</h3></div><div class="v-chips"><span class="v-pill v-ok">com.paymaya ✕</span><button class="v-btn v-sm">+ App</button><button class="v-btn v-sm">+ Sender</button></div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">2</span><h3>How it's read</h3><span class="v-pill">Shared by all of Maya</span></div><div class="m-shared"><details class="m-acc"><summary><span class="v-pill v-warn">Built-in</span><span><b>Maya notification reader</b><small>4 message types</small></span></summary><div><div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Card payment</span><div class="v-sm">Payment of <mark>{amount}</mark> received on your <mark>{card name}</mark></div><div class="v-xs v-muted">Money in. The card name picks the account</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money sent</span><div class="v-sm">You transferred <mark>{amount}</mark> to <mark>{name}</mark>.</div><div class="v-xs v-muted">Money out. Also "paid" or "sent"</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Money in</span><div class="v-sm">You received <mark>{amount}</mark> from <mark>{name}</mark></div><div class="v-xs v-muted">Money in, who sent it</div></div>
+<div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Wallet top-up</span><div class="v-sm">You received <mark>{amount}</mark> in your wallet via <mark>{channel}</mark></div><div class="v-xs v-muted">Money in. "via …" is optional</div></div></div></details><label class="v-field">Sample message<textarea rows="2">You paid ₱5,000.00 to Maya Black.</textarea></label>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money out</span><span class="v-pill v-ok">To Maya Black</span><span class="v-pill">Account: Maya</span></div></div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">3</span><h3>Which messages</h3></div><div class="m-note">Everything from Maya that no rule caught.</div></div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">4</span><h3>What to do</h3></div>
+          <div class="v-grid2"><label class="v-field">Account<select><option>Read from the message, ask if unclear</option></select></label><label class="v-field">Category<select><option>Ask me in the Inbox</option></select></label></div>
+          <div class="v-xs v-muted">Keep Account on automatic: one account here would receive both sides.</div>
+        </div>
+        <div class="m-sec"><div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
+          <div class="m-shared">
+            <div class="v-grid2">
+              <label class="v-field">Other side from<select id="o-src"><option value="Maya">Maya (this source)</option><option value="GCash">GCash</option><option value="BPI">BPI</option></select></label>
+              <div class="v-xs v-muted" style="align-self:end;padding-bottom:6px">Each message is read by its own source's patterns and reader.</div>
+            </div>
+            <label class="v-field">The other side's message (optional)<textarea rows="2" id="o-msg"></textarea></label>
+            <div class="v-row v-wrap" style="gap:8px" id="o-read"></div>
+            <button type="button" class="v-btn v-sm v-pri" id="o-make" style="align-self:flex-start" hidden></button>
+          </div>
+          <div class="v-testbox" role="status" id="o-result"></div>
+        </div>
+        <div class="v-row v-sp"><button class="v-btn v-sm v-ghost">Remove Maya</button><div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div></div>
+      </section>
+      <!-- EDITOR: the same five sections for a rule and for "Everything else" -->
+      <section class="v-card v-stack" aria-labelledby="edh" id="main-ed" style="gap:14px">
+        <div class="v-row v-sp"><h2 id="edh">Sample card payment</h2><span class="v-row" style="gap:8px"><span class="v-pill" id="kindpill">Rule 1</span><span class="v-pill v-ok">Saved</span></span></div>
+        <div class="v-row v-sp v-wrap" data-rule style="gap:10px"><span class="v-row" style="gap:10px"><button class="v-sw" role="switch" aria-checked="true" aria-label="This rule on or off"></button><b class="v-sm">This rule is on</b></span><span class="v-row" style="gap:6px"><span class="v-xs v-muted">Order</span><button class="v-iconbtn v-s" aria-label="Try this rule earlier">↑</button><button class="v-iconbtn v-s" aria-label="Try this rule later">↓</button></span></div>
+        <label class="v-field" data-rule>What is it for<input value="Sample card payment"></label>
+        <p class="v-xs v-muted" data-else hidden style="margin:0">Catches anything from GCash that no rule caught. It has no words: it is the fallback.</p>
+
+        <div class="m-sec">
+          <div class="m-sech"><span class="m-step">1</span><h3>Where to listen</h3></div>
+          <div data-rule class="v-stack" style="gap:8px">
+            <div class="v-seg" role="group" aria-label="Listen on" style="align-self:flex-start"><button aria-pressed="true">Notifications</button><button aria-pressed="false">Emails</button><button aria-pressed="false">Both</button></div>
+            <div class="v-chips"><button class="v-pill m-pick" aria-pressed="true">GCash</button><button class="v-pill m-pick" aria-pressed="false">BPI</button><button class="v-pill m-pick" aria-pressed="false">Maya</button><button class="v-btn v-sm">+ App</button><button class="v-btn v-sm">+ Sender</button></div>
+            <div class="v-xs v-muted">Pick none to listen everywhere.</div>
+          </div>
+          <div data-else hidden class="v-stack" style="gap:8px">
+            <div class="v-lab">Apps</div><div class="v-chips"><span class="v-pill v-ok">com.sample.gcash ✕</span><button class="v-btn v-sm">+ App</button></div>
+            <div class="v-lab">Email senders</div><div class="v-chips"><span class="v-pill v-ok">@sample-gcash.test ✕</span><button class="v-btn v-sm">+ Sender</button></div>
+          </div>
+        </div>
+
+        <div class="m-sec">
+          <div class="m-sech"><span class="m-step">2</span><h3>How it's read</h3><span class="v-pill">Shared by all of GCash</span></div>
+          <div class="m-shared">
+            <div class="v-sm">The amount and money in or out come from here, <b>not from the rule's words</b>. Changing this affects every GCash rule.</div>
+            <div class="m-pattern"><span><span class="v-pill v-ok">Your pattern</span> <code>You have paid {amount} to {name}. Ref {ref}</code></span><button class="v-btn v-sm v-ghost">Edit</button></div>
+            <details class="m-acc m-reader" open><summary><span class="v-pill v-warn">Built-in</span><span><b>GCash notification reader</b><small>3 message types · tried after your patterns</small></span></summary><div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-ok">Money in</span><button type="button" class="v-btn v-sm v-ghost" data-try="in">Try this</button></div><div class="v-sm">You have received <mark>{amount}</mark> of GCash from <mark>{name}</mark> with account ending in <mark>{last4}</mark>.</div><div class="v-xs v-muted">Reads: amount, who sent it, their last digits (if shown), Ref. No. (if shown)</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Payment</span><button type="button" class="v-btn v-sm v-ghost" data-try="pay">Try this</button></div><div class="v-sm">You have paid <mark>{amount}</mark> of GCash to purchase <mark>{name}</mark> with a convenience fee of <mark>{fee}</mark>.</div><div class="v-xs v-muted">Reads: amount plus the fee, who was paid. "to purchase" and the fee are optional</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Money sent</span><button type="button" class="v-btn v-sm v-ghost" data-try="sent">Try this</button></div><div class="v-sm">You have sent <mark>{amount}</mark> to <mark>{name}</mark> on <mark>{date}</mark></div><div class="v-xs v-muted">Reads: amount, who you sent it to</div></div>
+<div class="v-xs v-muted">Highlighted parts can change. This is a plain-language summary: capital letters don't matter, and "PHP", "P" or "₱" may come before an amount. A message worded another way is not read: add a pattern for it. The built-in reader can't be edited; your pattern wins over it.</div>
+</div></details>
+            <label class="v-field">Sample message
+              <textarea rows="2" id="sample">You have paid PHP 3,000.00 to Sample Card. Ref 12345</textarea>
+            </label>
+            <div class="v-row v-wrap" style="gap:8px" data-ok><span class="v-pill" id="by">Read by your pattern</span><span class="v-pill v-ok" id="r-amt">Amount ₱3,000.00</span><span class="v-pill v-ok" id="r-dir">Money out</span><span class="v-pill v-ok" id="r-name">To Sample Card</span><span class="v-pill" id="r-ref">Ref 12345</span></div>
+            <div data-bad hidden class="v-stack" style="gap:8px">
+              <span class="v-pill v-bad" style="align-self:flex-start">No amount can be read</span>
+              <div class="v-sm">The app would ignore this message, even if the words below match.</div>
+              <button class="v-btn v-sm v-pri" style="align-self:flex-start">+ Make a pattern from this sample</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="m-sec">
+          <div class="m-sech"><span class="m-step">3</span><h3>Which messages</h3></div>
+          <div data-rule class="v-stack" style="gap:10px">
+            <div class="v-field">Look for any of these words<div class="v-chips"><span class="v-pill v-ok">sample card ✕</span><input placeholder="Add a word" style="max-width:200px"></div></div>
+            <div class="v-grid2">
+              <div class="v-field">Must also contain (optional)<input placeholder="Add a word"></div>
+              <div class="v-field">Skip it if it contains<input placeholder="Add a word"></div>
+            </div>
+          </div>
+          <div data-else hidden class="m-note">Everything from GCash that rules 1, 2 and 4 did not catch.</div>
+        </div>
+
+        <div class="m-sec">
+          <div class="m-sech"><span class="m-step">4</span><h3>What to do</h3></div>
+          <div class="v-row v-sp"><div><b>Ignore it</b><div class="v-xs v-muted">Drop these messages instead of recording them.</div></div><button class="v-sw" role="switch" aria-checked="false" aria-label="Ignore"></button></div>
+          <div data-rule class="v-stack" style="gap:10px">
+            <div class="v-seg" role="group" aria-label="What it is" style="align-self:flex-start"><button aria-pressed="false">Spending</button><button aria-pressed="false">Income</button><button aria-pressed="false">Transfer</button><button aria-pressed="true">Payment</button></div>
+            <div class="v-grid2">
+              <label class="v-field">Money leaves<select><option>GCash</option></select></label>
+              <label class="v-field">Money arrives in<select id="to"><option value="card">Sample Card</option><option value="">Ask in the Inbox</option></select></label>
+            </div>
+            <div class="v-xs v-muted">Whatever you set here is used. If one side is left to the Inbox, the item waits there for you to pick it.</div>
+          </div>
+          <div data-else hidden class="v-grid2">
+            <label class="v-field">Account<select><option>Read from the message, ask if unclear</option></select></label>
+            <label class="v-field">Category<select><option>Ask me in the Inbox</option></select></label>
+          </div>
+          <div class="v-row v-sp"><div><b>Confirm automatically</b><div class="v-xs v-muted">Only when it is safe. Otherwise it waits in the Inbox.</div></div><button class="v-sw" role="switch" aria-checked="false" id="auto" aria-label="Confirm automatically"></button></div>
+          <div data-rule class="m-note">If "Everything else from GCash" has this on, it also applies to this rule. It is off now.</div>
+          <div data-else hidden class="m-shared">
+            <div class="v-lab">Applies to all of GCash, including its rules</div>
+            <label class="v-field">Skip if under (₱)<input placeholder="No minimum"></label>
+            <div class="v-xs v-muted">Turning on "Confirm automatically" above also applies to GCash rules.</div>
+          </div>
+        </div>
+
+        <div class="m-sec">
+          <div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
+          <div class="v-testbox" role="status">
+            <div class="m-line"><span class="m-mark" id="mk1">✓</span><div><b id="t1">It can be read</b><div class="v-xs v-muted" id="s1">Your pattern: ₱3,000.00, money out</div></div></div>
+            <div class="m-line"><span class="m-mark" id="mk2">✓</span><div><b>GCash is on and it is not under the minimum</b></div></div>
+            <div class="m-line"><span class="m-mark" id="mk3">✓</span><div><b id="t3">Rule 1 matches: Sample card payment</b><div class="v-xs v-muted" id="s3">Contains "sample card". No ignore rule matches.</div></div></div>
+            <div data-result="both" class="v-stack" style="gap:6px">
+              <div class="v-lab">It saves two linked entries, waiting in the Inbox</div>
+              <div class="m-entry"><span>GCash<br><small class="v-muted">Transfer</small></span><b class="v-num">−₱3,000.00</b></div>
+              <div class="m-entry"><span>Sample Card<br><small class="v-muted">Transfer · lowers what you owe</small></span><b class="v-num">+₱3,000.00</b></div>
+              <div class="v-xs v-muted">Not counted as spending or income. Confirming one confirms both.</div>
+            </div>
+            <div data-result="one" hidden class="v-stack" style="gap:6px">
+              <div class="v-lab">It waits in the Inbox as a payment from GCash</div>
+              <div class="m-entry"><span>GCash<br><small class="v-muted">Payment · choose where it arrives</small></span><b class="v-num">−₱3,000.00</b></div>
+              <div class="v-xs v-muted">The account you set is kept. Pick the other one in the Inbox to finish.</div>
+            </div>
+            <div data-result="else" hidden class="v-stack" style="gap:6px">
+              <div class="v-lab">It waits in the Inbox</div>
+              <div class="m-entry"><span>GCash<br><small class="v-muted">Spending · choose a category</small></span><b class="v-num">−₱3,000.00</b></div>
+            </div>
+            <div data-result="builtin" hidden class="v-stack" style="gap:6px">
+              <div class="v-lab">It waits in the Inbox, handled by "Everything else from GCash"</div>
+              <div class="m-entry"><span>GCash<br><small class="v-muted" id="b-kind"></small></span><b class="v-num" id="b-amt"></b></div>
+            </div>
+            <div data-result="none" hidden class="v-lab">Nothing is saved, and nothing shows in the Inbox</div>
+          </div>
+        </div>
+
+        <div class="v-row v-sp v-wrap">
+          <button class="v-btn v-sm" data-rule style="color:var(--red)">Delete rule</button>
+          <button class="v-btn v-sm v-ghost" data-else hidden>Remove GCash</button>
+          <div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div>
+        </div>
+      </section>
+      </div>
+    </div>
+  </div>
+  </main>
+  </div>
+</div>
+<div class="m-bar"><span class="v-xs v-muted">Mockup: try</span><label class="v-xs v-muted" id="o-wrap" hidden>Other side: <select id="o-case" class="v-btn v-sm"><option value="pair">Would pair</option><option value="nopair">Readable, won't pair</option><option value="unread">Can't be read</option></select></label><button class="v-btn v-sm" id="bad">Unreadable sample</button><button class="v-btn v-sm" id="theme">Light / dark</button></div>
+</div>
+<script>
+(function(){
+  var view='rule', unreadable=false, sampleKey='mine';
+  // The three built-in examples were checked against the app's real GCash reader.
+  var samples={
+    mine:{text:'You have paid PHP 3,000.00 to Sample Card. Ref 12345',by:'Read by your pattern',amt:'₱3,000.00',dir:'Money out',name:'To Sample Card',ref:'Ref 12345'},
+    in:{text:'You have received 900.00 of GCash from Sample Bank with account ending in 1234.',by:'Read by the built-in reader',amt:'₱900.00',dir:'Money in',name:'From Sample Bank · 1234',ref:'',kind:'Income',signed:'+₱900.00'},
+    pay:{text:'You have paid P112.00 of GCash to purchase Sample Load with a convenience fee of P3.00.',by:'Read by the built-in reader',amt:'₱115.00',dir:'Money out',name:'To Sample Load',ref:'Includes ₱3.00 fee',kind:'Spending · choose a category',signed:'−₱115.00'},
+    sent:{text:'You have sent PHP 500.00 to Sample Person on 11-26-2026.',by:'Read by the built-in reader',amt:'₱500.00',dir:'Money out',name:'To Sample Person',ref:'',kind:'Spending · choose a category',signed:'−₱500.00'}
+  };
+  var $=function(q){return Array.prototype.slice.call(document.querySelectorAll(q));};
+  var id=function(i){return document.getElementById(i);};
+  function paint(){
+    id('o-wrap').hidden=view!=='maya';id('maya-ed').hidden=view!=='maya';id('main-ed').hidden=view==='maya';id('bad').hidden=view==='maya';
+    if(view==='maya')return;
+    $('[data-rule]').forEach(function(e){e.hidden=view!=='rule';});
+    $('[data-else]').forEach(function(e){e.hidden=view!=='else';});
+    id('edh').textContent=view==='rule'?'Sample card payment':'Everything else from GCash';
+    id('kindpill').textContent=view==='rule'?'Rule 1':'Fallback';
+    $('[data-ok]').forEach(function(e){e.hidden=unreadable;});
+    $('[data-bad]').forEach(function(e){e.hidden=!unreadable;});
+    var sm=samples[sampleKey], mine=sampleKey==='mine';
+    id('sample').value=unreadable?'Payment of three thousand pesos sent to Sample Card.':sm.text;
+    id('by').textContent=sm.by;id('r-amt').textContent='Amount '+sm.amt;id('r-dir').textContent=sm.dir;id('r-name').textContent=sm.name;id('r-ref').textContent=sm.ref;id('r-ref').style.display=sm.ref?'':'none';
+    var oneSide=id('to').value==='';
+    var result=unreadable?'none':!mine?'builtin':view==='else'?'else':oneSide?'one':'both';
+    if(!mine){id('b-kind').textContent=sm.kind;id('b-amt').textContent=sm.signed;}
+    $('[data-result]').forEach(function(e){e.hidden=e.getAttribute('data-result')!==result;});
+    id('mk1').textContent=unreadable?'✕':'✓';id('mk1').className='m-mark'+(unreadable?' m-bad':'');
+    id('t1').textContent=unreadable?'It cannot be read':'It can be read';
+    id('s1').textContent=unreadable?'Add a pattern in step 2. Until then it is ignored.':(mine?'Your pattern: ':'Built-in reader: ')+sm.amt+', '+sm.dir.toLowerCase();
+    ['mk2','mk3'].forEach(function(k){id(k).textContent=unreadable?'–':'✓';id(k).className='m-mark'+(unreadable?' m-off':'');});
+    id('t3').textContent=unreadable?'Rules are not checked':view==='else'?'Shown as if no rule matched':'Rule 1 matches: Sample card payment';
+    id('s3').textContent=unreadable?'The words match, but there is nothing to save.':view==='else'?'The fallback applies only then.':'Contains "sample card". No ignore rule matches.';
+    if(!unreadable&&!mine){id('t3').textContent='No rule matches this sample';id('s3').textContent='It does not contain "sample card", so the fallback applies.';}
+    id('bad').textContent=unreadable?'Readable sample':'Unreadable sample';
+  }
+  $('[data-go]').forEach(function(b){b.onclick=function(){$('[data-go]').forEach(function(x){x.removeAttribute('aria-current');});b.setAttribute('aria-current','true');view=b.getAttribute('data-go');paint();};});
+  $('.v-sw, .m-pick').forEach(function(b){b.onclick=function(){var k=b.classList.contains('v-sw')?'aria-checked':'aria-pressed';b.setAttribute(k,b.getAttribute(k)==='true'?'false':'true');};});
+  $('[data-try]').forEach(function(b){b.onclick=function(){sampleKey=b.getAttribute('data-try');unreadable=false;paint();id('sample').scrollIntoView({block:'center'});};});
+  id('sample').insertAdjacentHTML('afterend','<button type="button" class="v-btn v-sm v-ghost" id="back" style="align-self:flex-start">Back to my sample</button>');
+  id('back').onclick=function(){sampleKey='mine';unreadable=false;paint();};
+  id('to').onchange=paint;
+  // The sample results below were checked against the app's real readers and pairing code.
+  var cases={pair:'Payment of ₱5,000.00 received on your Maya Black',nopair:'Payment of ₱4,985.00 received on your Maya Black',unread:'You paid your Maya Black bill of ₱5,000.00.'};
+  var line=function(mark,cls,title,sub){return '<div class="m-line"><span class="m-mark '+cls+'">'+mark+'</span><div>'+(sub?'<b>'+title+'</b><div class="v-xs v-muted">'+sub+'</div>':'<div class="v-sm">'+title+'</div>')+'</div></div>';};
+  var entry=function(name,kind,amt){return '<div class="m-entry"><span>'+name+'<br><small class="v-muted">'+kind+'</small></span><b class="v-num">'+amt+'</b></div>';};
+  function other(){
+    var k=id('o-case').value, src=id('o-src').value, readable=src==='Maya'&&k!=='unread';
+    id('o-msg').value=cases[k];
+    var amt=k==='nopair'?'₱4,985.00':'₱5,000.00';
+    id('o-read').innerHTML=readable?'<span class="v-pill">Read by '+src+'\'s built-in reader</span><span class="v-pill v-ok">Amount '+amt+'</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span>':'<span class="v-pill v-bad">'+src+' can\'t read this message</span>';
+    id('o-make').hidden=readable;id('o-make').textContent='+ Make a '+src+' pattern from this message';
+    var h;
+    if(!readable){
+      h=line('✕','m-bad','These would not pair',src+' can\'t read the second message, so the app would ignore it.'+(src!=='Maya'?' Is it the right source?':''))+
+        '<div class="v-lab">Only the first side is saved</div>'+entry('Maya','Spending · choose a category','−₱5,000.00')+'<div class="v-xs v-muted">Maya Black would not go down.</div>';
+    }else if(k==='nopair'){
+      h=line('✕','m-bad','Both can be read, but they would not pair','The amounts are ₱15.00 apart. A fee on one side can cause this.')+
+        line('✕','m-bad','Same amount: ₱5,000.00 out, ₱4,985.00 in')+line('✓','','One out and one in, two different accounts')+line('✓','','"To Maya Black" names the other account')+
+        '<div class="v-lab">Two separate entries wait in the Inbox</div>'+entry('Maya','Spending · choose a category','−₱5,000.00')+entry('Maya Black','Income','+₱4,985.00')+
+        '<div class="v-xs v-muted">Amounts must be exactly equal to pair. Check both real messages.</div>';
+    }else{
+      h=line('✓','','These two would pair',' ')+line('✓','','Same amount, one out and one in, two different accounts')+line('✓','','"To Maya Black" names the other account')+
+        line('⏱','m-off','They must also arrive within an hour of each other. A sample can\'t check that.')+
+        '<div class="v-lab">One linked transfer, waiting in the Inbox</div>'+entry('Maya','Transfer','−₱5,000.00')+entry('Maya Black','Transfer · lowers what you owe','+₱5,000.00')+
+        '<div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>';
+    }
+    id('o-result').innerHTML=h;
+  }
+  id('o-case').onchange=function(){id('o-src').value='Maya';other();};
+  id('o-src').onchange=other;
+  other();
+  if(location.hash.indexOf('#maya')===0){view='maya';$('[data-go]').forEach(function(x){if(x.getAttribute('data-go')==='maya')x.setAttribute('aria-current','true');else x.removeAttribute('aria-current');});}
+  id('bad').onclick=function(){unreadable=!unreadable;paint();};
+  id('theme').onclick=function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');};
+  if(location.hash==='#pay'){sampleKey='pay';}
+  if(location.hash==='#bad'){unreadable=true;} if(location.hash==='#else'){view='else';}
+  paint();
+  var m={'#maya-bad':'unread','#maya-nopair':'nopair'}[location.hash];if(m){id('o-case').value=m;other();}
+  if(location.hash==='#maya-gcash'){id('o-src').value='GCash';other();}
+})();
+</script>
+</body>
+</html>

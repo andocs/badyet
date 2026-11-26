@@ -6,8 +6,10 @@ import { deleteCaptureRule, saveCaptureSource } from "@/app/(v13)/settings/actio
 import { canParseEmail } from "@/lib/capture/email";
 import { canParse } from "@/lib/capture/parsers";
 import { formatPesos, money } from "@/lib/domain/money";
-import { PatternsSection } from "./capture-patterns";
-import { wordsHit } from "@/lib/capture/decide";
+import { groupRules } from "@/lib/capture/explain";
+import type { AccountLite } from "@/lib/capture/row";
+import { rulesWithDraft } from "@/lib/capture/draft";
+import { Reading, Result, Step } from "./rules-parts";
 import type { CapturePattern } from "@/lib/capture/patterns";
 import { isCustomSlot, isUnusedSlot, RULE_CHANNELS, RULE_KINDS, SOURCE_INFO, SOURCES, type CaptureRule, type RuleChannel, type RuleKind, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
 import { addWord, ruleTitle, windowMinutes, windowParts } from "@/lib/rules/helpers";
@@ -17,6 +19,8 @@ import { useConfirm, useToast } from "./feedback";
 export interface DeviceApp { package: string; label: string | null; seen: "installed" | "notified" }
 export interface SeenSender { address: string; emails: number }
 interface Option { id: string; name: string }
+/** The account rows also carry what the sample test needs to work out which account a message means. */
+type AccountOption = Option & { institution?: string | null; last4?: string | null };
 
 const PACKAGE = /^[a-z][a-z0-9_]*(\.[a-z0-9_]+)+$/i;
 const SENDER = /^(@[^\s@]+\.[^\s@]+|[^\s@]+@[^\s@]+\.[^\s@]+)$/;
@@ -226,16 +230,19 @@ function draftOf(r: CaptureRule | null): Draft {
   };
 }
 
-function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, onDone }: { rule: CaptureRule | null; accounts: Option[]; categories: Option[]; apps: DeviceApp[]; lastSynced: string | null; seenSenders: SeenSender[]; onDone: () => void }) {
+/** What the sample test needs besides the thing being edited. */
+interface TestData { configs: SourceConfig[]; rules: CaptureRule[]; patterns: CapturePattern[]; testAccounts: AccountLite[] }
+
+function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, test, order, onDone }: { rule: CaptureRule | null; accounts: Option[]; categories: Option[]; apps: DeviceApp[]; lastSynced: string | null; seenSenders: SeenSender[]; test: TestData; /** The saved rule's switch and place in the order. */ order: { number: number; first: boolean; last: boolean; enabled: boolean; busy: boolean; onToggle: (v: boolean) => void; onMove: (dir: "up" | "down") => void } | null; onDone: () => void }) {
   const [d, setD] = useState<Draft>(() => draftOf(rule));
   const [sample, setSample] = useState("");
+  const [reading, setReading] = useState<SourceKey | null>(null);
   const [dlg, setDlg] = useState<"" | "apps" | "senders">("");
   const s = useRun();
   const ask = useConfirm();
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setD((x) => ({ ...x, [k]: v }));
   const ignore = d.action === "ignore";
   const moves = !ignore && (d.kind === "transfer" || d.kind === "payment");
-  const acct = new Map(accounts.map((a) => [a.id, a.name]));
   const cat = new Map(categories.map((c) => [c.id, c.name]));
 
   const save = () =>
@@ -245,23 +252,34 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, onD
       rule ? undefined : onDone,
     );
 
-  const text = sample.trim().toLowerCase();
-  const probe: CaptureRule = { id: "test", source: null, matchText: d.words[0] ?? "", action: "record", categoryId: null, words: d.words, mustWords: d.mustWords, skipWords: d.skipWords };
-  const hit = text !== "" && d.words.length > 0 && wordsHit(probe, text);
-  const outcome = ignore
-    ? "It would be skipped."
-    : `${KIND_LABEL[d.kind]}${d.kind === "spending" && d.categoryId ? ` · ${cat.get(d.categoryId) ?? "category"}` : ""}${moves ? ` · ${acct.get(d.fromId) ?? "ask in the Inbox"} → ${acct.get(d.toId) ?? "ask in the Inbox"}` : ""} · ${d.autoConfirm ? "confirmed automatically" : "waits in the Inbox"}`;
+  // Which source's patterns and reader the sample is tried with: one the rule is limited to, else any of yours.
+  const readable = d.sources.length > 0 ? test.configs.filter((c) => d.sources.includes(c.source)) : test.configs;
+  const source: SourceKey = reading && readable.some((c) => c.source === reading) ? reading : (readable[0]?.source ?? "gcash");
+  const config = test.configs.find((c) => c.source === source);
+  const channels = d.channel === "notifications" ? (["notification"] as const) : d.channel === "emails" ? (["email"] as const) : undefined;
+  const draft: CaptureRule = {
+    id: rule?.id ?? "draft", source: null, matchText: d.words[0] ?? "", action: d.action, enabled: d.enabled, channel: d.channel, words: d.words, mustWords: d.mustWords, skipWords: d.skipWords,
+    sources: d.sources as SourceKey[], packages: d.packages, senders: d.senders, kind: d.kind, categoryId: d.categoryId || null, fromAccountId: moves ? d.fromId || null : null, toAccountId: moves ? d.toId || null : null, autoConfirm: d.autoConfirm,
+  };
+  const names = new Map(test.rules.map((r) => [r.id, ruleTitle(r)]));
+  names.set(draft.id, d.name.trim() || d.words[0] || "this rule");
 
   return (
     <section className="v-card v-stack" aria-labelledby="edh" style={{ gap: 14 }}>
-      <div className="v-row v-sp"><h2 id="edh">{rule ? "Edit rule" : "New rule"}</h2><span className="v-pill">{rule ? "Saved" : "Not saved yet"}</span></div>
+      <div className="v-row v-sp"><h2 id="edh">{rule ? ruleTitle(rule) : "New rule"}</h2><span className="v-row" style={{ gap: 8 }}>{order ? <span className="v-pill">Rule {order.number}</span> : null}<span className={`v-pill${rule ? " v-ok" : ""}`}>{rule ? "Saved" : "Not saved yet"}</span></span></div>
+      {order ? (
+        <div className="v-row v-sp v-wrap" style={{ gap: 10 }}>
+          <span className="v-row" style={{ gap: 10 }}><Switch on={order.enabled} label="This rule on or off" disabled={order.busy} onChange={(v) => { set("enabled", v); order.onToggle(v); }} /><b className="v-sm">This rule is {order.enabled ? "on" : "off"}</b></span>
+          <span className="v-row" style={{ gap: 6 }}><span className="v-xs v-muted">Order</span>
+            <button type="button" className="v-iconbtn v-s" aria-label="Try this rule earlier" disabled={order.first || order.busy} onClick={() => order.onMove("up")}>↑</button>
+            <button type="button" className="v-iconbtn v-s" aria-label="Try this rule later" disabled={order.last || order.busy} onClick={() => order.onMove("down")}>↓</button>
+          </span>
+        </div>
+      ) : null}
       <label className="v-field">What is it for<input value={d.name} maxLength={60} onChange={(e) => set("name", e.target.value)} placeholder="Credit card payment" /></label>
-      <div className="v-stack" style={{ gap: 6 }}>
-        <div className="v-lab" id="lo">Listen on</div>
+
+      <Step n={1} title="Where to listen">
         <Seg label="Listen on" value={d.channel} options={RULE_CHANNELS.map((c) => ({ value: c, label: c === "both" ? "Both" : CHANNEL_LABEL[c] }))} onChange={(v) => set("channel", v)} />
-      </div>
-      <div className="v-stack" style={{ gap: 6 }}>
-        <div className="v-lab">From</div>
         <div className="v-chips">
           {PICKABLE.map((k) => (
             <button key={k} type="button" className="v-pill" aria-pressed={d.sources.includes(k)} style={{ border: 0, cursor: "pointer", minHeight: 34, padding: "0 12px", ...(d.sources.includes(k) ? { background: "var(--accent)", color: "var(--on-accent)" } : {}) }} onClick={() => set("sources", d.sources.includes(k) ? d.sources.filter((x) => x !== k) : [...d.sources, k])}>{SOURCE_INFO[k as SourceKey].label}</button>
@@ -272,67 +290,71 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, onD
           <button type="button" className="v-btn v-sm" onClick={() => setDlg("senders")}>+ Sender</button>
         </div>
         <div className="v-xs v-muted">Pick none to listen everywhere.</div>
-      </div>
-      <div className="v-grid2">
+      </Step>
+
+      <Step n={2} title="How it's read" aside={<span className="v-pill">Shared by all of {config?.label ?? SOURCE_INFO[source].label}</span>}>
+        <Reading source={source} setSource={setReading} options={readable.map((c) => c.source)} configs={test.configs} patterns={test.patterns} channels={channels} sample={sample} setSample={setSample} />
+      </Step>
+
+      <Step n={3} title="Which messages">
         <WordChips label="Look for any of these words" hint="Add at least one." list={d.words} onChange={(l) => set("words", l)} />
-        <div className="v-stack">
+        <div className="v-grid2">
           <WordChips label="Must also contain (optional)" list={d.mustWords} onChange={(l) => set("mustWords", l)} />
           <WordChips label="Skip it if it contains" list={d.skipWords} onChange={(l) => set("skipWords", l)} bad />
         </div>
-      </div>
-      <div className="v-row v-sp">
-        <div><b>Ignore it</b><div className="v-xs v-muted">Drop what this rule matches instead of recording it. Ignore rules always win.</div></div>
-        <Switch on={ignore} label="Ignore what this rule matches" onChange={(v) => set("action", v ? "ignore" : "record")} />
-      </div>
-      {!ignore ? (
-        <>
-          <div className="v-stack" style={{ gap: 6 }}>
-            <div className="v-lab">What it is</div>
+      </Step>
+
+      <Step n={4} title="What to do">
+        <div className="v-row v-sp">
+          <div><b>Ignore it</b><div className="v-xs v-muted">Drop what this rule matches instead of recording it. Ignore rules always win.</div></div>
+          <Switch on={ignore} label="Ignore what this rule matches" onChange={(v) => set("action", v ? "ignore" : "record")} />
+        </div>
+        {!ignore ? (
+          <>
             <Seg label="What it is" value={d.kind} options={RULE_KINDS.map((k) => ({ value: k, label: KIND_LABEL[k] }))} onChange={(v) => set("kind", v)} />
-          </div>
-          {d.kind === "spending" ? (
-            <label className="v-field">Category
-              <select value={d.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-                <option value="">Decide in the Inbox</option>
-                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </label>
-          ) : null}
-          {moves ? (
-            <>
-              <div className="v-grid2">
-                <label className="v-field">Money leaves
-                  <select value={d.fromId} onChange={(e) => set("fromId", e.target.value)}>
-                    <option value="">Ask in the Inbox</option>
-                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </select>
-                </label>
-                <label className="v-field">Money arrives in
-                  <select value={d.toId} onChange={(e) => set("toId", e.target.value)}>
-                    <option value="">Ask in the Inbox</option>
-                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </select>
-                </label>
-              </div>
-              <div className="v-xs v-muted">With both set, both sides are recorded. Leave one blank to ask in the Inbox.</div>
-            </>
-          ) : null}
-          <div className="v-row v-sp">
-            <div><b>Confirm automatically</b><div className="v-xs v-muted">Only when it is safe: an account is known, and a category for spending. Otherwise it waits in the Inbox.</div></div>
-            <Switch on={d.autoConfirm} label="Confirm automatically" onChange={(v) => set("autoConfirm", v)} />
-          </div>
-        </>
-      ) : null}
-      <div className="v-testbox">
-        <div className="v-lab">Test it</div>
-        <label className="v-field">Sample message<textarea rows={2} maxLength={400} value={sample} onChange={(e) => setSample(e.target.value)} placeholder="Paste a notification or email here" /></label>
-        {text === "" ? null : (
-          <div className="v-row v-wrap" role="status">
-            <span className={`v-pill ${hit ? "v-ok" : "v-bad"}`}>{hit ? "Matches" : "Does not match"}</span>
-            <span className="v-xs v-muted">{d.words.length === 0 ? "Add a word to look for first." : hit ? outcome : "Nothing would happen."}</span>
-          </div>
-        )}
-      </div>
+            {d.kind === "spending" ? (
+              <label className="v-field">Category
+                <select value={d.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
+                  <option value="">Decide in the Inbox</option>
+                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </label>
+            ) : null}
+            {moves ? (
+              <>
+                <div className="v-grid2">
+                  <label className="v-field">Money leaves
+                    <select value={d.fromId} onChange={(e) => set("fromId", e.target.value)}>
+                      <option value="">Ask in the Inbox</option>
+                      {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="v-field">Money arrives in
+                    <select value={d.toId} onChange={(e) => set("toId", e.target.value)}>
+                      <option value="">Ask in the Inbox</option>
+                      {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <div className="v-xs v-muted">Whatever you set here is used. With both, both sides are recorded. If one side is left to the Inbox, the item waits there: press Transfer and pick the other account. If the other account then sends its own message, it is not added twice.</div>
+              </>
+            ) : null}
+            <div className="v-row v-sp">
+              <div><b>Confirm automatically</b><div className="v-xs v-muted">Only when it is safe: an account is known, and a category for spending. Otherwise it waits in the Inbox.</div></div>
+              <Switch on={d.autoConfirm} label="Confirm automatically" onChange={(v) => set("autoConfirm", v)} />
+            </div>
+            {config?.autoConfirm && !d.autoConfirm ? <div className="v-note">&quot;Everything else from {config.label}&quot; confirms automatically, and that also applies to this rule.</div> : null}
+          </>
+        ) : null}
+      </Step>
+
+      <Step n={5} title="What happens with the sample">
+        {config ? (
+          <Result sample={sample} configs={test.configs} allPatterns={test.patterns} ruleId={ignore ? null : draft.id} ruleNames={names} categoryName={cat}
+            setup={{ source, config, rules: rulesWithDraft(test.rules, draft), patterns: test.patterns, accounts: test.testAccounts, channels, from: d.sources.length === 0 ? (d.packages[0] ?? d.senders[0]) : undefined }} />
+        ) : null}
+      </Step>
+
       <div className="v-row v-sp v-wrap">
         {rule ? (
           <button type="button" className="v-btn v-sm" disabled={s.busy} style={{ color: "var(--red)" }} onClick={async () => {
@@ -359,29 +381,21 @@ function summary(r: CaptureRule): string {
   return places.length ? places.join(" · ") : "All sources";
 }
 
-function RuleCard({ rule, selected, first, last, enabled, busy, acct, cat, onSelect, onToggle, onMove }: { rule: CaptureRule; selected: boolean; first: boolean; last: boolean; enabled: boolean; busy: boolean; acct: Map<string, string>; cat: Map<string, string>; onSelect: () => void; onToggle: (v: boolean) => void; onMove: (d: "up" | "down") => void }) {
+/** One rule in the list: its place in the order, its name, and what it does. */
+function RuleItem({ rule, number, selected, enabled, acct, cat, showWhere, onSelect }: { rule: CaptureRule; number: number; selected: boolean; enabled: boolean; acct: Map<string, string>; cat: Map<string, string>; showWhere: boolean; onSelect: () => void }) {
   const words = rule.words && rule.words.length > 0 ? rule.words : [rule.matchText];
-  const ignore = rule.action === "ignore";
   const kind = rule.kind ?? "spending";
-  const what = ignore
-    ? "Skips matching items."
-    : `${KIND_LABEL[kind]}${kind === "spending" && rule.categoryId ? `, category ${cat.get(rule.categoryId) ?? "a category"}` : ""}${(kind === "transfer" || kind === "payment") && rule.fromAccountId && rule.toAccountId ? `, ${acct.get(rule.fromAccountId) ?? "?"} to ${acct.get(rule.toAccountId) ?? "?"}` : ""}. ${rule.autoConfirm || rule.action === "auto_confirm" ? "Confirms automatically." : "Asks me to confirm."}`;
+  const moves = kind === "transfer" || kind === "payment";
+  const side = (id: string | null | undefined) => (id ? (acct.get(id) ?? "?") : "asks in the Inbox");
+  const what = rule.action === "ignore" ? "Ignored" : `${KIND_LABEL[kind]}${kind === "spending" && rule.categoryId ? ` · ${cat.get(rule.categoryId) ?? "category"}` : ""}${moves && (rule.fromAccountId || rule.toAccountId) ? ` · ${side(rule.fromAccountId)} → ${side(rule.toAccountId)}` : ""}`;
   return (
-    <div className={`v-rulecard${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
-      <div className="v-row v-sp">
-        <button type="button" style={{ background: "none", border: 0, borderRadius: 0, minHeight: 0, boxShadow: "none", padding: 0, font: "inherit", color: "inherit", fontWeight: 800, textAlign: "left", cursor: "pointer", flex: 1, minWidth: 0 }} aria-label={`Edit ${ruleTitle(rule)}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{ruleTitle(rule)}</button>
-        <button type="button" className="v-btn v-sm" aria-label={`Move ${ruleTitle(rule)} up`} disabled={first || busy} onClick={(e) => { e.stopPropagation(); onMove("up"); }}>↑</button>
-        <button type="button" className="v-btn v-sm" aria-label={`Move ${ruleTitle(rule)} down`} disabled={last || busy} onClick={(e) => { e.stopPropagation(); onMove("down"); }}>↓</button>
-        <span onClick={(e) => e.stopPropagation()}><Switch on={enabled} label={`${ruleTitle(rule)} on or off`} disabled={busy} onChange={onToggle} /></span>
-      </div>
-      <div className="v-row v-wrap"><span className="v-pill v-ok">{CHANNEL_LABEL[rule.channel ?? "both"]}</span><span className="v-xs v-muted">{summary(rule)}</span></div>
-      <div className="v-chips">
-        {ignore ? <span className="v-pill v-bad">ignore</span> : null}
-        {words.slice(0, 3).map((w) => <span key={w} className="v-pill">{w}</span>)}
-        {words.length > 3 ? <span className="v-pill">+{words.length - 3}</span> : null}
-      </div>
-      <div className="v-xs v-muted">{enabled ? what : `Paused. ${what}`}</div>
-    </div>
+    <button type="button" className={`v-ritem${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
+      <span className="v-rno">{number}</span>
+      <span>
+        <b>{ruleTitle(rule)}</b>
+        <small>{showWhere ? `${summary(rule)} · ` : ""}{words.slice(0, 2).map((w) => `"${w}"`).join(", ")}{words.length > 2 ? ` +${words.length - 2}` : ""} → {what}{enabled ? "" : " · off"}</small>
+      </span>
+    </button>
   );
 }
 
@@ -396,24 +410,10 @@ function sourceLine(cfg: SourceConfig, patterns: CapturePattern[], acct: Map<str
   return { listen, reader: builtIn ? "Built-in reader" : "Your patterns", mine, defaults: parts.join(" · ") };
 }
 
-function SourceCard({ cfg, patterns, selected, busy, acct, cat, onSelect, onToggle }: { cfg: SourceConfig; patterns: CapturePattern[]; selected: boolean; busy: boolean; acct: Map<string, string>; cat: Map<string, string>; onSelect: () => void; onToggle: (v: boolean) => void }) {
-  const info = { ...SOURCE_INFO[cfg.source], label: cfg.label };
-  const l = sourceLine(cfg, patterns, acct, cat);
-  return (
-    <div className={`v-rulecard${cfg.enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
-      <div className="v-row v-sp">
-        <button type="button" style={{ background: "none", border: 0, borderRadius: 0, minHeight: 0, boxShadow: "none", padding: 0, font: "inherit", color: "inherit", fontWeight: 800, textAlign: "left", cursor: "pointer", flex: 1, minWidth: 0 }} aria-label={`Edit ${info.label}`} onClick={(e) => { e.stopPropagation(); onSelect(); }}>{info.label}</button>
-        <span onClick={(e) => e.stopPropagation()}><Switch on={cfg.enabled} label={`${info.label} on or off`} disabled={busy} onChange={onToggle} /></span>
-      </div>
-      <div className="v-row v-wrap"><span className="v-pill v-ok">{l.listen}</span><span className="v-pill v-warn">{l.reader}</span>{l.mine ? <span className="v-pill">Your patterns ({l.mine})</span> : null}</div>
-      <div className="v-xs v-muted">{cfg.enabled ? l.defaults : `Paused. ${l.defaults}`}</div>
-    </div>
-  );
-}
-
 /** One source, in the rule editor's layout: the apps and senders it listens to, how it is read, and what to do with anything no rule above caught. */
-function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, seenSenders, onDone }: { cfg: SourceConfig; patterns: CapturePattern[]; accounts: Option[]; categories: Option[]; apps: DeviceApp[]; lastSynced: string | null; seenSenders: SeenSender[]; onDone: () => void }) {
+function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, seenSenders, test, onDone }: { cfg: SourceConfig; patterns: CapturePattern[]; accounts: Option[]; categories: Option[]; apps: DeviceApp[]; lastSynced: string | null; seenSenders: SeenSender[]; test: TestData; onDone: () => void }) {
   const [name, setName] = useState(cfg.label);
+  const [sample, setSample] = useState("");
   const info = { ...SOURCE_INFO[cfg.source], label: isCustomSlot(cfg.source) && name.trim() ? name.trim() : cfg.label };
   const ask = useConfirm();
   const s = useRun();
@@ -424,69 +424,83 @@ function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, s
   const [autoConfirm, setAutoConfirm] = useState(cfg.autoConfirm);
   const [minAmount, setMinAmount] = useState(cfg.minAmount > 0 ? formatPesos(money(cfg.minAmount), { symbol: false }) : "");
   const [picker, setPicker] = useState<"apps" | "senders" | null>(null);
-  const notif = canParse(cfg.source);
-  const email = canParseEmail(cfg.source);
   const save = () =>
     s.run(() => saveCaptureSource({ source: cfg.source, enabled: cfg.enabled, packages: packages.join("\n"), senders: senders.join("\n"), accountId: accountId || null, categoryId: categoryId || null, autoConfirm, minAmount, label: name }), `${info.label} saved.`);
   const remove = async () => {
     if (!(await ask({ title: `Remove ${info.label}?`, message: `It stops listening and moves to Removed. Its reader and settings stay; Add back restores them.`, confirmLabel: "Remove", danger: true }))) return;
     s.run(() => removeSource(cfg.source, true), `${info.label} removed.`, onDone);
   };
+  // The settings as they are on screen, so the sample shows what saving them would do.
+  const typedMin = Number(minAmount.replace(/,/g, ""));
+  const draft: SourceConfig = { ...cfg, label: info.label, packages, senders, accountId: accountId || null, categoryId: categoryId || null, autoConfirm, minAmount: Number.isFinite(typedMin) && typedMin > 0 ? Math.round(typedMin * 100) : 0 };
+  const configs = test.configs.map((c) => (c.source === cfg.source ? draft : c));
   const chips = (list: string[], set: (l: string[]) => void, label: string) =>
     list.map((x) => <button key={x} type="button" className="v-pill v-ok" style={{ border: 0, cursor: "pointer" }} aria-label={`Remove ${x} from ${label}`} onClick={() => set(list.filter((y) => y !== x))}>{x} ✕</button>);
 
   return (
     <section className="v-card v-stack" aria-labelledby="se" style={{ gap: 14 }}>
-      <div className="v-row v-sp"><h2 id="se">Everything else from {info.label}</h2><span className="v-pill v-warn">{notif || email ? "Built-in reader" : "Your patterns"}</span></div>
-      <p className="v-xs v-muted" style={{ margin: 0 }}>Catches anything from {info.label} that no rule above caught. {info.blurb}</p>
+      <div className="v-row v-sp v-wrap"><h2 id="se">Everything else from {info.label}</h2><span className="v-pill">Fallback</span></div>
+      <p className="v-xs v-muted" style={{ margin: 0 }}>Catches anything from {info.label} that no rule caught. {info.blurb}</p>
       {isCustomSlot(cfg.source) ? <label className="v-field">Name<input value={name} maxLength={30} onChange={(e) => setName(e.target.value)} placeholder="e.g. ShopeePay" /></label> : null}
-      <div className="v-stack" style={{ gap: 6 }}>
+
+      <Step n={1} title="Where to listen">
         <div className="v-lab">Notifications from these apps</div>
         <div className="v-chips">{chips(packages, setPackages, "apps")}<button type="button" className="v-btn v-sm" onClick={() => setPicker("apps")}>+ App</button></div>
         <div className="v-xs v-muted">The phone listens to these apps. Turn on notification access on the phone once.</div>
-      </div>
-      <div className="v-stack" style={{ gap: 6 }}>
         <div className="v-lab">Emails from these senders</div>
         <div className="v-chips">{chips(senders, setSenders, "senders")}<button type="button" className="v-btn v-sm" onClick={() => setPicker("senders")}>+ Sender</button></div>
         <div className="v-xs v-muted">Gmail is checked every few minutes, and right away when a bank app notifies. @bank.com matches every address at it.</div>
-      </div>
-      <div className="v-testbox">
-        <div className="v-lab">How it&apos;s read</div>
-        <div className="v-sm">
-          {notif && email ? `Built-in ${info.label} reader for notifications and emails.` : notif ? `Built-in ${info.label} reader for notifications. No built-in email reader yet: add a pattern to read its emails.` : email ? `Built-in ${info.label} reader for emails. Add a pattern to read its notifications.` : `No built-in reader for ${info.label}. Add at least one pattern, or nothing from it can be read.`}
+      </Step>
+
+      <Step n={2} title="How it's read" aside={<span className="v-pill">Shared by all of {info.label}</span>}>
+        <Reading source={cfg.source} configs={configs} patterns={patterns} sample={sample} setSample={setSample} />
+      </Step>
+
+      <Step n={3} title="Which messages">
+        <div className="v-note">Everything from {info.label} that no rule caught. It has no words: it is the fallback.</div>
+      </Step>
+
+      <Step n={4} title="What to do">
+        <div className="v-grid2">
+          <label className="v-field">Account
+            <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
+              <option value="">Read from the message, ask if unclear</option>
+              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </label>
+          <label className="v-field">Category
+            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <option value="">Ask me in the Inbox</option>
+              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </label>
         </div>
-        <PatternsSection patterns={patterns} only={cfg.source} />
-      </div>
-      <div className="v-grid2">
-        <label className="v-field">Account
-          <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-            <option value="">Read from the message, ask if unclear</option>
-            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
-        </label>
-        <label className="v-field">Category
-          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-            <option value="">Ask me in the Inbox</option>
-            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
-      </div>
-      <div className="v-grid2">
-        <label className="v-field">Skip if under (₱)<input inputMode="decimal" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} placeholder="No minimum" /></label>
-        <div className="v-row v-sp" style={{ alignSelf: "end", minHeight: 44 }}>
-          <b>Confirm automatically</b>
-          <Switch on={autoConfirm} label={`Confirm ${info.label} automatically`} onChange={setAutoConfirm} />
+        {accountId ? <div className="v-note">Everything from {info.label} will go to this account, whatever the message says. Leave it on automatic if one app speaks for several accounts, such as a wallet and its card.</div> : null}
+        <div className="v-shared">
+          <div className="v-lab">Applies to all of {info.label}, including its rules</div>
+          <label className="v-field">Skip if under (₱)<input inputMode="decimal" value={minAmount} onChange={(e) => setMinAmount(e.target.value)} placeholder="No minimum" /></label>
+          <div className="v-row v-sp">
+            <div><b>Confirm automatically</b><div className="v-xs v-muted">Only when it is safe. On here also confirms this source&apos;s rule matches.</div></div>
+            <Switch on={autoConfirm} label={`Confirm ${info.label} automatically`} onChange={setAutoConfirm} />
+          </div>
         </div>
-      </div>
+      </Step>
+
+      <Step n={5} title="What happens with the sample">
+        <Result sample={sample} configs={configs} allPatterns={test.patterns} ruleId={null} ruleNames={new Map(test.rules.map((r) => [r.id, ruleTitle(r)]))} categoryName={new Map(categories.map((c) => [c.id, c.name]))}
+          setup={{ source: cfg.source, config: draft, rules: test.rules, patterns: test.patterns, accounts: test.testAccounts }} />
+      </Step>
+
       <div className="v-row v-sp v-wrap">
         <button type="button" className="v-btn v-sm v-ghost" disabled={s.busy} onClick={remove}>Remove {info.label}</button>
-        <div className="v-row"><button type="button" className="v-btn" onClick={onDone}>Close</button><button type="button" className="v-btn v-pri" disabled={s.busy} onClick={save}>Save</button></div>
+        <div className="v-row"><button type="button" className="v-btn v-sm" onClick={onDone}>Cancel</button><button type="button" className="v-btn v-sm v-pri" disabled={s.busy} onClick={save}>Save</button></div>
       </div>
       <AppPicker open={picker === "apps"} onClose={() => setPicker(null)} apps={apps} lastSynced={lastSynced} picked={packages} onChange={setPackages} />
       <SenderPicker open={picker === "senders"} onClose={() => setPicker(null)} seen={seenSenders} picked={senders} onChange={setSenders} />
     </section>
   );
 }
+
 
 function CaptureTab({ rules, sources, patterns, accounts, categories, apps, lastSynced, seenSenders, captureMissing, gmailAlert }: Pick<Props, "rules" | "sources" | "patterns" | "accounts" | "categories" | "apps" | "lastSynced" | "seenSenders" | "captureMissing" | "gmailAlert">) {
   const [sel, setSel] = useState<string | "new" | null>(rules[0]?.id ?? null);
@@ -504,6 +518,21 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
   const cat = new Map(categories.map((c) => [c.id, c.name]));
   const chosen = sel && sel !== "new" ? rules.find((r) => r.id === sel) ?? null : null;
   const editing = sel === "new" || chosen !== null;
+  const grouped = groupRules(rules, live.map((c) => c.source));
+  const test: TestData = { configs: live, rules: rules.map((r) => ({ ...r, enabled: over[r.id] ?? r.enabled })), patterns, testAccounts: accounts.map((a) => ({ id: a.id, name: a.name, institution: a.institution ?? null, last4: a.last4 ?? null })) };
+  const toggleRule = (r: CaptureRule, v: boolean) => {
+    setOver((o) => ({ ...o, [r.id]: v }));
+    s.run(async () => {
+      const res = await setRuleEnabled(r.id, v);
+      if (res.error) setOver((o) => ({ ...o, [r.id]: !v }));
+      return res;
+    }, v ? "Rule on." : "Rule off.");
+  };
+  const item = (r: CaptureRule, showWhere: boolean) => (
+    <RuleItem key={r.id} rule={r} number={grouped.numberOf.get(r.id)!} selected={sel === r.id} enabled={over[r.id] ?? r.enabled !== false} acct={acct} cat={cat} showWhere={showWhere} onSelect={() => setSel(r.id)} />
+  );
+  const chosenAt = chosen ? rules.findIndex((r) => r.id === chosen.id) : -1;
+  const chosenOrder = chosen ? { number: chosenAt + 1, first: chosenAt === 0, last: chosenAt === rules.length - 1, enabled: over[chosen.id] ?? chosen.enabled !== false, busy: s.busy, onToggle: (v: boolean) => toggleRule(chosen, v), onMove: (dir: "up" | "down") => s.run(() => moveRule(chosen.id, dir), "Order saved.") } : null;
   const toggleSource = (cfg: SourceConfig, v: boolean) => {
     setSrcOver((o) => ({ ...o, [cfg.source]: v }));
     s.run(async () => {
@@ -526,30 +555,32 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
     <div className="v-rsplit">
       <div className="v-stack">
         <section className="v-card v-stack" aria-labelledby="rl">
-          <div className="v-row v-sp"><h2 id="rl">Capture rules</h2><button type="button" className="v-btn v-sm v-pri" onClick={() => setSel("new")}>+ New rule</button></div>
-          <div className="v-xs v-muted">Run top to bottom. The first match decides. Ignore rules always win.</div>
-          {rules.length === 0 ? <p className="v-muted v-sm" style={{ margin: 0 }}>No rules yet.</p> : null}
-          {rules.map((r, i) => (
-            <RuleCard key={r.id} rule={r} selected={sel === r.id} first={i === 0} last={i === rules.length - 1} enabled={over[r.id] ?? r.enabled !== false} busy={s.busy} acct={acct} cat={cat}
-              onSelect={() => setSel(r.id)}
-              onToggle={(v) => {
-                setOver((o) => ({ ...o, [r.id]: v }));
-                s.run(async () => {
-                  const res = await setRuleEnabled(r.id, v);
-                  if (res.error) setOver((o) => ({ ...o, [r.id]: !v }));
-                  return res;
-                }, v ? "Rule on." : "Rule off.");
-              }}
-              onMove={(dir) => s.run(() => moveRule(r.id, dir), "Order saved.")} />
-          ))}
-        </section>
-        <section className="v-card v-stack" aria-labelledby="ee">
-          <h2 id="ee">Everything else from…</h2>
-          <div className="v-xs v-muted">Each app or bank catches whatever no rule above caught, with its own account, category and minimum.</div>
-          {live.map((c) => (
-            <SourceCard key={c.source} cfg={c} patterns={patterns} selected={sel === `src:${c.source}`} busy={s.busy} acct={acct} cat={cat} onSelect={() => setSel(`src:${c.source}`)} onToggle={(v) => toggleSource(c, v)} />
-          ))}
-          {nextSlot ? <button type="button" className="v-btn v-sm" disabled={s.busy} onClick={() => s.run(() => removeSource(nextSlot.source, false), "Another app added. Name it and add its app or sender.", () => setSel(`src:${nextSlot.source}`))}>+ Another app</button> : null}
+          <div className="v-row v-sp"><h2 id="rl">Where messages come from</h2><button type="button" className="v-btn v-sm v-pri" onClick={() => setSel("new")}>+ New rule</button></div>
+          <div className="v-xs v-muted">Numbers are the order rules are tried, across every source. The first match decides. Ignore rules always win. If none matches, &quot;Everything else&quot; applies.</div>
+          {grouped.groups.map(({ source, rules: mine }) => {
+            const c = live.find((x) => x.source === source)!;
+            const l = sourceLine(c, patterns, acct, cat);
+            return (
+              <div key={source} className="v-rgroup">
+                <div className="v-rghead">
+                  <b>{c.label}</b>
+                  <span className="v-row" style={{ gap: 8 }}><span className="v-pill v-warn">{l.mine ? `${l.reader === "Built-in reader" ? "Built-in + " : ""}${l.mine} ${l.mine === 1 ? "pattern" : "patterns"}` : l.reader}</span><Switch on={c.enabled} label={`${c.label} on or off`} disabled={s.busy} onChange={(v) => toggleSource(c, v)} /></span>
+                </div>
+                {mine.map((r) => item(r, false))}
+                <button type="button" className={`v-ritem v-else${c.enabled ? "" : " v-off"}`} aria-current={sel === `src:${source}`} onClick={() => setSel(`src:${source}`)}>
+                  <span className="v-rno">…</span>
+                  <span><b>Everything else from {c.label}</b><small>{c.enabled ? "" : "Off · "}{l.listen === "Nothing yet" ? "Nothing to listen to yet · " : ""}{l.defaults}</small></span>
+                </button>
+              </div>
+            );
+          })}
+          {grouped.shared.length > 0 ? (
+            <div className="v-rgroup">
+              <div className="v-rghead"><b>Several or any source</b></div>
+              {grouped.shared.map((r) => item(r, true))}
+            </div>
+          ) : null}
+          {nextSlot ? <button type="button" className="v-btn v-sm" disabled={s.busy} onClick={() => s.run(() => removeSource(nextSlot.source, false), "Another app added. Name it and add its app or sender.", () => setSel(`src:${nextSlot.source}`))}>+ Another app or bank</button> : null}
           {removed.length > 0 ? (
             <div className="v-testbox">
               <div className="v-lab">Removed</div>
@@ -563,9 +594,9 @@ function CaptureTab({ rules, sources, patterns, accounts, categories, apps, last
         <SourcesArea gmailAlert={gmailAlert} />
       </div>
       {chosenSource ? (
-        <SourceEditor key={chosenSource.source} cfg={chosenSource} patterns={patterns} accounts={accounts} categories={categories} apps={apps} lastSynced={lastSynced} seenSenders={seenSenders} onDone={() => setSel(null)} />
+        <SourceEditor key={chosenSource.source} cfg={chosenSource} patterns={patterns} accounts={accounts} categories={categories} apps={apps} lastSynced={lastSynced} seenSenders={seenSenders} test={test} onDone={() => setSel(null)} />
       ) : editing ? (
-        <Editor key={sel} rule={chosen} accounts={accounts} categories={categories} apps={apps} lastSynced={lastSynced} seenSenders={seenSenders} onDone={() => setSel(null)} />
+        <Editor key={sel} rule={chosen} accounts={accounts} categories={categories} apps={apps} lastSynced={lastSynced} seenSenders={seenSenders} test={test} order={chosenOrder} onDone={() => setSel(null)} />
       ) : (
         <section className="v-card v-stack">
           <p className="v-muted v-sm" style={{ margin: 0 }}>Pick a rule to edit it, or <button type="button" className="v-btn v-sm" onClick={() => { toast("Fill in the form, then Save.", "ok"); setSel("new"); }}>start a new one</button>.</p>
@@ -611,7 +642,7 @@ interface Props {
   rules: CaptureRule[];
   sources: SourceConfig[];
   patterns: CapturePattern[];
-  accounts: Option[];
+  accounts: AccountOption[];
   categories: Option[];
   apps: DeviceApp[];
   lastSynced: string | null;

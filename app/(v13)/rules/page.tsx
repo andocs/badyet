@@ -15,7 +15,7 @@ export default async function Rules() {
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
   const [catRes, acctRes, srcRes, patRes, appsRes, sendersRes, dedupeRes, setRes] = await Promise.all([
     supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").order("sort"),
-    supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
+    supabase.from("accounts").select("id, name, institution, last4").is("archived_at", null).order("sort"),
     supabase.from("capture_sources").select("source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount"),
     supabase.from("capture_patterns").select("id, source, template, direction").order("created_at"),
     supabase.from("device_apps").select("package, label, seen, updated_at").order("label"),
@@ -45,7 +45,7 @@ export default async function Rules() {
         rules={rulesFromRows(rulesRes.error ? [] : ((rulesRes.data ?? []) as unknown as RuleRow[]))}
         sources={configsFromRows(srcRes.error ? [] : await withRemoved(supabase, (srcRes.data ?? []) as SourceRow[]))}
         patterns={patRes.error ? [] : patternsFromRows((patRes.data ?? []) as PatternRow[])}
-        accounts={(acctRes.data ?? []) as { id: string; name: string }[]}
+        accounts={(acctRes.data ?? []) as { id: string; name: string; institution: string | null; last4: string | null }[]}
         categories={(catRes.data ?? []) as { id: string; name: string }[]}
         apps={apps}
         lastSynced={lastSynced}

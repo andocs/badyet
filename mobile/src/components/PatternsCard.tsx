@@ -11,15 +11,19 @@ import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
 /** Your own notification patterns: write the wording with placeholders, try it on a sample, save it. The app turns it into a regex on the phone. */
-export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: CapturePattern[]; onChanged: () => void | Promise<void>; sources?: SourceConfig[] }) {
+export function PatternsCard({ patterns: all, onChanged, sources = [], only, seed }: { patterns: CapturePattern[]; onChanged: () => void | Promise<void>; sources?: SourceConfig[]; /** Show and add patterns for this source only (step 2 of the editor). */ only?: SourceKey; /** A first draft for the add form, made from a sample. */ seed?: { template: string; sample: string; direction: 'in' | 'out' } }) {
+  const patterns = only ? all.filter((p) => p.source === only) : all;
+  // The add form stays folded until you want it; a draft made from a sample opens it.
+  const [adding, setAdding] = useState(!only || !!seed);
   const c = useTheme();
   // Sources by their own names ("ShopeePay"), without the ones you removed or have not added yet.
   const nameOf = (k: SourceKey) => sources.find((x) => x.source === k)?.label ?? SOURCE_INFO[k].label;
   const shownSources: readonly SourceKey[] = sources.length ? sources.filter((x) => !x.removed).map((x) => x.source) : SOURCES;
-  const [source, setSource] = useState<SourceKey>('custom');
-  const [direction, setDirection] = useState<'in' | 'out'>('in');
-  const [template, setTemplate] = useState('');
-  const [sample, setSample] = useState('');
+  const [picked, setSource] = useState<SourceKey>('custom');
+  const source = only ?? picked;
+  const [direction, setDirection] = useState<'in' | 'out'>(seed?.direction ?? 'in');
+  const [template, setTemplate] = useState(seed?.template ?? '');
+  const [sample, setSample] = useState(seed?.sample ?? '');
   const [problem, setProblem] = useState<string | null>(null);
 
   const result = template.trim() !== '' && sample.trim() !== '' ? testPattern(template, direction, sample) : null;
@@ -27,7 +31,7 @@ export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: 
 
   async function add() {
     setProblem(null);
-    const r = await addPattern(supabase, { source, template, direction }, patterns.length);
+    const r = await addPattern(supabase, { source, template, direction }, all.length);
     if ('error' in r) return setProblem(r.error);
     setTemplate('');
     setSample('');
@@ -39,9 +43,10 @@ export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: 
     else await onChanged();
   }
 
+  const Wrap = only ? View : Card;
   return (
-    <Card>
-      <Label>Your own patterns</Label>
+    <Wrap style={only ? { gap: 8 } : undefined}>
+      <Label>{only ? 'My patterns · tried first' : 'Your own patterns'}</Label>
       <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
         Teach the app a notification without waiting for an update. Write the wording with placeholders:{'\n'}
         {'{amount}'} the amount (required) · {'{name}'} who it was with · {'{last4}'} the last digits of your account · {'{ref}'} a reference number · {'{any}'} anything you want to skip.
@@ -62,12 +67,23 @@ export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: 
         </View>
       ))}
 
-      <Label>For</Label>
-      <View style={s.chips}>
-        {shownSources.map((k) => (
-          <Chip key={k} label={nameOf(k)} on={source === k} onPress={() => setSource(k)} />
-        ))}
-      </View>
+      {only ? (
+        <Pressable onPress={() => setAdding((v) => !v)} accessibilityRole="button" accessibilityState={{ expanded: adding }} style={{ minHeight: 44, justifyContent: 'center' }}>
+          <Text style={{ color: c.accentText, fontFamily: fonts.bodyBold, fontSize: 13 }}>{adding ? '− Close the new pattern' : '+ Add a pattern'}</Text>
+        </Pressable>
+      ) : null}
+      {adding ? (
+        <View style={{ gap: 8 }}>
+      {only ? null : (
+        <>
+          <Label>For</Label>
+          <View style={s.chips}>
+            {shownSources.map((k) => (
+              <Chip key={k} label={nameOf(k)} on={source === k} onPress={() => setSource(k)} />
+            ))}
+          </View>
+        </>
+      )}
       <Label>Money</Label>
       <View style={s.chips}>
         <Chip label="Comes in" on={direction === 'in'} onPress={() => setDirection('in')} />
@@ -90,7 +106,9 @@ export function PatternsCard({ patterns, onChanged, sources = [] }: { patterns: 
       <Pressable onPress={() => void add()} accessibilityRole="button" style={[s.btn, { backgroundColor: c.accent }]}>
         <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>Save pattern</Text>
       </Pressable>
-    </Card>
+        </View>
+      ) : null}
+    </Wrap>
   );
 }
 

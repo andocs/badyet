@@ -21,7 +21,15 @@ export interface TransferPlan {
 
 export type Decision =
   | { keep: false; reason: 'source-off' | 'under-minimum' | 'ignore-rule' }
-  | { keep: true; status: 'pending' | 'confirmed'; accountId: string | null; categoryId: string | null; ruleId: string | null; transfer?: TransferPlan };
+  | { keep: true; status: 'pending' | 'confirmed'; accountId: string | null; categoryId: string | null; ruleId: string | null; transfer?: TransferPlan; move?: HalfPlan };
+
+/** A transfer or payment rule with only one of its two accounts set: what it does name, from this message's side. */
+export interface HalfPlan {
+  /** The account this message's money is on, when the rule names it. */
+  own: string | null;
+  /** The account on the other side, when the rule names it. */
+  other: string | null;
+}
 
 /** Rules for this source come before rules for every source; longer keywords before shorter; then by id so the order is stable. Rules saved with a position keep that order first. */
 function ordered(rules: readonly CaptureRule[], source: SourceKey): CaptureRule[] {
@@ -96,6 +104,13 @@ export function decide(c: Captured, config: SourceConfig, rules: readonly Captur
       ruleId: rec.id,
       transfer: { fromAccountId: rec.fromAccountId!, toAccountId: rec.toAccountId! },
     };
+  }
+
+  // One side named: it is used, and the item always waits, since the other side may still be yours to pick.
+  if (rec && (rec.kind === 'transfer' || rec.kind === 'payment') && !!rec.fromAccountId !== !!rec.toAccountId) {
+    const own = (c.direction === 'out' ? rec.fromAccountId : rec.toAccountId) ?? null;
+    const other = (c.direction === 'out' ? rec.toAccountId : rec.fromAccountId) ?? null;
+    return { keep: true, status: 'pending', accountId: own ?? config.accountId, categoryId: null, ruleId: rec.id, move: { own, other } };
   }
 
   const catRule = c.direction === 'out' ? matched.find((r) => r.action === 'set_category' || (r.action === 'record' && r.kind !== 'income' && r.categoryId)) : undefined;

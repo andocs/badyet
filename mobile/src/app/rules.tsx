@@ -1,15 +1,17 @@
+import { groupRules } from '@/lib/capture/explain';
+import type { AccountLite } from '@/lib/capture/row';
+import { formatPesos, money } from '@/lib/domain/money';
 import { setSourceRemoved } from '@/lib/capture/source-write';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
-import { SOURCES, SOURCE_INFO, type CaptureRule, type SourceKey, isUnusedSlot } from '@/lib/capture/sources';
+import { SOURCE_INFO, type CaptureRule, type SourceConfig, type SourceKey, isUnusedSlot } from '@/lib/capture/sources';
 import { Body, Card, Chip, Label, Notice, Screen } from '~/components/ui';
-import { CHANNEL_LABEL, RuleEditor } from '~/components/RuleEditor';
-import { PatternsCard } from '~/components/PatternsCard';
+import { RuleEditor } from '~/components/RuleEditor';
 import { SourceEditor } from '~/components/SourceEditor';
 import { applyAllowlist } from '~/lib/allowlist';
 import { useHeldCount } from '~/lib/CaptureRunner';
-import { loadCapture, moveRule, saveDedupeRule, saveGmailAlert, setRuleEnabled } from '~/lib/capture';
+import { loadCapture, moveRule, saveDedupeRule, saveGmailAlert, saveSource, setRuleEnabled } from '~/lib/capture';
 import { loadSeenSenders, readPhoneApps, syncDeviceApps, type AppInfo } from '~/lib/deviceApps';
 import { loadPickers } from '~/lib/pickers';
 import { useSession } from '~/lib/session';
@@ -34,8 +36,8 @@ export default function Rules() {
   const router = useRouter();
   const { session } = useSession();
   const { data, error, refreshing, reload } = useLoad(async () => {
-    const [capture, pickers, senders] = await Promise.all([loadCapture(supabase), loadPickers(supabase), loadSeenSenders(supabase)]);
-    return { ...capture, accounts: pickers.accounts, categories: pickers.categories, senders };
+    const [capture, pickers, senders, accountRows] = await Promise.all([loadCapture(supabase), loadPickers(supabase), loadSeenSenders(supabase), supabase.from('accounts').select('id, name, institution, last4').is('archived_at', null)]);
+    return { ...capture, accounts: pickers.accounts, categories: pickers.categories, senders, testAccounts: (accountRows.data ?? []) as AccountLite[] };
   });
   const held = useHeldCount();
   const [tab, setTab] = useState<Tab>('rules');
@@ -63,6 +65,13 @@ export default function Rules() {
     await reload();
     refreshAllowlist();
   }
+  async function toggleSource(cfg: SourceConfig, on: boolean) {
+    if (!session) return;
+    const res = await saveSource(supabase, session.user.id, { source: cfg.source, enabled: on, packages: cfg.packages.join('\n'), senders: cfg.senders.join('\n'), accountId: cfg.accountId, categoryId: cfg.categoryId, autoConfirm: cfg.autoConfirm, minAmount: cfg.minAmount > 0 ? formatPesos(money(cfg.minAmount), { symbol: false }) : '', label: cfg.label });
+    if ('error' in res) setProblem(res.error);
+    await reload();
+    refreshAllowlist();
+  }
   async function toggleGmailAlert(on: boolean) {
     if (!session) return;
     const res = await saveGmailAlert(supabase, session.user.id, on);
@@ -78,6 +87,12 @@ export default function Rules() {
   }
 
   const editingSourceCfg = data?.configs.find((x) => x.source === editingSource) ?? null;
+  const test = data ? { configs: data.configs.filter((x) => !x.removed), rules: data.rules, patterns: data.patterns, accounts: data.testAccounts } : null;
+  // The switch and order of the rule being edited, as they are now.
+  const editingId = editing && editing !== 'new' ? editing.id : null;
+  const editingAt = editingId && data ? data.rules.findIndex((r) => r.id === editingId) : -1;
+  const editingNow = editingAt >= 0 ? data!.rules[editingAt]! : null;
+  const order = editingNow ? { number: editingAt + 1, first: editingAt === 0, last: editingAt === data!.rules.length - 1, enabled: editingNow.enabled !== false, onToggle: (v: boolean) => void toggleRule(editingNow, v), onMove: (dir: -1 | 1) => void move(editingNow, dir) } : null;
 
   return (
     <Screen title="Rules" refreshing={refreshing} onRefresh={reload}>
@@ -100,79 +115,74 @@ export default function Rules() {
               {held} capture{held === 1 ? ' is' : 's are'} waiting for an account. Open the Inbox to say which account each one belongs to.
             </Notice>
           ) : null}
-          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>The first rule that matches decides. Ignore rules win over the rest.</Text>
-
-          {data.rules.length === 0 ? <Notice>No rules yet. Add one below.</Notice> : null}
-          {data.rules.map((r, i) => {
-            const words = r.words?.length ? r.words : [r.matchText];
-            return (
-              <Card key={r.id}>
-                <View style={s.row}>
-                  <Pressable onPress={() => setEditing(r)} accessibilityRole="button" accessibilityLabel={`Edit rule ${r.name ?? r.matchText}`} style={{ flex: 1, gap: 4 }}>
-                    <Body bold>{r.name || `“${r.matchText}”`}</Body>
-                    <View style={s.chips}>
-                      <View style={[s.pill, { backgroundColor: c.soft }]}>
-                        <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 12 }}>{CHANNEL_LABEL[r.channel ?? 'both']}</Text>
-                      </View>
-                    </View>
-                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>From {fromSummary(r)}</Text>
-                    <View style={s.chips}>
-                      {words.slice(0, 4).map((w) => (
-                        <View key={w} style={[s.pill, { backgroundColor: c.soft }]}>
-                          <Text style={{ color: c.ink, fontFamily: fonts.body, fontSize: 12 }}>{w}</Text>
-                        </View>
-                      ))}
-                      {words.length > 4 ? <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>+{words.length - 4}</Text> : null}
-                    </View>
-                  </Pressable>
-                  <Switch value={r.enabled !== false} onValueChange={(on) => void toggleRule(r, on)} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel={`Rule ${r.name ?? r.matchText} on`} />
-                </View>
-                <View style={s.row}>
-                  <Pressable onPress={() => void move(r, -1)} disabled={i === 0} accessibilityRole="button" accessibilityLabel="Move up" style={[s.small, { backgroundColor: c.soft, opacity: i === 0 ? 0.4 : 1 }]}>
-                    <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Up</Text>
-                  </Pressable>
-                  <Pressable onPress={() => void move(r, 1)} disabled={i === data.rules.length - 1} accessibilityRole="button" accessibilityLabel="Move down" style={[s.small, { backgroundColor: c.soft, opacity: i === data.rules.length - 1 ? 0.4 : 1 }]}>
-                    <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Down</Text>
-                  </Pressable>
-                </View>
-              </Card>
-            );
-          })}
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Numbers are the order rules are tried, across every source. The first match decides. Ignore rules always win. If none matches, &quot;Everything else&quot; applies.</Text>
           <Pressable onPress={() => setEditing('new')} accessibilityRole="button" style={[s.btn, { backgroundColor: c.accent }]}>
             <Text style={{ color: c.onAccent, fontFamily: fonts.bodyBold, fontSize: 15 }}>+ New rule</Text>
           </Pressable>
 
-          <Card>
-            <Label>Gmail</Label>
-            <View style={s.row}>
-              <View style={{ flex: 1 }}>
-                <Body bold>Check Gmail when Gmail notifies</Body>
-                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>When the Gmail app shows a notification, read your new bank emails right away. The notification itself is never read.</Text>
-              </View>
-              <Switch value={data.gmailAlert} onValueChange={(on) => void toggleGmailAlert(on)} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Check Gmail when Gmail notifies" />
-            </View>
-          </Card>
-
-          <Card>
-            <Label>Everything else from…</Label>
-            <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>Each app or bank catches whatever no rule above caught, with its own account, category and minimum.</Text>
-            {SOURCES.filter((k) => !data.configs.find((x) => x.source === k)!.removed).map((k) => {
-              const cfg = data.configs.find((x) => x.source === k)!;
-              const where = [cfg.packages.length ? `${cfg.packages.length} app${cfg.packages.length === 1 ? '' : 's'}` : null, cfg.senders.length ? `${cfg.senders.length} sender${cfg.senders.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'No app or sender set yet';
+          {(() => {
+            const live = data.configs.filter((x) => !x.removed);
+            const grouped = groupRules(data.rules, live.map((x) => x.source));
+            const row = (r: CaptureRule, showWhere: boolean) => {
+              const words = r.words?.length ? r.words : [r.matchText];
+              const what = r.action === 'ignore' ? 'Ignored' : KIND_LABEL[r.kind ?? 'spending'];
               return (
-                <Pressable key={k} onPress={() => setEditingSource(k)} accessibilityRole="button" accessibilityLabel={`Edit ${cfg.label}`} style={[s.row, { minHeight: 52 }]}>
+                <Pressable key={r.id} onPress={() => setEditing(r)} accessibilityRole="button" accessibilityLabel={`Edit rule ${r.name ?? r.matchText}`} style={[s.item, { backgroundColor: c.soft, borderColor: c.line, opacity: r.enabled === false ? 0.65 : 1 }]}>
+                  <View style={[s.no, { backgroundColor: c.surface }]}>
+                    <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 12 }}>{grouped.numberOf.get(r.id)}</Text>
+                  </View>
                   <View style={{ flex: 1 }}>
-                    <Body bold>{cfg.label}</Body>
-                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
-                      {cfg.enabled ? 'On' : 'Off'} · {where}
-                      {cfg.autoConfirm ? ' · confirms itself' : ''}
+                    <Body bold>{r.name || `“${r.matchText}”`}</Body>
+                    <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                      {showWhere ? `${fromSummary(r)} · ` : ''}
+                      {words.slice(0, 2).join(', ')} → {what}
+                      {r.enabled === false ? ' · off' : ''}
                     </Text>
                   </View>
-                  <Text style={{ color: c.muted, fontSize: 18 }}>›</Text>
                 </Pressable>
               );
-            })}
-            {(() => {
+            };
+            return (
+              <>
+                {grouped.groups.map(({ source, rules: mine }) => {
+                  const cfg = live.find((x) => x.source === source)!;
+                  const where = [cfg.packages.length ? `${cfg.packages.length} app${cfg.packages.length === 1 ? '' : 's'}` : null, cfg.senders.length ? `${cfg.senders.length} sender${cfg.senders.length === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ') || 'No app or sender set yet';
+                  return (
+                    <Card key={source}>
+                      <View style={s.row}>
+                        <View style={{ flex: 1 }}>
+                          <Body bold>{cfg.label}</Body>
+                        </View>
+                        <Switch value={cfg.enabled} onValueChange={(on) => void toggleSource(cfg, on)} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel={`${cfg.label} on or off`} />
+                      </View>
+                      {mine.map((r) => row(r, false))}
+                      <Pressable onPress={() => setEditingSource(source)} accessibilityRole="button" accessibilityLabel={`Edit everything else from ${cfg.label}`} style={[s.item, { borderColor: c.line, borderStyle: 'dashed' }]}>
+                        <View style={[s.no, { backgroundColor: c.surface }]}>
+                          <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 12 }}>…</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Body bold>Everything else from {cfg.label}</Body>
+                          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                            {cfg.enabled ? '' : 'Off · '}
+                            {where}
+                            {cfg.autoConfirm ? ' · confirms itself' : ''}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    </Card>
+                  );
+                })}
+                {grouped.shared.length > 0 ? (
+                  <Card>
+                    <Label>Several or any source</Label>
+                    {grouped.shared.map((r) => row(r, true))}
+                  </Card>
+                ) : null}
+              </>
+            );
+          })()}
+
+          {(() => {
               const next = data.configs.find((x) => isUnusedSlot(x, data.patterns));
               return next ? (
                 <Pressable
@@ -186,30 +196,39 @@ export default function Rules() {
                   accessibilityRole="button"
                   style={{ minHeight: 44, borderRadius: 999, alignItems: 'center', justifyContent: 'center', backgroundColor: c.soft }}
                 >
-                  <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>+ Another app</Text>
+                  <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 14 }}>+ Another app or bank</Text>
                 </Pressable>
               ) : null;
             })()}
-            {data.configs.some((x) => x.removed && !isUnusedSlot(x, data.patterns)) ? (
-              <View style={{ gap: 8, borderTopWidth: 1, borderTopColor: c.line, paddingTop: 10 }}>
-                <Label>Removed</Label>
-                {data.configs.filter((x) => x.removed && !isUnusedSlot(x, data.patterns)).map((x) => (
-                  <View key={x.source} style={[s.row, { minHeight: 44 }]}>
-                    <Body>{x.label}</Body>
-                    <Pressable
-                      onPress={() => void setSourceRemoved(supabase, x.source, false).then((r) => ('error' in r ? setProblem(r.error) : reload()))}
-                      accessibilityRole="button"
-                      style={{ minHeight: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: c.soft }}
-                    >
-                      <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Add back</Text>
-                    </Pressable>
-                  </View>
-                ))}
+          {data.configs.some((x) => x.removed && !isUnusedSlot(x, data.patterns)) ? (
+            <Card>
+              <Label>Removed</Label>
+              {data.configs.filter((x) => x.removed && !isUnusedSlot(x, data.patterns)).map((x) => (
+                <View key={x.source} style={[s.row, { minHeight: 44 }]}>
+                  <Body>{x.label}</Body>
+                  <Pressable
+                    onPress={() => void setSourceRemoved(supabase, x.source, false).then((r) => ('error' in r ? setProblem(r.error) : reload()))}
+                    accessibilityRole="button"
+                    style={{ minHeight: 36, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: c.soft }}
+                  >
+                    <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Add back</Text>
+                  </Pressable>
+                </View>
+              ))}
+            </Card>
+          ) : null}
+
+          <Card>
+            <Label>Gmail</Label>
+            <View style={s.row}>
+              <View style={{ flex: 1 }}>
+                <Body bold>Check Gmail when Gmail notifies</Body>
+                <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>When the Gmail app shows a notification, read your new bank emails right away. The notification itself is never read.</Text>
               </View>
-            ) : null}
+              <Switch value={data.gmailAlert} onValueChange={(on) => void toggleGmailAlert(on)} trackColor={{ true: c.accent, false: c.line }} thumbColor={c.ink} accessibilityLabel="Check Gmail when Gmail notifies" />
+            </View>
           </Card>
 
-          <PatternsCard patterns={data.patterns} sources={data.configs} onChanged={reload} />
         </>
       ) : null}
 
@@ -220,6 +239,9 @@ export default function Rules() {
       {editing && data ? (
         <RuleEditor
           rule={editing === 'new' ? null : editing}
+          test={test!}
+          order={order}
+          onPatternsChanged={reload}
           accounts={data.accounts}
           categories={data.categories}
           installed={phone.installed}
@@ -233,6 +255,8 @@ export default function Rules() {
       {editingSourceCfg && data ? (
         <SourceEditor
           cfg={editingSourceCfg}
+          test={test!}
+          onPatternsChanged={reload}
           accounts={data.accounts}
           categories={data.categories}
           onClose={() => setEditingSource(null)}
@@ -298,7 +322,11 @@ function DedupeCard({ userId, windowMin, matchSource, onSaved }: { userId: strin
   );
 }
 
+const KIND_LABEL = { spending: 'Spending', income: 'Income', transfer: 'Transfer', payment: 'Payment' } as const;
+
 const s = StyleSheet.create({
+  item: { flexDirection: 'row', alignItems: 'center', gap: 10, borderWidth: 1, borderRadius: 10, padding: 10, minHeight: 56 },
+  no: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   pill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },

@@ -1,8 +1,11 @@
+import { rulesWithDraft } from '@/lib/capture/draft';
+import type { CapturePattern } from '@/lib/capture/patterns';
+import type { AccountLite } from '@/lib/capture/row';
+import { Reading, Result, Step } from '~/components/RuleSteps';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { wordsHit } from '@/lib/capture/decide';
-import { RULE_CHANNELS, RULE_KINDS, SOURCES, SOURCE_INFO, type CaptureRule, type RuleChannel, type RuleKind, type SourceKey, isCustomSlot } from '@/lib/capture/sources';
+import { RULE_CHANNELS, RULE_KINDS, SOURCES, SOURCE_INFO, type CaptureRule, type RuleChannel, type RuleKind, type SourceKey, isCustomSlot, type SourceConfig } from '@/lib/capture/sources';
 import { Body, Chip, Label } from '~/components/ui';
 import { saveRuleFull, deleteRule } from '~/lib/capture';
 import type { AppInfo, SenderInfo } from '~/lib/deviceApps';
@@ -10,6 +13,14 @@ import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 
 type Option = { id: string; name: string };
+
+/** What the sample test needs besides the thing being edited. */
+export interface TestData {
+  configs: SourceConfig[];
+  rules: CaptureRule[];
+  patterns: CapturePattern[];
+  accounts: AccountLite[];
+}
 
 export const CHANNEL_LABEL: Record<RuleChannel, string> = { notifications: 'Notifications', emails: 'Emails', both: 'Both' };
 const KIND_LABEL: Record<RuleKind, string> = { spending: 'Spending', income: 'Income', transfer: 'Transfer', payment: 'Payment' };
@@ -29,8 +40,13 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 
 /** The sheet that edits one capture rule (a new one when `rule` is null). */
 export function RuleEditor({
-  rule, accounts, categories, installed, recent, senders, onClose, onSaved,
+  rule, accounts, categories, installed, recent, senders, test, order, onPatternsChanged, onClose, onSaved,
 }: {
+  /** What the sample test needs besides the thing being edited. */
+  test: TestData;
+  /** The saved rule's switch and place in the order. */
+  order: { number: number; first: boolean; last: boolean; enabled: boolean; onToggle: (v: boolean) => void; onMove: (dir: -1 | 1) => void } | null;
+  onPatternsChanged: () => void | Promise<void>;
   rule: CaptureRule | null;
   accounts: Option[];
   categories: Option[];
@@ -58,6 +74,7 @@ export function RuleEditor({
   const [autoConfirm, setAutoConfirm] = useState(rule?.autoConfirm ?? rule?.action === 'auto_confirm');
   const [picker, setPicker] = useState<null | 'app' | 'sender'>(null);
   const [sample, setSample] = useState('');
+  const [reading, setReading] = useState<SourceKey | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -65,14 +82,25 @@ export function RuleEditor({
   const labelOf = new Map(installed.map((a) => [a.package, a.label]));
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-  const draft: CaptureRule = { id: '', source: null, matchText: toList(words)[0] ?? '', action: 'record', categoryId: null, words: toList(words), mustWords: toList(must), skipWords: toList(skip) };
-  const tested = sample.trim() ? wordsHit(draft, sample.toLowerCase()) : null;
+  const draft: CaptureRule = {
+    id: rule?.id ?? 'draft', source: null, matchText: toList(words)[0] ?? '', action: ignore ? 'ignore' : 'record', enabled: order?.enabled ?? true, channel, words: toList(words), mustWords: toList(must), skipWords: toList(skip),
+    sources, packages, senders: fromSenders, kind, categoryId, fromAccountId: moves ? fromId : null, toAccountId: moves ? toId : null, autoConfirm,
+  };
+  // Which source's patterns and reader the sample is tried with: one the rule is limited to, else any of yours.
+  const readable = sources.length > 0 ? test.configs.filter((x) => sources.includes(x.source)) : test.configs;
+  const source: SourceKey = reading && readable.some((x) => x.source === reading) ? reading : (readable[0]?.source ?? 'gcash');
+  const config = test.configs.find((x) => x.source === source);
+  const channels = channel === 'notifications' ? (['notification'] as const) : channel === 'emails' ? (['email'] as const) : undefined;
+  const ruleNames = new Map(test.rules.map((r) => [r.id, r.name || r.words?.[0] || r.matchText]));
+  ruleNames.set(draft.id, name.trim() || draft.matchText || 'this rule');
+  const accountName = (id: string | null) => (id ? (accounts.find((a) => a.id === id)?.name ?? 'Account') : 'asks in the Inbox');
+  const whatSummary = ignore ? 'Ignored' : `${KIND_LABEL[kind]}${moves && (fromId || toId) ? ` · ${accountName(fromId)} → ${accountName(toId)}` : ''}`;
 
   async function save() {
     setBusy(true);
     setProblem(null);
     const r = await saveRuleFull(supabase, rule?.id ?? null, {
-      name, enabled: rule?.enabled ?? true, channel, words: toList(words), mustWords: toList(must), skipWords: toList(skip), sources, packages, senders: fromSenders,
+      name, enabled: order?.enabled ?? rule?.enabled ?? true, channel, words: toList(words), mustWords: toList(must), skipWords: toList(skip), sources, packages, senders: fromSenders,
       action: ignore ? 'ignore' : 'record', kind, categoryId, fromAccountId: fromId, toAccountId: toId, autoConfirm,
     });
     setBusy(false);
@@ -103,12 +131,29 @@ export function RuleEditor({
           <SenderPicker senders={senders} chosen={fromSenders} onToggle={(a) => setFromSenders((l) => toggle(l, a))} onDone={() => setPicker(null)} />
         ) : (
           <ScrollView contentContainerStyle={{ gap: 14 }} keyboardShouldPersistTaps="handled">
-            <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>{rule ? 'Edit rule' : 'New rule'}</Text>
+            <Text style={{ color: c.ink, fontFamily: fonts.display, fontSize: 20 }}>
+              {rule ? 'Edit rule' : 'New rule'}
+              {order ? ` · Rule ${order.number}` : ''}
+            </Text>
+            {order ? (
+              <View style={s.between}>
+                <Switch value={order.enabled} onValueChange={order.onToggle} accessibilityLabel="This rule on or off" {...switchProps} />
+                <View style={{ flex: 1 }}>
+                  <Body bold>This rule is {order.enabled ? 'on' : 'off'}</Body>
+                </View>
+                {([[-1, '↑', 'Try this rule earlier', order.first], [1, '↓', 'Try this rule later', order.last]] as const).map(([dir, sign, label, off]) => (
+                  <Pressable key={dir} onPress={() => order.onMove(dir)} disabled={off} accessibilityRole="button" accessibilityLabel={label} style={[s.btn, { backgroundColor: c.soft, opacity: off ? 0.4 : 1, paddingHorizontal: 16 }]}>
+                    <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 15 }}>{sign}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null}
 
             <Field label="Name">
               <TextInput value={name} onChangeText={setName} maxLength={60} placeholder="Like GCash cashback" placeholderTextColor={c.muted} style={input} />
             </Field>
 
+            <Step n={1} title="Where to listen" summary={`${CHANNEL_LABEL[channel]} · ${sources.length + packages.length + fromSenders.length === 0 ? 'everywhere' : [...sources.map((k) => SOURCE_INFO[k].label), ...packages, ...fromSenders].join(', ')}`} startOpen={!rule}>
             <Field label="Listen on">
               <View style={s.chips}>
                 {RULE_CHANNELS.map((x) => (
@@ -133,6 +178,13 @@ export function RuleEditor({
               </View>
             </Field>
 
+            </Step>
+
+            <Step n={2} title="How it's read" summary={`Shared by all of ${config?.label ?? SOURCE_INFO[source].label}`}>
+              <Reading source={source} setSource={setReading} options={readable.map((x) => x.source)} configs={test.configs} patterns={test.patterns} channels={channels} sample={sample} setSample={setSample} onPatternsChanged={onPatternsChanged} />
+            </Step>
+
+            <Step n={3} title="Which messages" summary={toList(words).length ? `Contains ${toList(words).slice(0, 3).join(', ')}` : 'Add a word to look for'} startOpen={!rule}>
             <Field label="Words (any of these)" hint="Separate with commas.">
               <TextInput value={words} onChangeText={setWords} autoCapitalize="none" placeholder="cashback, refund" placeholderTextColor={c.muted} style={input} />
             </Field>
@@ -143,6 +195,9 @@ export function RuleEditor({
               <TextInput value={skip} onChangeText={setSkip} autoCapitalize="none" placeholder="optional" placeholderTextColor={c.muted} style={input} />
             </Field>
 
+            </Step>
+
+            <Step n={4} title="What to do" summary={whatSummary} startOpen>
             <View style={s.between}>
               <View style={{ flex: 1 }}>
                 <Body bold>Ignore</Body>
@@ -203,12 +258,22 @@ export function RuleEditor({
               </>
             ) : null}
 
-            <Field label="Test it" hint={tested === null ? 'Paste a notification or email to see if this rule would catch it. Nothing is saved.' : undefined}>
-              <TextInput value={sample} onChangeText={setSample} multiline placeholder="You received PHP 50 cashback" placeholderTextColor={c.muted} style={[...input, { minHeight: 64 }]} />
-              {tested !== null ? (
-                <Text style={{ color: tested ? c.accentText : c.err, fontFamily: fonts.bodyBold, fontSize: 14 }}>{tested ? 'This rule would match.' : 'This rule would not match.'}</Text>
+            {moves ? (
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                Whatever you set here is used. If one side is left to the Inbox, the item waits there: press Transfer and pick the other account. If the other account then sends its own message, it is not added twice.
+              </Text>
+            ) : null}
+            {config?.autoConfirm && !autoConfirm && !ignore ? (
+              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>&quot;Everything else from {config.label}&quot; confirms automatically, and that also applies to this rule.</Text>
+            ) : null}
+            </Step>
+
+            <Step n={5} title="What happens with the sample" summary={sample.trim() ? 'Tap to see the result' : 'Paste a sample in step 2'}>
+              {config ? (
+                <Result sample={sample} configs={test.configs} allPatterns={test.patterns} ruleId={ignore ? null : draft.id} ruleNames={ruleNames} categoryName={new Map(categories.map((x) => [x.id, x.name]))}
+                  setup={{ source, config, rules: rulesWithDraft(test.rules, draft), patterns: test.patterns, accounts: test.accounts, channels, from: sources.length === 0 ? (packages[0] ?? fromSenders[0]) : undefined }} />
               ) : null}
-            </Field>
+            </Step>
 
             {problem ? <Text style={{ color: c.err, fontFamily: fonts.body, fontSize: 14 }}>{problem}</Text> : null}
             <View style={s.between}>

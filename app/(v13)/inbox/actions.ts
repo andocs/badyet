@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
 import { resolveHeldRow } from "@/lib/capture/held";
+import { addOtherSide, checkOtherAccount } from "@/lib/capture/other-side";
 import { isMoveCategory } from "@/lib/capture/transfer-category";
 import { normalizePattern } from "@/lib/inbox/rules";
 import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
@@ -22,7 +23,7 @@ const refresh = () => {
  * Confirms a pending row. A normal row needs a category; a transfer does not, and confirming one also confirms its other leg.
  * With `rule`, "always put this merchant under this category" is saved. Only confirmed rows move balances.
  */
-export async function confirmTransaction(input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean }): Promise<FormState> {
+export async function confirmTransaction(input: { id: string; categoryId: string | null; rule: boolean; note: string; billId?: string | null; asTransfer?: boolean; otherAccountId?: string | null }): Promise<FormState> {
   const supabase = await requireAuthed();
   if (!UUID.test(input.id)) return { error: "That transaction was not found." };
   const row = await supabase.from("transactions").select("id, kind, status, merchant, transfer_peer_id, account_id, occurred_at, source, amount").eq("id", input.id).maybeSingle();
@@ -62,11 +63,25 @@ export async function confirmTransaction(input: { id: string; categoryId: string
     }
   }
 
+  // "Other account": checked before anything changes, then the missing side is added after confirming.
+  const other = becomesTransfer && !row.data.transfer_peer_id ? (input.otherAccountId ?? null) : null;
+  if (other) {
+    const ok = await checkOtherAccount(supabase, row.data.account_id as string, other);
+    if ("error" in ok) return { error: ok.error };
+  }
+
   const now = new Date().toISOString();
   const note = input.note.trim().slice(0, 200) || null;
   const ids = [row.data.id as string, ...(isTransfer && row.data.transfer_peer_id ? [row.data.transfer_peer_id as string] : [])];
   const upd = await supabase.from("transactions").update({ status: "confirmed", confirmed_at: now, category_id: categoryId, note, ...(becomesTransfer ? { kind: "transfer" } : {}) }).in("id", ids).eq("status", "pending");
   if (upd.error) return { error: "Could not confirm that. Try again." };
+  if (other) {
+    const done = await addOtherSide(supabase, { id: row.data.id as string, otherAccountId: other, newId: crypto.randomUUID() });
+    if ("error" in done) {
+      refresh();
+      return { error: done.error };
+    }
+  }
   if (billId) {
     const link = await supabase.from("transactions").update({ budget_line_id: billId }).eq("id", row.data.id);
     if (link.error) return { error: "Confirmed, but it was not linked to the bill. Mark the bill sent on Now." };

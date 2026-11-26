@@ -154,3 +154,49 @@ describe('runCapture', () => {
     expect(await runCapture(again.deps)).toMatchObject({ held: 1, skipped: 1 });
   });
 });
+
+describe('a rule that records both sides, and the other side message', () => {
+  const accounts: AccountLite[] = [
+    { id: 'wallet', name: 'Maya', institution: null, last4: null },
+    { id: 'black', name: 'Maya Black', institution: null, last4: null },
+  ];
+  const maya = (text: string, at = T) => note('com.paymaya', 'Maya', text, { postTime: at });
+  const PAID = maya('You paid P5,000.00 to Maya Black.');
+  const RECEIVED = maya('Payment of P5,000.00 received on your Maya Black', T + 60_000);
+  const rule = (over: object): CaptureRule => ({ id: 'r', source: null, matchText: 'to maya black', words: ['to maya black'], action: 'record', categoryId: null, kind: 'payment', fromAccountId: 'wallet', toAccountId: 'black', ...over });
+  const withMaya = (t: ReturnType<typeof setup>) => {
+    const c = t.configs.find((x) => x.source === 'maya')!;
+    c.packages = ['com.paymaya'];
+    return t;
+  };
+
+  it('does not add the card side again when its own message arrives in the same pass', async () => {
+    const t = withMaya(setup({ queue: [PAID, RECEIVED], ctx: { rules: [rule({})], accounts } }));
+    expect(await runCapture(t.deps)).toMatchObject({ added: 1, skipped: 1 });
+    expect(t.rows.map((r) => [r.account_id, r.amount, r.kind])).toEqual([['wallet', -500_000, 'transfer'], ['black', 500_000, 'transfer']]);
+  });
+
+  it('claims the entry already saved when the message arrives later', async () => {
+    const t = withMaya(setup({ queue: [RECEIVED], ctx: { accounts } }));
+    const claimed: [string, string][] = [];
+    t.deps.madeLegs = async () => [{ id: 'leg', accountId: 'black', amount: 500_000, at: T, peerAccountId: 'wallet' }];
+    t.deps.claimLeg = async (id, hash) => void claimed.push([id, hash]);
+    expect(await runCapture(t.deps)).toMatchObject({ added: 0, skipped: 1 });
+    expect(t.rows).toHaveLength(0);
+    expect(claimed).toHaveLength(1);
+    expect(claimed[0]![0]).toBe('leg');
+  });
+
+  it('with only "money arrives in" set, takes this side from the message and records both', async () => {
+    const t = withMaya(setup({ queue: [PAID], ctx: { rules: [rule({ fromAccountId: undefined, autoConfirm: true })], accounts } }));
+    expect(await runCapture(t.deps)).toMatchObject({ added: 1 });
+    expect(t.rows.map((r) => [r.account_id, r.kind, r.status])).toEqual([['wallet', 'transfer', 'pending'], ['black', 'transfer', 'pending']]);
+  });
+
+  it('with only "money leaves" set, uses that account and waits for the other side to be picked', async () => {
+    const t = withMaya(setup({ queue: [PAID], ctx: { rules: [rule({ toAccountId: undefined, autoConfirm: true })], accounts: [...accounts, { id: 'other', name: 'Other Maya Wallet', institution: null, last4: null }] } }));
+    expect(await runCapture(t.deps)).toMatchObject({ added: 1 });
+    expect(t.rows).toHaveLength(1);
+    expect(t.rows[0]).toMatchObject({ account_id: 'wallet', amount: -500_000, kind: 'expense', category_id: null, status: 'pending' });
+  });
+});

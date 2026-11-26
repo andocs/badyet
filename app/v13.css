@@ -906,3 +906,36 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v13 .v-navbar{position:fixed;top:0;left:0;right:0;height:3px;z-index:100;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:40% 100%;background-repeat:no-repeat;animation:v13nav 1s ease-in-out infinite}
 @keyframes v13nav{from{background-position:-40% 0}to{background-position:140% 0}}
 @media(prefers-reduced-motion:reduce){.v13 .v-navbar{animation:none;background:var(--accent)}}
+
+/* rev-59: one Rules editor. The list is grouped by source; both editors use the same five numbered sections. */
+.v-rgroup{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px}
+.v-rghead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;flex-wrap:wrap}
+.v-rghead b{font:800 16px var(--font-display)}
+.v-ritem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;cursor:pointer;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:left;width:100%;min-height:52px}
+.v-ritem[aria-current=true]{border-color:var(--accent);background:var(--tint)}
+.v-ritem.v-off{opacity:.65}
+.v-ritem.v-else{background:none;border-style:dashed}
+.v-ritem.v-else[aria-current=true]{background:var(--tint)}
+.v-ritem b{display:block;overflow-wrap:anywhere}.v-ritem small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v-rno{width:26px;height:26px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font:800 12px var(--font-display)}
+.v-rsec{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.v-rsech{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.v-rsech h3{flex:1}
+.v-step{width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:800 13px var(--font-display);flex:none}
+.v-shared{border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:12px;display:flex;flex-direction:column;gap:10px}
+.v-shared .v-field input,.v-shared .v-field textarea,.v-shared .v-field select{background:var(--surface)}
+.v-acc{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.v-acc>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;min-height:52px}
+.v-acc>summary::-webkit-details-marker{display:none}
+.v-acc>summary small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v-acc>summary::after{content:"⌄";color:var(--muted)}
+.v-acc[open]>summary::after{content:"⌃"}
+.v-acc>div{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
+.v-fmt{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px;overflow-wrap:anywhere}
+.v-fmt mark{background:var(--tint);color:var(--accent-text);border-radius:8px;padding:1px 6px;font-weight:700;font-size:12px}
+.v-markline{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.v-mark{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:13px;background:var(--accent);color:var(--on-accent)}
+.v-mark.v-bad{background:var(--red-tint);color:var(--red)}.v-mark.v-off{background:var(--surface);color:var(--muted)}
+.v-entry{display:flex;justify-content:space-between;gap:12px;background:var(--surface);border-radius:8px;padding:10px 12px}
+.v-addpat>summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--accent-text);min-height:36px;display:flex;align-items:center}
+.v-addpat[open]>summary{margin-bottom:8px}
