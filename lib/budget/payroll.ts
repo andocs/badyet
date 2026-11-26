@@ -1,4 +1,6 @@
+import { money } from "@/lib/domain/money";
 import type { PayslipLine } from "@/lib/engine/payslip";
+import type { GroupView } from "./view";
 
 /** One payslip deduction listed in a budget category: what it is, which cutoffs it comes off, and what it takes. */
 export interface PayrollRow {
@@ -15,8 +17,7 @@ export interface PayrollRow {
 /**
  * Where each payslip deduction (your other deductions and the payroll savings plan) is listed on the Budget page. An other deduction
  * shows under the budget category it is set to; one with none, or whose category is gone, goes in the first category that does not
- * feed savings. The savings plan goes in the category that feeds savings. They are already out of take-home, so they are listed
- * in the category but never added to its total.
+ * feed savings. The savings plan goes in the category that feeds savings.
  */
 export function payrollOnLines(
   pay: { first: { lines: readonly PayslipLine[] }; second: { lines: readonly PayslipLine[] } },
@@ -42,4 +43,23 @@ export function payrollOnLines(
     }
   }
   return out;
+}
+
+/**
+ * The categories with their payslip deductions counted in: each total includes the rows listed under it, and each share is worked
+ * against take-home before those deductions, so the Budget page shows your whole pay. What is left does not change, since the
+ * same money is added to both sides. With a cutoff, only that cutoff's amounts count; pass that cutoff's take-home.
+ */
+export function withPayroll(
+  groups: readonly GroupView[],
+  rows: Readonly<Record<string, readonly PayrollRow[]>>,
+  takeHome: number,
+  cutoff: "first" | "second" | null = null,
+): GroupView[] {
+  const of = (r: PayrollRow) => (cutoff ? r[cutoff] : r.amount);
+  const gross = takeHome + Object.values(rows).flat().reduce((t, r) => t + of(r), 0);
+  return groups.map((g) => {
+    const total = money(g.total + (rows[g.id] ?? []).reduce((t, r) => t + of(r), 0));
+    return { ...g, total, share: gross > 0 ? Math.max(0, Math.min(100, (total / gross) * 100)) : 0 };
+  });
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { PayslipLine } from "@/lib/engine/payslip";
 import { p } from "@/lib/engine/fixtures";
-import { payrollOnLines } from "./payroll";
+import { payrollOnLines, withPayroll } from "./payroll";
+import type { GroupView } from "./view";
 
 const l = (over: Partial<PayslipLine>): PayslipLine => ({ kind: "deduction", label: "HMO", source: "other_deduction", amount: p(300), ...over });
 const groups = [{ id: "ess", feedsSavings: false }, { id: "sav", feedsSavings: true }, { id: "want", feedsSavings: false }];
@@ -19,5 +20,20 @@ describe("payrollOnLines", () => {
     const r = payrollOnLines({ first: { lines: [l({}), l({ ref: "gone", label: "Old" }), l({ source: "savings_plan", label: "Savings plan" })] }, second: { lines: [] } }, groups);
     expect(r.ess!.map((x) => x.label)).toEqual(["HMO", "Old"]);
     expect(r.sav![0]).toMatchObject({ label: "Savings plan", kind: "plan" });
+  });
+});
+
+describe("withPayroll", () => {
+  const group = (id: string, total: number) => ({ id, name: id, feedsSavings: id === "sav", lines: [], total: p(total), share: 0, spentTotal: p(0) }) as GroupView;
+  const rows = payrollOnLines({ first: { lines: [l({})] }, second: { lines: [l({ source: "savings_plan", label: "Savings plan", amount: p(700) })] } }, groups);
+
+  it("counts each category's payslip rows in its total and works shares on pay before them", () => {
+    const out = withPayroll([group("ess", 5_700), group("sav", 3_300)], rows, p(9_000));
+    expect(out.map((g) => g.total)).toEqual([p(6_000), p(4_000)]);
+    expect(out.map((g) => g.share)).toEqual([60, 40]);
+  });
+  it("counts only that cutoff's amounts in a cutoff view", () => {
+    const out = withPayroll([group("ess", 5_700), group("sav", 3_300)], rows, p(9_000), "first");
+    expect(out.map((g) => g.total)).toEqual([p(6_000), p(3_300)]);
   });
 });
