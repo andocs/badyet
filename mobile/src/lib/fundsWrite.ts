@@ -1,3 +1,4 @@
+import { monthOrder } from '@/lib/engine/funds';
 import { linkPlanFund, planLinkChoice } from '@/lib/pay/savings-plan';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateFund, validateOverride } from '@/lib/funds/input';
@@ -60,6 +61,7 @@ interface Plan {
   order: string[] | null;
   pins: Record<string, number>;
   skips: string[];
+  overflow: string | null;
   note: string | null;
 }
 
@@ -67,7 +69,7 @@ interface Plan {
 async function writeOverride(supabase: SupabaseClient, month: string, plan: Plan): Promise<string | null> {
   const first = `${month}-01`;
   const existing = await supabase.from('month_overrides').select('id').eq('month', first).maybeSingle();
-  const empty = !plan.order && Object.keys(plan.pins).length === 0 && plan.skips.length === 0;
+  const empty = !plan.order && Object.keys(plan.pins).length === 0 && plan.skips.length === 0 && !plan.overflow;
   if (empty) {
     if (existing.data) await supabase.from('month_overrides').delete().eq('id', (existing.data as { id: string }).id);
     return null;
@@ -82,6 +84,9 @@ async function writeOverride(supabase: SupabaseClient, month: string, plan: Plan
     if (error || !data) return 'Could not save that month.';
     id = (data as { id: string }).id;
   }
+  // Saved on its own: without that database update, only choosing something other than the default fails.
+  const over = await supabase.from('month_overrides').update({ overflow_to: plan.overflow }).eq('id', id);
+  if (over?.error && plan.overflow) return 'Saved the month, but apply the bonus overflow database update before choosing where the extra goes.';
   const rows = [
     ...Object.entries(plan.pins).map(([fund_id, pin_amount]) => ({ override_id: id, fund_id, pin_amount, skip: false })),
     ...plan.skips.map((fund_id) => ({ override_id: id, fund_id, pin_amount: null, skip: true })),
@@ -98,13 +103,13 @@ export async function saveOverride(supabase: SupabaseClient, input: unknown): Pr
   const v = validateOverride(input);
   if (!v.ok) return { error: v.error };
   const o = v.value;
-  const ids = [...new Set([...(o.order ?? []), ...Object.keys(o.pins), ...o.skips])];
+  const ids = [...new Set([...(o.order ?? []), ...Object.keys(o.pins), ...o.skips, ...(o.overflow && o.overflow !== 'none' ? [o.overflow] : [])])];
   if (ids.length > 0) {
     const found = await supabase.from('funds').select('id').in('id', ids);
     if ((found.data ?? []).length !== ids.length) return { error: 'One of those funds was not found.' };
   }
   for (const month of o.months) {
-    const err = await writeOverride(supabase, month, { order: o.order, pins: o.pins, skips: o.skips, note: o.note });
+    const err = await writeOverride(supabase, month, { order: o.order, pins: o.pins, skips: o.skips, note: o.note, overflow: o.overflow });
     if (err) return { error: err };
   }
   return { ok: true };
@@ -124,8 +129,13 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
   if (!['first', 'pin', 'skip', 'unpin'].includes(input.op)) return { error: 'Pick what to do.' };
   if (input.op === 'pin' && (!Number.isInteger(input.amount) || (input.amount as number) < 0 || (input.amount as number) > 100_000_000_000)) return { error: 'Enter the amount to pin.' };
 
-  const fundRows = await supabase.from('funds').select('id').is('archived_at', null).order('priority');
-  const defaultOrder = ((fundRows.data ?? []) as { id: string }[]).map((f) => f.id);
+  const fundRows = await supabase.from('funds').select('id, rule').is('archived_at', null).order('priority');
+  const inPriority = (fundRows.data ?? []) as { id: string; rule: 'steps' | 'cap' | 'reset' | 'fixed' }[];
+  const plan = await supabase.from('pay_settings').select('savings_plan_fund_id').maybeSingle();
+  const planFundId = (plan?.data as { savings_plan_fund_id?: string | null } | null | undefined)?.savings_plan_fund_id ?? null;
+  // The payroll savings plan's fund is separate from general savings: it is never ordered, pinned or skipped.
+  const general = inPriority.filter((f) => f.id !== planFundId);
+  const defaultOrder = general.map((f) => f.id);
   if (!defaultOrder.includes(input.fundId)) return { error: 'That fund was not found.' };
 
   for (const month of input.months) {
@@ -141,7 +151,7 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
       else if (r.pin_amount !== null) pins[r.fund_id] = r.pin_amount;
     }
     let order = row?.fund_order ?? null;
-    if (input.op === 'first') order = [input.fundId, ...(order ?? defaultOrder).filter((id) => id !== input.fundId)];
+    if (input.op === 'first') order = [input.fundId, ...(order ?? monthOrder(general, month).map((f) => f.id)).filter((id) => id !== input.fundId)];
     if (input.op === 'pin') {
       pins[input.fundId] = input.amount as number;
       const i = skips.indexOf(input.fundId);
@@ -156,7 +166,9 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
       const i = skips.indexOf(input.fundId);
       if (i >= 0) skips.splice(i, 1);
     }
-    const err = await writeOverride(supabase, month, { order, pins, skips, note: row?.note ?? null });
+    const had = row ? await supabase.from('month_overrides').select('overflow_to').eq('id', row.id).maybeSingle() : null;
+    const overflow = (had?.data as { overflow_to?: string | null } | null | undefined)?.overflow_to ?? null;
+    const err = await writeOverride(supabase, month, { order, pins, skips, note: row?.note ?? null, overflow });
     if (err) return { error: err };
   }
   return { ok: true };

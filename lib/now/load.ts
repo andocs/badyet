@@ -1,3 +1,4 @@
+import { monthEditsOf } from "@/lib/pay/month-edits";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
 import { money, sum, type Money } from "@/lib/domain/money";
@@ -103,6 +104,8 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   const labelExtra = await supabase.from("pay_settings").select("other_deduction_label").maybeSingle();
   // The list of other deductions is a newer migration still.
   const listExtra = await supabase.from("pay_settings").select("other_deductions").maybeSingle();
+  // "This month only" payslip changes; a database without that update has none.
+  const editRes = await supabase.from("payslip_month_edits").select("month, cutoff, source, label, amount");
   // Same for the rev-36 settings: without that update there is no remembered pay account and the panel shows everything.
   const nowExtra = await supabase.from("user_settings").select("pay_account_id, now_categories").maybeSingle();
   const extra = (nowExtra.error ? null : nowExtra.data) as { pay_account_id: string | null; now_categories: string[] | null } | null;
@@ -147,7 +150,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       events: salaryEvents,
       allowances: rows<AllowanceRow>(allowances).map(allowanceOf),
       assumptions: assumptionsOf((assumptions.data as AssumptionsRow | null) ?? null),
-      settings: paySettingsOf(withPlanExtra(withPlanExtra(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra), labelExtra), listExtra)),
+      settings: { ...paySettingsOf(withPlanExtra(withPlanExtra(withPlanExtra((pay.data as PaySettingsRow | null) ?? null, planExtra), labelExtra), listExtra)), monthEdits: monthEditsOf(editRes.error ? [] : ((editRes.data ?? []) as Parameters<typeof monthEditsOf>[0])) },
       bonusRules: [],
       bonusInstances: [],
       lines,

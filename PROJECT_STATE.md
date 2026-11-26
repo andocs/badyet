@@ -7,14 +7,15 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-46 merged
+- **Phase:** rev-54 gate
 - **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** none
-- **Next action:** Next revision; open: reimbursement counted before the deposit arrives
+- **Gate:** awaiting approval
+- **Next action:** Approve rev-47..54: merge + OTA; apply migrations 20261226000000 and 20261227000000
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-25 to 2026-11-25) covering apk, rev-39, rev-40, rev-41, rev-42, rev-43, rev-45, rev-44
 - earlier: 15 events (2026-11-25 to 2026-11-25) covering handover, batch-4-plan, rev-33, rev-34, rev-35, rev-36, rev-37, rev-38
 - earlier: 15 events (2026-11-22 to 2026-11-23) covering ota, rev-28, rev-29, rev-30, rev-31, rev-32
 - earlier: 15 events (2026-11-22 to 2026-11-22) covering ota, rev-22, rev-23, build, rev-24, rev-25, rev-26, rev-27..29, rev-27
@@ -32,21 +33,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-25 13:07 | apk | Batch 4 APK built: https://expo.dev/artifacts/eas/ceUP-EgurpB8tJX9yQBgZZF0OSIZzW0l3F0pUJcExaI.apk; Vercel main passed | -
-- 2026-11-25 17:30 | rev-39 | Batch 4 leftovers: phone Inbox Pays a bill; phone budget plans (new/edit/delete); six Other app sources with names (+ Another app, patterns per source on phone); settle to savings (new pool kind, adds to month savings pool, forecast too); bonus net uses payslip tax method (test: net = payslip delta); mobile lint 0 warnings. Migration 20261221000000_savings_and_custom_slots.sql | 5149dc1
-- 2026-11-25 17:39 | rev-39 | Approved; merged to main (8a9748e); published OTA to channel preview (runtime 1.1.0, group c84f127c); Vercel main: success | -
-- 2026-11-25 18:54 | rev-40 | Batch 5 fixes: SSS (SSS Circular 2024-006 table, 5% of MSC) and Pag-IBIG (2% to 10k cap) computed, phone field shows real amount; RTO skip prompt + skipped days listed at once, un-skip clears settle; Transfer category/group hidden, Inbox Transfer button (asTransfer); Forecast chart default saved-so-far + balance switch; transfer pairing windows 60 min gap / 3 h lookback; payslip Necessary vs Other deductions, HMO plan name + editor (web+phone), Budget read-only From your payslip card; savings plan shown per fund (forecast month sheet, Funds page). Migration 20261222000000_payroll_labels.sql. Wants in Planned vs spent pending user info. | 8860ac7
-- 2026-11-25 18:56 | rev-40 | Approved; merged to main (238f945); OTA published (group a32f2b2e-fc97-40ef-b6e4-1cb0e238f0bb); Vercel main: success | -
-- 2026-11-25 18:58 | rev-41 | Pay checklist mockups (3 options: by line / by wallet / wallet cards with lines), web + phone, sample numbers | -
-- 2026-11-25 19:01 | rev-41 | Approved: pay checklist Option 3 + two-way sync (tick records transfer and moves balances; detected transfers auto-tick; duplicates not double counted); merged to main | -
-- 2026-11-25 19:08 | rev-42 | Pay checklist (Option 3): page /pay-checklist + phone plan/checklist; tick = one transfer from payroll account (pay_account_id) to line wallet, balances move; Send the rest = one lump; transfers detected from notifications/emails auto-tick lines in budget order; captured transfer that duplicates one the app recorded is ignored (single or lump of several ticks); lines without a wallet get a wallet picker; Now bills links to it. No migration. | a506a71
-- 2026-11-25 19:11 | rev-42 | Email dedupe and pairing use the transaction time written inside the email (lib/capture/email-time.ts) instead of the email's receipt time; falls back to arrival time when none found | 8a3f7f5
-- 2026-11-25 19:14 | rev-42 | Approved; merged to main (cc9f2e2); OTA published (group 92ae8684-ce87-4500-b817-48406f567942); Vercel main: success | -
-- 2026-11-25 19:21 | rev-43 | Wants row in Planned vs spent (plan = whatever-is-left + moved to Wants - taken; spent = Wants group categories); Choose dropdown floats (absolute popover, closes outside/Esc); docs/BATCH-5-notes.md and HANDOVER-batch-4.md removed and ignored; pay checklist uses a styled Pick dropdown, tab labels with payday dates. No migration. | 387f82f
-- 2026-11-25 19:23 | rev-43 | Approved; merged to main (a30e9ea); OTA published (group a4ae1f48-ba76-497e-ac73-2c58eaa107b2); Vercel main: success | -
-- 2026-11-25 19:41 | rev-45 | Savings plan fund link (uncapped, never resets), pills removed, Other payroll deduction moved beside payslip builder, salary-based contribution labels. All checks PASS. | f3b61f8
-- 2026-11-25 19:47 | rev-45 | Other deductions list per cutoff (needs migration 20261225000000_other_deductions.sql), no-cap funds, chart stack order. Checks PASS. | -
-- 2026-11-25 19:49 | rev-44 | Merged into rev-45 branch so inbox items (incl. All activity) can be edited | -
 - 2026-11-25 19:52 | rev-45 | Inbox edit now includes category (web, phone). | -
 - 2026-11-25 19:55 | rev-45 | Built-in Credit card payment category (acts like Transfer, shown in pickers). | -
 - 2026-11-25 20:04 | rev-45 | Other-deductions layout; rounded-square tickbox standard (web+phone); skeleton/loading bar; payslip deductions can show under a budget line (panel keeps the rest). | -
@@ -57,6 +43,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-25 20:22 | budget hero | Hero total now includes other payroll deductions (web + phone). Merged to main 6bac596; OTA published. | 6bac596
 - 2026-11-26 09:44 | rev-46 | Budget totals include payslip deductions + savings plan again (hero, fixed pill, category totals). Checks PASS. Not merged yet. | -
 - 2026-11-26 10:17 | rev-46 | Merged to main (c81bbad); OTA published (group 8e4fbac8). | c81bbad
+- 2026-11-26 11:12 | rev-47 | Bonus overflow carries to next priority; per-month override (migration 20261226000000); override spacing fix. Checks and build PASS. Not merged. | -
+- 2026-11-26 11:27 | rev-48 | General savings bonus destination, January reset-first order, year pills on top. Includes rev-47. Checks and build PASS. Not merged. | -
+- 2026-11-26 11:45 | rev-49 | Override layout fixed (verified by screenshot), tickbox CSS fixed, step funds stop at current step. Includes rev-47/48. Checks PASS. Not merged. | -
+- 2026-11-26 11:49 | rev-50 | EF later steps wait for all other capped funds to be full. Includes rev-47..49. Checks PASS. Not merged. | -
+- 2026-11-26 11:52 | rev-51 | Savings plan fund excluded from general savings. Includes rev-47..50. Checks PASS. Not merged. | -
+- 2026-11-26 12:35 | rev-52 | SSS/Pag-IBIG 0 overrides treated as unset. Includes rev-47..51. Checks PASS. Not merged. User's payslip also shows HMO Plan twice (payslip custom line + other deductions). | -
+- 2026-11-26 12:39 | rev-53 | SSS split per Circular 2024-006: regular SS on the SSS line, MPF on PenBoost. Includes rev-47..52. Checks PASS. Not merged. | -
+- 2026-11-26 12:46 | rev-54 | This month only payslip edits (migration 20261227000000_payslip_month_edits.sql). Includes rev-47..53. Checks PASS. Not merged. | -
 
 ## 4. Open questions
 

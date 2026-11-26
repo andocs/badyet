@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthed } from "@/lib/auth/require";
 import type { FormState } from "@/lib/form-state";
+import { removeMonthEdits, saveMonthEdits } from "@/lib/pay/month-edits";
 import { saveOtherDeductions } from "@/lib/pay/other-deduction";
 import { saveSavingsPlan } from "@/lib/pay/savings-plan";
 import { validateRaise, validateTemplates } from "@/lib/salary/event-input";
@@ -127,6 +128,26 @@ export async function saveTemplates(input: unknown): Promise<FormState> {
     if (ins.error) return { error: "Saved the layout but not its lines. Try again." };
   }
   refresh();
+  return { ok: true };
+}
+
+/** "This month only": changes the amounts of some payslip lines for one month. */
+export async function saveMonthEditsAction(input: unknown): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await saveMonthEdits(supabase, input);
+  if ("error" in r) return { error: r.error };
+  refresh();
+  revalidatePath("/budget");
+  return { ok: true };
+}
+
+/** Takes a one-month change off some payslip lines. */
+export async function removeMonthEditsAction(input: unknown): Promise<FormState> {
+  const supabase = await requireAuthed();
+  const r = await removeMonthEdits(supabase, input);
+  if ("error" in r) return { error: r.error };
+  refresh();
+  revalidatePath("/budget");
   return { ok: true };
 }
 

@@ -1,7 +1,7 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { monthParts } from "@/lib/domain/dates";
 import { money, sum, type Money } from "@/lib/domain/money";
-import { fundCredits } from "@/lib/engine/bonus";
+import { savingsCredits } from "@/lib/engine/bonus";
 import type { ProjectionInput, ProjectionMonth } from "@/lib/engine/projection";
 import type { FundsData } from "./load";
 import { savingsByMonth } from "@/lib/budget/savings";
@@ -46,14 +46,14 @@ export interface ForecastRow {
   bonuses: { name: string; net: Money }[];
   /** Left after every budget line is below this: the month is tight. */
   tight: boolean;
-  /** Net bonus money assigned to funds this month, before room caps. */
-  bonusCredits: Record<string, Money>;
+  /** Net bonus money going to general savings this month. */
+  bonusSavings: Money;
   funds: Record<string, FundCell>;
 }
 
 /** Projection months as plain rows for the screens. A month's saved total = what the pool gave funds plus money credited straight to them. */
 export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: ReadonlySet<string>): ForecastRow[] {
-  const credits = fundCredits(run.flatMap((m) => m.bonuses));
+  const credits = savingsCredits(run.flatMap((m) => m.bonuses));
   return run.map((m) => ({
     month: m.month,
     year: monthParts(m.month).year,
@@ -65,7 +65,7 @@ export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: Re
     unplaced: m.funds.unplaced,
     bonuses: m.bonuses.map((b) => ({ name: b.name, net: b.net })),
     tight: m.budget.tight.first || m.budget.tight.second || m.budget.over.first || m.budget.over.second,
-    bonusCredits: credits.get(m.month) ?? {},
+    bonusSavings: credits.get(m.month) ?? money(0),
     funds: Object.fromEntries(
       m.funds.funds.map((f) => [f.fundId, { amount: f.amount, bonus: money(f.bonus + f.plan), plan: f.plan, balance: f.balanceAfter, reasons: f.reasons }]),
     ),

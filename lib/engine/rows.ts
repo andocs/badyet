@@ -122,9 +122,11 @@ export function otherDeductionsOf(raw: unknown): OtherDeductionItem[] {
 export const paySettingsOf = (r: PaySettingsRow | null): PaySettings =>
   r
     ? {
-        sssOverride: m(r.sss_override),
+        // A stored 0 is not a figure you chose: the old data copy wrote 0 where nothing had been typed. It means "work it from my
+        // salary". To take nothing, type 0 on the payslip line itself.
+        sssOverride: m(r.sss_override || null),
         philhealthOverride: m(r.philhealth_override),
-        pagibigOverride: m(r.pagibig_override),
+        pagibigOverride: m(r.pagibig_override || null),
         taxOverrideFirst: m(r.tax_override_first),
         taxOverrideSecond: m(r.tax_override_second),
         otherDeduction: money(r.other_deduction),

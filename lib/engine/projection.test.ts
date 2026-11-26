@@ -76,13 +76,14 @@ describe("projection", () => {
     expect(withLine.total).toBeGreaterThan(withoutLine.total);
   });
 
-  it("a 13th month assigned to a fund goes straight in, on the payslip's cutoff, not through the pool", () => {
+  it("a 13th month going to savings goes straight to the funds, on the payslip's cutoff, not through the pool", () => {
     const dec = cmp.with[11]!;
     expect(dec.bonuses).toHaveLength(1);
     expect(dec.bonuses[0]!.gross).toBe(p(60_000)); // base after the expected promotion
     expect(dec.pay.second.lines.some((l) => l.label === "13th month")).toBe(true);
     const ef = dec.funds.funds.find((f) => f.fundId === "ef")!;
-    expect(ef.bonus).toBe(dec.bonuses[0]!.net);
+    expect(ef.bonus).toBeGreaterThan(0);
+    expect(dec.funds.funds.reduce((t, f) => t + f.bonus, 0) + dec.funds.bonusUnplaced).toBe(dec.bonuses[0]!.net);
     expect(cmp.without[11]!.bonuses[0]!.gross).toBe(p(50_000));
   });
 

@@ -3,6 +3,7 @@ import { OverrideBulk, OverrideMonth, type Sim } from "@/components/v13/funds/ov
 import type { FundMeta } from "@/components/v13/funds/forecast-view";
 import { forecastInput, forecastRows } from "@/lib/funds/forecast";
 import { loadFunds } from "@/lib/funds/load";
+import { cleanOrder, monthOrder } from "@/lib/engine/funds";
 import { monthRange } from "@/lib/engine/months";
 import { runProjection } from "@/lib/engine/projection";
 import { createClient } from "@/lib/supabase/server";
@@ -27,31 +28,36 @@ export default async function Override({ searchParams }: { searchParams: Promise
   const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)));
   const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule], resets: f.rule === "reset" && f.id !== d.budget.salary.input.settings.savingsPlanFundId }));
   const years = [...new Set(rows.map((r) => r.year))];
+  const planFundId = d.budget.salary.input.settings.savingsPlanFundId ?? null;
+  // The payroll savings plan's fund is separate from general savings, so there is nothing to change for it here.
+  const general = funds.filter((f) => f.id !== planFundId);
 
   if (sp.bulk) {
     const year = years.includes(Number(sp.y)) ? Number(sp.y) : years[0]!;
     const custom = Object.fromEntries(d.overrides.filter((o) => o.order && o.order.length).map((o) => [o.month as string, true]));
-    return <main className="v-main"><OverrideBulk year={year} years={years} funds={funds} rows={rows} firstMonths={custom} /></main>;
+    return <main className="v-main"><OverrideBulk year={year} years={years} funds={general} rows={rows} firstMonths={custom} /></main>;
   }
 
   const month = months.includes(sp.m ?? "") ? (sp.m as string) : months[1]!;
-  const defaultOrder = d.funds.map((f) => f.id); // already in default priority order
+  // The funds are already in priority order; January puts the yearly-reset funds first.
+  const defaultOrder = monthOrder(d.funds.filter((f) => f.id !== planFundId), month).map((f) => f.id);
   const own = d.overrides.find((o) => o.month === month);
   const sim: Sim = {
     funds: d.funds,
     start: Object.fromEntries(d.funds.map((f) => [f.id, d.fundStart[f.id] ?? 0])),
-    months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusCredits: r.bonusCredits })),
-    overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [] })),
+    months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusSavings: r.bonusSavings, planCredit: planFundId ? (r.funds[planFundId]?.plan ?? 0) : 0 })),
+    planFundId,
+    overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [], overflow: o.overflow ?? null })),
   };
   return (
     <main className="v-main">
       <OverrideMonth
         key={month}
         month={month}
-        funds={funds}
+        funds={general}
         defaultOrder={defaultOrder}
         sim={sim}
-        existing={own ? { order: own.order ?? null, pins: own.pins ?? {}, skips: own.skips ?? [], note: d.notes.get(month) ?? "" } : null}
+        existing={own ? { order: own.order ? cleanOrder(own.order, defaultOrder) : null, pins: own.pins ?? {}, skips: own.skips ?? [], note: d.notes.get(month) ?? "", overflow: own.overflow ?? null } : null}
         months={months}
       />
     </main>

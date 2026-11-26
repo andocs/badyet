@@ -1,3 +1,4 @@
+import { cleanOrder, monthOrder } from '@/lib/engine/funds';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -19,7 +20,7 @@ const PALETTE = ['#34D399', '#7FA8FF', '#F6C453', '#C4A0FF', '#5CD0E6', '#F28BC8
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const WHY = (r: string) =>
-  r.startsWith('priority') ? `Priority ${r.slice(9)}` : r === 'cap hit' ? 'Cap reached' : r === 'pool ran out' ? 'Pool ran out' : r === 'takes the rest' ? 'Takes the rest' : r === 'pinned' ? 'Pinned' : r === 'skipped' ? 'Skipped' : r;
+  r.startsWith('priority') ? `Priority ${r.slice(9)}` : r === 'cap hit' ? 'Cap reached' : r === 'pool ran out' ? 'Pool ran out' : r === 'takes the rest' ? 'Takes the rest' : r === 'pinned' ? 'Pinned' : r === 'skipped' ? 'Skipped' : r === 'bonus savings' ? 'Bonus savings' : r === 'next step' ? 'Next step' : r === 'waits for other funds' ? 'Next step waits for other funds' : r;
 
 function MonthSheet({ row, funds, onClose, onChange }: { row: ForecastRow; funds: FundMeta[]; onClose: () => void; onChange: () => void }) {
   const c = useTheme();
@@ -276,6 +277,7 @@ export default function Forecast() {
                 o.order && o.order.length ? `New order (${name.get(o.order[0]!) ?? 'a fund'} first)` : '',
                 Object.keys(o.pins ?? {}).length ? `Pinned ${Object.entries(o.pins ?? {}).map(([id, a]) => `${name.get(id) ?? 'fund'} ${peso(money(a as number), hide)}`).join(', ')}` : '',
                 (o.skips ?? []).length ? `Skipped ${(o.skips ?? []).map((id) => name.get(id) ?? 'fund').join(', ')}` : '',
+                o.overflow ? (o.overflow === 'none' ? 'Bonus savings left unplaced' : `Bonus savings to ${name.get(o.overflow) ?? 'a fund'} first`) : '',
               ].filter(Boolean).join(' · ');
               const note = data!.notes.get(o.month);
               return (
@@ -296,11 +298,15 @@ export default function Forecast() {
       {data && editing && rows.find((r) => r.month === editing) ? (
         <OverrideSheet
           row={rows.find((r) => r.month === editing)!}
-          funds={data.funds.map((f) => ({ id: f.id, name: f.name }))}
-          order={data.overrides.find((o) => o.month === editing)?.order ?? null}
+          funds={monthOrder(data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId), editing).map((f) => ({ id: f.id, name: f.name }))}
+          order={(() => {
+            const saved = data.overrides.find((o) => o.month === editing)?.order;
+            return saved ? cleanOrder(saved, monthOrder(data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId), editing).map((f) => f.id)) : null;
+          })()}
           pins={Object.fromEntries(Object.entries(data.overrides.find((o) => o.month === editing)?.pins ?? {}).map(([k, v]) => [k, v as number]))}
           skips={data.overrides.find((o) => o.month === editing)?.skips ?? []}
           note={data.notes.get(editing) ?? ''}
+          overflow={data.overrides.find((o) => o.month === editing)?.overflow ?? null}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
@@ -312,7 +318,7 @@ export default function Forecast() {
       {data && bulk ? (
         <BulkSheet
           months={rows.filter((r) => r.year === shownYear).map((r) => r.month)}
-          funds={data.funds.map((f) => ({ id: f.id, name: f.name }))}
+          funds={data.funds.filter((f) => f.id !== data.budget.salary.input.settings.savingsPlanFundId).map((f) => ({ id: f.id, name: f.name }))}
           onClose={() => setBulk(false)}
           onSaved={() => {
             setBulk(false);

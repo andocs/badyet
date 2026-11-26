@@ -17,7 +17,20 @@ export function sssMonthlySalaryCredit(monthlyPay: Money): Money {
   return money(Math.min(SSS_MAX_MSC, Math.max(SSS_MIN_MSC, stepped)));
 }
 
-/** What the employee pays SSS a month (regular SS plus the MPF part), from the monthly pay. */
+/** The salary credit up to which contributions are regular SS; the part above it is the MPF. */
+export const SSS_REGULAR_MAX_MSC = 2_000_000;
+
+/** The employee's regular SS share a month: 5% of the salary credit up to 20,000, so 1,000 at most. This is the payslip's SSS line. */
+export function sssRegular(monthlyPay: Money): Money {
+  return mulBp(money(Math.min(sssMonthlySalaryCredit(monthlyPay), SSS_REGULAR_MAX_MSC)), SSS_EMPLOYEE_BP);
+}
+
+/** The employee's MPF share a month: 5% of the salary credit above 20,000, so 750 at most. This is the SSS PenBoost line. */
+export function sssMpf(monthlyPay: Money): Money {
+  return money(sssEmployee(monthlyPay) - sssRegular(monthlyPay));
+}
+
+/** What the employee pays SSS a month in all (regular SS plus the MPF part), from the monthly pay. */
 export function sssEmployee(monthlyPay: Money): Money {
   return mulBp(sssMonthlySalaryCredit(monthlyPay), SSS_EMPLOYEE_BP);
 }

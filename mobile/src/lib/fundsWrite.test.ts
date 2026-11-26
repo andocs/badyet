@@ -7,9 +7,9 @@ const F2 = '22222222-2222-4222-8222-222222222222';
 const OV = '77777777-7777-4777-8777-777777777777';
 
 describe('saveFund', () => {
-  it('rejects a cap fund with no target', async () => {
+  it('rejects a yearly-reset fund with no target', async () => {
     const { supabase, log } = client({});
-    expect(await saveFund(supabase, { name: 'Trip', rule: 'cap' })).toHaveProperty('error');
+    expect(await saveFund(supabase, { name: 'Trip', rule: 'reset' })).toHaveProperty('error');
     expect(log).toHaveLength(0);
   });
   it('a new fund goes last in priority', async () => {

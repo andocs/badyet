@@ -1,3 +1,4 @@
+import { SAVINGS_NAME } from '@/lib/bonuses/view';
 import { useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { BonusCard } from '@/lib/bonuses/view';
@@ -40,10 +41,9 @@ interface DestDraft {
 
 /** Where this bonus goes (funds or your own labelled destinations), and the Low/Base/High pick for CIP. */
 export function EditBonusSheet({
-  card, funds, baseMultiplier, onClose, onSaved,
+  card, baseMultiplier, onClose, onSaved,
 }: {
   card: BonusCard;
-  funds: { id: string; name: string }[];
   baseMultiplier: number;
   onClose: () => void;
   onSaved: () => void;
@@ -58,8 +58,8 @@ export function EditBonusSheet({
   const { problem, busy, run } = useRun(onSaved);
   const picks = [['Low', 0.5], ['Base', 1], ['High', 1.5]] as const;
   const effective = mult ?? baseMultiplier;
-  const nameOf = (d: DestDraft) => (d.kind === 'fund' ? (funds.find((f) => f.id === d.targetId)?.name ?? 'Fund') : d.label);
-  const usedFunds = new Set(dests.filter((d) => d.kind === 'fund').map((d) => d.targetId));
+  const nameOf = (d: DestDraft) => (d.kind === 'fund' ? SAVINGS_NAME : d.label);
+  const hasSavings = dests.some((d) => d.kind === 'fund');
   const placed = dests.reduce((t, d) => t + (parsePesos(d.amount.trim()) ?? 0), 0);
 
   const submit = () =>
@@ -102,13 +102,12 @@ export function EditBonusSheet({
       <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 13 }}>
         Placed {peso(money(placed), hide)} of {peso(card.net, hide)}
       </Text>
-      {funds.filter((f) => !usedFunds.has(f.id)).length > 0 ? (
-        <Field label="Add a fund">
+      {!hasSavings ? (
+        <Field label="Add savings">
           <View style={s.chips}>
-            {funds.filter((f) => !usedFunds.has(f.id)).map((f) => (
-              <Chip key={f.id} label={f.name} on={false} onPress={() => setDests((x) => [...x, { kind: 'fund', targetId: f.id, label: '', amount: '', done: false }])} />
-            ))}
+            <Chip label={SAVINGS_NAME} on={false} onPress={() => setDests((x) => [...x, { kind: 'fund', targetId: null, label: '', amount: '', done: false }])} />
           </View>
+          <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Fills your funds in priority order; each takes up to its cap.</Text>
         </Field>
       ) : null}
       <Field label="Add something else">

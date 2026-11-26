@@ -20,10 +20,9 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
   const year = years.includes(Number(y)) ? Number(y) : data.thisYear;
   const hasStart = input.events.some((e) => e.kind === "start");
 
-  const funds = new Map(data.funds.map((f) => [f.id, f.name]));
-  const cards = hasStart ? bonusCards(year, input, data.saved, funds) : [];
+  const cards = hasStart ? bonusCards(year, input, data.saved) : [];
   const sum = yearSummary(cards);
-  const prev = hasStart && year > data.thisYear ? yearSummary(bonusCards(year - 1, input, data.saved, funds)) : null;
+  const prev = hasStart && year > data.thisYear ? yearSummary(bonusCards(year - 1, input, data.saved)) : null;
   const total = Math.max(1, sum.net);
   // Funds keep their own colour; every other line gets one no fund uses, so no two bars share a colour.
   const colors = destColors(data.funds, cards.flatMap((c) => c.dests));

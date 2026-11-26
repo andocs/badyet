@@ -3,7 +3,7 @@ import { addMonths } from "@/lib/domain/dates";
 import { sub, type Money } from "@/lib/domain/money";
 import { evaluateBudget, type BudgetMonth } from "./budget";
 import type { PlanSpan } from "./plans";
-import { fundCredits, planBonuses, type BonusPayment } from "./bonus";
+import { savingsCredits, planBonuses, type BonusPayment } from "./bonus";
 import { allocateFunds, type FundMonth } from "./funds";
 import { monthRange } from "./months";
 import { buildMonthPay, type MonthPay, type PayslipTemplate } from "./payslip";
@@ -107,7 +107,7 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
     });
   });
 
-  const credits = fundCredits(bonuses);
+  const credits = savingsCredits(bonuses);
   // A payroll savings plan is already out of take-home, so it does not touch the budget; it goes straight into the fund it names, in full
   // (whatever that fund's target), and that fund never resets.
   const planFund = input.settings.savingsPlanFundId ?? null;
@@ -122,7 +122,7 @@ export function runProjection(input: ProjectionInput, opts: { includeExpected: b
   const fundMonths = allocateFunds(
     input.funds,
     input.fundStart,
-    months.map((m, i) => ({ month: m, pool: budgets[i]!.savingsPool, bonusCredits: credits.get(m), planCredits: planCredits.get(m) })),
+    months.map((m, i) => ({ month: m, pool: budgets[i]!.savingsPool, bonusSavings: credits.get(m), planCredits: planCredits.get(m) })),
     input.overrides ?? [],
     planFund,
   );

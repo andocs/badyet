@@ -40,11 +40,12 @@ describe("forecast rows", () => {
     expect(jan2028.funds.travel!.balance).toBeLessThanOrEqual(jan2028.funds.travel!.amount + jan2028.funds.travel!.bonus); // starts again from zero
   });
 
-  it("a 13th month assigned to a fund shows as bonus money in its month", () => {
+  it("a 13th month going to savings shows as bonus money in the funds it filled", () => {
     const dec = rows.find((r) => r.month === "2027-12")!;
     expect(dec.bonuses.map((b) => b.name)).toEqual(["13th month"]);
-    expect(dec.funds.travel!.bonus).toBeGreaterThan(0);
-    expect(savedThisMonth(dec, "travel")).toBe(dec.funds.travel!.amount + dec.funds.travel!.bonus);
+    const filled = Object.entries(dec.funds).find(([, f]) => f.bonus > 0)!;
+    expect(filled).toBeDefined();
+    expect(savedThisMonth(dec, filled[0])).toBe(filled[1].amount + filled[1].bonus);
   });
 
   it("totals and year ends", () => {

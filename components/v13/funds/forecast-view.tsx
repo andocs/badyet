@@ -12,7 +12,7 @@ export interface FundMeta { id: string; name: string; color: string; blurb: stri
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const label = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
-const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r);
+const WHY = (r: string) => (r.startsWith("priority") ? `Priority ${r.slice(9)}` : r === "cap hit" ? "Cap reached" : r === "pool ran out" ? "Pool ran out" : r === "takes the rest" ? "Takes the rest" : r === "pinned" ? "Pinned" : r === "skipped" ? "Skipped" : r === "bonus savings" ? "Bonus savings" : r === "next step" ? "Next step" : r === "waits for other funds" ? "Next step waits for other funds" : r);
 
 /** 60 months of fund balances: a chart, a year ladder with month cards, and a month sheet that tells the story. */
 export interface PlanMeta { perMonth: number; fund: string | null; fundSet: boolean }
@@ -106,6 +106,7 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
             </section>
           ) : (
             <div className="v-stack v-l">
+              <div className="v-seg v-fit" role="group" aria-label="Year">{years.map((y) => <button key={y} type="button" aria-pressed={y === year} onClick={() => setYear(y)}>{y}</button>)}</div>
               <section aria-labelledby="lh">
                 <div className="v-row v-sp v-wrap" style={{ marginBottom: 8 }}><h2 id="lh">Year by year</h2><span className="v-lbl">Pick a year to see its twelve months.</span></div>
                 <div className="v-ladder">
@@ -142,7 +143,6 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
                 </div>
                 <div className="v-xs v-muted" style={{ marginTop: 10 }}>Each bar splits the month&apos;s savings by fund. Changed marks an override. Gift icon = bonus month. * or assumed = assumed raises.</div>
               </section>
-              <div className="v-seg v-fit" role="group" aria-label="Year">{years.map((y) => <button key={y} type="button" aria-pressed={y === year} onClick={() => setYear(y)}>{y}</button>)}</div>
             </div>
           )}
         </div>

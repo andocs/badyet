@@ -1,7 +1,7 @@
 import type { YearMonth } from "@/lib/domain/dates";
 import { findBracket, taxPerCutoff, type TaxRow } from "@/lib/domain/pay";
 import { divRound, fromRatio, money, mulBp, sub, sum, ZERO, type Money } from "@/lib/domain/money";
-import { pagibigEmployee, sssEmployee } from "@/lib/pay/contributions";
+import { pagibigEmployee, sssMpf, sssRegular } from "@/lib/pay/contributions";
 import { philhealthMonthly } from "@/lib/pay/philhealth";
 import { TAX_ROWS } from "@/lib/pay/tax-table";
 import type { BonusPayment } from "./bonus";
@@ -32,6 +32,8 @@ export interface PayslipLine {
   amount: Money;
   /** An other deduction set to show under a budget category: that category group's id. */
   ref?: string;
+  /** The amount was changed for this month only. */
+  edited?: boolean;
 }
 
 export interface Payslip {
@@ -67,11 +69,6 @@ export interface MonthPay {
  * second cutoff = half the base minus the other half of the tax, SSS, PhilHealth and Pag-IBIG. Allowances are added on the
  * cutoff each allowance says it lands in (the second by default).
  */
-/**
- * SSS and Pag-IBIG come from the official tables (lib/pay/contributions.ts) when no amount is typed. SSS PenBoost is your own
- * choice, so it uses the amount you gave when there is none on the line (decided 2026-11-22: 750 a month).
- */
-export const STANDARD_CONTRIBUTION = { penboost: money(75_000) } as const;
 
 export function defaultTemplate(cutoff: PayCutoff): PayslipTemplate {
   const common: PayslipLineSpec[] = [
@@ -161,18 +158,28 @@ export function buildMonthPay(
   rows: readonly TaxRow[] = TAX_ROWS,
 ): MonthPay {
   const { base } = salary;
-  const sss = settings.sssOverride ?? sssEmployee(base);
+  // The SSS table splits your share in two: regular SS is the SSS line, and the MPF part is the SSS PenBoost line.
+  const sss = settings.sssOverride ?? sssRegular(base);
+  const penboost = sssMpf(base);
   const pagibig = settings.pagibigOverride ?? pagibigEmployee(base);
   const philhealth = settings.philhealthOverride ?? philhealthMonthly((base * 12) as Money);
 
+  // "This month only" changes, which win over the layout's typed amounts and over a tax amount set for every month.
+  const edits = (settings.monthEdits ?? []).filter((e) => e.month === salary.month);
+  const editFor = (cutoff: PayCutoff, spec: PayslipLineSpec) =>
+    spec.source === "base_share" ? undefined : edits.find((e) => e.cutoff === cutoff && e.source === spec.source && (spec.source !== "custom" || e.label === spec.label));
+
   // Tax is worked per cutoff on that cutoff's taxable pay. Contributions that reduce it are the SSS, PhilHealth, Pag-IBIG and
   // PenBoost lines on that cutoff's payslip, at the amount on the line (a typed amount counts, as it does on the payslip).
-  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost: STANDARD_CONTRIBUTION.penboost };
+  const sourceAmount: Record<string, Money> = { sss, philhealth, pagibig, penboost };
   const mandatoryIn = (cutoff: PayCutoff): Money =>
     sum(
       templateFor(templates, cutoff, salary.month)
         .lines.filter((l) => l.kind === "deduction" && l.source in sourceAmount)
-        .map((l) => l.amountOverride ?? sourceAmount[l.source]!),
+        .map((l) => {
+          const e = editFor(cutoff, l);
+          return e ? (e.amount ?? sourceAmount[l.source]!) : (l.amountOverride ?? sourceAmount[l.source]!);
+        }),
     );
   const baseIn = (cutoff: PayCutoff): Money =>
     mulBp(base, templateFor(templates, cutoff, salary.month).lines.find((l) => l.source === "base_share")?.shareBp ?? 5000);
@@ -215,13 +222,20 @@ export function buildMonthPay(
       else if (spec.source === "sss") amount = sss;
       else if (spec.source === "philhealth") amount = philhealth;
       else if (spec.source === "pagibig") amount = pagibig;
-      else if (spec.source === "penboost") amount = STANDARD_CONTRIBUTION.penboost;
+      else if (spec.source === "penboost") amount = penboost;
       else amount = ZERO;
       lines.push({ kind: spec.kind, label: spec.label, source: spec.source, amount });
     }
     // Tax overrides replace the tax line of that cutoff.
     const override = cutoff === "first" ? settings.taxOverrideFirst : settings.taxOverrideSecond;
     if (override !== null) for (const l of lines) if (l.source === "income_tax") l.amount = override;
+    // The template lines are first in `lines`, in the template's order.
+    template.lines.forEach((spec, i) => {
+      const e = editFor(cutoff, spec);
+      if (!e) return;
+      const calculated = spec.source === "income_tax" ? (override ?? (cutoff === "first" ? taxFirst : taxSecond)) : spec.source === "custom" ? (spec.amountOverride ?? ZERO) : sourceAmount[spec.source]!;
+      lines[i] = { ...lines[i]!, amount: e.amount ?? calculated, edited: true };
+    });
 
     for (const a of salary.allowances) {
       if (a.allowance.payslipCutoff === cutoff) lines.push({ kind: "earning", label: a.allowance.name, source: "allowance", amount: a.amount });

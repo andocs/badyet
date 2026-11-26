@@ -14,11 +14,6 @@ export async function saveInstance(supabase: SupabaseClient, input: unknown): Pr
 
   const rule = await supabase.from('bonus_rules').select('id').eq('id', i.ruleId).maybeSingle();
   if (!rule.data) return { error: 'That bonus was not found.' };
-  const fundIds = i.splits.filter((s) => s.kind === 'fund').map((s) => s.targetId as string);
-  if (fundIds.length > 0) {
-    const found = await supabase.from('funds').select('id').in('id', fundIds);
-    if ((found.data ?? []).length !== new Set(fundIds).size) return { error: 'One of those funds was not found.' };
-  }
 
   const values = {
     multiplier_num: i.multiplierNum,

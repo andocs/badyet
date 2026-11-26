@@ -55,16 +55,27 @@ export interface BonusCard {
   unplaced: Money;
 }
 
-export function destName(kind: DestKind, targetId: string | null, label: string | null, funds: ReadonlyMap<string, string>): string {
-  if (kind === "fund") return (targetId ? funds.get(targetId) : undefined) ?? label ?? "Fund";
-  return label ?? { gift: "Gift", purchase: "Big purchase", debt: "Debt", wants: "Wants", account: "Account", fund: "Fund" }[kind];
+export function destName(kind: DestKind, label: string | null): string {
+  if (kind === "fund") return SAVINGS_NAME;
+  return label ?? { gift: "Gift", purchase: "Big purchase", debt: "Debt", wants: "Wants", account: "Account" }[kind];
+}
+
+/** Savings are one pot that fills your funds in order, so a bonus names general savings, not a fund. */
+export const SAVINGS_NAME = "General savings";
+
+/** Folds every savings destination (older ones named a fund each) into one General savings line, where the first one was. */
+function mergeSavings(dests: DestView[]): DestView[] {
+  const funds = dests.filter((d) => d.kind === "fund");
+  if (funds.length === 0) return dests;
+  const savings: DestView = { kind: "fund", targetId: null, label: null, name: SAVINGS_NAME, amount: sum(funds.map((d) => d.amount)), done: funds.every((d) => d.done) };
+  return dests.flatMap((d) => (d.kind !== "fund" ? [d] : d === funds[0] ? [savings] : []));
 }
 
 /**
  * A year's bonuses as cards: gross to net by the engine (the shared cap worked in pay-month order), and where each one goes. Where you have
  * saved destinations for a bonus they are used; otherwise the rule's default splits. A received bonus also shows what was planned.
  */
-export function bonusCards(year: number, input: SalaryInput, saved: ReadonlyMap<string, readonly SavedSplit[]>, funds: ReadonlyMap<string, string>): BonusCard[] {
+export function bonusCards(year: number, input: SalaryInput, saved: ReadonlyMap<string, readonly SavedSplit[]>): BonusCard[] {
   const months = monthRange(`${year}-01` as YearMonth, 12);
   const salaryOf = (m: YearMonth) => salaryAt(input, m);
   const payments = planBonuses(input.bonusRules, input.bonusInstances, salaryOf, input.settings, input.assumptions, months, input.templates);
@@ -87,16 +98,17 @@ export function bonusCards(year: number, input: SalaryInput, saved: ReadonlyMap<
     used = money(used + p.exempt);
 
     const own = saved.get(key);
-    const dests: DestView[] = own
-      ? own.map((s) => ({ kind: s.kind, targetId: s.targetId, label: s.label, name: destName(s.kind, s.targetId, s.label, funds), amount: s.amount, done: s.done }))
+    const placed: DestView[] = own
+      ? own.map((s) => ({ kind: s.kind, targetId: s.targetId, label: s.label, name: destName(s.kind, s.label), amount: s.amount, done: s.done }))
       : allocateSplits(p.net, p.splits).placed.map(({ split, amount }) => ({
           kind: split.targetKind,
           targetId: split.targetId ?? null,
           label: split.label ?? null,
-          name: destName(split.targetKind, split.targetId ?? null, split.label ?? null, funds),
+          name: destName(split.targetKind, split.label ?? null),
           amount,
           done: false,
         }));
+    const dests = mergeSavings(placed);
     const plannedPayment = planned.find((x) => x.ruleId === p.ruleId && x.month === p.month);
     return {
       key,

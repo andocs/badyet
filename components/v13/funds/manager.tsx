@@ -195,7 +195,7 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
             <div>
               <b>Payroll savings plan goes into this fund</b>
               <div className="v-xs v-muted">
-                Only one fund can have it{(() => { const other = list.find((x) => x.planLinked && x.id !== d.id); return other && d.linkPlan ? `. Turning it on here moves it from ${other.name}` : ""; })()}. It always lands in full and this fund never resets.
+                Only one fund can have it{(() => { const other = list.find((x) => x.planLinked && x.id !== d.id); return other && d.linkPlan ? `. Turning it on here moves it from ${other.name}` : ""; })()}. It always lands in full, this fund never resets, and it gets none of your general savings.
               </div>
             </div>
             <button type="button" className="v-sw" role="switch" aria-checked={d.linkPlan} aria-label="Payroll savings plan goes into this fund" onClick={() => set({ linkPlan: !d.linkPlan })} />

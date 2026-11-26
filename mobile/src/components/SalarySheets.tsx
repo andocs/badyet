@@ -1,3 +1,4 @@
+import { changedKeys, editKey, monthChanges, removeMonthEdits, saveMonthEdits, type BuilderLayout } from '@/lib/pay/month-edits';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import type { YearMonth } from '@/lib/domain/dates';
@@ -143,10 +144,10 @@ export function ProjectedSheet({ on: onIn, pctBp, month: monthIn, onClose, onSav
  */
 /** What a contribution line is worked from, so it reads as based on your salary rather than "default". */
 const BASIS: Partial<Record<PayslipLineSpec['source'], string>> = {
-  sss: 'SSS table, from your salary',
+  sss: 'SSS table: regular SS, from your salary',
   pagibig: 'Pag-IBIG: 2% of your salary, up to ₱10,000',
   philhealth: 'PhilHealth: 2.5% of your base pay',
-  penboost: 'PenBoost: your usual amount, not from salary',
+  penboost: 'SSS table: MPF part, from your salary',
   income_tax: "Tax on this cutoff's taxable pay",
 };
 
@@ -219,9 +220,15 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
     setNewLabel('');
     setNewAmount('');
   };
-  // What the contribution lines come to with nothing typed: SSS and Pag-IBIG from the official tables, PhilHealth from the base, PenBoost's usual amount.
+  // The saved layout and what is on screen, to tell which amounts changed.
+  const savedLayout = (): BuilderLayout => {
+    const d = fresh(input, month);
+    return { first: d.first.map((x) => x.spec), second: d.second.map((x) => x.spec) };
+  };
+  const onScreen = (): BuilderLayout => ({ first: drafts.first.map((x) => x.spec), second: drafts.second.map((x) => x.spec) });
+  // What the contribution lines come to with nothing typed: SSS and Pag-IBIG from the official tables, PhilHealth from the base. PenBoost is the SSS MPF part.
   const defaults = useMemo(() => {
-    const pay = buildMonthPay(salaryAt(input, month), input.settings, [], []);
+    const pay = buildMonthPay(salaryAt(input, month), { ...input.settings, monthEdits: [] }, [], []);
     const out: Partial<Record<PayslipLineSpec['source'], Money>> = {};
     for (const l of [...pay.first.lines, ...pay.second.lines]) if (['sss', 'philhealth', 'pagibig', 'penboost'].includes(l.source) && !(l.source in out)) out[l.source as PayslipLineSpec['source']] = l.amount;
     return out;
@@ -264,6 +271,18 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
                     onChange={(v) => patch(cutoff, d.key, { amountOverride: v })}
                   />
                 </Field>
+                {(() => {
+                  const e = (input.settings.monthEdits ?? []).find((x) => x.month === month && editKey(x) === editKey({ cutoff, source: sp.source, label: sp.label }));
+                  if (!e) return null;
+                  return (
+                    <View style={s.between}>
+                      <Text style={{ color: c.gold, fontFamily: fonts.bodyBold, fontSize: 13, flex: 1 }}>This month only: {e.amount === null ? 'calculated' : peso(e.amount, hide)}</Text>
+                      <Pressable onPress={() => void run(() => removeMonthEdits(supabase, { month, lines: [{ cutoff: e.cutoff, source: e.source, label: e.label }] }))} accessibilityRole="button" style={[s.small, { backgroundColor: c.soft }]}>
+                        <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Remove</Text>
+                      </Pressable>
+                    </View>
+                  );
+                })()}
                 <View style={s.chips}>
                   <Pressable onPress={() => move(cutoff, d.key)} accessibilityRole="button" style={[s.small, { backgroundColor: c.soft }]}>
                     <Text style={{ color: c.ink, fontFamily: fonts.bodyBold, fontSize: 13 }}>Move to {cutoff === 'first' ? '2nd' : '1st'}</Text>
@@ -291,7 +310,33 @@ export function PayslipSheet({ input, thisMonth, onClose, onSaved }: { input: Sa
         <Button label="Add line" onPress={addCustom} />
       </View>
 
-      <SheetActions onClose={onClose} onSave={() => run(() => saveTemplates(supabase, { month, first: lines('first'), second: lines('second') }))} busy={busy} saveLabel="Save layout" problem={problem} />
+      <SheetActions
+        onClose={onClose}
+        onSave={() =>
+          run(async () => {
+            // An amount saved from this month on must not stay hidden behind an old one-month change.
+            const changed = changedKeys(savedLayout(), onScreen());
+            const stale = (input.settings.monthEdits ?? []).filter((e) => e.month === month && changed.has(editKey(e)));
+            if (stale.length > 0) {
+              const r = await removeMonthEdits(supabase, { month, lines: stale.map((e) => ({ cutoff: e.cutoff, source: e.source, label: e.label })) });
+              if ('error' in r) return r;
+            }
+            return saveTemplates(supabase, { month, first: lines('first'), second: lines('second') });
+          })
+        }
+        busy={busy}
+        saveLabel="Save from this month on"
+        problem={problem}
+      />
+      <Button
+        label="This month only"
+        onPress={() =>
+          void run(async () => {
+            const c = monthChanges(savedLayout(), onScreen());
+            return c.ok ? saveMonthEdits(supabase, { month, edits: c.value }) : { error: c.error };
+          })
+        }
+      />
       <Button label="Back to the standard layout" onPress={() => ask('Reset the layout?', `Saved layouts from ${label(month)} on are removed.`, () => run(() => resetTemplates(supabase, month)))} />
     </Sheet>
   );
