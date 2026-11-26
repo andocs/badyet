@@ -1,4 +1,4 @@
-import { awaitedByMonth, loadReimbursements } from "@/lib/budget/reimburse";
+import { loadReimbursements, reimbursementOverrides } from "@/lib/budget/reimburse";
 import { monthEditsOf } from "@/lib/pay/month-edits";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
@@ -160,7 +160,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       funds: [],
       fundStart: {},
       plans,
-      awaitedReimbursements: awaitedByMonth(reimbursements),
+      reimbursementOverrides: reimbursementOverrides(reimbursements, lines, plans),
     },
     { includeExpected: false },
   );

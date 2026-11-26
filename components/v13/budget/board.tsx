@@ -61,7 +61,7 @@ const draftOf = (l: LineView): Draft => ({
 export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {}, moves = [], reimbursements = [] }: { /** This month's reimbursements, when this month is shown. */ reimbursements?: ReimbursementStatus[] } & { /** Office-day money moved this month. */ moves?: Move[] } & { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
   const [marking, startMark] = useTransition();
-  const mark = (input: { lineId: string; month: string; cutoff: "first" | "second"; received: boolean }) =>
+  const mark = (input: { lineId: string; month: string; cutoff: "first" | "second"; received: boolean; postponed: boolean }) =>
     startMark(async () => {
       const r = await markReimbursement(input);
       if (r.error) toast(r.error, "bad");
@@ -192,13 +192,15 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                       if (!l.reimburse) return null;
                       const when = l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`;
                       const r = reimbursements.find((x) => x.lineId === l.id);
-                      if (!r || r.state === "expected") return <small>back <Money value={l.reimburse.amount} />{when}</small>;
-                      const received = r.state === "received";
+                      if (!r || r.state === "expected") return <small>back <Money value={money(r?.amount ?? l.reimburse.amount)} />{when}{r && r.carried > 0 ? " (incl. postponed)" : ""}</small>;
+                      // Inside a row that opens the editor, so each button keeps its click and keys to itself.
+                      const button = (text: string, received: boolean, postponed: boolean) => (
+                        <button type="button" className="v-btn v-sm v-ghost" disabled={marking} onKeyDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); mark({ lineId: r.lineId, month: r.month, cutoff: r.cutoff, received, postponed }); }}>{text}</button>
+                      );
                       return (
-                        <small className={received ? "v-pos" : "v-warnt"}>
-                          {received ? "Received " : "Waiting for "}<Money value={l.reimburse.amount} />{" "}
-                          {/* Inside a row that opens the editor, so the button keeps its click and keys to itself. */}
-                          <button type="button" className="v-btn v-sm v-ghost" disabled={marking} onKeyDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); mark({ lineId: r.lineId, month: r.month, cutoff: r.cutoff, received: !received }); }}>{received ? "Not yet" : "Mark received"}</button>
+                        <small className={r.state === "received" ? "v-pos" : "v-warnt"}>
+                          {r.state === "received" ? "Received " : r.state === "postponed" ? "Postponed " : "Waiting for "}<Money value={money(r.amount)} />{r.state === "postponed" ? " to next month" : r.carried > 0 ? " (incl. postponed)" : ""}{" "}
+                          {r.state === "waiting" ? <>{button("Mark received", true, false)}{button("Postponed?", false, true)}</> : button(r.state === "received" ? "Not yet" : "Undo", false, false)}
                         </small>
                       );
                     })()}

@@ -7,7 +7,7 @@ import { buildGroups, monthFlag, type GroupView, type MonthFlag } from "./view";
 import { planFor, type PlanSpan } from "./plans";
 import { savingsByMonth } from "./savings";
 import { budgetMoves, type Move } from "./moves";
-import { awaitedByMonth, type ReimbursementStatus } from "./reimburse";
+import { reimbursementOverrides, type ReimbursementStatus } from "./reimburse";
 
 /** ₱2,500 left in a month is "tight". */
 export const TIGHT = 250_000;
@@ -60,7 +60,7 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const year = Number(month.slice(0, 4));
 
   const input = (start: YearMonth, months: number): ProjectionInput => ({
-    start, months, ...data.salary.input, bonusRules: [], bonusInstances: [], lines: data.lines, allocations: data.allocations, funds: [], fundStart: {}, plans: data.plans, extraSavings: savingsByMonth(data.pools, data.paydays), awaitedReimbursements: awaitedByMonth(data.reimbursements),
+    start, months, ...data.salary.input, bonusRules: [], bonusInstances: [], lines: data.lines, allocations: data.allocations, funds: [], fundStart: {}, plans: data.plans, extraSavings: savingsByMonth(data.pools, data.paydays), reimbursementOverrides: reimbursementOverrides(data.reimbursements, data.lines, data.plans),
   });
   const cutoffNow = data.period.which === 1 ? "first" : "second";
   const activeNow = planFor(data.plans, data.period.month, cutoffNow);
