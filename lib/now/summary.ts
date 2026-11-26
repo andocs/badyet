@@ -89,6 +89,8 @@ export interface NowView {
   nextPayday: IsoDate;
   /** What the daily lines allow for the cutoff, and what is spent against them. */
   pool: Money;
+  /** The part of `pool` that office days moved to Wants, net of what they took back. */
+  movedIn: Money;
   spent: Money;
   left: Money;
   /** Safe to spend per day from today, without the office-day amount. */
@@ -142,9 +144,13 @@ export function buildNowView(input: NowInput): NowView {
   const dailyCategories = new Set(input.lines.filter((l) => l.countsToDaily && l.kind === "normal").map((l) => l.categoryId));
   const dailySpend = spendTxns.filter((t) => t.categoryId !== null && dailyCategories.has(t.categoryId));
 
-  const pool = budget.dailyPool[cutoff];
+  // What there is for daily spending this cutoff: the daily lines, plus office-day money moved to Wants, less what overspent office
+  // days took from it. The hero's "left of", pace and chart all use it, so they agree with the amount per day.
+  const dailyLines = budget.dailyPool[cutoff];
+  const movedIn = ((input.movedToWants ?? ZERO) - (input.takenFromWants ?? ZERO)) as Money;
+  const pool = atLeastZero((dailyLines + movedIn) as Money);
   const spent = sum(dailySpend.map((t) => (-t.amount) as Money));
-  const perDay = dailySafeToSpend({ dailyPool: pool, confirmedSpend: spent, daysLeft, movedToWants: input.movedToWants, takenFromWants: input.takenFromWants });
+  const perDay = dailySafeToSpend({ dailyPool: dailyLines, confirmedSpend: spent, daysLeft, movedToWants: input.movedToWants, takenFromWants: input.takenFromWants });
   const isUsualOfficeDay = input.officeDays.includes(isoWeekday(today));
   const nextOfficeDate = days.find((d) => d > today && input.officeDays.includes(isoWeekday(d)));
   const paceMoney = Number((BigInt(pool) * BigInt(dayNumber)) / BigInt(daysTotal)) as Money;
@@ -218,6 +224,7 @@ export function buildNowView(input: NowInput): NowView {
     daysLeft,
     nextPayday,
     pool,
+    movedIn,
     spent,
     left: atLeastZero(sub(pool, spent)),
     perDay,

@@ -109,6 +109,7 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
       ) : (
         <Text style={[s.heroSub, { fontFamily: fonts.body }]}>
           {peso(view.left, hide)} left of {peso(view.pool, hide)} · {view.daysLeft} {view.daysLeft === 1 ? 'day' : 'days'}
+          {view.movedIn !== 0 ? ` · ${view.movedIn > 0 ? 'incl.' : 'less'} ${peso(money(Math.abs(view.movedIn)), hide)} RTO` : ''}
         </Text>
       )}
       <Runway view={view} />

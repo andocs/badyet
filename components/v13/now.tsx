@@ -94,7 +94,7 @@ function Hero({ view, today }: { view: NowView; today: ReturnType<typeof isoDate
             <div className="v-muted">No budget line counts towards your daily amount yet. Mark your Wants lines in Budget.</div>
           ) : (
             <div className="v-muted">
-              per day for {view.daysLeft} {view.daysLeft === 1 ? "day" : "days"}. <Money value={view.left} /> left of <Money value={view.pool} />.
+              per day for {view.daysLeft} {view.daysLeft === 1 ? "day" : "days"}. <Money value={view.left} /> left of <Money value={view.pool} />.{view.movedIn !== 0 ? <> {view.movedIn > 0 ? "Incl. " : "Less "}<Money value={money(Math.abs(view.movedIn))} /> RTO.</> : null}
             </div>
           )}
           {officeNote ? (
