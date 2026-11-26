@@ -7,14 +7,15 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-58 gate
+- **Phase:** rev-58 merged
 - **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** awaiting approval
-- **Next action:** Approve rev-58: merge + OTA; apply migrations 20261228000000 and 20261229000000
-- **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
+- **Gate:** none
+- **Next action:** Next revision
+- **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-25 to 2026-11-26) covering rev-45, budget hero, rev-46, rev-47, rev-48, rev-49, rev-50, rev-51
 - earlier: 15 events (2026-11-25 to 2026-11-25) covering apk, rev-39, rev-40, rev-41, rev-42, rev-43, rev-45, rev-44
 - earlier: 15 events (2026-11-25 to 2026-11-25) covering handover, batch-4-plan, rev-33, rev-34, rev-35, rev-36, rev-37, rev-38
 - earlier: 15 events (2026-11-22 to 2026-11-23) covering ota, rev-28, rev-29, rev-30, rev-31, rev-32
@@ -33,21 +34,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-25 19:52 | rev-45 | Inbox edit now includes category (web, phone). | -
-- 2026-11-25 19:55 | rev-45 | Built-in Credit card payment category (acts like Transfer, shown in pickers). | -
-- 2026-11-25 20:04 | rev-45 | Other-deductions layout; rounded-square tickbox standard (web+phone); skeleton/loading bar; payslip deductions can show under a budget line (panel keeps the rest). | -
-- 2026-11-25 20:07 | rev-45 | Deductions link to a budget category (group), shown as read-only rows in that category. | -
-- 2026-11-25 20:10 | rev-45 | Payslip deductions + savings plan shown in budget categories with Payslip rule and cutoff; panel removed. | -
-- 2026-11-25 20:11 | rev-45 | Credit card payment category hidden from Budget (still in Inbox pickers). | -
-- 2026-11-25 20:14 | rev-45 | Merged to main (30e8fe6) with rev-44; OTA published (group 08225860). Pending: user applies migration 20261225000000_other_deductions.sql. | -
-- 2026-11-25 20:22 | budget hero | Hero total now includes other payroll deductions (web + phone). Merged to main 6bac596; OTA published. | 6bac596
-- 2026-11-26 09:44 | rev-46 | Budget totals include payslip deductions + savings plan again (hero, fixed pill, category totals). Checks PASS. Not merged yet. | -
-- 2026-11-26 10:17 | rev-46 | Merged to main (c81bbad); OTA published (group 8e4fbac8). | c81bbad
-- 2026-11-26 11:12 | rev-47 | Bonus overflow carries to next priority; per-month override (migration 20261226000000); override spacing fix. Checks and build PASS. Not merged. | -
-- 2026-11-26 11:27 | rev-48 | General savings bonus destination, January reset-first order, year pills on top. Includes rev-47. Checks and build PASS. Not merged. | -
-- 2026-11-26 11:45 | rev-49 | Override layout fixed (verified by screenshot), tickbox CSS fixed, step funds stop at current step. Includes rev-47/48. Checks PASS. Not merged. | -
-- 2026-11-26 11:49 | rev-50 | EF later steps wait for all other capped funds to be full. Includes rev-47..49. Checks PASS. Not merged. | -
-- 2026-11-26 11:52 | rev-51 | Savings plan fund excluded from general savings. Includes rev-47..50. Checks PASS. Not merged. | -
 - 2026-11-26 12:35 | rev-52 | SSS/Pag-IBIG 0 overrides treated as unset. Includes rev-47..51. Checks PASS. Not merged. User's payslip also shows HMO Plan twice (payslip custom line + other deductions). | -
 - 2026-11-26 12:39 | rev-53 | SSS split per Circular 2024-006: regular SS on the SSS line, MPF on PenBoost. Includes rev-47..52. Checks PASS. Not merged. | -
 - 2026-11-26 12:46 | rev-54 | This month only payslip edits (migration 20261227000000_payslip_month_edits.sql). Includes rev-47..53. Checks PASS. Not merged. | -
@@ -58,6 +44,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 19:11 | rev-56 | Closed: Apply order clearing pins/skips; one-month change not following a moved line. Checks PASS. Not merged. | -
 - 2026-11-26 19:18 | rev-56..57 | Merged to main (00fc37e); OTA published (group 43e4cbf7). All three open items closed. User to apply migration 20261228000000. | 00fc37e
 - 2026-11-26 19:32 | rev-58 | Postponed reimbursements carry to next month's reimbursement day. Checks PASS. Not merged. Migrations 20261228 and 20261229. | -
+- 2026-11-26 19:37 | rev-58 | Merged to main (99ae92a); OTA published (group c4c2e934). User reports migrations applied. | 99ae92a
 
 ## 4. Open questions
 
