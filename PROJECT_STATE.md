@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-54 merged
+- **Phase:** rev-55 gate
 - **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** none
-- **Next action:** Apply migrations 20261226000000 and 20261227000000. Open: Apply order clears pins/skips; reimbursement counted before deposit; remove duplicate HMO payslip line
+- **Gate:** awaiting approval
+- **Next action:** Approve rev-55: merge + OTA; decide whether hero left includes money moved to Wants
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -52,6 +52,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 12:39 | rev-53 | SSS split per Circular 2024-006: regular SS on the SSS line, MPF on PenBoost. Includes rev-47..52. Checks PASS. Not merged. | -
 - 2026-11-26 12:46 | rev-54 | This month only payslip edits (migration 20261227000000_payslip_month_edits.sql). Includes rev-47..53. Checks PASS. Not merged. | -
 - 2026-11-26 12:54 | rev-47..54 | Merged to main (fe8e21f); OTA published (group 89a2cb76). User to apply migrations 20261226000000 and 20261227000000. | fe8e21f
+- 2026-11-26 18:58 | rev-55 | RTO moves shown on Budget lines/categories. Checks PASS. Not merged. Open: hero 'left' excludes RTO money moved to Wants (Now page includes it). | -
 
 ## 4. Open questions
 
