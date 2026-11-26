@@ -95,6 +95,10 @@ describe("Now view", () => {
     expect(v.envelopes.find((e) => e.name === "Wants")).toMatchObject({ plan: p(9_300), spent: 0 });
     const more = buildNowView({ ...base("2027-03-17"), movedToWants: p(250), takenFromWants: p(50) });
     expect(more.envelopes.find((e) => e.name === "Wants")!.plan).toBe(p(9_500));
+    // The hero counts the same money: "left of" includes it, so it agrees with the amount per day.
+    const plain = buildNowView(base("2027-03-17"));
+    expect([more.pool - plain.pool, more.left - plain.left, more.movedIn, plain.movedIn]).toEqual([p(200), p(200), p(200), 0]);
+    expect(more.perDay).toBeGreaterThan(plain.perDay);
   });
 
   it("counts spending in the categories of the Wants group against that row", () => {
