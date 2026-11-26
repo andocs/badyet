@@ -1295,6 +1295,15 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v13 .m-mark.m-bad{background:var(--red-tint);color:var(--red)}.v13 .m-mark.m-warn{background:var(--gold-tint);color:var(--gold-text)}.v13 .m-mark.m-off{background:var(--surface);color:var(--muted)}
 .v13 .m-entry{display:flex;justify-content:space-between;gap:12px;background:var(--surface);border-radius:8px;padding:10px 12px}
 .v13 .m-note{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.v13 details.m-acc{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.v13 details.m-acc>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;min-height:52px}
+.v13 details.m-acc>summary::-webkit-details-marker{display:none}
+.v13 details.m-acc>summary small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 details.m-acc>summary::after{content:"⌄";color:var(--muted)}
+.v13 details.m-acc[open]>summary::after{content:"⌃"}
+.v13 details.m-acc>div{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
+.v13 .m-format{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px}
+.v13 .m-format mark{background:var(--tint);color:var(--accent-text);border-radius:5px;padding:1px 5px;font-weight:700;font-size:12px}
 .v13 .m-pick{border:0;cursor:pointer;min-height:34px;padding:0 12px}
 .v13 .m-pick[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
 
@@ -1350,17 +1359,23 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
       <div class="v-seg"><button aria-pressed="true">Notifications</button><button aria-pressed="false">Emails</button><button aria-pressed="false">Both</button></div>
       <div class="v-chips"><span class="v-pill v-ok">GCash</span><button class="v-btn v-sm">+ App</button><button class="v-btn v-sm">+ Sender</button></div>
     </div></details>
-    <details class="m-acc"><summary><span class="m-step">2</span><span><b>How it's read</b><small>₱3,000.00 · money out · shared by all of GCash</small></span></summary><div>
+    <details class="m-acc" open><summary><span class="m-step">2</span><span><b>How it's read</b><small>₱3,000.00 · money out · shared by all of GCash</small></span></summary><div>
       <div class="m-pattern"><code>You have paid {amount} to {name}. Ref {ref}</code><button class="v-btn v-sm v-ghost">Edit</button></div>
       <label class="v-field">Sample message<textarea rows="3">You have paid PHP 3,000.00 to Sample Card. Ref 12345</textarea></label>
-      <div class="v-chips"><span class="v-pill v-ok">Amount ₱3,000.00</span><span class="v-pill v-ok">Money out</span></div>
+      <div class="v-chips"><span class="v-pill">Read by your pattern</span><span class="v-pill v-ok">Amount ₱3,000.00</span><span class="v-pill v-ok">Money out</span></div>
+      <details class="m-acc m-reader" open><summary><span class="v-pill v-warn">Built-in</span><span><b>GCash notification reader</b><small>3 message types · tried after your patterns</small></span></summary><div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-ok">Money in</span></div><div class="v-sm">You have received <mark>{amount}</mark> of GCash from <mark>{name}</mark> with account ending in <mark>{last4}</mark>.</div><div class="v-xs v-muted">Reads: amount, who sent it, their last digits (if shown), Ref. No. (if shown)</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Payment</span></div><div class="v-sm">You have paid <mark>{amount}</mark> of GCash to purchase <mark>{name}</mark> with a convenience fee of <mark>{fee}</mark>.</div><div class="v-xs v-muted">Reads: amount plus the fee, who was paid. "to purchase" and the fee are optional</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Money sent</span></div><div class="v-sm">You have sent <mark>{amount}</mark> to <mark>{name}</mark> on <mark>{date}</mark></div><div class="v-xs v-muted">Reads: amount, who you sent it to</div></div>
+<div class="v-xs v-muted">Highlighted parts can change. This is a plain-language summary: capital letters don't matter, and "PHP", "P" or "₱" may come before an amount. A message worded another way is not read: add a pattern for it. The built-in reader can't be edited; your pattern wins over it.</div>
+</div></details>
     </div></details>
     <details class="m-acc"><summary><span class="m-step">3</span><span><b>Which messages</b><small>Contains "sample card"</small></span></summary><div>
       <div class="v-field">Look for any of these words<div class="v-chips"><span class="v-pill v-ok">sample card ✕</span></div><input placeholder="Add a word"></div>
       <div class="v-field">Must also contain<input placeholder="Add a word"></div>
       <div class="v-field">Skip it if it contains<input placeholder="Add a word"></div>
     </div></details>
-    <details class="m-acc" open><summary><span class="m-step">4</span><span><b>What to do</b><small>Payment · GCash → Sample Card</small></span></summary><div>
+    <details class="m-acc"><summary><span class="m-step">4</span><span><b>What to do</b><small>Payment · GCash → Sample Card</small></span></summary><div>
       <div class="v-seg"><button aria-pressed="false">Spend</button><button aria-pressed="false">Income</button><button aria-pressed="false">Transfer</button><button aria-pressed="true">Payment</button></div>
       <label class="v-field">Money leaves<select><option>GCash</option></select></label>
       <label class="v-field">Money arrives in<select><option>Sample Card</option></select></label>

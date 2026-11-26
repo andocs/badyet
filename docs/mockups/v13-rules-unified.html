@@ -1295,6 +1295,15 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v13 .m-mark.m-bad{background:var(--red-tint);color:var(--red)}.v13 .m-mark.m-warn{background:var(--gold-tint);color:var(--gold-text)}.v13 .m-mark.m-off{background:var(--surface);color:var(--muted)}
 .v13 .m-entry{display:flex;justify-content:space-between;gap:12px;background:var(--surface);border-radius:8px;padding:10px 12px}
 .v13 .m-note{border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted)}
+.v13 details.m-acc{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.v13 details.m-acc>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;min-height:52px}
+.v13 details.m-acc>summary::-webkit-details-marker{display:none}
+.v13 details.m-acc>summary small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.v13 details.m-acc>summary::after{content:"⌄";color:var(--muted)}
+.v13 details.m-acc[open]>summary::after{content:"⌃"}
+.v13 details.m-acc>div{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
+.v13 .m-format{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:8px;padding:10px}
+.v13 .m-format mark{background:var(--tint);color:var(--accent-text);border-radius:5px;padding:1px 5px;font-weight:700;font-size:12px}
 .v13 .m-pick{border:0;cursor:pointer;min-height:34px;padding:0 12px}
 .v13 .m-pick[aria-pressed=true]{background:var(--accent);color:var(--on-accent)}
 </style>
@@ -1373,11 +1382,16 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
           <div class="m-shared">
             <div class="v-sm">The amount and money in or out come from here, <b>not from the rule's words</b>. Changing this affects every GCash rule.</div>
             <div class="m-pattern"><span><span class="v-pill v-ok">Your pattern</span> <code>You have paid {amount} to {name}. Ref {ref}</code></span><button class="v-btn v-sm v-ghost">Edit</button></div>
-            <div class="m-pattern"><span><span class="v-pill v-warn">Built-in</span> <span class="v-sm">GCash notification reader (used if no pattern fits)</span></span></div>
+            <details class="m-acc m-reader" open><summary><span class="v-pill v-warn">Built-in</span><span><b>GCash notification reader</b><small>3 message types · tried after your patterns</small></span></summary><div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-ok">Money in</span><button type="button" class="v-btn v-sm v-ghost" data-try="in">Try this</button></div><div class="v-sm">You have received <mark>{amount}</mark> of GCash from <mark>{name}</mark> with account ending in <mark>{last4}</mark>.</div><div class="v-xs v-muted">Reads: amount, who sent it, their last digits (if shown), Ref. No. (if shown)</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Payment</span><button type="button" class="v-btn v-sm v-ghost" data-try="pay">Try this</button></div><div class="v-sm">You have paid <mark>{amount}</mark> of GCash to purchase <mark>{name}</mark> with a convenience fee of <mark>{fee}</mark>.</div><div class="v-xs v-muted">Reads: amount plus the fee, who was paid. "to purchase" and the fee are optional</div></div>
+<div class="m-format"><div class="v-row v-sp" style="gap:8px"><span class="v-pill v-warn">Money sent</span><button type="button" class="v-btn v-sm v-ghost" data-try="sent">Try this</button></div><div class="v-sm">You have sent <mark>{amount}</mark> to <mark>{name}</mark> on <mark>{date}</mark></div><div class="v-xs v-muted">Reads: amount, who you sent it to</div></div>
+<div class="v-xs v-muted">Highlighted parts can change. This is a plain-language summary: capital letters don't matter, and "PHP", "P" or "₱" may come before an amount. A message worded another way is not read: add a pattern for it. The built-in reader can't be edited; your pattern wins over it.</div>
+</div></details>
             <label class="v-field">Sample message
               <textarea rows="2" id="sample">You have paid PHP 3,000.00 to Sample Card. Ref 12345</textarea>
             </label>
-            <div class="v-row v-wrap" style="gap:8px" data-ok><span class="v-pill v-ok">Amount ₱3,000.00</span><span class="v-pill v-ok">Money out</span><span class="v-pill v-ok">To Sample Card</span><span class="v-pill">Ref 12345</span></div>
+            <div class="v-row v-wrap" style="gap:8px" data-ok><span class="v-pill" id="by">Read by your pattern</span><span class="v-pill v-ok" id="r-amt">Amount ₱3,000.00</span><span class="v-pill v-ok" id="r-dir">Money out</span><span class="v-pill v-ok" id="r-name">To Sample Card</span><span class="v-pill" id="r-ref">Ref 12345</span></div>
             <div data-bad hidden class="v-stack" style="gap:8px">
               <span class="v-pill v-bad" style="align-self:flex-start">No amount can be read</span>
               <div class="v-sm">The app would ignore this message, even if the words below match.</div>
@@ -1443,6 +1457,10 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
               <div class="v-lab">It waits in the Inbox</div>
               <div class="m-entry"><span>GCash<br><small class="v-muted">Spending · choose a category</small></span><b class="v-num">−₱3,000.00</b></div>
             </div>
+            <div data-result="builtin" hidden class="v-stack" style="gap:6px">
+              <div class="v-lab">It waits in the Inbox, handled by "Everything else from GCash"</div>
+              <div class="m-entry"><span>GCash<br><small class="v-muted" id="b-kind"></small></span><b class="v-num" id="b-amt"></b></div>
+            </div>
             <div data-result="none" hidden class="v-lab">Nothing is saved, and nothing shows in the Inbox</div>
           </div>
         </div>
@@ -1462,7 +1480,14 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 </div>
 <script>
 (function(){
-  var view='rule', unreadable=false;
+  var view='rule', unreadable=false, sampleKey='mine';
+  // The three built-in examples were checked against the app's real GCash reader.
+  var samples={
+    mine:{text:'You have paid PHP 3,000.00 to Sample Card. Ref 12345',by:'Read by your pattern',amt:'₱3,000.00',dir:'Money out',name:'To Sample Card',ref:'Ref 12345'},
+    in:{text:'You have received 900.00 of GCash from Sample Bank with account ending in 1234.',by:'Read by the built-in reader',amt:'₱900.00',dir:'Money in',name:'From Sample Bank · 1234',ref:'',kind:'Income',signed:'+₱900.00'},
+    pay:{text:'You have paid P112.00 of GCash to purchase Sample Load with a convenience fee of P3.00.',by:'Read by the built-in reader',amt:'₱115.00',dir:'Money out',name:'To Sample Load',ref:'Includes ₱3.00 fee',kind:'Spending · choose a category',signed:'−₱115.00'},
+    sent:{text:'You have sent PHP 500.00 to Sample Person on 11-26-2026.',by:'Read by the built-in reader',amt:'₱500.00',dir:'Money out',name:'To Sample Person',ref:'',kind:'Spending · choose a category',signed:'−₱500.00'}
+  };
   var $=function(q){return Array.prototype.slice.call(document.querySelectorAll(q));};
   var id=function(i){return document.getElementById(i);};
   function paint(){
@@ -1472,23 +1497,31 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
     id('kindpill').textContent=view==='rule'?'Rule 1':'Fallback';
     $('[data-ok]').forEach(function(e){e.hidden=unreadable;});
     $('[data-bad]').forEach(function(e){e.hidden=!unreadable;});
-    id('sample').value=unreadable?'Payment of three thousand pesos sent to Sample Card.':'You have paid PHP 3,000.00 to Sample Card. Ref 12345';
+    var sm=samples[sampleKey], mine=sampleKey==='mine';
+    id('sample').value=unreadable?'Payment of three thousand pesos sent to Sample Card.':sm.text;
+    id('by').textContent=sm.by;id('r-amt').textContent='Amount '+sm.amt;id('r-dir').textContent=sm.dir;id('r-name').textContent=sm.name;id('r-ref').textContent=sm.ref;id('r-ref').style.display=sm.ref?'':'none';
     var oneSide=id('to').value==='';
-    var result=unreadable?'none':view==='else'?'else':oneSide?'one':'both';
+    var result=unreadable?'none':!mine?'builtin':view==='else'?'else':oneSide?'one':'both';
+    if(!mine){id('b-kind').textContent=sm.kind;id('b-amt').textContent=sm.signed;}
     $('[data-result]').forEach(function(e){e.hidden=e.getAttribute('data-result')!==result;});
     id('mk1').textContent=unreadable?'✕':'✓';id('mk1').className='m-mark'+(unreadable?' m-bad':'');
     id('t1').textContent=unreadable?'It cannot be read':'It can be read';
-    id('s1').textContent=unreadable?'Add a pattern in step 2. Until then it is ignored.':'Your pattern: ₱3,000.00, money out';
+    id('s1').textContent=unreadable?'Add a pattern in step 2. Until then it is ignored.':(mine?'Your pattern: ':'Built-in reader: ')+sm.amt+', '+sm.dir.toLowerCase();
     ['mk2','mk3'].forEach(function(k){id(k).textContent=unreadable?'–':'✓';id(k).className='m-mark'+(unreadable?' m-off':'');});
     id('t3').textContent=unreadable?'Rules are not checked':view==='else'?'Shown as if no rule matched':'Rule 1 matches: Sample card payment';
     id('s3').textContent=unreadable?'The words match, but there is nothing to save.':view==='else'?'The fallback applies only then.':'Contains "sample card". No ignore rule matches.';
+    if(!unreadable&&!mine){id('t3').textContent='No rule matches this sample';id('s3').textContent='It does not contain "sample card", so the fallback applies.';}
     id('bad').textContent=unreadable?'Readable sample':'Unreadable sample';
   }
   $('[data-go]').forEach(function(b){b.onclick=function(){$('[data-go]').forEach(function(x){x.removeAttribute('aria-current');});b.setAttribute('aria-current','true');view=b.getAttribute('data-go');paint();};});
   $('.v-sw, .m-pick').forEach(function(b){b.onclick=function(){var k=b.classList.contains('v-sw')?'aria-checked':'aria-pressed';b.setAttribute(k,b.getAttribute(k)==='true'?'false':'true');};});
+  $('[data-try]').forEach(function(b){b.onclick=function(){sampleKey=b.getAttribute('data-try');unreadable=false;paint();id('sample').scrollIntoView({block:'center'});};});
+  id('sample').insertAdjacentHTML('afterend','<button type="button" class="v-btn v-sm v-ghost" id="back" style="align-self:flex-start">Back to my sample</button>');
+  id('back').onclick=function(){sampleKey='mine';unreadable=false;paint();};
   id('to').onchange=paint;
   id('bad').onclick=function(){unreadable=!unreadable;paint();};
   id('theme').onclick=function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');};
+  if(location.hash==='#pay'){sampleKey='pay';}
   if(location.hash==='#bad'){unreadable=true;} if(location.hash==='#else'){view='else';}
   paint();
 })();
