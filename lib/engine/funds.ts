@@ -92,8 +92,8 @@ export interface FundMonth {
 export interface FundForecastMonth {
   month: YearMonth;
   pool: Money;
-  /** Net bonuses assigned to funds, by fund id. They go straight to the fund, not through the pool. */
-  bonusCredits?: Readonly<Record<string, Money>>;
+  /** Net bonus money going to general savings. It is not part of the pool: it fills funds down the month's order, ignoring monthly limits. */
+  bonusSavings?: Money;
   /** The payroll savings plan's money, by fund id (only the fund the plan feeds). It lands in full, whatever the fund's target. */
   planCredits?: Readonly<Record<string, Money>>;
 }
@@ -103,8 +103,18 @@ function defaultOrder(funds: readonly Fund[]): Fund[] {
 }
 
 /**
- * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, credit bonus money
- * (capped by room; what does not fit carries over down the month's order), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
+ * The order funds fill in for a month when you have not changed it: your priority order, except that in January the funds that reset
+ * each year come first, ahead of the emergency fund and the rest. The payroll savings plan's fund never resets, so it stays put.
+ */
+export function monthOrder<T extends { id: string; rule: Fund["rule"] }>(inPriority: readonly T[], month: string, planFundId: string | null = null): T[] {
+  if (Number(month.slice(5, 7)) !== 1) return [...inPriority];
+  const resets = (f: T) => f.rule === "reset" && f.id !== planFundId;
+  return [...inPriority.filter(resets), ...inPriority.filter((f) => !resets(f))];
+}
+
+/**
+ * Allocate the savings pool to funds month by month. Order of events in a month: reset funds whose reset month it is, add the payroll
+ * savings plan, pour bonus savings down the month's order (each fund up to its cap), take pinned amounts from the pool first, then fill funds in the month's order (an override's order first, the rest by
  * priority), each taking min(demand, what is left). Skipped funds get nothing; a fund is never both pinned and skipped.
  */
 export function allocateFunds(
@@ -131,20 +141,6 @@ export function allocateFunds(
     const rows = new Map<string, FundMonthRow>(funds.map((f) => [f.id, { fundId: f.id, amount: ZERO, bonus: ZERO, plan: ZERO, balanceAfter: ZERO, reasons: [] }]));
 
     let bonusUnplaced = ZERO;
-    // Bonus money a full fund cannot take; it carries over to other funds below.
-    let overflow = ZERO;
-    for (const [fundId, credit] of Object.entries(m.bonusCredits ?? {})) {
-      const f = funds.find((x) => x.id === fundId);
-      if (!f) {
-        bonusUnplaced = (bonusUnplaced + credit) as Money;
-        continue;
-      }
-      const r = room(f, balance[fundId]!);
-      const taken = r === null ? credit : min(credit, r);
-      balance[fundId] = (balance[fundId]! + taken) as Money;
-      rows.get(fundId)!.bonus = taken;
-      overflow = (overflow + (credit - taken)) as Money;
-    }
 
     // The payroll savings plan goes in full: it was already taken from your pay, so a full fund does not turn it away.
     for (const [fundId, credit] of Object.entries(m.planCredits ?? {})) {
@@ -158,26 +154,27 @@ export function allocateFunds(
     }
 
     const listed = (o?.order ?? []).map((id) => funds.find((f) => f.id === id)).filter((f): f is Fund => f !== undefined);
-    const order = [...listed, ...funds.filter((f) => !listed.includes(f))];
+    const order = [...listed, ...monthOrder(funds, m.month, planFundId).filter((f) => !listed.includes(f))];
 
-    // What a full fund could not take goes down this month's priority order (a chosen fund first, if the month names one), passing
-    // over skipped and full funds. "none" keeps it out of every fund.
+    // Bonus savings fill funds down this month's order (a chosen fund first, if the month names one): each takes up to its cap and the
+    // rest flows to the next, passing over skipped and full funds. "none" keeps it out of every fund.
+    let waiting = m.bonusSavings ?? ZERO;
     if (o?.overflow !== "none") {
       const first = funds.find((f) => f.id === o?.overflow);
       for (const f of first ? [first, ...order.filter((x) => x !== first)] : order) {
-        if (overflow <= 0) break;
+        if (waiting <= 0) break;
         if (skips.has(f.id)) continue;
         const r = room(f, balance[f.id]!);
-        const taken = r === null ? overflow : min(overflow, r);
+        const taken = r === null ? waiting : min(waiting, r);
         if (taken <= 0) continue;
         balance[f.id] = (balance[f.id]! + taken) as Money;
         const row = rows.get(f.id)!;
         row.bonus = (row.bonus + taken) as Money;
-        row.reasons.push("extra carried over");
-        overflow = sub(overflow, taken);
+        row.reasons.push("bonus savings");
+        waiting = sub(waiting, taken);
       }
     }
-    bonusUnplaced = (bonusUnplaced + overflow) as Money;
+    bonusUnplaced = (bonusUnplaced + waiting) as Money;
 
     let left = m.pool > 0 ? m.pool : ZERO;
     const pinned = new Set<string>();

@@ -52,7 +52,7 @@ describe('saveInstance', () => {
     expect(await saveInstance(supabase, input)).toEqual({ ok: true });
     expect(op(log, 'bonus_instances', 'insert')?.args[0]).toEqual({ rule_id: RULE, year: 2027, status: 'planned', multiplier_num: 100 });
     expect(op(log, 'bonus_instance_splits', 'delete')).toBeDefined();
-    expect(op(log, 'bonus_instance_splits', 'insert')?.args[0]).toEqual([{ instance_id: INST, target_kind: 'fund', target_id: FUND, label: null, amount: 5_000_000, done: true }]);
+    expect(op(log, 'bonus_instance_splits', 'insert')?.args[0]).toEqual([{ instance_id: INST, target_kind: 'fund', target_id: null, label: null, amount: 5_000_000, done: true }]);
   });
 
   it('updates an existing instance and records what arrived', async () => {
@@ -66,10 +66,8 @@ describe('saveInstance', () => {
     expect(op(log, 'bonus_instance_splits', 'insert')).toBeUndefined();
   });
 
-  it('refuses a bonus or a fund that is not there', async () => {
+  it('refuses a bonus that is not there', async () => {
     expect(await saveInstance(client({}).supabase, input)).toEqual({ error: 'That bonus was not found.' });
-    const gone = client({ 'bonus_rules:select': { data: { id: RULE } }, 'funds:select': { data: [] } });
-    expect(await saveInstance(gone.supabase, input)).toEqual({ error: 'One of those funds was not found.' });
   });
 
   it('rejects bad input before touching the database', async () => {

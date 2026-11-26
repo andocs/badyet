@@ -223,9 +223,9 @@ export function OverrideSheet({
           </View>
         ))}
       </Field>
-      <Field label="When a bonus fills a fund, the extra goes to">
+      <Field label="This month's bonus savings go">
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          <Chip label="Next in priority" on={overflow === null} onPress={() => setOverflow(null)} />
+          <Chip label="Down the order" on={overflow === null} onPress={() => setOverflow(null)} />
           {funds.map((f) => (
             <Chip key={f.id} label={`${f.name} first`} on={overflow === f.id} onPress={() => setOverflow(f.id)} />
           ))}

@@ -1,3 +1,4 @@
+import { monthOrder } from '@/lib/engine/funds';
 import { linkPlanFund, planLinkChoice } from '@/lib/pay/savings-plan';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { validateFund, validateOverride } from '@/lib/funds/input';
@@ -128,8 +129,11 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
   if (!['first', 'pin', 'skip', 'unpin'].includes(input.op)) return { error: 'Pick what to do.' };
   if (input.op === 'pin' && (!Number.isInteger(input.amount) || (input.amount as number) < 0 || (input.amount as number) > 100_000_000_000)) return { error: 'Enter the amount to pin.' };
 
-  const fundRows = await supabase.from('funds').select('id').is('archived_at', null).order('priority');
-  const defaultOrder = ((fundRows.data ?? []) as { id: string }[]).map((f) => f.id);
+  const fundRows = await supabase.from('funds').select('id, rule').is('archived_at', null).order('priority');
+  const inPriority = (fundRows.data ?? []) as { id: string; rule: 'steps' | 'cap' | 'reset' | 'fixed' }[];
+  const plan = await supabase.from('pay_settings').select('savings_plan_fund_id').maybeSingle();
+  const planFundId = (plan?.data as { savings_plan_fund_id?: string | null } | null | undefined)?.savings_plan_fund_id ?? null;
+  const defaultOrder = inPriority.map((f) => f.id);
   if (!defaultOrder.includes(input.fundId)) return { error: 'That fund was not found.' };
 
   for (const month of input.months) {
@@ -145,7 +149,7 @@ export async function bulkOverride(supabase: SupabaseClient, input: { months: st
       else if (r.pin_amount !== null) pins[r.fund_id] = r.pin_amount;
     }
     let order = row?.fund_order ?? null;
-    if (input.op === 'first') order = [input.fundId, ...(order ?? defaultOrder).filter((id) => id !== input.fundId)];
+    if (input.op === 'first') order = [input.fundId, ...(order ?? monthOrder(inPriority, month, planFundId).map((f) => f.id)).filter((id) => id !== input.fundId)];
     if (input.op === 'pin') {
       pins[input.fundId] = input.amount as number;
       const i = skips.indexOf(input.fundId);

@@ -41,9 +41,10 @@ describe("validateInstance", () => {
   it("accepts splits to a fund and to a named destination", () => {
     expect(validateInstance(ok)).toMatchObject({ ok: true, value: { year: 2027, splits: [{ kind: "fund" }, { kind: "gift", label: "Mom's birthday", done: true }] } });
   });
-  it("rejects a fund without an id, an unnamed gift, bad amounts and years", () => {
+  it("rejects two savings lines, an unnamed gift, bad amounts and years", () => {
     const bad = (s: unknown, extra: object = {}) => validateInstance({ ...ok, splits: [s], ...extra }).ok;
-    expect(bad({ kind: "fund", targetId: null, amount: 1 })).toBe(false);
+    expect(bad({ kind: "fund", targetId: null, amount: 1 })).toBe(true);
+    expect(validateInstance({ ...ok, splits: [{ kind: "fund", targetId: null, amount: 1 }, { kind: "fund", targetId: null, amount: 2 }] }).ok).toBe(false);
     expect(bad({ kind: "gift", targetId: null, label: "", amount: 1 })).toBe(false);
     expect(bad({ kind: "gift", label: "x", amount: -1 })).toBe(false);
     expect(bad({ kind: "loot", label: "x", amount: 1 })).toBe(false);

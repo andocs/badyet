@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EXEMPTION_CAP } from "@/lib/windfall/compute";
 import { buildMonthPay } from "./payslip";
-import { allocateSplits, fundCredits, planBonuses, type BonusPayment } from "./bonus";
+import { allocateSplits, planBonuses, savingsCredits, type BonusPayment } from "./bonus";
 import { resolveSalaryTimeline } from "./salary";
 import { noAssumptions, p, settings, startEvent, ym } from "./fixtures";
 import type { BonusInstance, BonusRule, SalaryEvent } from "./types";
@@ -99,7 +99,7 @@ describe("bonus splits", () => {
     expect(unplaced).toBe(0);
   });
 
-  it("leaves the unplaced rest, and only fund targets reach fund balances", () => {
+  it("leaves the unplaced rest, and only savings reach the funds, as one pot", () => {
     const payment: BonusPayment = {
       ruleId: "t13", name: "13th month", kind: "thirteenth", month: ym("2026-12"), cutoff: "second", gross: p(50_000), deMinimis: p(0),
       exempt: p(50_000), net: p(50_000), tax: p(0), received: false,
@@ -109,6 +109,6 @@ describe("bonus splits", () => {
       ],
     };
     expect(allocateSplits(payment.net, payment.splits).unplaced).toBe(p(25_000));
-    expect(fundCredits([payment]).get(ym("2026-12"))).toEqual({ ef: p(20_000) });
+    expect(savingsCredits([payment]).get(ym("2026-12"))).toBe(p(20_000));
   });
 });

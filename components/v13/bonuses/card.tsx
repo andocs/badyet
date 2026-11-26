@@ -4,7 +4,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
 import { saveInstance } from "@/app/(v13)/bonuses/actions";
 import { destColors, destKey } from "@/lib/bonuses/colors";
 import { money, parsePesos } from "@/lib/domain/money";
-import type { BonusCard, DestKind, DestView } from "@/lib/bonuses/view";
+import { SAVINGS_NAME, type BonusCard, type DestKind, type DestView } from "@/lib/bonuses/view";
 import { EXEMPTION_CAP } from "@/lib/windfall/compute";
 import { Money } from "../money";
 import { V13Icon } from "../icons";
@@ -19,7 +19,7 @@ const rowOf = (d: DestView): Row => ({ kind: d.kind, targetId: d.targetId, label
 export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: BonusCard; funds: { id: string; name: string; color: string | null }[]; colors: Record<string, string>; baseMultiplier: number }) {
   const [editing, setEditing] = useState(false);
   const [rows, setRows] = useState<Row[]>(() => card.dests.map(rowOf));
-  const [add, setAdd] = useState({ mode: (funds.length > 0 ? "fund" : "custom") as "fund" | "custom", fundId: "", name: "", value: "", unit: "peso" as "peso" | "pct" });
+  const [add, setAdd] = useState({ mode: "fund" as "fund" | "custom", name: "", value: "", unit: "peso" as "peso" | "pct" });
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
   // The row being ticked off, so its check shows a spinner until the server has it.
@@ -49,9 +49,9 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
   const dot = (d: { kind: DestKind; targetId: string | null; name: string }) => palette[destKey(d)] ?? "var(--muted)";
   const placed = rows.reduce((t, r) => t + (parsePesos(r.amount) ?? 0), 0);
   const left = card.net - placed;
-  // The add form: a fund or a custom line, as a flat amount or a percent of this bonus.
-  const availableFunds = funds.filter((f) => !rows.some((r) => r.targetId === f.id));
-  const addMode = add.mode === "fund" && availableFunds.length === 0 ? "custom" : add.mode;
+  // The add form: general savings or a custom line, as a flat amount or a percent of this bonus.
+  const hasSavings = rows.some((r) => r.kind === "fund");
+  const addMode = add.mode === "fund" && hasSavings ? "custom" : add.mode;
   const addAmount = (() => {
     if (add.unit === "pct") {
       const pct = Number(add.value);
@@ -60,19 +60,17 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
     const v = parsePesos(add.value);
     return v !== undefined && v > 0 ? v : null;
   })();
-  const canAdd = addAmount !== null && (addMode === "fund" ? add.fundId !== "" : add.name.trim() !== "");
+  const canAdd = addAmount !== null && (addMode === "fund" || add.name.trim() !== "");
   const addDestination = () => {
     if (!canAdd || addAmount === null) return;
     const amount = (addAmount / 100).toFixed(2);
     if (addMode === "fund") {
-      const fund = funds.find((f) => f.id === add.fundId);
-      if (!fund) return;
-      setRows((x) => [...x, { kind: "fund", targetId: fund.id, label: null, name: fund.name, amount, done: false }]);
+      setRows((x) => [...x, { kind: "fund", targetId: null, label: null, name: SAVINGS_NAME, amount, done: false }]);
     } else {
       const name = add.name.trim();
       setRows((x) => [...x, { kind: "wants", targetId: null, label: name, name, amount, done: false }]);
     }
-    setAdd({ ...add, fundId: "", name: "", value: "" });
+    setAdd({ ...add, name: "", value: "" });
   };
   const isCip = card.kind === "cip";
   const mult = card.multiplierNum ?? baseMultiplier;
@@ -95,15 +93,12 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
       <div className="v-lbl">Add a destination</div>
       <div className="v-addform">
         <div className="v-seg" role="group" aria-label="Where it goes">
-          <button type="button" aria-pressed={addMode === "fund"} disabled={availableFunds.length === 0} onClick={() => setAdd({ ...add, mode: "fund" })}>A fund</button>
+          <button type="button" aria-pressed={addMode === "fund"} disabled={hasSavings} onClick={() => setAdd({ ...add, mode: "fund" })}>General savings</button>
           <button type="button" aria-pressed={addMode === "custom"} onClick={() => setAdd({ ...add, mode: "custom" })}>Something else</button>
         </div>
         <div className="v-addfields">
           {addMode === "fund" ? (
-            <select className="v-lbl-in" value={add.fundId} aria-label="Fund" onChange={(e) => setAdd({ ...add, fundId: e.target.value })}>
-              <option value="">Choose a fund…</option>
-              {availableFunds.map((fd) => <option key={fd.id} value={fd.id}>{fd.name}</option>)}
-            </select>
+            <div className="v-xs v-muted">Fills your funds in priority order; each takes up to its cap.</div>
           ) : (
             <input className="v-lbl-in" value={add.name} maxLength={60} placeholder="Name it, e.g. Mom's birthday gift" aria-label="Name of the destination" onChange={(e) => setAdd({ ...add, name: e.target.value })} />
           )}
@@ -115,7 +110,7 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
             </div>
           </div>
         </div>
-        <div className="v-addpre v-xs v-muted" aria-live="polite">{add.unit === "pct" && addAmount !== null ? <>That is <b><Money value={money(addAmount)} /></b> of <Money value={card.net} />.</> : "Pick a fund or name a line, then how much."}</div>
+        <div className="v-addpre v-xs v-muted" aria-live="polite">{add.unit === "pct" && addAmount !== null ? <>That is <b><Money value={money(addAmount)} /></b> of <Money value={card.net} />.</> : "Pick general savings or name a line, then how much."}</div>
         <button type="button" className="v-btn v-pri v-addgo" disabled={!canAdd} onClick={addDestination}>Add destination</button>
       </div>
     </div>

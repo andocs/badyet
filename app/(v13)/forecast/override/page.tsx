@@ -3,6 +3,7 @@ import { OverrideBulk, OverrideMonth, type Sim } from "@/components/v13/funds/ov
 import type { FundMeta } from "@/components/v13/funds/forecast-view";
 import { forecastInput, forecastRows } from "@/lib/funds/forecast";
 import { loadFunds } from "@/lib/funds/load";
+import { monthOrder } from "@/lib/engine/funds";
 import { monthRange } from "@/lib/engine/months";
 import { runProjection } from "@/lib/engine/projection";
 import { createClient } from "@/lib/supabase/server";
@@ -35,12 +36,15 @@ export default async function Override({ searchParams }: { searchParams: Promise
   }
 
   const month = months.includes(sp.m ?? "") ? (sp.m as string) : months[1]!;
-  const defaultOrder = d.funds.map((f) => f.id); // already in default priority order
+  const planFundId = d.budget.salary.input.settings.savingsPlanFundId ?? null;
+  // The funds are already in priority order; January puts the yearly-reset funds first.
+  const defaultOrder = monthOrder(d.funds, month, planFundId).map((f) => f.id);
   const own = d.overrides.find((o) => o.month === month);
   const sim: Sim = {
     funds: d.funds,
     start: Object.fromEntries(d.funds.map((f) => [f.id, d.fundStart[f.id] ?? 0])),
-    months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusCredits: r.bonusCredits })),
+    months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusSavings: r.bonusSavings, planCredit: planFundId ? (r.funds[planFundId]?.plan ?? 0) : 0 })),
+    planFundId,
     overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [], overflow: o.overflow ?? null })),
   };
   return (

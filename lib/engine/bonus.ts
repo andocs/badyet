@@ -172,15 +172,16 @@ export function allocateSplits(net: Money, splits: readonly BonusSplit[]): { pla
   return { placed, unplaced: left };
 }
 
-/** Net bonus money going straight into funds, by month and fund id. Gifts, purchases, debt and wants are spent on purpose and do not enter funds. */
-export function fundCredits(payments: readonly BonusPayment[]): Map<YearMonth, Record<string, Money>> {
-  const out = new Map<YearMonth, Record<string, Money>>();
+/**
+ * Net bonus money going to general savings, by month. A destination of kind "fund" means savings (older ones may still name a fund;
+ * the name no longer matters). Gifts, purchases, debt and wants are spent on purpose and do not enter funds.
+ */
+export function savingsCredits(payments: readonly BonusPayment[]): Map<YearMonth, Money> {
+  const out = new Map<YearMonth, Money>();
   for (const p of payments) {
     for (const { split, amount } of allocateSplits(p.net, p.splits).placed) {
-      if (split.targetKind !== "fund" || !split.targetId || amount === 0) continue;
-      const row = out.get(p.month) ?? {};
-      row[split.targetId] = ((row[split.targetId] ?? 0) + amount) as Money;
-      out.set(p.month, row);
+      if (split.targetKind !== "fund" || amount === 0) continue;
+      out.set(p.month, ((out.get(p.month) ?? 0) + amount) as Money);
     }
   }
   return out;

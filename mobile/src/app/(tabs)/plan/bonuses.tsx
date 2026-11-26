@@ -141,8 +141,7 @@ export default function Bonuses() {
   const hasStart = !!input?.events.some((e) => e.kind === 'start');
   const years = data ? Array.from({ length: 6 }, (_, i) => data.thisYear + i) : [];
   const shownYear = data && year !== null && years.includes(year) ? year : (data?.thisYear ?? 0);
-  const funds = data ? new Map(data.funds.map((f) => [f.id, f.name])) : new Map<string, string>();
-  const cards = data && input && hasStart ? bonusCards(shownYear, input, data.saved, funds) : [];
+  const cards = data && input && hasStart ? bonusCards(shownYear, input, data.saved) : [];
   const sum = yearSummary(cards);
   const total = Math.max(1, sum.net);
   const colors = data ? destColors(data.funds, cards.flatMap((x) => x.dests)) : {};
@@ -231,7 +230,7 @@ export default function Bonuses() {
           )}
         </>
       ) : null}
-      {data && edit?.k === 'edit' ? <EditBonusSheet card={edit.card} funds={data.funds.map((f) => ({ id: f.id, name: f.name }))} baseMultiplier={input!.assumptions.cipMultiplierNum} onClose={() => setEdit(null)} onSaved={done} /> : null}
+      {data && edit?.k === 'edit' ? <EditBonusSheet card={edit.card} baseMultiplier={input!.assumptions.cipMultiplierNum} onClose={() => setEdit(null)} onSaved={done} /> : null}
       {edit?.k === 'received' ? <ReceivedSheet card={edit.card} onClose={() => setEdit(null)} onSaved={done} /> : null}
       {rule ? <RuleSheet rule={rule.rule} onClose={() => setRule(null)} onSaved={done} /> : null}
     </Screen>

@@ -107,17 +107,18 @@ export function validateInstance(input: unknown): Checked<InstanceInput> {
   if (!int(p.year, 2000, 2200)) return { ok: false, error: "Pick a year." };
   if (p.multiplierNum != null && !int(p.multiplierNum, 1, 1_000)) return { ok: false, error: "Check the multiplier." };
   const raw = Array.isArray(p.splits) ? p.splits : [];
+  if (raw.filter((r) => (r as { kind?: unknown } | null)?.kind === "fund").length > 1) return { ok: false, error: "General savings is already listed. Change its amount instead." };
   if (raw.length > 30) return { ok: false, error: "That is too many destinations." };
   const splits: SplitInput[] = [];
   for (const r of raw) {
     const s = r as Record<string, unknown>;
     if (s.kind !== "fund" && s.kind !== "gift" && s.kind !== "purchase" && s.kind !== "debt" && s.kind !== "wants" && s.kind !== "account") return { ok: false, error: "Check the destination types." };
     if (s.targetId != null && (typeof s.targetId !== "string" || !UUID.test(s.targetId))) return { ok: false, error: "Pick a fund from the list." };
-    if (s.kind === "fund" && s.targetId == null) return { ok: false, error: "Pick a fund from the list." };
-    const label = typeof s.label === "string" && s.label.trim() !== "" ? s.label.trim().slice(0, 60) : null;
+    // "fund" means general savings: it fills your funds in order, so it names none of them.
+    const label = s.kind !== "fund" && typeof s.label === "string" && s.label.trim() !== "" ? s.label.trim().slice(0, 60) : null;
     if (s.kind !== "fund" && label === null) return { ok: false, error: "Name each destination." };
     if (!int(s.amount, 0, MAX)) return { ok: false, error: "Check the destination amounts." };
-    splits.push({ kind: s.kind, targetId: (s.targetId as string | null) ?? null, label, amount: s.amount, done: s.done === true });
+    splits.push({ kind: s.kind, targetId: s.kind === "fund" ? null : ((s.targetId as string | null) ?? null), label, amount: s.amount, done: s.done === true });
   }
   let received: InstanceInput["received"] = null;
   if (p.received != null) {
