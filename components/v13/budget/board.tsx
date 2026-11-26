@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { deleteLine, saveLine } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
+import { applyMoves, type Move } from "@/lib/budget/moves";
 import { withPayroll, type PayrollRow } from "@/lib/budget/payroll";
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
 import { useConfirm, useToast } from "../feedback";
@@ -56,9 +57,10 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {} }: { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {}, moves = [] }: { /** Office-day money moved this month. */ moves?: Move[] } & { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
-  const groups: GroupView[] = withPayroll(cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups, payroll, cutoff ? cutoffTakeHome : takeHome, cutoff);
+  const moved = applyMoves(cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups, moves, cutoff);
+  const groups: GroupView[] = withPayroll(moved.groups, payroll, cutoff ? cutoffTakeHome : takeHome, cutoff);
   const dialog = useRef<HTMLDialogElement>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -178,6 +180,7 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                   <span className="v-ba">
                     <b className="v-num">{l.amount === null ? "—" : <Money value={l.amount} />}</b>
                     {!cutoff && l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
+                    {(moved.notes[l.id] ?? []).map((n) => <small key={`${n.text}${n.counted}`} className={`v-num ${n.amount < 0 ? "v-neg" : "v-pos"}`}><Money value={money(n.amount)} signed /> {n.text}{n.counted ? "" : " (saved balance)"}</small>)}
                     {l.reimburse ? <small>back <Money value={l.reimburse.amount} />{l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`}</small> : null}
                     {showSpent && l.spent && l.amount ? (
                       <>
@@ -189,6 +192,18 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                 </div>
               );
             })}
+            {(moved.rows[g.id] ?? []).map((r) => (
+              <div key={r.key} className="v-bl" aria-label={r.label} style={{ cursor: "default" }}>
+                <span className="v-bn"><i className="v-dot" style={{ background: color, opacity: 0.45 }} /><span><b>{r.label}</b><span className="v-xs v-muted" style={{ display: "block" }}>{r.counted ? "office-day money you moved" : "from a pool's saved balance, not in the total"}</span></span></span>
+                <span className="v-br"><span className="v-pill v-rl">Moved</span></span>
+                <span className="v-bcut">
+                  <span className="v-cutp" role="img" aria-label={cutoffText(r.cutoff)}>
+                    <i className={r.cutoff !== "second" ? "v-on" : ""}>1</i><i className={r.cutoff !== "first" ? "v-on" : ""}>2</i>
+                  </span>
+                </span>
+                <span className="v-ba"><b className={`v-num ${r.amount < 0 ? "v-neg" : "v-pos"}`}><Money value={money(r.amount)} signed /></b></span>
+              </div>
+            ))}
             {(payroll[g.id] ?? []).filter((d) => !cutoff || d[cutoff] > 0).map((d) => (
               <div key={`${d.kind}-${d.label}`} className="v-bl" aria-label={`${d.label}, taken from your payslip`} style={{ cursor: "default" }}>
                 <span className="v-bn"><i className="v-dot" style={{ background: color, opacity: 0.45 }} /><span><b>{d.label}</b><span className="v-xs v-muted" style={{ display: "block" }}>from your payslip</span></span></span>

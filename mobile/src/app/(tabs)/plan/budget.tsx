@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { applyMoves, type MovedBudget, type MoveNote } from '@/lib/budget/moves';
 import { payrollOnLines, withPayroll, type PayrollRow } from '@/lib/budget/payroll';
 import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
@@ -261,7 +262,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean; onC
   );
 }
 
-function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
+function LineRow({ l, moves, onPress }: { l: LineView; moves: MoveNote[]; onPress: () => void }) {
   const c = useTheme();
   const { hide } = useHide();
   const sub = [ruleText(l), cutoffText(l.cutoff), l.accountName ? `to ${l.accountName}` : null, l.isDraft ? 'draft' : null].filter(Boolean).join(' · ');
@@ -270,6 +271,13 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
       <View style={{ flex: 1 }}>
         <Body bold>{l.name}</Body>
         <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>{sub}</Text>
+        {moves.map((n) => (
+          <Text key={`${n.text}${n.counted}`} style={{ color: n.amount < 0 ? c.err : c.accentText, fontFamily: fonts.bodyBold, fontSize: 12 }}>
+            {n.amount < 0 ? '−' : '+'}
+            {peso(money(Math.abs(n.amount)), hide)} {n.text}
+            {n.counted ? '' : ' (saved balance)'}
+          </Text>
+        ))}
         {l.spent ? (
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
             {peso(l.spent.amount, hide)} {l.spent.word}
@@ -293,7 +301,7 @@ function LineRow({ l, onPress }: { l: LineView; onPress: () => void }) {
   );
 }
 
-function Board({ groups, data, payroll, cut, onEdit, onAdd }: { cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
+function Board({ moved, groups, data, payroll, cut, onEdit, onAdd }: { moved: MovedBudget; cut: 'first' | 'second' | null; payroll: Record<string, PayrollRow[]>; groups: GroupView[]; data: BudgetData; onEdit: (l: LineView) => void; onAdd: (categoryId: string) => void }) {
   const c = useTheme();
   const { hide } = useHide();
   return (
@@ -316,7 +324,21 @@ function Board({ groups, data, payroll, cut, onEdit, onAdd }: { cut: 'first' | '
               <View style={{ width: `${g.share}%`, height: 6, borderRadius: 3, backgroundColor: c.accent }} />
             </View>
             {g.lines.map((l) => (
-              <LineRow key={l.id} l={l} onPress={() => onEdit(l)} />
+              <LineRow key={l.id} l={l} moves={moved.notes[l.id] ?? []} onPress={() => onEdit(l)} />
+            ))}
+            {(moved.rows[g.id] ?? []).map((r) => (
+              <View key={r.key} style={[s.between, { minHeight: 44 }]}>
+                <View style={{ flex: 1 }}>
+                  <Body bold>{r.label}</Body>
+                  <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
+                    {[r.counted ? 'office-day money you moved' : "from a pool's saved balance, not in the total", cutoffText(r.cutoff)].join(' · ')}
+                  </Text>
+                </View>
+                <Text style={{ color: r.amount < 0 ? c.err : c.accentText, fontFamily: fonts.bodyBold, fontSize: 15 }}>
+                  {r.amount < 0 ? '−' : '+'}
+                  {peso(money(Math.abs(r.amount)), hide)}
+                </Text>
+              </View>
             ))}
             {(payroll[g.id] ?? []).filter((d) => !cut || d[cut] > 0).map((d) => (
               <View key={`${d.kind}-${d.label}`} style={[s.between, { minHeight: 44 }]}>
@@ -460,8 +482,9 @@ export default function Budget() {
                 <Chip label="2nd cutoff" on={cut === 'second'} onPress={() => setCut('second')} />
               </View>
               <Board
+                moved={applyMoves(cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups, screen.moves, cut)}
                 groups={withPayroll(
-                  cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups,
+                  applyMoves(cut ? groupsForCutoff(screen.groups, cut, screen.shown.pay[cut].takeHome) : screen.groups, screen.moves, cut).groups,
                   payrollOnLines(screen.shown.pay, screen.groups),
                   cut ? screen.shown.pay[cut].takeHome : screen.takeHome,
                   cut,

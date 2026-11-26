@@ -6,6 +6,7 @@ import type { BudgetData } from "./load";
 import { buildGroups, monthFlag, type GroupView, type MonthFlag } from "./view";
 import { planFor, type PlanSpan } from "./plans";
 import { savingsByMonth } from "./savings";
+import { budgetMoves, type Move } from "./moves";
 
 /** ₱2,500 left in a month is "tight". */
 export const TIGHT = 250_000;
@@ -31,6 +32,8 @@ export interface BudgetScreen {
   takeHome: Money;
   /** Your other payroll deductions and savings plan this month. The hero and the category totals count them in. */
   payrollTotal: Money;
+  /** Office-day money you moved this budget month, to show on the lines it left and reached. */
+  moves: Move[];
   fixed: Money;
   flag: MonthFlag;
   /** Names of the raises that top lines up, for the note under the board. */
@@ -94,5 +97,5 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const eventLabel = new Map(data.salary.input.events.map((e) => [e.id, `${monthLabel(e.effectiveMonth)} raise`]));
   const topUpRaises = [...new Set(groups.flatMap((g) => g.lines.flatMap((l) => l.topUps.map((t) => eventLabel.get(t.eventId) ?? "a raise"))))];
 
-  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, payrollTotal, fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
+  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, payrollTotal, moves: shown ? budgetMoves(data.pools, data.paydays, shown.month) : [], fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
 }
