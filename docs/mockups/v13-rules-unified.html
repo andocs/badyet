@@ -1372,29 +1372,16 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
           <div class="v-xs v-muted">Keep Account on automatic: one account here would receive both sides.</div>
         </div>
         <div class="m-sec"><div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
-          <div class="v-seg" role="group" aria-label="Mockup: other side" style="align-self:flex-start"><button type="button" aria-pressed="true" data-side="ok">Readable other side</button><button type="button" aria-pressed="false" data-side="bad">Unreadable other side</button></div>
-          <div data-pane="ok" class="v-stack" style="gap:10px"><div class="m-shared">
-            <label class="v-field">The other side's message (optional)<textarea rows="2" data-other>Payment of ₱5,000.00 received on your Maya Black</textarea></label>
-            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span></div>
-          </div><div class="v-testbox" role="status">
-            <div class="m-line"><span class="m-mark">✓</span><div><b>These two would pair</b></div></div>
-            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">Same amount, one out and one in, two different accounts</div></div>
-            <div class="m-line"><span class="m-mark">✓</span><div class="v-sm">"To Maya Black" names the other account</div></div>
-            <div class="m-line"><span class="m-mark m-off">⏱</span><div class="v-sm">They must also arrive within an hour of each other. A sample can't check that.</div></div>
-            <div class="v-lab">One linked transfer, waiting in the Inbox</div>
-              <div class="m-entry"><span>Maya<br><small class="v-muted">Transfer</small></span><b class="v-num">−₱5,000.00</b></div>
-              <div class="m-entry"><span>Maya Black<br><small class="v-muted">Transfer · lowers what you owe</small></span><b class="v-num">+₱5,000.00</b></div>
-            <div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>
-          </div></div>
-          <div data-pane="bad" class="v-stack" style="gap:10px" hidden><div class="m-shared">
-            <label class="v-field">The other side's message (optional)<textarea rows="2">You paid your Maya Black bill of ₱5,000.00.</textarea></label>
-            <span class="v-pill v-bad" style="align-self:flex-start">No amount can be read</span><button type="button" class="v-btn v-sm v-pri" style="align-self:flex-start">+ Make a pattern from this message</button>
-          </div><div class="v-testbox" role="status">
-            <div class="m-line"><span class="m-mark m-bad">✕</span><div><b>These would not pair</b><div class="v-xs v-muted">The second message can't be read, so the app would ignore it.</div></div></div>
-            <div class="v-lab">Only the wallet side is saved</div>
-            <div class="m-entry"><span>Maya<br><small class="v-muted">Spending · choose a category</small></span><b class="v-num">−₱5,000.00</b></div>
-            <div class="v-xs v-muted">Maya Black would not go down. Add a pattern for the second message.</div>
-          </div></div>
+          <div class="m-shared">
+            <div class="v-grid2">
+              <label class="v-field">Other side from<select id="o-src"><option value="Maya">Maya (this source)</option><option value="GCash">GCash</option><option value="BPI">BPI</option></select></label>
+              <div class="v-xs v-muted" style="align-self:end;padding-bottom:6px">Each message is read by its own source's patterns and reader.</div>
+            </div>
+            <label class="v-field">The other side's message (optional)<textarea rows="2" id="o-msg"></textarea></label>
+            <div class="v-row v-wrap" style="gap:8px" id="o-read"></div>
+            <button type="button" class="v-btn v-sm v-pri" id="o-make" style="align-self:flex-start" hidden></button>
+          </div>
+          <div class="v-testbox" role="status" id="o-result"></div>
         </div>
         <div class="v-row v-sp"><button class="v-btn v-sm v-ghost">Remove Maya</button><div class="v-row"><button class="v-btn v-sm">Cancel</button><button class="v-btn v-sm v-pri">Save</button></div></div>
       </section>
@@ -1518,7 +1505,7 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
   </main>
   </div>
 </div>
-<div class="m-bar"><span class="v-xs v-muted">Mockup: try</span><button class="v-btn v-sm" id="bad">Unreadable sample</button><button class="v-btn v-sm" id="theme">Light / dark</button></div>
+<div class="m-bar"><span class="v-xs v-muted">Mockup: try</span><label class="v-xs v-muted" id="o-wrap" hidden>Other side: <select id="o-case" class="v-btn v-sm"><option value="pair">Would pair</option><option value="nopair">Readable, won't pair</option><option value="unread">Can't be read</option></select></label><button class="v-btn v-sm" id="bad">Unreadable sample</button><button class="v-btn v-sm" id="theme">Light / dark</button></div>
 </div>
 <script>
 (function(){
@@ -1533,7 +1520,7 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
   var $=function(q){return Array.prototype.slice.call(document.querySelectorAll(q));};
   var id=function(i){return document.getElementById(i);};
   function paint(){
-    id('maya-ed').hidden=view!=='maya';id('main-ed').hidden=view==='maya';id('bad').hidden=view==='maya';
+    id('o-wrap').hidden=view!=='maya';id('maya-ed').hidden=view!=='maya';id('main-ed').hidden=view==='maya';id('bad').hidden=view==='maya';
     if(view==='maya')return;
     $('[data-rule]').forEach(function(e){e.hidden=view!=='rule';});
     $('[data-else]').forEach(function(e){e.hidden=view!=='else';});
@@ -1563,14 +1550,44 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
   id('sample').insertAdjacentHTML('afterend','<button type="button" class="v-btn v-sm v-ghost" id="back" style="align-self:flex-start">Back to my sample</button>');
   id('back').onclick=function(){sampleKey='mine';unreadable=false;paint();};
   id('to').onchange=paint;
-  $('[data-side]').forEach(function(b){b.onclick=function(){var k=b.getAttribute('data-side');$('[data-side]').forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false');});$('[data-pane]').forEach(function(p){p.hidden=p.getAttribute('data-pane')!==k;});};});
+  // The sample results below were checked against the app's real readers and pairing code.
+  var cases={pair:'Payment of ₱5,000.00 received on your Maya Black',nopair:'Payment of ₱4,985.00 received on your Maya Black',unread:'You paid your Maya Black bill of ₱5,000.00.'};
+  var line=function(mark,cls,title,sub){return '<div class="m-line"><span class="m-mark '+cls+'">'+mark+'</span><div>'+(sub?'<b>'+title+'</b><div class="v-xs v-muted">'+sub+'</div>':'<div class="v-sm">'+title+'</div>')+'</div></div>';};
+  var entry=function(name,kind,amt){return '<div class="m-entry"><span>'+name+'<br><small class="v-muted">'+kind+'</small></span><b class="v-num">'+amt+'</b></div>';};
+  function other(){
+    var k=id('o-case').value, src=id('o-src').value, readable=src==='Maya'&&k!=='unread';
+    id('o-msg').value=cases[k];
+    var amt=k==='nopair'?'₱4,985.00':'₱5,000.00';
+    id('o-read').innerHTML=readable?'<span class="v-pill">Read by '+src+'\'s built-in reader</span><span class="v-pill v-ok">Amount '+amt+'</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span>':'<span class="v-pill v-bad">'+src+' can\'t read this message</span>';
+    id('o-make').hidden=readable;id('o-make').textContent='+ Make a '+src+' pattern from this message';
+    var h;
+    if(!readable){
+      h=line('✕','m-bad','These would not pair',src+' can\'t read the second message, so the app would ignore it.'+(src!=='Maya'?' Is it the right source?':''))+
+        '<div class="v-lab">Only the first side is saved</div>'+entry('Maya','Spending · choose a category','−₱5,000.00')+'<div class="v-xs v-muted">Maya Black would not go down.</div>';
+    }else if(k==='nopair'){
+      h=line('✕','m-bad','Both can be read, but they would not pair','The amounts are ₱15.00 apart. A fee on one side can cause this.')+
+        line('✕','m-bad','Same amount: ₱5,000.00 out, ₱4,985.00 in')+line('✓','','One out and one in, two different accounts')+line('✓','','"To Maya Black" names the other account')+
+        '<div class="v-lab">Two separate entries wait in the Inbox</div>'+entry('Maya','Spending · choose a category','−₱5,000.00')+entry('Maya Black','Income','+₱4,985.00')+
+        '<div class="v-xs v-muted">Amounts must be exactly equal to pair. Check both real messages.</div>';
+    }else{
+      h=line('✓','','These two would pair',' ')+line('✓','','Same amount, one out and one in, two different accounts')+line('✓','','"To Maya Black" names the other account')+
+        line('⏱','m-off','They must also arrive within an hour of each other. A sample can\'t check that.')+
+        '<div class="v-lab">One linked transfer, waiting in the Inbox</div>'+entry('Maya','Transfer','−₱5,000.00')+entry('Maya Black','Transfer · lowers what you owe','+₱5,000.00')+
+        '<div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>';
+    }
+    id('o-result').innerHTML=h;
+  }
+  id('o-case').onchange=function(){id('o-src').value='Maya';other();};
+  id('o-src').onchange=other;
+  other();
   if(location.hash.indexOf('#maya')===0){view='maya';$('[data-go]').forEach(function(x){if(x.getAttribute('data-go')==='maya')x.setAttribute('aria-current','true');else x.removeAttribute('aria-current');});}
   id('bad').onclick=function(){unreadable=!unreadable;paint();};
   id('theme').onclick=function(){var r=document.documentElement;r.setAttribute('data-theme',r.getAttribute('data-theme')==='dark'?'light':'dark');};
   if(location.hash==='#pay'){sampleKey='pay';}
   if(location.hash==='#bad'){unreadable=true;} if(location.hash==='#else'){view='else';}
   paint();
-  if(location.hash==='#maya-bad'){document.querySelector('[data-side="bad"]').click();}
+  var m={'#maya-bad':'unread','#maya-nopair':'nopair'}[location.hash];if(m){id('o-case').value=m;other();}
+  if(location.hash==='#maya-gcash'){id('o-src').value='GCash';other();}
 })();
 </script>
 </body>

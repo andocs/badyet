@@ -1423,8 +1423,9 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 <div class="m-format"><span class="v-pill v-warn" style="align-self:flex-start">Wallet top-up</span><div class="v-sm">You received <mark>{amount}</mark> in your wallet via <mark>{channel}</mark></div><div class="v-xs v-muted">Money in. "via …" is optional</div></div></div></details></div></details>
     <div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
     <div class="m-shared">
+            <label class="v-field">Other side from<select><option>Maya (this source)</option><option>GCash</option><option>BPI</option></select></label>
             <label class="v-field">The other side's message (optional)<textarea rows="2" data-other>Payment of ₱5,000.00 received on your Maya Black</textarea></label>
-            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by the built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span></div>
+            <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by Maya's built-in reader</span><span class="v-pill v-ok">Amount ₱5,000.00</span><span class="v-pill v-ok">Money in</span><span class="v-pill v-ok">Card: Maya Black</span></div>
           </div>
     <div class="v-testbox" role="status">
             <div class="m-line"><span class="m-mark">✓</span><div><b>These two would pair</b></div></div>
@@ -1436,6 +1437,22 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
               <div class="m-entry"><span>Maya Black<br><small class="v-muted">Transfer · lowers what you owe</small></span><b class="v-num">+₱5,000.00</b></div>
             <div class="v-xs v-muted">Not spending or income. Confirming one confirms both.</div>
           </div>
+  </div></div></div>
+
+  <!-- 5. Both readable, but no pair -->
+  <div class="m-frame"><div class="v-lab">5 · Both readable, but they won't pair</div>
+  <div class="m-phone"><div class="m-screen">
+    <div class="v-row v-sp"><h2>Everything else from Maya</h2><span class="v-pill">Fallback</span></div>
+    <div class="m-sech"><span class="m-step">5</span><h3>What happens with the sample</h3></div>
+    <div class="m-shared"><label class="v-field">Other side from<select><option>Maya (this source)</option><option>GCash</option><option>BPI</option></select></label>
+            <label class="v-field">The other side's message (optional)<textarea rows="2">Payment of ₱4,985.00 received on your Maya Black</textarea></label>
+      <div class="v-row v-wrap" style="gap:8px"><span class="v-pill">Read by Maya's built-in reader</span><span class="v-pill v-ok">Amount ₱4,985.00</span><span class="v-pill v-ok">Money in</span></div></div>
+    <div class="v-testbox">
+      <div class="m-line"><span class="m-mark m-bad">✕</span><div><b>These would not pair</b><div class="v-xs v-muted">The amounts are ₱15.00 apart. A fee can cause this.</div></div></div>
+      <div class="m-line"><span class="m-mark m-bad">✕</span><div class="v-sm">Same amount</div></div><div class="m-line"><span class="m-mark ">✓</span><div class="v-sm">One out and one in, two accounts</div></div><div class="m-line"><span class="m-mark ">✓</span><div class="v-sm">"To Maya Black" names the other account</div></div>
+      <div class="v-lab">Two separate entries wait in the Inbox</div>
+      <div class="m-entry"><span>Maya<br><small class="v-muted">Spending · choose a category</small></span><b class="v-num">−₱5,000.00</b></div><div class="m-entry"><span>Maya Black<br><small class="v-muted">Income</small></span><b class="v-num">+₱4,985.00</b></div>
+    </div>
   </div></div></div>
 
 </div>
