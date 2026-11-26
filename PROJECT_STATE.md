@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-55 merged
+- **Phase:** rev-56 gate
 - **Active slice / milestone:** rev-45 savings-plan-fund
-- **Gate:** none
-- **Next action:** Next revision. Open: Apply order clears pins/skips; reimbursement counted before deposit; one-month change does not follow a moved payslip line
+- **Gate:** awaiting approval
+- **Next action:** Approve rev-56: merge + OTA. Open: reimbursement counted before deposit
 - **User to-do now:** Apply migration 20261222000000_payroll_labels.sql if not yet; force-close and reopen the phone app (up to twice) for the OTA; consider making the GitHub repo private (history still holds the old notes)
 
 ## 3. Execution log
@@ -55,6 +55,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 18:58 | rev-55 | RTO moves shown on Budget lines/categories. Checks PASS. Not merged. Open: hero 'left' excludes RTO money moved to Wants (Now page includes it). | -
 - 2026-11-26 19:03 | rev-55 | Now hero totals include RTO money moved to Wants. Checks PASS. Not merged. | -
 - 2026-11-26 19:07 | rev-55 | Merged to main (136fb74); OTA published (group c5af7e65). | 136fb74
+- 2026-11-26 19:11 | rev-56 | Closed: Apply order clearing pins/skips; one-month change not following a moved line. Checks PASS. Not merged. | -
 
 ## 4. Open questions
 
