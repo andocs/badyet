@@ -1,3 +1,4 @@
+import { awaitedByMonth, loadReimbursements } from "@/lib/budget/reimburse";
 import { monthEditsOf } from "@/lib/pay/month-edits";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
@@ -143,6 +144,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   }));
 
   // This cutoff's budget, and the next payday's payslip, from the same engine the forecast will use.
+  const reimbursements = await loadReimbursements(supabase, { lines, plans, month: budgetMonth, current: period.which === 1 ? "first" : "second", paydays });
   const run = runProjection(
     {
       start: budgetMonth,
@@ -158,6 +160,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
       funds: [],
       fundStart: {},
       plans,
+      awaitedReimbursements: awaitedByMonth(reimbursements),
     },
     { includeExpected: false },
   );

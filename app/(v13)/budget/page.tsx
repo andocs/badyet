@@ -83,6 +83,7 @@ export default async function Budget({ searchParams }: { searchParams: Promise<{
                 planId={fut ? null : screen.plan.selected}
                 payroll={payrollOnLines(shown.pay, groups)}
                 moves={screen.moves}
+                reimbursements={screen.reimbursements}
               />
               {topUpRaises.length > 0 ? (
                 <div className="v-note">Top-ups come from raises: <b>{topUpRaises.join(", ")}</b>. Change or remove the raise and they follow.</div>

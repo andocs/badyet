@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { deleteLine, saveLine } from "@/app/(v13)/budget/actions";
+import { deleteLine, markReimbursement, saveLine } from "@/app/(v13)/budget/actions";
 import { money, parsePesos } from "@/lib/domain/money";
 import { applyMoves, type Move } from "@/lib/budget/moves";
+import type { ReimbursementStatus } from "@/lib/budget/reimburse";
 import { withPayroll, type PayrollRow } from "@/lib/budget/payroll";
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from "@/lib/budget/view";
 import { useConfirm, useToast } from "../feedback";
@@ -57,8 +58,14 @@ const draftOf = (l: LineView): Draft => ({
 });
 
 /** The budget lines by group, and the editor sheet. Tap a line to edit it. */
-export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {}, moves = [] }: { /** Office-day money moved this month. */ moves?: Move[] } & { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
+export function BudgetBoard({ groups: monthGroups, colors, categories, accounts, showSpent, takeHome, cutoff = null, cutoffTakeHome = 0, planId = null, payroll = {}, moves = [], reimbursements = [] }: { /** This month's reimbursements, when this month is shown. */ reimbursements?: ReimbursementStatus[] } & { /** Office-day money moved this month. */ moves?: Move[] } & { /** Payslip deductions shown under the budget category they are set to, by category id. */ payroll?: Record<string, PayrollRow[]>; groups: GroupView[]; colors: string[]; categories: (Option & { groupId: string })[]; accounts: Option[]; showSpent: boolean; takeHome: number; cutoff?: "first" | "second" | null; cutoffTakeHome?: number; planId?: string | null }) {
   // One cutoff's view: each line at its amount in that cutoff, lines with nothing in it left out, totals and shares of that cutoff's take-home.
+  const [marking, startMark] = useTransition();
+  const mark = (input: { lineId: string; month: string; cutoff: "first" | "second"; received: boolean }) =>
+    startMark(async () => {
+      const r = await markReimbursement(input);
+      if (r.error) toast(r.error, "bad");
+    });
   const moved = applyMoves(cutoff ? groupsForCutoff(monthGroups, cutoff, cutoffTakeHome) : monthGroups, moves, cutoff);
   const groups: GroupView[] = withPayroll(moved.groups, payroll, cutoff ? cutoffTakeHome : takeHome, cutoff);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -181,7 +188,20 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                     <b className="v-num">{l.amount === null ? "—" : <Money value={l.amount} />}</b>
                     {!cutoff && l.perCutoff && l.cutoff === "both" && l.perCutoff.first !== l.perCutoff.second ? <small className="v-num">1st <Money value={l.perCutoff.first} /> · 2nd <Money value={l.perCutoff.second} /></small> : null}
                     {(moved.notes[l.id] ?? []).map((n) => <small key={`${n.text}${n.counted}`} className={`v-num ${n.amount < 0 ? "v-neg" : "v-pos"}`}><Money value={money(n.amount)} signed /> {n.text}{n.counted ? "" : " (saved balance)"}</small>)}
-                    {l.reimburse ? <small>back <Money value={l.reimburse.amount} />{l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`}</small> : null}
+                    {(() => {
+                      if (!l.reimburse) return null;
+                      const when = l.reimburse.day ? ` on the ${l.reimburse.day}` : ` in the ${l.reimburse.cutoff === "first" ? "1st" : "2nd"} cutoff`;
+                      const r = reimbursements.find((x) => x.lineId === l.id);
+                      if (!r || r.state === "expected") return <small>back <Money value={l.reimburse.amount} />{when}</small>;
+                      const received = r.state === "received";
+                      return (
+                        <small className={received ? "v-pos" : "v-warnt"}>
+                          {received ? "Received " : "Waiting for "}<Money value={l.reimburse.amount} />{" "}
+                          {/* Inside a row that opens the editor, so the button keeps its click and keys to itself. */}
+                          <button type="button" className="v-btn v-sm v-ghost" disabled={marking} onKeyDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); mark({ lineId: r.lineId, month: r.month, cutoff: r.cutoff, received: !received }); }}>{received ? "Not yet" : "Mark received"}</button>
+                        </small>
+                      );
+                    })()}
                     {showSpent && l.spent && l.amount ? (
                       <>
                         <span className="v-bar" role="img" aria-label={`${Math.round(pc)} percent ${l.spent.word}`}><i style={{ width: `${pc}%`, background: color }} /></span>
