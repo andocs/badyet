@@ -48,6 +48,19 @@ export function changedKeys(saved: BuilderLayout, now: BuilderLayout): Set<strin
   return out;
 }
 
+/**
+ * Saved changes left behind on the other cutoff by lines whose amount you are now changing. They are removed with the save, or the
+ * old amount would come back if the new one were taken off.
+ */
+export function strandedEdits<E extends { month: string; cutoff: PayCutoff; source: string; label: string }>(edits: readonly E[], month: string, saved: BuilderLayout, changed: ReadonlySet<string>): E[] {
+  return edits.filter((e) => {
+    if (e.month !== month) return false;
+    const same = (l: BuilderLine) => l.source === e.source && (e.source !== 'custom' || l.label === e.label);
+    const other: PayCutoff = e.cutoff === 'first' ? 'second' : 'first';
+    return !saved[e.cutoff].some(same) && changed.has(editKey({ cutoff: other, source: e.source, label: e.label }));
+  });
+}
+
 /** What "This month only" would save: the changed amounts. Changes to the layout itself cannot be for one month. */
 export function monthChanges(saved: BuilderLayout, now: BuilderLayout): Checked<EditChange[]> {
   for (const cutoff of ['first', 'second'] as const) {

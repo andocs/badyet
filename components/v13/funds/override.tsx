@@ -61,7 +61,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
   const move = (id: string, by: -1 | 1) => setOrder((o) => { const n = [...o]; const i = n.indexOf(id); [n[i], n[i + by]] = [n[i + by]!, n[i]!]; return n; });
   const idx = months.indexOf(month);
   const run = (fn: () => Promise<{ ok?: boolean; error?: string }>, ok: string) => start(async () => { const r = await fn(); toast(r.error ?? ok, r.error ? "bad" : "ok"); });
-  const payload = (monthsList: string[], orderOnly = false) => ({ months: monthsList, order: current.order, pins: orderOnly ? {} : Object.fromEntries(Object.entries(pinsNum).filter(([k]) => !skips.includes(k))), skips: orderOnly ? [] : skips, note: note || null, overflow: orderOnly ? null : current.overflow });
+  const payload = (monthsList: string[], orderOnly = false) => ({ months: monthsList, order: current.order, pins: orderOnly ? {} : Object.fromEntries(Object.entries(pinsNum).filter(([k]) => !skips.includes(k))), skips: orderOnly ? [] : skips, note: note || null, overflow: orderOnly ? null : current.overflow, orderOnly });
   const range = months.slice(months.indexOf(month), months.indexOf(to) + 1);
 
   return (
@@ -137,7 +137,7 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
               <div className="v-field" style={{ minWidth: 150 }}><span className="v-sr">To</span><MonthPicker label="Apply until" value={to} min={month} max={months[months.length - 1]!} onChange={(v) => v && setTo(v)} /></div>
               <button type="button" className="v-btn v-pri" disabled={busy || order.join() === defaultOrder.join()} onClick={() => run(() => saveOverride(payload(range, true)), `Order applied to ${range.length} month${range.length === 1 ? "" : "s"}.`)}>Apply order</button>
             </div>
-            <div className="v-xs v-muted" style={{ marginTop: 6 }}>Copies the order only. Pins and skips stay on their own month.</div>
+            <div className="v-xs v-muted" style={{ marginTop: 6 }}>Copies the order only. Each month keeps its own pins, skips, bonus choice and note.</div>
           </section>
         </section>
         <aside className="v-stack">
