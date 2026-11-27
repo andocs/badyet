@@ -8,10 +8,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-60 lending
-- **Gate:** waiting
-- **Next action:** Apply migration 20261230000000_lending.sql, then approve merge and OTA for rev-60
-- **User to-do now:** Apply supabase/migrations/20261230000000_lending.sql in Supabase before using lending
+- **Active slice / milestone:** rev-60 lending (done)
+- **Gate:** none
+- **Next action:** Try lending signed in and on the phone; report anything off
+- **User to-do now:** Force-close and reopen the phone app twice to get the rev-60 update, then try one loan end to end
 
 ## 3. Execution log
 
@@ -55,6 +55,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 21:24 | cleanup | Deleted merged rev/59 branches, local and on GitHub; only main remains. | -
 - 2026-11-27 09:16 | rev-60 | Lending mockups (web 5 screens, phone 5 frames), design check clean | aa2e224
 - 2026-11-27 09:31 | rev-60 | Lending and Others built on web and phone; web 621 tests, phone 185, build and Android bundle pass | d259693
+- 2026-11-27 09:38 | rev-60 | Approved; migration applied (user); merged to main; OTA published fc2d446b | 78e8f1f
 
 ## 4. Open questions
 
