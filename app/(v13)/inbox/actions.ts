@@ -9,6 +9,8 @@ import { isMoveCategory } from "@/lib/capture/transfer-category";
 import { normalizePattern } from "@/lib/inbox/rules";
 import { transferHoldUntil, type HoldAccount } from "@/lib/capture/hold";
 import { editTransaction, type EditInput } from "@/lib/inbox/edit";
+import { isoDate } from "@/lib/domain/dates";
+import { todayManila } from "@/lib/plans/validate";
 
 const manilaTime = (ms: number) => new Date(ms).toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Manila" });
 
@@ -116,10 +118,11 @@ export async function resolveHeldCapture(input: { hash: string; accountId: strin
 /** Changes an Inbox item (pending or confirmed): name, amount, direction, account, date and time, note. */
 export async function editInboxItem(input: EditInput): Promise<FormState> {
   const supabase = await requireAuthed();
-  const r = await editTransaction(supabase, input);
-  if ("error" in r) return { error: r.error };
+  const r = await editTransaction(supabase, input, { today: isoDate(todayManila()), newId: () => crypto.randomUUID() });
+  // A loan edit also changes the budget, funds and forecast.
+  for (const path of ["/lending", "/budget", "/funds", "/forecast", "/bonuses"]) revalidatePath(path);
   refresh();
-  return { ok: true };
+  return "error" in r ? { error: r.error } : { ok: true };
 }
 
 /** "Not mine": the row is ignored. It never counts and no longer shows. */

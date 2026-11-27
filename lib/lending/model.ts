@@ -120,6 +120,19 @@ export function cutoffDraws(list: readonly Draw[], period: { start: IsoDate; end
     .map((d) => ({ lineId: d.from.kind === "line" ? d.from.ref : null, amount: d.amount }));
 }
 
+/**
+ * What is left on each source this cutoff for "Take it from". Wants is the same figure as Now's Wants row: "whatever is left", plus
+ * office-day (RTO) money moved to Wants, less what overspent office days took, less money already lent or sent from it.
+ */
+export function leftThisCutoff(changes: readonly { lineId: string | null; amount: number }[], restLineIds: ReadonlySet<string>) {
+  const isWants = (id: string | null) => id === null || restLineIds.has(id);
+  const sumOf = (match: (id: string | null) => boolean) => changes.filter((c) => match(c.lineId)).reduce((t, c) => t + c.amount, 0);
+  return {
+    wants: (rest: number, movedFromOfficeDays: number) => atLeastZero(money(rest + movedFromOfficeDays + sumOf(isWants))),
+    line: (id: string, planned: number) => atLeastZero(money(planned + sumOf((x) => x === id))),
+  };
+}
+
 /** Lent money still out of a savings fund, and the month the forecast expects it back. */
 export interface Held {
   fundId: string;

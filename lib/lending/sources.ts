@@ -4,6 +4,7 @@ import type { BonusData } from "@/lib/bonuses/load";
 import type { FundsData } from "@/lib/funds/load";
 import { formatPesos, money } from "@/lib/domain/money";
 import type { SourceInput } from "./write";
+import { cutoffDraws, leftThisCutoff } from "./model";
 
 /** "Take it from": what lent money can come out of, in the groups the picker shows. */
 export interface SourceOption {
@@ -30,14 +31,17 @@ export function sourceGroups(funds: FundsData, bonuses: BonusData): SourceGroup[
   const cutoff = funds.budget.period.which === 1 ? "first" : "second";
   const wants: SourceOption[] = [];
   const other: SourceOption[] = [];
-  const rest = screen.shown?.budget.rest[cutoff] ?? 0;
-  wants.push({ key: "wants", name: "Wants", label: `Wants (whatever is left) · ${formatPesos(money(rest))} this cutoff` });
+  const left = leftThisCutoff(cutoffDraws(funds.budget.draws, funds.budget.period), new Set(funds.budget.lines.filter((l) => l.rule === "rest").map((l) => l.id)));
+  const moved = screen.wantsAdj;
+  const total = left.wants(screen.shown?.budget.rest[cutoff] ?? 0, moved);
+  wants.push({ key: "wants", name: "Wants", label: `Wants · ${formatPesos(total)} ${moved > 0 ? `incl. ${formatPesos(moved)} RTO` : moved < 0 ? `after ${formatPesos(money(-moved))} RTO` : "this cutoff"}` });
   for (const g of screen.groups) {
     if (g.feedsSavings) continue;
     const isWants = g.name.trim().toLowerCase() === "wants";
     for (const l of g.lines) {
-      const amount = l.perCutoff?.[cutoff] ?? 0;
-      if (l.rule === "rest" || amount <= 0) continue;
+      const planned = l.perCutoff?.[cutoff] ?? 0;
+      if (l.rule === "rest" || planned <= 0) continue;
+      const amount = left.line(l.id, planned);
       (isWants ? wants : other).push({ key: `line:${l.id}`, name: l.name, label: `${l.name} · ${formatPesos(money(amount))} this cutoff` });
     }
   }

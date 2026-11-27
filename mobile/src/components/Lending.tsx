@@ -62,10 +62,10 @@ export function Effect({ children }: { children: string }) {
   );
 }
 
-export function DateField({ label, value, onChange, ctx, weeks = 2 }: { label: string; value: string; onChange: (v: string) => void; ctx: Pick<LendContext, 'today' | 'paydays'>; weeks?: 1 | 2 }) {
+export function DateField({ label, value, onChange, ctx, weeks = 2, min }: { label: string; value: string; onChange: (v: string) => void; ctx: Pick<LendContext, 'today' | 'paydays'>; weeks?: 1 | 2; min?: string }) {
   return (
     <Field label={label}>
-      <DateInput label={label} value={value} onChange={onChange} min={ctx.today} />
+      <DateInput label={label} value={value} onChange={onChange} min={min ?? ctx.today} />
       <View style={s.chips}>
         {dueChips(ctx.today, ctx.paydays, weeks).map((d) => (
           <Chip key={d.label} label={d.label} on={value === d.date} onPress={() => onChange(d.date)} />
@@ -108,7 +108,7 @@ export function SourcePicker({ ctx, value, onChange, label = 'Take it from' }: {
   );
 }
 
-export function LendFields({ ctx, draft, onChange, amount, askWho = true }: { ctx: LendContext; draft: LendDraft; onChange: (d: LendDraft) => void; amount: number | null; askWho?: boolean }) {
+export function LendFields({ ctx, draft, onChange, amount, askWho = true, minDue }: { ctx: LendContext; draft: LendDraft; onChange: (d: LendDraft) => void; amount: number | null; askWho?: boolean; minDue?: string }) {
   const set = (part: Partial<LendDraft>) => onChange({ ...draft, ...part });
   const name = ctx.sources.flatMap((g) => g.options).find((o) => o.key === draft.fromKey)?.name ?? null;
   return (
@@ -118,7 +118,7 @@ export function LendFields({ ctx, draft, onChange, amount, askWho = true }: { ct
           <Input value={draft.borrower} onChangeText={(borrower) => set({ borrower })} maxLength={80} placeholder="Name" accessibilityLabel="Who are you lending to" />
         </Field>
       ) : null}
-      <DateField label="Expected back on" value={draft.dueOn} onChange={(dueOn) => set({ dueOn })} ctx={ctx} />
+      <DateField label="Expected back on" value={draft.dueOn} onChange={(dueOn) => set({ dueOn })} ctx={ctx} min={minDue} />
       <SourcePicker ctx={ctx} value={draft.fromKey} onChange={(fromKey) => set({ fromKey })} />
       <Effect>{lendEffect({ kind: draft.fromKey.split(':')[0]!, name }, amount, draft.borrower)}</Effect>
     </View>

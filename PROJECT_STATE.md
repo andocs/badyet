@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-61 form control standard (done)
+- **Active slice / milestone:** rev-62 edit loan items + Wants total
 - **Gate:** none
-- **Next action:** Try lending and the new dropdowns and calendars signed in and on the phone
+- **Next action:** Edit loans from All activity; show the full Wants total in Take it from
 - **User to-do now:** Force-close and reopen the phone app twice to get the rev-61 update
 
 ## 3. Execution log

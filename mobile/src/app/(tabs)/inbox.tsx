@@ -432,6 +432,7 @@ export default function Inbox() {
           t={editing}
           accounts={data.accounts}
           categories={data.categories}
+          lending={data.lending}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
