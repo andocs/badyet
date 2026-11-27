@@ -112,5 +112,5 @@ export default async function Inbox() {
       };
     });
 
-  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} bills={(billsRes.data ?? []) as { id: string; name: string }[]} lending={lending?.ready ? { lend: lending.lend, open: lending.openLoans } : null} />;
+  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} bills={(billsRes.data ?? []) as { id: string; name: string }[]} lending={lending?.ready ? { lend: lending.lend, open: lending.openLoans, loans: lending.loans } : null} />;
 }

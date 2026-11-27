@@ -5,6 +5,8 @@ import { manilaDate } from "@/lib/now/summary";
 import type { PaybackChoice } from "./load";
 import { daysLate, outstandingOf, type Loan, type LoanSource } from "./model";
 import type { PaybackInput } from "./write";
+import type { EditLending } from "./edit";
+import { NO_SOURCE, sourceKey, sourceOfKey, type SourceGroup } from "./sources";
 
 /** What the web and phone lending forms say, kept in one place. */
 export const pesoText = (n: number): string => formatPesos(money(Math.abs(n)));
@@ -91,4 +93,29 @@ export function loanTags(loans: readonly Loan[]): Map<string, string> {
     for (const e of l.events) if (e.txnId) out.set(e.txnId, `Paid back by ${l.borrower}`);
   }
   return out;
+}
+
+/** The loan an item belongs to, as the edit form needs it. */
+export function loanOfTxn(loans: readonly Loan[], txnId: string): { role: "lent" | "payback"; loan: Loan } | null {
+  for (const loan of loans) {
+    if (loan.txnId === txnId) return { role: "lent", loan };
+    if (loan.events.some((e) => e.txnId === txnId)) return { role: "payback", loan };
+  }
+  return null;
+}
+
+export type Filed = "normal" | "loan" | "payback";
+
+/** The source picker's choices, with a loan's current source added when it is no longer on offer (an old bonus, say). */
+export function withSource(groups: readonly SourceGroup[], from: LoanSource): SourceGroup[] {
+  const key = sourceKey(from);
+  if (key === NO_SOURCE || groups.some((g) => g.options.some((o) => o.key === key))) return [...groups];
+  return [{ title: "Now", options: [{ key, name: from.name ?? "Current source", label: from.name ?? "Current source" }] }, ...groups];
+}
+
+/** What an edit sends about lending: nothing for an ordinary item left alone, "none" when a loan item stops being one. */
+export function editLending(filed: Filed, wasLinked: boolean, loan: { borrower: string; dueOn: string; fromKey: string }, payback: { loanId: string; nextDue: string | null }): EditLending | undefined {
+  if (filed === "loan") return { as: "loan", borrower: loan.borrower, dueOn: loan.dueOn, from: sourceOfKey(loan.fromKey) };
+  if (filed === "payback") return { as: "payback", loanId: payback.loanId, nextDue: payback.nextDue };
+  return wasLinked ? { as: "none" } : undefined;
 }

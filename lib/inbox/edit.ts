@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isMoveCategory } from "@/lib/capture/transfer-category";
-import { isLoanTxn } from "@/lib/lending/write";
+import { checkLinkedEdit, findLoanLink, keepsLink, linkLoanItem, unlinkLoanItem, type EditLending } from "@/lib/lending/edit";
+import type { Env } from "@/lib/lending/write";
+import { isoDate } from "@/lib/domain/dates";
 import { parsePesos } from "@/lib/domain/money";
 
 /** What can be changed on an Inbox item. Dates and times are Philippine time, the way you read them. */
@@ -22,6 +24,8 @@ export interface EditInput {
   note: string;
   /** "Others": whose account the money went to. Left alone when not given; empty clears it. */
   otherOwner?: string;
+  /** How to file it for lending: a loan, a payback, or no longer either. Left alone when not given. */
+  lending?: EditLending;
 }
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -75,8 +79,10 @@ export function manilaFields(iso: string): { date: string; time: string } {
  * Changes an Inbox item, pending or confirmed. A move between your own accounts keeps its two sides: the amount, time, name and note
  * change on both. Anything else can also change direction and account. The capture's duplicate key is left alone, so the same
  * notification is not added again. Balances follow the confirmed rows, so a confirmed item moves them straight away.
+ * An item that belongs to a loan keeps the loan in step; `lending` files an item as a loan or payback, or takes it out of one.
+ * `env` is needed only for that last part.
  */
-export async function editTransaction(supabase: SupabaseClient, input: EditInput): Promise<EditResult> {
+export async function editTransaction(supabase: SupabaseClient, input: EditInput, env?: Env): Promise<EditResult> {
   const v = validateEdit(input);
   if (!v.ok) return { error: v.error };
   const e = v.value;
@@ -84,12 +90,37 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
   if (!row.data || row.data.status === "ignored") return { error: "That item was not found." };
   const owner = e.otherOwner === undefined ? {} : { other_owner: e.otherOwner };
 
-  // A loan keeps its own amount, so that cannot drift from the money behind it.
-  if (row.data.kind === "transfer" && !row.data.transfer_peer_id && Math.abs(Number(row.data.amount)) !== e.amount && (await isLoanTxn(supabase, input.id))) {
-    return { error: "This is part of a loan. To change the amount, remove the loan on the Lending page and add it again." };
+  const lone = !row.data.transfer_peer_id;
+  const link = lone ? await findLoanLink(supabase, input.id) : null;
+  const wanted = input.lending;
+  let kind = row.data.kind as "expense" | "income" | "transfer";
+  if (link && keepsLink(link, wanted)) {
+    // The item and its loan change together; both are checked before either is written.
+    const date = isoDate(input.date.trim());
+    const direction = link.role === "lent" ? "out" : "in";
+    const next = await checkLinkedEdit(supabase, link, { amount: e.amount, direction, date }, wanted);
+    if ("error" in next) return { error: next.error };
+    const acct = await supabase.from("accounts").select("id").eq("id", e.accountId).is("archived_at", null).maybeSingle();
+    if (!acct.data) return { error: "That account was not found." };
+    const moved = await supabase.from("transactions").update({ amount: direction === "out" ? -e.amount : e.amount, account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note, ...owner }).eq("id", input.id);
+    if (moved.error) return { error: "Could not change that. Try again." };
+    const values = next.table === "loans" ? { ...next.values, account_id: e.accountId } : next.values;
+    const saved = await supabase.from(next.table).update(values).eq("id", next.id);
+    return saved.error ? { error: "The item changed, but the loan did not. Save it again." } : { ok: true };
+  }
+  if (wanted && wanted.as !== "none") {
+    if (!lone) return { error: "That one is a move between your own accounts." };
+    if (!env) return { error: "Could not change that. Try again." };
+    if (wanted.as === "loan" ? e.direction !== "out" : e.direction !== "in") return { error: wanted.as === "loan" ? "Only money going out can be lent." : "Only money coming in can be a payback." };
+  }
+  if (link) {
+    const freed = await unlinkLoanItem(supabase, link);
+    if ("error" in freed) return { error: freed.error };
+    kind = e.direction === "out" ? "expense" : "income";
   }
 
-  if (row.data.kind === "transfer") {
+  // A move between your own accounts keeps its two sides. A transfer with one side can change account like anything else.
+  if (kind === "transfer" && !lone) {
     const peerId = row.data.transfer_peer_id as string | null;
     const legs = await supabase.from("transactions").select("id, amount").in("id", peerId ? [row.data.id, peerId] : [row.data.id]);
     if (legs.error || !legs.data || legs.data.length === 0) return { error: "Could not change that. Try again." };
@@ -102,6 +133,12 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
 
   const acct = await supabase.from("accounts").select("id").eq("id", e.accountId).is("archived_at", null).maybeSingle();
   if (!acct.data) return { error: "That account was not found." };
+  if (kind === "transfer") {
+    const sign = Number(row.data.amount) < 0 ? -1 : 1;
+    const r = await supabase.from("transactions").update({ amount: sign * e.amount, account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note, ...owner }).eq("id", row.data.id);
+    if (r.error) return { error: "Could not change that. Try again." };
+    return wanted && wanted.as !== "none" ? thenLink(supabase, input.id, wanted, e.note, env!) : { ok: true };
+  }
   let movesBetweenYours = false;
   if (e.categoryId) {
     const cat = await supabase.from("categories").select("id, name").eq("id", e.categoryId).is("archived_at", null).maybeSingle();
@@ -117,5 +154,11 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
       ...owner,
     })
     .eq("id", row.data.id);
-  return r.error ? { error: "Could not change that. Try again." } : { ok: true };
+  if (r.error) return { error: "Could not change that. Try again." };
+  return wanted && wanted.as !== "none" ? thenLink(supabase, input.id, wanted, e.note, env!) : { ok: true };
+}
+
+async function thenLink(supabase: SupabaseClient, id: string, lending: Exclude<EditLending, { as: "none" }>, note: string | null, env: Env): Promise<EditResult> {
+  const r = await linkLoanItem(supabase, id, lending, note ?? "", env);
+  return "error" in r ? { error: `Your other changes were saved, but it was not filed for lending: ${r.error}` } : { ok: true };
 }

@@ -9,9 +9,9 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-61 form control standard (done)
-- **Gate:** none
-- **Next action:** Try lending and the new dropdowns and calendars signed in and on the phone
+- **Active slice / milestone:** rev-62 edit loan items + Wants total
+- **Gate:** waiting
+- **Next action:** Approve merge and OTA for rev-62
 - **User to-do now:** Force-close and reopen the phone app twice to get the rev-61 update
 
 ## 3. Execution log
@@ -59,6 +59,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-27 09:38 | rev-60 | Approved; migration applied (user); merged to main; OTA published fc2d446b | 78e8f1f
 - 2026-11-27 10:00 | rev-61 | Form control standard: ~45 browser dropdowns and all date fields replaced (web), phone dates and months picked; standard written under Decisions + test. Checks PASS | 00331f9
 - 2026-11-27 10:15 | rev-61 | Approved; merged to main; OTA published 8d183eea | 2657270
+- 2026-11-27 10:27 | rev-62 | Loan items editable from All activity (web+phone), loan kept in step; Take it from shows full Wants total incl RTO. Checks PASS (639/185) | d61c12e
 
 ## 4. Open questions
 
@@ -99,7 +100,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 6,404,352 | 26,084,468 | 951,845 | 11,957,779 | 1,106,020,266 | 4,313,777 |  |
+| **Cumulative** | 6,404,352 | 26,084,468 | 951,845 | 12,002,733 | 1,113,232,735 | 4,350,242 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -169,6 +170,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Rev 60 mockups | 68,190 | 474,863 | 14,790 | 75,667 | 3,143,932 | 16,988 |  |
 | Rev 60 build | 0 | 0 | 0 | 254,115 | 8,729,655 | 102,481 |  |
 | Rev 61 | 0 | 0 | 0 | 90,345 | 7,682,692 | 44,710 |  |
+| Rev 62 | 0 | 0 | 0 | 39,497 | 3,953,706 | 27,764 |  |
 
 <!-- END SUMMARY -->
 

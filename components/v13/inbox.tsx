@@ -56,7 +56,7 @@ const when = (iso: string, today: IsoDate) => `${relativeDay(manilaDate(iso), to
  */
 type Change = { type: "confirm"; id: string; categoryId: string | null; categoryName: string | null } | { type: "ignore"; id: string };
 
-export function InboxView({ txns: txnsIn, categories, held, accounts, today, bills, lending }: { txns: InboxTxn[]; categories: Category[]; held: HeldCapture[]; accounts: { id: string; name: string }[]; today: IsoDate; bills: { id: string; name: string }[]; lending: { lend: LendContext; open: Loan[] } | null }) {
+export function InboxView({ txns: txnsIn, categories, held, accounts, today, bills, lending }: { txns: InboxTxn[]; categories: Category[]; held: HeldCapture[]; accounts: { id: string; name: string }[]; today: IsoDate; bills: { id: string; name: string }[]; lending: { lend: LendContext; open: Loan[]; loans: Loan[] } | null }) {
   // A confirmed row leaves To check and an ignored row disappears the moment you tap; the server catches up in the background.
   const [txns, apply] = useOptimistic(txnsIn, (cur, c: Change) =>
     c.type === "ignore" ? cur.filter((t) => t.id !== c.id) : cur.map((t) => (t.id === c.id ? { ...t, status: "confirmed" as const, categoryId: c.categoryId, categoryName: c.categoryName } : t)),
@@ -408,10 +408,10 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
             <div className={`v-big v-num ${open.amount > 0 ? "v-pos" : ""}`} style={{ fontSize: 36 }}><Money value={money(open.amount)} signed /></div>
             <div className="v-row v-wrap" style={{ gap: 8 }}>
               <span className={`v-pill ${open.status === "pending" ? "v-warn" : "v-ok"}`}>{open.status === "pending" ? "Pending" : "Confirmed"}</span>
-              {open.kind === "transfer" ? <span className="v-pill">Transfer</span> : null}
+              {open.loanTag ? <span className="v-pill">Lending</span> : open.kind === "transfer" ? <span className="v-pill">Transfer</span> : null}
             </div>
             {editing ? (
-              <InboxEditForm key={open.id} t={open} accounts={accounts} categories={categories} onSaved={() => setEditing(false)} onCancel={() => setEditing(false)} />
+              <InboxEditForm key={open.id} t={open} accounts={accounts} categories={categories} lending={lending} onSaved={() => setEditing(false)} onCancel={() => setEditing(false)} />
             ) : (
               <>
             <dl className="v-kv">
