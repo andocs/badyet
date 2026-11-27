@@ -13,6 +13,8 @@ import { Money } from "./money";
 import { QuickAddButton } from "./quick-add";
 import { BillList } from "./bill-list";
 import { PaydayCard, PanelPicker } from "./payday-card";
+import { DueCard } from "./lending/loan-actions";
+import type { PaybackChoice } from "@/lib/lending/load";
 
 /** The envelopes you chose to show (all when you have not chosen). */
 const shownEnvelopes = (all: Envelope[], ids: string[] | null) => (ids ? all.filter((e) => ids.includes(e.categoryId)) : all);
@@ -20,7 +22,7 @@ const shownEnvelopes = (all: Envelope[], ids: string[] | null) => (ids ? all.fil
 type Ready = Extract<NowData, { kind: "ready" }>;
 const CARD_COLORS = ["#2F5BD7", "#087A5A", "#B03030", "#7A3FB8", "#0F7A95", "#B83A86"];
 
-export function NowPage({ data, pending }: { data: Ready; pending: number }) {
+export function NowPage({ data, pending, paybacks = [] }: { data: Ready; pending: number; paybacks?: PaybackChoice[] }) {
   const { view, today } = data;
   return (
     <main className="v-main">
@@ -43,6 +45,10 @@ export function NowPage({ data, pending }: { data: Ready; pending: number }) {
         {data.payday ? (
           <PaydayCard amount={data.payday.amount} cutoff={data.payday.cutoff} bonuses={data.payday.bonuses} accountId={data.payday.accountId} accounts={data.accounts.map((a) => ({ id: a.id, name: a.name, kind: a.kind }))} />
         ) : null}
+
+        {data.dueLoans.map((loan) => (
+          <DueCard key={loan.id} loan={loan} ctx={{ choices: paybacks, accounts: data.accounts.map((a) => ({ id: a.id, name: a.name })), today, paydays: data.paydays }} />
+        ))}
 
         <div className="v-top2">
           <Hero view={view} today={today} />

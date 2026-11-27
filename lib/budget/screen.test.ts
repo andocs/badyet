@@ -27,6 +27,7 @@ const lines: LineRow[] = [
 
 const data = (over: Partial<BudgetData> = {}): BudgetData => ({
   reimbursements: [],
+  draws: [],
   salary: {
     input: { events: [startEvent], allowances: [allowance2], assumptions: noAssumptions, settings, templates: [], bonusRules: [], bonusInstances: [] },
     thisMonth: yearMonth("2027-03"),

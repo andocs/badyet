@@ -5,6 +5,8 @@ import { loadBudget, type BudgetData } from "@/lib/budget/load";
 import { balanceNow } from "@/lib/engine/balances";
 import { startBalances } from "@/lib/engine/funds";
 import type { Fund, MonthOverride } from "@/lib/engine/types";
+import { loadLending, type Lending } from "@/lib/lending/load";
+import { fundLending, type Held } from "@/lib/lending/model";
 
 export interface FundsData {
   budget: BudgetData;
@@ -13,6 +15,9 @@ export interface FundsData {
   colors: Map<string, string | null>;
   accountBalances: Record<string, Money>;
   fundStart: Record<string, Money>;
+  /** Lent money still out of a fund, and when the forecast expects it back. */
+  held: Held[];
+  lending: Lending;
   overrides: MonthOverride[];
   notes: Map<string, string>;
 }
@@ -56,12 +61,13 @@ async function loadAccountBalances(supabase: SupabaseClient): Promise<Record<str
 }
 
 export async function loadFunds(supabase: SupabaseClient): Promise<FundsData> {
-  const [budget, fundRes, ovRes, pinRes, balances] = await Promise.all([
+  const [budget, fundRes, ovRes, pinRes, balances, lending] = await Promise.all([
     loadBudget(supabase),
     supabase.from("funds").select("id, name, color, priority, rule, target, tranches, max_per_month, fixed_amount, reset_month, linked_account_id, share_bp, start_balance").is("archived_at", null).order("priority"),
     supabase.from("month_overrides").select("id, month, fund_order, note"),
     supabase.from("month_fund_overrides").select("override_id, fund_id, pin_amount, skip"),
     loadAccountBalances(supabase),
+    loadLending(supabase),
   ]);
   const fundRows = rows<FundDb>(fundRes);
   const funds = fundRows.map(fundOf);
@@ -81,12 +87,15 @@ export async function loadFunds(supabase: SupabaseClient): Promise<FundsData> {
       overflow: overflowOf.get(o.id) ?? null,
     };
   });
+  const { balances: fundStart, held } = fundLending(funds, startBalances(funds, balances), lending.loans, lending.outside, budget.today);
   return {
     budget,
     funds,
     colors: new Map(fundRows.map((f) => [f.id, f.color])),
     accountBalances: balances,
-    fundStart: startBalances(funds, balances),
+    fundStart,
+    held,
+    lending,
     overrides,
     notes,
   };

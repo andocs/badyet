@@ -5,6 +5,8 @@ import { bonusCards, yearSummary } from "@/lib/bonuses/view";
 import { formatPesos, money } from "@/lib/domain/money";
 import { createClient } from "@/lib/supabase/server";
 import { BonusCardView } from "@/components/v13/bonuses/card";
+import { loadLending } from "@/lib/lending/load";
+import { bonusNotes, draws } from "@/lib/lending/model";
 import { RulesPanel } from "@/components/v13/bonuses/rules";
 import { Money } from "@/components/v13/money";
 
@@ -21,6 +23,8 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
   const hasStart = input.events.some((e) => e.kind === "start");
 
   const cards = hasStart ? bonusCards(year, input, data.saved) : [];
+  const lending = await loadLending(supabase);
+  const lentFrom = bonusNotes(draws(lending.loans, lending.outside));
   const sum = yearSummary(cards);
   const prev = hasStart && year > data.thisYear ? yearSummary(bonusCards(year - 1, input, data.saved)) : null;
   const total = Math.max(1, sum.net);
@@ -70,7 +74,7 @@ export default async function Bonuses({ searchParams }: { searchParams: Promise<
                 </section>
                 {cards.length === 0 ? <div className="v-note">No bonuses land in {year}. Add a yearly rule or a one-off on the right.</div> : null}
                 {cards.map((c) => (
-                  <BonusCardView key={`${c.key}-${c.status}-${c.net}-${c.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(",")}`} card={c} funds={data.funds} colors={colors} baseMultiplier={input.assumptions.cipMultiplierNum} />
+                  <BonusCardView key={`${c.key}-${c.status}-${c.net}-${c.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(",")}`} card={c} funds={data.funds} colors={colors} baseMultiplier={input.assumptions.cipMultiplierNum} lent={lentFrom[c.key]} />
                 ))}
               </>
             )}

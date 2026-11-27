@@ -16,6 +16,10 @@ export interface EditableItem {
   occurredAt: string;
   kind: "expense" | "income" | "transfer";
   note: string | null;
+  /** For a transfer: the other account of yours, when there is one. */
+  peerAccount?: string | null;
+  /** "Others": whose account it went to. */
+  otherOwner?: string | null;
 }
 
 /** Change an Inbox item: its name, amount, direction, account, date and time, and note. A transfer keeps its two accounts. */
@@ -29,14 +33,17 @@ export function InboxEditForm({ t, accounts, categories, onSaved, onCancel }: { 
   const [date, setDate] = useState(when.date);
   const [time, setTime] = useState(when.time);
   const [note, setNote] = useState(t.note ?? "");
+  const [otherOwner, setOtherOwner] = useState(t.otherOwner ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, start] = useTransition();
   const isTransfer = t.kind === "transfer";
+  // Money out with no other account of yours on the far side may have gone to someone else.
+  const askOwner = !t.peerAccount && (isTransfer ? t.amount < 0 : direction === "out");
 
   const save = () =>
     start(async () => {
       setError(null);
-      const r = await editInboxItem({ id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId || null, date, time, note });
+      const r = await editInboxItem({ id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId || null, date, time, note, ...(askOwner && otherOwner.trim() !== (t.otherOwner ?? "") ? { otherOwner } : {}) });
       if (r.error) setError(r.error);
       else onSaved();
     });
@@ -70,6 +77,7 @@ export function InboxEditForm({ t, accounts, categories, onSaved, onCancel }: { 
           <div style={{ marginTop: 6 }}><Pick label="Category" value={categoryId} placeholder="No category" options={[{ value: "", label: "No category" }, ...categories.map((c) => ({ value: c.id, label: c.name }))]} onChange={setCategoryId} /></div>
         </div>
       )}
+      {askOwner ? <label className="v-field">Others: whose account did it go to? (optional)<input value={otherOwner} maxLength={80} placeholder="Only for someone else's account" onChange={(e) => setOtherOwner(e.target.value)} /></label> : null}
       <div className="v-two">
         <label className="v-field">Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
         <label className="v-field">Time (Philippine time)<input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label>

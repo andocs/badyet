@@ -205,12 +205,14 @@ interface Draft {
   kind: RuleKind;
   categoryId: string;
   fromId: string;
+  /** An account id, "others" for someone else's account, or "". */
   toId: string;
+  toOther: string;
   autoConfirm: boolean;
 }
 
 function draftOf(r: CaptureRule | null): Draft {
-  if (!r) return { name: "", enabled: true, channel: "both", words: [], mustWords: [], skipWords: [], sources: [], packages: [], senders: [], action: "record", kind: "spending", categoryId: "", fromId: "", toId: "", autoConfirm: false };
+  if (!r) return { name: "", enabled: true, channel: "both", words: [], mustWords: [], skipWords: [], sources: [], packages: [], senders: [], action: "record", kind: "spending", categoryId: "", fromId: "", toId: "", toOther: "", autoConfirm: false };
   return {
     name: r.name ?? "",
     enabled: r.enabled !== false,
@@ -225,7 +227,8 @@ function draftOf(r: CaptureRule | null): Draft {
     kind: r.kind ?? "spending",
     categoryId: r.categoryId ?? "",
     fromId: r.fromAccountId ?? "",
-    toId: r.toAccountId ?? "",
+    toId: r.toOther ? "others" : (r.toAccountId ?? ""),
+    toOther: r.toOther ?? "",
     autoConfirm: r.autoConfirm === true || r.action === "auto_confirm",
   };
 }
@@ -247,7 +250,7 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, tes
 
   const save = () =>
     s.run(
-      () => saveCaptureRuleFull(rule?.id ?? null, { name: d.name, enabled: d.enabled, channel: d.channel, words: d.words, mustWords: d.mustWords, skipWords: d.skipWords, sources: d.sources, packages: d.packages, senders: d.senders, action: d.action, kind: d.kind, categoryId: d.categoryId || null, fromAccountId: d.fromId || null, toAccountId: d.toId || null, autoConfirm: d.autoConfirm }),
+      () => saveCaptureRuleFull(rule?.id ?? null, { name: d.name, enabled: d.enabled, channel: d.channel, words: d.words, mustWords: d.mustWords, skipWords: d.skipWords, sources: d.sources, packages: d.packages, senders: d.senders, action: d.action, kind: d.kind, categoryId: d.categoryId || null, fromAccountId: d.fromId || null, toAccountId: d.toId === "others" ? null : d.toId || null, toOther: d.toId === "others" ? d.toOther : null, autoConfirm: d.autoConfirm }),
       "Rule saved.",
       rule ? undefined : onDone,
     );
@@ -259,7 +262,7 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, tes
   const channels = d.channel === "notifications" ? (["notification"] as const) : d.channel === "emails" ? (["email"] as const) : undefined;
   const draft: CaptureRule = {
     id: rule?.id ?? "draft", source: null, matchText: d.words[0] ?? "", action: d.action, enabled: d.enabled, channel: d.channel, words: d.words, mustWords: d.mustWords, skipWords: d.skipWords,
-    sources: d.sources as SourceKey[], packages: d.packages, senders: d.senders, kind: d.kind, categoryId: d.categoryId || null, fromAccountId: moves ? d.fromId || null : null, toAccountId: moves ? d.toId || null : null, autoConfirm: d.autoConfirm,
+    sources: d.sources as SourceKey[], packages: d.packages, senders: d.senders, kind: d.kind, categoryId: d.categoryId || null, fromAccountId: moves ? d.fromId || null : null, toAccountId: moves && d.toId !== "others" ? d.toId || null : null, toOther: moves && d.toId === "others" ? d.toOther.trim() || null : null, autoConfirm: d.autoConfirm,
   };
   const names = new Map(test.rules.map((r) => [r.id, ruleTitle(r)]));
   names.set(draft.id, d.name.trim() || d.words[0] || "this rule");
@@ -333,9 +336,16 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, tes
                     <select value={d.toId} onChange={(e) => set("toId", e.target.value)}>
                       <option value="">Ask in the Inbox</option>
                       {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                      <option value="others">{"Others (someone else's account)"}</option>
                     </select>
                   </label>
                 </div>
+                {d.toId === "others" ? (
+                  <label className="v-field">Whose account is it?
+                    <input value={d.toOther} maxLength={80} placeholder="Name, bank and last digits" onChange={(e) => set("toOther", e.target.value)} />
+                    <span className="v-xs" style={{ fontWeight: 500 }}>It waits in the Inbox, where you choose: a loan, spending or not spending.</span>
+                  </label>
+                ) : null}
                 <div className="v-xs v-muted">Whatever you set here is used. With both, both sides are recorded. If one side is left to the Inbox, the item waits there: press Transfer and pick the other account. If the other account then sends its own message, it is not added twice.</div>
               </>
             ) : null}
@@ -387,7 +397,8 @@ function RuleItem({ rule, number, selected, enabled, acct, cat, showWhere, onSel
   const kind = rule.kind ?? "spending";
   const moves = kind === "transfer" || kind === "payment";
   const side = (id: string | null | undefined) => (id ? (acct.get(id) ?? "?") : "asks in the Inbox");
-  const what = rule.action === "ignore" ? "Ignored" : `${KIND_LABEL[kind]}${kind === "spending" && rule.categoryId ? ` · ${cat.get(rule.categoryId) ?? "category"}` : ""}${moves && (rule.fromAccountId || rule.toAccountId) ? ` · ${side(rule.fromAccountId)} → ${side(rule.toAccountId)}` : ""}`;
+  const arrives = rule.toOther ? `${rule.toOther} (others)` : side(rule.toAccountId);
+  const what = rule.action === "ignore" ? "Ignored" : `${KIND_LABEL[kind]}${kind === "spending" && rule.categoryId ? ` · ${cat.get(rule.categoryId) ?? "category"}` : ""}${moves && (rule.fromAccountId || rule.toAccountId || rule.toOther) ? ` · ${side(rule.fromAccountId)} → ${arrives}` : ""}`;
   return (
     <button type="button" className={`v-ritem${enabled ? "" : " v-off"}`} aria-current={selected} onClick={onSelect}>
       <span className="v-rno">{number}</span>

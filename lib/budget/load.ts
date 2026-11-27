@@ -1,4 +1,6 @@
 import { loadReimbursements, type ReimbursementStatus } from "./reimburse";
+import { loadLending } from "@/lib/lending/load";
+import { draws, type Draw } from "@/lib/lending/model";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
 import { money, type Money } from "@/lib/domain/money";
@@ -44,6 +46,8 @@ export interface BudgetData {
   spendByDay: Map<string, Money>;
   /** This budget month's reimbursements: received, waiting, or still ahead. */
   reimbursements: ReimbursementStatus[];
+  /** Money lent or sent to others, taken from Wants or a budget line (and paid back). */
+  draws: Draw[];
 }
 
 interface LineDb {
@@ -70,7 +74,7 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
 
   const [groups, cats, lineRes, accts, alloc, poolRes, entryRes, overrideRes, txns] = await Promise.all([
     supabase.from("category_groups").select("id, name, feeds_savings, sort").is("archived_at", null).neq("name", "Transfers").order("sort"),
-    supabase.from("categories").select("id, name, color, group_id").is("archived_at", null).neq("name", "Transfer").neq("name", "Credit card payment").order("sort"),
+    supabase.from("categories").select("id, name, color, group_id").is("archived_at", null).neq("name", "Transfer").neq("name", "Credit card payment").neq("name", "Lending").order("sort"),
     supabase.from("budget_lines_v2").select("id, category_id, name, rule, amount, pct_bp, amount_second, reimburse_amount, reimburse_cutoff, reimburse_day, cutoff, account_id, starts_on, ends_on, is_draft, sort, counts_to_daily, kind").order("sort"),
     supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
     supabase.from("raise_allocations").select("salary_event_id, budget_line_id, mode, amount, pct_bp"),
@@ -134,7 +138,10 @@ export async function loadBudget(supabase: SupabaseClient): Promise<BudgetData> 
 
   const reimbursements = await loadReimbursements(supabase, { lines, plans, month: budgetMonth, current: period.which === 1 ? "first" : "second", paydays });
 
+  const lending = await loadLending(supabase);
+
   return {
+    draws: draws(lending.loans, lending.outside),
     reimbursements,
     salary,
     today,

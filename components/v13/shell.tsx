@@ -23,6 +23,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
     { label: "Bonuses", icon: "gift", href: "/bonuses" },
     { label: "Funds", icon: "fund", href: "/funds" },
     { label: "Forecast", icon: "forecast", href: "/forecast" },
+    { label: "Lending", icon: "wallet", href: "/lending" },
   ];
   return (
     <div className="v13">
@@ -55,7 +56,7 @@ export function V13Shell({ children, pending, accounts, categories }: { children
         </div>
         <PhoneTabs
           inbox={today[1]!}
-          plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/pay-checklist", "/bonuses", "/funds", "/forecast", "/installments", "/subscriptions"] }}
+          plan={{ label: "More", icon: "plan", href: "/budget", also: ["/pay", "/pay-checklist", "/bonuses", "/funds", "/forecast", "/lending", "/installments", "/subscriptions"] }}
           more={
             <div className="v-more">
               <RailLinks items={[...plan, { label: "Rules", icon: "rules", href: "/rules" }, { label: "Settings", icon: "settings", href: "/settings" }]} />

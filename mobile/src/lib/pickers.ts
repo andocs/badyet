@@ -22,7 +22,7 @@ function readCache(): Pickers | null {
 export async function loadPickers(supabase: SupabaseClient): Promise<Pickers> {
   const [a, c] = await Promise.all([
     supabase.from('accounts').select('id, name').is('archived_at', null).order('sort'),
-    supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').order('sort'),
+    supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').neq('name', 'Lending').order('sort'),
   ]);
   if (!a.error && !c.error) {
     const fresh = { accounts: (a.data ?? []) as Picker[], categories: (c.data ?? []) as Picker[] };

@@ -6,6 +6,7 @@ import type { FormState } from "@/lib/form-state";
 import { ruleFullRow, validateRuleFull, type RuleFullInput } from "@/lib/capture/validate";
 import { reorder, validateDedupe, type DedupeInput } from "@/lib/rules/helpers";
 import { setSourceRemoved } from "@/lib/capture/source-write";
+import { clearRuleOther } from "@/lib/capture/rule-other";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const refresh = () => {
@@ -38,6 +39,7 @@ export async function saveCaptureRuleFull(id: string | null, input: RuleFullInpu
   } else {
     const { error } = await supabase.from("capture_rules").update(row).eq("id", id);
     if (error) return { error: MISSING.includes(error.code) ? "Apply the Rules database update first." : "That did not save. Try again." };
+    if (!v.value.toOther) await clearRuleOther(supabase, id);
   }
   refresh();
   return { ok: true };

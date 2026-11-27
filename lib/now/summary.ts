@@ -48,6 +48,8 @@ export interface NowInput {
   /** Pool money moved to Wants this cutoff, and Wants money taken for overspent office days. */
   movedToWants?: Money;
   takenFromWants?: Money;
+  /** Money lent or sent out of Wants (lineId null) or a budget line this cutoff: negative = out, positive = paid back. */
+  draws?: readonly { lineId: string | null; amount: number }[];
 }
 
 export interface Envelope {
@@ -146,7 +148,15 @@ export function buildNowView(input: NowInput): NowView {
 
   // What there is for daily spending this cutoff: the daily lines, plus office-day money moved to Wants, less what overspent office
   // days took from it. The hero's "left of", pace and chart all use it, so they agree with the amount per day.
-  const dailyLines = budget.dailyPool[cutoff];
+  // Lent money leaves the line it was taken from until it is paid back. A "whatever is left" line is Wants.
+  const isWantsDraw = (d: { lineId: string | null }) => d.lineId === null || lineById.get(d.lineId)?.rule === "rest";
+  const wantsDraw = (input.draws ?? []).filter(isWantsDraw).reduce((t, d) => t + d.amount, 0);
+  const lineDraws = (input.draws ?? []).filter((d) => !isWantsDraw(d)).flatMap((d) => {
+    const line = lineById.get(d.lineId!);
+    return line ? [{ line, amount: d.amount }] : [];
+  });
+  const dailyDraw = lineDraws.filter((d) => d.line.countsToDaily && d.line.kind === "normal").reduce((t, d) => t + d.amount, 0);
+  const dailyLines = atLeastZero((budget.dailyPool[cutoff] + dailyDraw) as Money);
   const movedIn = ((input.movedToWants ?? ZERO) - (input.takenFromWants ?? ZERO)) as Money;
   const pool = atLeastZero((dailyLines + movedIn) as Money);
   const spent = sum(dailySpend.map((t) => (-t.amount) as Money));
@@ -170,6 +180,10 @@ export function buildNowView(input: NowInput): NowView {
     const amount = l[cutoff];
     if (amount > 0) planByCategory.set(line.categoryId, ((planByCategory.get(line.categoryId) ?? 0) + amount) as Money);
   }
+  for (const d of lineDraws) {
+    const planned = planByCategory.get(d.line.categoryId);
+    if (planned !== undefined) planByCategory.set(d.line.categoryId, atLeastZero((planned + d.amount) as Money));
+  }
   const envelopes: Envelope[] = [...planByCategory.entries()].map(([categoryId, plan], i) => {
     const cat = catById.get(categoryId)!;
     const catTxns = input.txns.filter((t) => t.categoryId === categoryId && t.kind === "expense" && t.status !== "ignored");
@@ -192,7 +206,7 @@ export function buildNowView(input: NowInput): NowView {
   // Spent is what you spent in the categories of the Wants group.
   const wantsIds = new Set(input.categories.filter((c) => (c.groupName ?? "").trim().toLowerCase() === "wants").map((c) => c.id));
   const wantsTxns = input.txns.filter((t) => t.categoryId !== null && wantsIds.has(t.categoryId) && t.kind === "expense" && t.status !== "ignored");
-  const wantsPlan = atLeastZero(sub(((budget.rest[cutoff] ?? ZERO) + (input.movedToWants ?? ZERO)) as Money, input.takenFromWants ?? ZERO));
+  const wantsPlan = atLeastZero(sub(((budget.rest[cutoff] ?? ZERO) + (input.movedToWants ?? ZERO) + wantsDraw) as Money, input.takenFromWants ?? ZERO));
   const wantsSpent = sum(wantsTxns.filter((t) => t.status === "confirmed").map((t) => (-t.amount) as Money));
   if (wantsPlan > 0 || wantsSpent > 0) {
     const wantsPace = Number((BigInt(wantsPlan) * BigInt(dayNumber)) / BigInt(daysTotal)) as Money;

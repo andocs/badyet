@@ -7,6 +7,8 @@ import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
 import { dayLabel, ordinalCutoff, relativeDay, shortDate } from '@/lib/now/format';
 import { loadNow, type AccountCard } from '@/lib/now/load';
+import { loadLinkable } from '@/lib/lending/load';
+import { DueCard } from '~/components/Lending';
 import { manilaDate, type Bill, type Envelope, type NowTxn, type NowView } from '@/lib/now/summary';
 import { BillSheet } from '~/components/BillSheet';
 import { PanelSheet, PaydayCard } from '~/components/Payday';
@@ -29,7 +31,12 @@ const KIND: Record<string, string> = { ewallet: 'E-wallet', debit: 'Debit', savi
 export default function Now() {
   const c = useTheme();
   const router = useRouter();
-  const { data, error, refreshing, reload } = useLoad(() => loadNow(supabase));
+  const { data, error, refreshing, reload } = useLoad(async () => {
+    const now = await loadNow(supabase);
+    // Money in that a due loan could be paid with, only looked up when something is due.
+    const paybacks = now.kind === 'ready' && now.dueLoans.length > 0 ? await loadLinkable(supabase, 'in') : [];
+    return { ...now, paybacks };
+  });
 
   if (!data) {
     return (
@@ -63,6 +70,9 @@ export default function Now() {
       <GmailBanner />
       <HeldNotice />
       {data.payday ? <PaydayCard payday={data.payday} accounts={data.accounts} onSaved={reload} /> : null}
+      {data.dueLoans.map((loan) => (
+        <DueCard key={loan.id} loan={loan} ctx={{ choices: data.paybacks, accounts: data.accounts, today, paydays: data.paydays }} onDone={() => void reload()} />
+      ))}
       <Hero view={view} today={today} />
       <Recent txns={view.recent} today={today} pending={view.pendingCount} />
       <AccountsRow accounts={data.accounts} total={data.total} />

@@ -19,6 +19,8 @@ export interface TxnInsert {
   dedupe_hash?: string | null;
   /** The other side of a transfer. The database links the earlier row back to this one. */
   transfer_peer_id?: string | null;
+  /** "Others": whose account the money went to, filled in by a rule. */
+  other_owner?: string;
 }
 
 export interface AccountLite {
@@ -110,5 +112,6 @@ export function buildRow(args: {
     status: d.status,
     confirmed_at: confirmed ? at : null,
     dedupe_hash: args.hash,
+    ...(d.otherOwner ? { other_owner: d.otherOwner } : {}),
   };
 }

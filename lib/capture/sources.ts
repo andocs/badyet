@@ -116,6 +116,8 @@ export interface CaptureRule {
   /** Transfer and payment: where the money leaves and where it arrives. */
   fromAccountId?: string | null;
   toAccountId?: string | null;
+  /** Instead of an account of yours, the money arrives in someone else's: whose it is. */
+  toOther?: string | null;
   autoConfirm?: boolean;
   /** Top to bottom; the first match decides. */
   position?: number;
@@ -155,6 +157,7 @@ export interface RuleRow {
   kind?: string;
   from_account_id?: string | null;
   to_account_id?: string | null;
+  to_other?: string | null;
   auto_confirm?: boolean;
   position?: number;
 }
@@ -201,6 +204,7 @@ export function rulesFromRows(rows: readonly RuleRow[]): CaptureRule[] {
       kind: (RULE_KINDS as readonly string[]).includes(r.kind ?? '') ? (r.kind as RuleKind) : 'spending',
       fromAccountId: r.from_account_id ?? null,
       toAccountId: r.to_account_id ?? null,
+      toOther: r.to_other ?? null,
       autoConfirm: r.auto_confirm ?? false,
       position: r.position ?? 0,
     }));

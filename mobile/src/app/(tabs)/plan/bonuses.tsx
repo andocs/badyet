@@ -4,6 +4,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { destColors, destKey } from '@/lib/bonuses/colors';
 import { loadBonuses } from '@/lib/bonuses/load';
 import { bonusCards, yearSummary, type BonusCard } from '@/lib/bonuses/view';
+import { loadLending } from '@/lib/lending/load';
+import { bonusNotes, draws } from '@/lib/lending/model';
 import { money } from '@/lib/domain/money';
 import type { BonusRule } from '@/lib/engine/types';
 import { EXEMPTION_CAP } from '@/lib/windfall/compute';
@@ -32,8 +34,10 @@ function Row({ left, right, hint, strong }: { left: string; right: React.ReactNo
 }
 
 function CardView({
-  card, colors, onEdit, onReceived,
+  card, colors, onEdit, onReceived, lent,
 }: {
+  /** Money lent or sent from this bonus, and what has come back. */
+  lent?: { text: string; amount: number }[];
   card: BonusCard;
   colors: Record<string, string>;
   onEdit: () => void;
@@ -62,6 +66,12 @@ function CardView({
           <Text style={{ color: allPlaced ? c.accentText : c.gold, fontFamily: fonts.bodyBold, fontSize: 11 }}>{allPlaced ? 'All placed' : 'Not placed'}</Text>
         </View>
       </Pressable>
+
+      {lent?.map((n, i) => (
+        <Text key={i} style={{ color: n.amount < 0 ? c.err : c.accentText, fontFamily: fonts.bodyBold, fontSize: 12 }}>
+          {n.amount < 0 ? '−' : '+'}{peso(money(Math.abs(n.amount)), hide)} {n.text}
+        </Text>
+      ))}
 
       {open ? (
         <>
@@ -134,7 +144,10 @@ function CardView({
 export default function Bonuses() {
   const c = useTheme();
   const { hide } = useHide();
-  const { data, error, refreshing, reload } = useLoad(() => loadBonuses(supabase));
+  const { data, error, refreshing, reload } = useLoad(async () => {
+    const [bonuses, lending] = await Promise.all([loadBonuses(supabase), loadLending(supabase)]);
+    return { ...bonuses, lentFrom: bonusNotes(draws(lending.loans, lending.outside)) };
+  });
   const [year, setYear] = useState<number | null>(null);
 
   const input = data?.salary.input;
@@ -206,7 +219,7 @@ export default function Bonuses() {
 
               {cards.length === 0 ? <Notice>No bonuses land in {shownYear}. Add a rule below.</Notice> : null}
               {cards.map((card) => (
-                <CardView key={`${card.key}-${card.status}-${card.net}-${card.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(',')}`} card={card} colors={colors} onEdit={() => setEdit({ k: 'edit', card })} onReceived={() => setEdit({ k: 'received', card })} />
+                <CardView key={`${card.key}-${card.status}-${card.net}-${card.dests.map((d) => `${d.name}${d.amount}${d.done}`).join(',')}`} card={card} lent={data.lentFrom[card.key]} colors={colors} onEdit={() => setEdit({ k: 'edit', card })} onReceived={() => setEdit({ k: 'received', card })} />
               ))}
 
               <Card>

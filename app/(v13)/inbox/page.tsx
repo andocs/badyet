@@ -8,6 +8,8 @@ import { todayManila } from "@/lib/plans/validate";
 import { createClient } from "@/lib/supabase/server";
 import { InboxView, type InboxTxn } from "@/components/v13/inbox";
 import type { HeldCapture } from "@/components/v13/held-capture-card";
+import { loadLendingContext } from "@/lib/lending/context";
+import { loanTags } from "@/lib/lending/forms";
 
 export const metadata = { title: "Inbox · Bad(yet)" };
 
@@ -36,9 +38,16 @@ export default async function Inbox() {
   await ensureTransferCategory(supabase);
   await ensureCardPaymentCategory(supabase);
 
+  // Lending is extra: if any of it cannot be read, the rest of the Inbox still loads.
+  const lending = await loadLendingContext(supabase).catch(() => null);
+  const tags = loanTags(lending?.loans ?? []);
+  // Whose account a transfer to someone else went to. A newer column, asked for on its own so an older database still loads.
+  const ownerRes = await supabase.from("transactions").select("id, other_owner").not("other_owner", "is", null);
+  const owners = new Map(ownerRes.error ? [] : ((ownerRes.data ?? []) as { id: string; other_owner: string }[]).map((o) => [o.id, o.other_owner]));
+
   const cols = "id, account_id, occurred_at, amount, merchant, kind, category_id, transfer_peer_id, source, status, dedupe_hash, note";
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, heldRes, liveAccounts, billsRes] = await Promise.all([
-    supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").order("sort"),
+    supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").neq("name", "Lending").order("sort"),
     supabase.from("accounts").select("id, name, institution, archived_at"),
     supabase.from("merchant_rules").select("id, pattern, category_id, account_id, priority"),
     supabase.from("transactions").select(cols).eq("status", "pending").order("occurred_at", { ascending: false }),
@@ -98,8 +107,10 @@ export default async function Inbox() {
         dedupe: r.dedupe_hash ? `${r.dedupe_hash.slice(0, 4)}…${r.dedupe_hash.slice(-4)}` : null,
         note: r.note,
         holdUntil: holds.get(r.id) ?? null,
+        loanTag: tags.get(r.id) ?? null,
+        otherOwner: owners.get(r.id) ?? null,
       };
     });
 
-  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} bills={(billsRes.data ?? []) as { id: string; name: string }[]} />;
+  return <InboxView txns={txns} categories={categories} held={held} accounts={(liveAccounts.data ?? []) as { id: string; name: string }[]} today={isoDate(todayManila())} bills={(billsRes.data ?? []) as { id: string; name: string }[]} lending={lending?.ready ? { lend: lending.lend, open: lending.openLoans } : null} />;
 }

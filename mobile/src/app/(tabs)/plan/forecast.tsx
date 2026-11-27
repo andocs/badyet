@@ -98,8 +98,8 @@ function build(d: FundsData) {
   const hasExpected = run.some((m) => m.expected);
   const without = hasExpected ? runProjection(input, { includeExpected: false }) : null;
   return {
-    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month))),
-    withoutTotal: without ? totalBalance(forecastRows(without, new Set())[59]!) : null,
+    rows: forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.held),
+    withoutTotal: without ? totalBalance(forecastRows(without, new Set(), d.held)[59]!) : null,
   };
 }
 

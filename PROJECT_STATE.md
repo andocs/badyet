@@ -7,11 +7,11 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-59 merged
-- **Active slice / milestone:** rev-59 unified rules
-- **Gate:** none
-- **Next action:** Next revision
-- **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; try the new Rules page and the sample boxes with real Maya wallet and card messages; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-60 lending
+- **Gate:** waiting
+- **Next action:** Apply migration 20261230000000_lending.sql, then approve merge and OTA for rev-60
+- **User to-do now:** Apply supabase/migrations/20261230000000_lending.sql in Supabase before using lending
 
 ## 3. Execution log
 
@@ -53,6 +53,8 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-26 21:17 | rev-59 | Built unified Rules editor (web + phone), one-account fix, repeat-entry safeguard, Inbox Other account, sample and other-side tests. Checks, builds, Vercel PASS. Not tried on a signed-in page or a phone. No migration. | 64572ee
 - 2026-11-26 21:22 | rev-59 | Approved. Merged to main (88b0bf8); OTA published (group 87e576dd). No migration. | 88b0bf8
 - 2026-11-26 21:24 | cleanup | Deleted merged rev/59 branches, local and on GitHub; only main remains. | -
+- 2026-11-27 09:16 | rev-60 | Lending mockups (web 5 screens, phone 5 frames), design check clean | aa2e224
+- 2026-11-27 09:31 | rev-60 | Lending and Others built on web and phone; web 621 tests, phone 185, build and Android bundle pass | d259693
 
 ## 4. Open questions
 
@@ -93,7 +95,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 5,517,367 | 24,733,779 | 936,579 | 10,589,270 | 1,074,672,209 | 4,137,168 |  |
+| **Cumulative** | 6,404,352 | 26,084,468 | 951,845 | 11,847,167 | 1,094,420,963 | 4,263,272 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -160,6 +162,8 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | rev-42 | 47,003 | 183,558 | 8,760 | 61,365 | 13,044,241 | 46,014 |  |
 | rev-43 | 5,209,588 | 21,801,789 | 917,784 | 8,866,890 | 896,594,703 | 3,638,213 | no mark 'rev-43': all-time |
 | Rev 59 | 0 | 0 | 0 | 137,748 | 23,672,160 | 81,419 |  |
+| Rev 60 mockups | 68,190 | 474,863 | 14,790 | 75,667 | 3,143,932 | 16,988 |  |
+| Rev 60 build | 0 | 0 | 0 | 254,115 | 8,729,655 | 102,481 |  |
 
 <!-- END SUMMARY -->
 

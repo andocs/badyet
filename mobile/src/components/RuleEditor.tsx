@@ -70,7 +70,9 @@ export function RuleEditor({
   const [kind, setKind] = useState<RuleKind>(rule?.kind ?? 'spending');
   const [categoryId, setCategoryId] = useState<string | null>(rule?.categoryId ?? null);
   const [fromId, setFromId] = useState<string | null>(rule?.fromAccountId ?? null);
-  const [toId, setToId] = useState<string | null>(rule?.toAccountId ?? null);
+  const [toId, setToId] = useState<string | null>(rule?.toOther ? 'others' : (rule?.toAccountId ?? null));
+  const [toOther, setToOther] = useState(rule?.toOther ?? '');
+  const toAccount = toId === 'others' ? null : toId;
   const [autoConfirm, setAutoConfirm] = useState(rule?.autoConfirm ?? rule?.action === 'auto_confirm');
   const [picker, setPicker] = useState<null | 'app' | 'sender'>(null);
   const [sample, setSample] = useState('');
@@ -84,7 +86,7 @@ export function RuleEditor({
 
   const draft: CaptureRule = {
     id: rule?.id ?? 'draft', source: null, matchText: toList(words)[0] ?? '', action: ignore ? 'ignore' : 'record', enabled: order?.enabled ?? true, channel, words: toList(words), mustWords: toList(must), skipWords: toList(skip),
-    sources, packages, senders: fromSenders, kind, categoryId, fromAccountId: moves ? fromId : null, toAccountId: moves ? toId : null, autoConfirm,
+    sources, packages, senders: fromSenders, kind, categoryId, fromAccountId: moves ? fromId : null, toAccountId: moves ? toAccount : null, toOther: moves && toId === 'others' ? toOther.trim() || null : null, autoConfirm,
   };
   // Which source's patterns and reader the sample is tried with: one the rule is limited to, else any of yours.
   const readable = sources.length > 0 ? test.configs.filter((x) => sources.includes(x.source)) : test.configs;
@@ -93,7 +95,7 @@ export function RuleEditor({
   const channels = channel === 'notifications' ? (['notification'] as const) : channel === 'emails' ? (['email'] as const) : undefined;
   const ruleNames = new Map(test.rules.map((r) => [r.id, r.name || r.words?.[0] || r.matchText]));
   ruleNames.set(draft.id, name.trim() || draft.matchText || 'this rule');
-  const accountName = (id: string | null) => (id ? (accounts.find((a) => a.id === id)?.name ?? 'Account') : 'asks in the Inbox');
+  const accountName = (id: string | null) => (id === 'others' ? `${toOther.trim() || 'someone'} (others)` : id ? (accounts.find((a) => a.id === id)?.name ?? 'Account') : 'asks in the Inbox');
   const whatSummary = ignore ? 'Ignored' : `${KIND_LABEL[kind]}${moves && (fromId || toId) ? ` · ${accountName(fromId)} → ${accountName(toId)}` : ''}`;
 
   async function save() {
@@ -101,7 +103,7 @@ export function RuleEditor({
     setProblem(null);
     const r = await saveRuleFull(supabase, rule?.id ?? null, {
       name, enabled: order?.enabled ?? rule?.enabled ?? true, channel, words: toList(words), mustWords: toList(must), skipWords: toList(skip), sources, packages, senders: fromSenders,
-      action: ignore ? 'ignore' : 'record', kind, categoryId, fromAccountId: fromId, toAccountId: toId, autoConfirm,
+      action: ignore ? 'ignore' : 'record', kind, categoryId, fromAccountId: fromId, toAccountId: toAccount, toOther: toId === 'others' ? toOther : null, autoConfirm,
     });
     setBusy(false);
     if ('error' in r) setProblem(r.error);
@@ -243,8 +245,15 @@ export function RuleEditor({
                         {accounts.map((a) => (
                           <Chip key={a.id} label={a.name} on={toId === a.id} onPress={() => setToId(a.id)} />
                         ))}
+                        <Chip label="Others (someone else's account)" on={toId === 'others'} onPress={() => setToId('others')} />
                       </View>
                     </Field>
+                    {toId === 'others' ? (
+                      <Field label="Whose account is it?">
+                        <TextInput value={toOther} onChangeText={setToOther} maxLength={80} placeholder="Name, bank and last digits" placeholderTextColor={c.muted} accessibilityLabel="Whose account is it" style={input} />
+                        <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>It waits in the Inbox, where you choose: a loan, spending or not spending.</Text>
+                      </Field>
+                    ) : null}
                   </>
                 ) : null}
 
