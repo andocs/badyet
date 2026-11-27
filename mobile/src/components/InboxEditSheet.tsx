@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { editTransaction, manilaFields } from '@/lib/inbox/edit';
+import { DateInput } from '~/components/DateInput';
 import { Chip } from '~/components/ui';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import type { InboxTxn } from '~/lib/inbox';
@@ -75,8 +76,8 @@ export function InboxEditSheet({ t, accounts, categories, onClose, onSaved }: { 
           <Input value={otherOwner} onChangeText={setOtherOwner} maxLength={80} placeholder="Only for someone else's account" />
         </Field>
       ) : null}
-      <Field label="Date (YYYY-MM-DD)">
-        <Input value={date} onChangeText={setDate} keyboardType="numbers-and-punctuation" placeholder="2026-11-25" />
+      <Field label="Date">
+        <DateInput label="Date" value={date} onChange={setDate} />
       </Field>
       <Field label="Time (24-hour, Philippine time)">
         <Input value={time} onChangeText={setTime} keyboardType="numbers-and-punctuation" placeholder="10:02" />

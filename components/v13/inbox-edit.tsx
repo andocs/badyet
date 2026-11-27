@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { editInboxItem } from "@/app/(v13)/inbox/actions";
 import { manilaFields } from "@/lib/inbox/edit";
 import { Pick } from "./pick";
+import { DatePicker } from "./pickers";
 
 export interface EditableItem {
   id: string;
@@ -79,8 +80,8 @@ export function InboxEditForm({ t, accounts, categories, onSaved, onCancel }: { 
       )}
       {askOwner ? <label className="v-field">Others: whose account did it go to? (optional)<input value={otherOwner} maxLength={80} placeholder="Only for someone else's account" onChange={(e) => setOtherOwner(e.target.value)} /></label> : null}
       <div className="v-two">
-        <label className="v-field">Date<input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
-        <label className="v-field">Time (Philippine time)<input type="time" value={time} onChange={(e) => setTime(e.target.value)} /></label>
+        <div className="v-field">Date<DatePicker label="Date" value={date} onChange={setDate} /></div>
+        <label className="v-field">Time (24-hour, Philippine time)<input value={time} inputMode="numeric" maxLength={5} placeholder="14:05" onChange={(e) => setTime(e.target.value)} /></label>
       </div>
       <label className="v-field">Note<input value={note} maxLength={200} placeholder="Add a note (optional)" onChange={(e) => setNote(e.target.value)} /></label>
       {error ? <p className="v-flag v-bad" role="alert" style={{ margin: 0 }}>{error}</p> : null}

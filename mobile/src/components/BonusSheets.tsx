@@ -5,6 +5,7 @@ import type { BonusCard } from '@/lib/bonuses/view';
 import type { SplitInput } from '@/lib/bonuses/input';
 import { formatPesos, money, parsePesos } from '@/lib/domain/money';
 import type { BonusRule } from '@/lib/engine/types';
+import { MonthInput } from '~/components/DateInput';
 import { Chip } from '~/components/ui';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import { archiveRule, saveRule } from '~/lib/bonusRules';
@@ -222,8 +223,8 @@ export function RuleSheet({ rule, onClose, onSaved }: { rule: BonusRule | null; 
         </View>
       </Field>
       {recurrence === 'once' ? (
-        <Field label="Month it lands (YYYY-MM)">
-          <Input value={onceOn} onChangeText={setOnceOn} placeholder="2027-03" autoCapitalize="none" />
+        <Field label="Month it lands">
+          <MonthInput label="Month it lands" value={onceOn} onChange={setOnceOn} />
         </Field>
       ) : (
         <Field label="Month it lands">

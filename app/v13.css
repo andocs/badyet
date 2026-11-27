@@ -949,3 +949,18 @@ details.v-env.v-capitem .v-capbody{padding:14px;display:flex;flex-direction:colu
 .v-lend2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
 @media(max-width:900px){.v-lend2{grid-template-columns:minmax(0,1fr)}}
 .v-lentlist{margin:6px 0 0;display:flex;flex-direction:column;gap:2px}
+
+/* The form control standard (PROJECT_STATE.md): the app's dropdown and calendar replace the browser's own. */
+.v13 .v-popp.v-poplist{padding:0;gap:0;border-radius:10px}
+.v13 .v-poplist .v-pkm{position:static;width:100%;max-width:none;min-width:0;max-height:min(50vh,320px);border:0;box-shadow:none;border-radius:10px}
+.v13 .v-pkg{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:10px 10px 4px}
+.v13 .v-poplist .v-pko{flex:none;font-size:14px}
+.v13 .v-field .v-pk{min-height:44px;border-radius:8px;font-size:15px}
+.v13 .v-pk>span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v13 .v-pg .v-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted)}
+.v13 .v-pg.v-days button[aria-current=date]:not([aria-pressed=true]){border-color:var(--accent)}
+.v13 .v-pickrow{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.v13 .v-pickrow .v-pk{width:auto;min-width:150px;max-width:260px}
+.v13 .v-pk{color:var(--ink);font-weight:600}
+.v13 .v-pk .v-ph{color:var(--muted)}
+.v13 .v-pk .v-cr{font-size:0;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-3px 2px 0 0}

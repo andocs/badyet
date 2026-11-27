@@ -4,6 +4,8 @@ import type { IsoDate } from "@/lib/domain/dates";
 import { lendEffect } from "@/lib/lending/forms";
 import { dueChips } from "@/lib/lending/model";
 import { NO_SOURCE, type SourceGroup } from "@/lib/lending/sources";
+import { Pick } from "../pick";
+import { DatePicker } from "../pickers";
 
 export interface LendDraft {
   borrower: string;
@@ -39,17 +41,10 @@ export function DateChips({ ctx, value, onPick, weeks = 2 }: { ctx: Pick<LendCon
 
 export function SourceSelect({ ctx, value, onChange, label = "Take it from" }: { ctx: LendContext; value: string; onChange: (key: string) => void; label?: string }) {
   return (
-    <label className="v-field">
+    <div className="v-field">
       {label}
-      <select value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value={NO_SOURCE}>No budget line</option>
-        {ctx.sources.map((g) => (
-          <optgroup key={g.title} label={g.title}>
-            {g.options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-          </optgroup>
-        ))}
-      </select>
-    </label>
+      <Pick label={label} value={value} onChange={onChange} options={[{ value: NO_SOURCE, label: "No budget line" }, ...ctx.sources.flatMap((g) => g.options.map((o) => ({ value: o.key, label: o.label, group: g.title })))]} />
+    </div>
   );
 }
 
@@ -62,12 +57,16 @@ export function LendFields({ ctx, draft, onChange, amount, askWho = true }: { ct
         {askWho ? (
           <label className="v-field">
             Who are you lending to?
-            <input value={draft.borrower} maxLength={80} list="lend-people" placeholder="Name" onChange={(e) => set({ borrower: e.target.value })} />
+            <input value={draft.borrower} maxLength={80} autoComplete="off" placeholder="Name" onChange={(e) => set({ borrower: e.target.value })} />
           </label>
         ) : null}
-        <label className="v-field">Expected back on<input type="date" value={draft.dueOn} onChange={(e) => set({ dueOn: e.target.value })} /></label>
+        <div className="v-field">Expected back on<DatePicker label="Expected back on" value={draft.dueOn} min={ctx.today} onChange={(dueOn) => set({ dueOn })} /></div>
       </div>
-      <datalist id="lend-people">{ctx.people.map((p) => <option key={p} value={p} />)}</datalist>
+      {askWho && ctx.people.length > 0 ? (
+        <div className="v-chips" role="group" aria-label="People you have lent to">
+          {ctx.people.slice(0, 8).map((p) => <button key={p} type="button" className="v-btn v-sm" aria-pressed={draft.borrower === p} onClick={() => set({ borrower: p })}>{p}</button>)}
+        </div>
+      ) : null}
       <DateChips ctx={ctx} value={draft.dueOn} onPick={(dueOn) => set({ dueOn })} />
       <SourceSelect ctx={ctx} value={draft.fromKey} onChange={(fromKey) => set({ fromKey })} />
       <div className="v-testbox">

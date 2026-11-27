@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { addPlan, editPlan, removePlan } from "@/app/(v13)/budget/actions";
 import { cutoffRefLabel, type PlanSpan } from "@/lib/budget/plans";
+import { Pick } from "../pick";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -55,13 +56,8 @@ export function PlanBar({ plans, selected, activeNow, thisMonth }: { plans: Plan
   const cutPick = (label: string, month: string, cut: string, set: (m: string, c: string) => void) => (
     <fieldset className="v-row v-wrap" style={{ gap: 8, border: 0, padding: 0, margin: 0 }}>
       <legend className="v-lbl" style={{ marginBottom: 4 }}>{label}</legend>
-      <select aria-label={`${label}: month`} value={month} onChange={(e) => set(e.target.value, cut)}>
-        {[...new Set([month, ...months])].sort().map((m) => <option key={m} value={m}>{MON[Number(m.slice(5)) - 1]} {m.slice(0, 4)}</option>)}
-      </select>
-      <select aria-label={`${label}: cutoff`} value={cut} onChange={(e) => set(month, e.target.value)}>
-        <option value="first">1st cutoff</option>
-        <option value="second">2nd cutoff</option>
-      </select>
+      <span className="v-pickrow"><Pick label={`${label}: month`} value={month} options={[...new Set([month, ...months])].sort().map((m) => ({ value: m, label: `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}` }))} onChange={(v) => set(v, cut)} />
+      <Pick label={`${label}: cutoff`} value={cut} options={[{ value: "first", label: "1st cutoff" }, { value: "second", label: "2nd cutoff" }]} onChange={(v) => set(month, v)} /></span>
     </fieldset>
   );
 

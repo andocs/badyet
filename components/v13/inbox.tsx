@@ -10,12 +10,14 @@ import type { OtherWhat } from "@/lib/lending/write";
 import { LendFields, newDraft, SourceSelect, type LendContext, type LendDraft } from "./lending/fields";
 import type { IsoDate } from "@/lib/domain/dates";
 import { money } from "@/lib/domain/money";
-import { relativeDay, timeLabel } from "@/lib/now/format";
+import { relativeDay, timeLabel, shortDate } from "@/lib/now/format";
 import { manilaDate } from "@/lib/now/summary";
 import { HeldCaptureCard, type HeldCapture } from "./held-capture-card";
 import { InboxEditForm } from "./inbox-edit";
 import { V13Icon } from "./icons";
 import { Money } from "./money";
+import { Pick } from "./pick";
+import { DatePicker } from "./pickers";
 
 export interface InboxTxn {
   id: string;
@@ -192,15 +194,11 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
       ))}
     </div>
     {isAsT(t) ? (
-      <label className="v-field">
+      <div className="v-field">
         {t.amount < 0 ? "Other account (where it arrived)" : "Other account (where it came from)"}
-        <select value={otherOf(t)} onChange={(e) => setOthers((o) => ({ ...o, [t.id]: e.target.value }))}>
-          <option value="">Only this side</option>
-          {accounts.filter((a) => a.id !== t.accountId).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          {lending && t.amount < 0 ? <option value="others">{"Others (someone else's account)"}</option> : null}
-        </select>
+        <Pick label={t.amount < 0 ? "Other account (where it arrived)" : "Other account (where it came from)"} value={otherOf(t)} onChange={(v) => setOthers((o) => ({ ...o, [t.id]: v }))} options={[{ value: "", label: "Only this side" }, ...accounts.filter((a) => a.id !== t.accountId).map((a) => ({ value: a.id, label: a.name })), ...(lending && t.amount < 0 ? [{ value: "others", label: "Others (someone else's account)" }] : [])]} />
         {otherOf(t) === "others" ? null : <span className="v-xs" style={{ fontWeight: 500 }}>Pick one to add the other side too, if it did not send its own message.</span>}
-      </label>
+      </div>
     ) : null}
     {toOthers(t) ? othersFields(t) : null}
     {lendingIt(t) ? <LendFields ctx={lending!.lend} draft={draftOf(t)} onChange={(d) => setDrafts((x) => ({ ...x, [t.id]: d }))} amount={Math.abs(t.amount)} /> : null}
@@ -225,14 +223,11 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
         </div>
         {what === "loan" ? <LendFields ctx={lending!.lend} draft={{ ...draft, borrower: ownerOf(t) }} onChange={setDraft} amount={Math.abs(t.amount)} askWho={false} /> : null}
         {what === "spending" ? (
-          <label className="v-field">
+          <div className="v-field">
             Counts against
-            <select value={pick(t) ?? ""} onChange={(e) => setPicks((p) => ({ ...p, [t.id]: e.target.value || null }))}>
-              <option value="">Pick a category</option>
-              {categories.filter((c) => c.name !== "Credit card payment").map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <Pick label="Counts against" value={pick(t)} placeholder="Pick a category" onChange={(v) => setPicks((p) => ({ ...p, [t.id]: v }))} options={categories.filter((c) => c.name !== "Credit card payment").map((c) => ({ value: c.id, label: c.name }))} />
             {spendName ? <span className="v-xs" style={{ fontWeight: 500 }}>{pesoText(t.amount)} counts as spending in {spendName}.</span> : null}
-          </label>
+          </div>
         ) : null}
         {what === "none" ? <SourceSelect ctx={lending!.lend} value={draft.fromKey} onChange={(fromKey) => setDraft({ ...draft, fromKey })} label="Take it from (optional)" /> : null}
       </div>
@@ -243,13 +238,11 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
     const owed = outstandingOf(loan);
     return (
       <div className="v-stack" style={{ gap: 10 }}>
-        <label className="v-field">
+        <div className="v-field">
           Whose payback?
-          <select value={loan.id} onChange={(e) => setPaying((p) => ({ ...p, [t.id]: e.target.value }))}>
-            {openLoans.map((l) => <option key={l.id} value={l.id}>{l.borrower} · {pesoText(outstandingOf(l))} owed, due {l.dueOn}</option>)}
-          </select>
-        </label>
-        {t.amount < owed ? <label className="v-field">When will the other {pesoText(owed - t.amount)} come?<input type="date" value={restDue(t)} min={lending!.lend.today} onChange={(e) => setRest((r) => ({ ...r, [t.id]: e.target.value }))} /></label> : null}
+          <Pick label="Whose payback?" value={loan.id} onChange={(v) => setPaying((p) => ({ ...p, [t.id]: v }))} options={openLoans.map((l) => ({ value: l.id, label: `${l.borrower} · ${pesoText(outstandingOf(l))} owed, due ${shortDate(l.dueOn)}` }))} />
+        </div>
+        {t.amount < owed ? <div className="v-field">When will the other {pesoText(owed - t.amount)} come?<DatePicker label="When the rest will come" value={restDue(t)} min={lending!.lend.today} onChange={(v) => setRest((r) => ({ ...r, [t.id]: v }))} /></div> : null}
         {t.amount > owed
           ? <p className="v-flag v-bad" style={{ margin: 0 }}>This is more than {loan.borrower} still owes ({pesoText(owed)}).</p>
           : <div className="v-testbox"><div className="v-sm">{paybackEffect(loan.from, t.amount, owed, loan.borrower, t.amount < owed ? restDue(t) : null)}</div></div>}
@@ -437,13 +430,10 @@ export function InboxView({ txns: txnsIn, categories, held, accounts, today, bil
                 {holdNote(open) ?? guessLine(open)}
                 {special(open) ? null : ruleRow(open)}
                 {open.amount < 0 && bills.length > 0 && !special(open) ? (
-                  <label className="v-field">
+                  <div className="v-field">
                     Pays a bill
-                    <select value={billPicks[open.id] ?? ""} onChange={(e) => setBillPicks((b) => ({ ...b, [open.id]: e.target.value }))}>
-                      <option value="">No, not a bill</option>
-                      {bills.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
-                  </label>
+                    <Pick label="Pays a bill" value={billPicks[open.id] ?? ""} onChange={(v) => setBillPicks((b) => ({ ...b, [open.id]: v }))} options={[{ value: "", label: "No, not a bill" }, ...bills.map((b) => ({ value: b.id, label: b.name }))]} />
+                  </div>
                 ) : null}
                 <label className="v-field">
                   Note

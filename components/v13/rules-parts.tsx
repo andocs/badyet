@@ -8,6 +8,7 @@ import type { CapturePattern } from "@/lib/capture/patterns";
 import { SOURCE_INFO, type SourceConfig, type SourceKey } from "@/lib/capture/sources";
 import { PatternsSection } from "./capture-patterns";
 import { Money } from "./money";
+import { Pick } from "./pick";
 
 /** The numbered sections of the Rules editor. Rules and "Everything else" use the same five. */
 export function Step({ n, title, aside, children }: { n: number; title: string; aside?: React.ReactNode; children: React.ReactNode }) {
@@ -56,9 +57,9 @@ export function Reading({ source, setSource, options, configs, patterns, channel
   return (
     <div className="v-shared">
       {options && setSource && options.length > 1 ? (
-        <label className="v-field">Try reading as
-          <select value={source} onChange={(e) => setSource(e.target.value as SourceKey)}>{options.map((k) => <option key={k} value={k}>{labelOf(configs, k)}</option>)}</select>
-        </label>
+        <div className="v-field">Try reading as
+          <Pick label="Try reading as" value={source} options={options.map((k) => ({ value: k, label: labelOf(configs, k) }))} onChange={(v) => setSource(v as SourceKey)} />
+        </div>
       ) : null}
       <div className="v-sm">The amount and money in or out come from here, <b>not from a rule&apos;s words</b>. Changing this affects everything from {label}.</div>
       <PatternsSection key={`${source}-${seed?.key ?? 0}`} patterns={patterns} only={source} seed={seed ?? undefined} />
@@ -129,11 +130,9 @@ export function Result({ setup, sample, configs, allPatterns, ruleId, ruleNames,
       {outcome.kind === "kept" ? (
         <div className="v-shared">
           <div className="v-grid2">
-            <label className="v-field">Other side from
-              <select value={otherSource} onChange={(e) => setOtherSource(e.target.value as SourceKey)}>
-                {configs.map((c) => <option key={c.source} value={c.source}>{c.label}{c.source === setup.source ? " (this source)" : ""}</option>)}
-              </select>
-            </label>
+            <div className="v-field">Other side from
+              <Pick label="Other side from" value={otherSource} options={configs.map((c) => ({ value: c.source, label: `${c.label}${c.source === setup.source ? " (this source)" : ""}` }))} onChange={(v) => setOtherSource(v as SourceKey)} />
+            </div>
             <div className="v-xs v-muted" style={{ alignSelf: "end", paddingBottom: 6 }}>Each message is read by its own source&apos;s patterns and reader.</div>
           </div>
           <label className="v-field">The other side&apos;s message (optional)<textarea rows={3} maxLength={1500} value={otherText} onChange={(e) => setOtherText(e.target.value)} placeholder="Paste what the other account sends, if it sends anything" /></label>

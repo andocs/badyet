@@ -8,6 +8,7 @@ import { sourceOfKey } from '@/lib/lending/sources';
 import { createLoan, removeLoan } from '@/lib/lending/write';
 import { relativeDay } from '@/lib/now/format';
 import { manilaDate } from '@/lib/now/summary';
+import { DateInput } from '~/components/DateInput';
 import { Choices, LendFields, LoanActions, lendingEnv, newDraft, type LendDraft } from '~/components/Lending';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import { Amount, Body, Card, Chip, Notice, Screen } from '~/components/ui';
@@ -59,8 +60,8 @@ function LendSheet({ data, onClose, onSaved }: { data: Data; onClose: () => void
           <Field label="Amount (₱)">
             <Input value={amount} onChangeText={setAmount} keyboardType="decimal-pad" accessibilityLabel="Amount" />
           </Field>
-          <Field label="Lent on (YYYY-MM-DD)">
-            <Input value={date} onChangeText={setDate} keyboardType="numbers-and-punctuation" accessibilityLabel="Lent on" />
+          <Field label="Lent on">
+            <DateInput label="Lent on" value={date} onChange={setDate} max={data.lend.today} />
           </Field>
           <Choices label="Money left from" options={[...data.payback.accounts.map((a) => ({ key: a.id, label: a.name })), { key: '', label: 'Cash that no account tracks' }]} value={accountId} onPick={setAccountId} />
         </>

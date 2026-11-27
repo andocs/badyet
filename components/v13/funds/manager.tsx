@@ -7,6 +7,7 @@ import { FUND_COLORS as COLORS } from "@/lib/bonuses/colors";
 import { useConfirm } from "../feedback";
 import { Money } from "../money";
 import { MonthOfYear } from "../pickers";
+import { Pick } from "../pick";
 
 export interface FundCard {
   id: string;
@@ -181,9 +182,9 @@ export function FundsManager({ funds, accounts }: { funds: FundCard[]; accounts:
           </div>
           {d.linked ? (
             <div className="v-grid2">
-              <label className="v-field">Account
-                <select value={d.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Pick an account</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
-              </label>
+              <div className="v-field">Account
+                <Pick label="Account" value={d.accountId || null} options={accounts.map((x) => ({ value: x.id, label: x.name }))} onChange={(v) => set({ accountId: v })} placeholder="Pick an account" />
+              </div>
               <label className="v-field">Share of it (%) <span className="v-xs v-muted">leave empty if this fund is the whole account</span>
                 <input value={d.shareBp} inputMode="decimal" onChange={(e) => set({ shareBp: e.target.value })} placeholder="100" />
               </label>

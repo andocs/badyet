@@ -3,14 +3,15 @@
 <!-- Single source of truth. Written only by haiku-logger. Everything above END SUMMARY must stay short (about 80 lines): Sonnet and /where-am-i read only that part. -->
 
 ## 1. What we're building
-Project badyet-web: hosted personal budgeting web app converted from Google Sheet "Bad(yet) Sheet" (id 1r7JQq-LOFu5FrZryqhgwsuEHoGKVbpPLxeCD1vPkrG4). Single user, hosted with login. Not a git repo yet.
+
+Project badyet-web: hosted personal budgeting web app converted from Google Sheet "Bad(yet) Sheet" (id 1r7JQq-LOFu5FrZryqhgwsuEHoGKVbpPLxeCD1vPkrG4). Single user, hosted with login. Not a git repo yet. FORM CONTROL STANDARD (every revision and mockup): use the app's Pick, DatePicker, MonthPicker (phone: chips, DateInput, MonthInput), never browser dropdowns or date fields. Full table under "Decisions & architecture"; enforced by lib/ui-standard.test.ts.
 
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-60 lending (done)
-- **Gate:** none
-- **Next action:** Try lending signed in and on the phone; report anything off
+- **Active slice / milestone:** rev-61 form control standard
+- **Gate:** waiting
+- **Next action:** Approve merge and OTA for rev-61
 - **User to-do now:** Force-close and reopen the phone app twice to get the rev-60 update, then try one loan end to end
 
 ## 3. Execution log
@@ -56,6 +57,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-27 09:16 | rev-60 | Lending mockups (web 5 screens, phone 5 frames), design check clean | aa2e224
 - 2026-11-27 09:31 | rev-60 | Lending and Others built on web and phone; web 621 tests, phone 185, build and Android bundle pass | d259693
 - 2026-11-27 09:38 | rev-60 | Approved; migration applied (user); merged to main; OTA published fc2d446b | 78e8f1f
+- 2026-11-27 10:00 | rev-61 | Form control standard: ~45 browser dropdowns and all date fields replaced (web), phone dates and months picked; standard written under Decisions + test. Checks PASS | 00331f9
 
 ## 4. Open questions
 
@@ -96,7 +98,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 
 | Scope | Haiku in | Haiku cached | Haiku out | Sonnet in | Sonnet cached | Sonnet out | Note |
 |---|---|---|---|---|---|---|---|
-| **Cumulative** | 6,404,352 | 26,084,468 | 951,845 | 11,847,167 | 1,094,420,963 | 4,263,272 |  |
+| **Cumulative** | 6,404,352 | 26,084,468 | 951,845 | 11,957,779 | 1,106,020,266 | 4,313,777 |  |
 | Phase 1 | 201,838 | 781,627 | 50,905 | 240,574 | 12,654,069 | 153,100 |  |
 | Slice 1 | 54,226 | 136,487 | 9,514 | 132,077 | 4,369,183 | 91,339 |  |
 | Slice 2 | 55,864 | 189,586 | 13,266 | 102,274 | 7,005,198 | 61,113 |  |
@@ -165,6 +167,7 @@ in = fresh input + cache writes, cached = cache reads, out = output.
 | Rev 59 | 0 | 0 | 0 | 137,748 | 23,672,160 | 81,419 |  |
 | Rev 60 mockups | 68,190 | 474,863 | 14,790 | 75,667 | 3,143,932 | 16,988 |  |
 | Rev 60 build | 0 | 0 | 0 | 254,115 | 8,729,655 | 102,481 |  |
+| Rev 61 | 0 | 0 | 0 | 90,345 | 7,682,692 | 44,710 |  |
 
 <!-- END SUMMARY -->
 
@@ -178,6 +181,25 @@ Batch 5 (notes in docs/BATCH-5-notes.md, 2026-11-25). Decisions: necessary deduc
 - rev-42: pay checklist build per the rev-41 choice.
 
 ## Decisions & architecture
+
+### Form control standard (set 2026-11-27, rev-61; applies to every revision and mockup)
+Never use the browser's or a typed stand-in where one of these exists. lib/ui-standard.test.ts fails the tests if a banned one comes back.
+
+| Need | Web (components/v13) | Phone (mobile/src) |
+|---|---|---|
+| Pick one from a list | `Pick` (pick.tsx; groups with `group`, forms with `FormPick` + `name`). Never <select>, <datalist> | `Chip` wraps; long grouped lists fold behind one chip (SourcePicker) |
+| Full date | `DatePicker` (pickers.tsx). Never type="date" | `DateInput` (components/DateInput.tsx). Never a typed YYYY-MM-DD |
+| Month and year | `MonthPicker`. Never type="month" | `MonthInput`. Never a typed YYYY-MM |
+| Month of year / day of month | `MonthOfYear` / `DayOfMonth` | chips |
+| Time | plain text field, 24-hour HH:mm. Never type="time" | the same |
+| Numbers and money | text field with inputMode. Never type="number" | keyboardType number-pad / decimal-pad |
+| Tickbox | the one tickbox style (native checkbox is styled globally; `.v-chk` for buttons) | `Tick` |
+| One of a few, with explanations | radio cards (.v-choice, .v-rulegrid) or the segmented control (.v-seg) | chips |
+| Name suggestions | buttons under the field | chips |
+
+- A `Pick` or a picker goes inside <div className="v-field">, never inside a <label>.
+- Mockups are built from these controls too (draw them as they look), not from browser <select> or date inputs. rev-60 went wrong because its mockups used browser controls.
+- app/v13.css has parts nested inside `.v13{...}`: a rule there must not start with `.v13`.
 
 2026-11-22 answers for round three. Income tax: per cutoff, not per month. Deduction order: SSS (1000), PhilHealth, Pag-IBIG (200), SSS PenBoost (750), then tax on the remainder x 24 against the 2023 TRAIN bracket, divided by 24. Both-cutoff lines: a line can total 15,000 a month but be split 5,000 in the 1st cutoff and 10,000 in the 2nd. Reimbursements: a separate deposit; utility is fixed monthly, usually the 17th; wifi case is pay 2,099 then reimbursed; reallocation of the value needed. Installments: mostly card plans, also loans, each as its own budget line.
 - 2026-11-25 Budget plans (rev-37): no overlapping plans; plans start and end on cutoff days; a plan replaces the whole budget (copied from the normal budget, then edited).
