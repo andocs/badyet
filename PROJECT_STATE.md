@@ -9,13 +9,14 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-62 edit loan items + Wants total
-- **Gate:** waiting
-- **Next action:** Approve merge and OTA for rev-62
-- **User to-do now:** Force-close and reopen the phone app twice to get the rev-61 update
+- **Active slice / milestone:** rev-62 edit loan items (done)
+- **Gate:** none
+- **Next action:** Try editing a loan from All activity, signed in and on the phone
+- **User to-do now:** Force-close and reopen the phone app twice to get the rev-62 update, then edit one loan from All activity
 
 ## 3. Execution log
 
+- earlier: 15 events (2026-11-26 to 2026-11-26) covering rev-52, rev-53, rev-54, rev-47..54, rev-55, rev-56, rev-56..57, rev-58, cleanup, rev-59
 - earlier: 15 events (2026-11-25 to 2026-11-26) covering rev-45, budget hero, rev-46, rev-47, rev-48, rev-49, rev-50, rev-51
 - earlier: 15 events (2026-11-25 to 2026-11-25) covering apk, rev-39, rev-40, rev-41, rev-42, rev-43, rev-45, rev-44
 - earlier: 15 events (2026-11-25 to 2026-11-25) covering handover, batch-4-plan, rev-33, rev-34, rev-35, rev-36, rev-37, rev-38
@@ -35,21 +36,6 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering slice-6, slice-7, slice-8, slice-9, phase3, rev-1, rev-2, rev-3, rev-4
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering phase1, slice-1, slice-2, slice-3, slice-4, slice-5
 - earlier: 15 events (2026-11-19 to 2026-11-19) covering Phase 1, Phase 1 / Gate 1, phase1
-- 2026-11-26 12:35 | rev-52 | SSS/Pag-IBIG 0 overrides treated as unset. Includes rev-47..51. Checks PASS. Not merged. User's payslip also shows HMO Plan twice (payslip custom line + other deductions). | -
-- 2026-11-26 12:39 | rev-53 | SSS split per Circular 2024-006: regular SS on the SSS line, MPF on PenBoost. Includes rev-47..52. Checks PASS. Not merged. | -
-- 2026-11-26 12:46 | rev-54 | This month only payslip edits (migration 20261227000000_payslip_month_edits.sql). Includes rev-47..53. Checks PASS. Not merged. | -
-- 2026-11-26 12:54 | rev-47..54 | Merged to main (fe8e21f); OTA published (group 89a2cb76). User to apply migrations 20261226000000 and 20261227000000. | fe8e21f
-- 2026-11-26 18:58 | rev-55 | RTO moves shown on Budget lines/categories. Checks PASS. Not merged. Open: hero 'left' excludes RTO money moved to Wants (Now page includes it). | -
-- 2026-11-26 19:03 | rev-55 | Now hero totals include RTO money moved to Wants. Checks PASS. Not merged. | -
-- 2026-11-26 19:07 | rev-55 | Merged to main (136fb74); OTA published (group c5af7e65). | 136fb74
-- 2026-11-26 19:11 | rev-56 | Closed: Apply order clearing pins/skips; one-month change not following a moved line. Checks PASS. Not merged. | -
-- 2026-11-26 19:18 | rev-56..57 | Merged to main (00fc37e); OTA published (group 43e4cbf7). All three open items closed. User to apply migration 20261228000000. | 00fc37e
-- 2026-11-26 19:32 | rev-58 | Postponed reimbursements carry to next month's reimbursement day. Checks PASS. Not merged. Migrations 20261228 and 20261229. | -
-- 2026-11-26 19:37 | rev-58 | Merged to main (99ae92a); OTA published (group c4c2e934). User reports migrations applied. | 99ae92a
-- 2026-11-26 19:39 | cleanup | Deleted 72 merged rev/* and slice/* branches, local and on GitHub; only main remains. | -
-- 2026-11-26 20:37 | rev-59 | Mockups for consolidated Rules editor: docs/mockups/v13-rules-unified.html and docs/mockups/phone/rules-unified.html. Not built. | -
-- 2026-11-26 20:41 | rev-59 | Mockup updated: built-in reader panel (examples checked against the real GCash reader). | -
-- 2026-11-26 20:53 | rev-59 | Mockup updated: other side's message box with paired and unreadable results. Awaiting approval. | -
 - 2026-11-26 21:01 | rev-59 | Mockup updated: other-side source choice, won't-pair result, demo switch out of step 5. Awaiting approval. | -
 - 2026-11-26 21:17 | rev-59 | Built unified Rules editor (web + phone), one-account fix, repeat-entry safeguard, Inbox Other account, sample and other-side tests. Checks, builds, Vercel PASS. Not tried on a signed-in page or a phone. No migration. | 64572ee
 - 2026-11-26 21:22 | rev-59 | Approved. Merged to main (88b0bf8); OTA published (group 87e576dd). No migration. | 88b0bf8
@@ -60,6 +46,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-27 10:00 | rev-61 | Form control standard: ~45 browser dropdowns and all date fields replaced (web), phone dates and months picked; standard written under Decisions + test. Checks PASS | 00331f9
 - 2026-11-27 10:15 | rev-61 | Approved; merged to main; OTA published 8d183eea | 2657270
 - 2026-11-27 10:27 | rev-62 | Loan items editable from All activity (web+phone), loan kept in step; Take it from shows full Wants total incl RTO. Checks PASS (639/185) | d61c12e
+- 2026-11-27 10:35 | rev-62 | Approved; merged to main; OTA published 8f1072f7; rev/60-62 branches deleted | b4ceca2
 
 ## 4. Open questions
 
