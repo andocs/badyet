@@ -25,7 +25,7 @@ export default async function Override({ searchParams }: { searchParams: Promise
   const months = monthRange(start, 60) as string[];
   const input = forecastInput(d, start, 60);
   const run = runProjection(input, { includeExpected: true });
-  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)));
+  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.held);
   const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule], resets: f.rule === "reset" && f.id !== d.budget.salary.input.settings.savingsPlanFundId }));
   const years = [...new Set(rows.map((r) => r.year))];
   const planFundId = d.budget.salary.input.settings.savingsPlanFundId ?? null;
@@ -44,7 +44,7 @@ export default async function Override({ searchParams }: { searchParams: Promise
   const own = d.overrides.find((o) => o.month === month);
   const sim: Sim = {
     funds: d.funds,
-    start: Object.fromEntries(d.funds.map((f) => [f.id, d.fundStart[f.id] ?? 0])),
+    start: Object.fromEntries(d.funds.map((f) => [f.id, input.fundStart[f.id] ?? 0])),
     months: rows.map((r) => ({ month: r.month, pool: r.pool, bonusSavings: r.bonusSavings, planCredit: planFundId ? (r.funds[planFundId]?.plan ?? 0) : 0 })),
     planFundId,
     overrides: d.overrides.map((o) => ({ month: o.month, order: o.order ?? null, pins: o.pins ?? {}, skips: o.skips ?? [], overflow: o.overflow ?? null })),

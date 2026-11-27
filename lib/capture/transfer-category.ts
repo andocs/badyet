@@ -5,6 +5,12 @@ export const TRANSFER_CATEGORY = "Transfer";
 /** Paying a credit card from a bank account: money between your own accounts, so it is not spending (the purchases already were). */
 export const CARD_PAYMENT_CATEGORY = "Credit card payment";
 
+/** Money lent to someone and paid back. Filed as a transfer, so it is neither spending nor income. */
+export const LENDING_CATEGORY = "Lending";
+
+/** The categories the app makes and files things under itself, so no picker or budget list offers them. */
+export const isBuiltInCategory = (name: string | null | undefined): boolean => name === TRANSFER_CATEGORY || name === CARD_PAYMENT_CATEGORY || name === LENDING_CATEGORY;
+
 /** Categories that mean "a move between your own accounts": confirming an item with one of them makes it a transfer, not spending. */
 export const isMoveCategory = (name: string | null | undefined): boolean => name === TRANSFER_CATEGORY || name === CARD_PAYMENT_CATEGORY;
 
@@ -45,5 +51,15 @@ export async function ensureCardPaymentCategory(supabase: SupabaseClient): Promi
   const groupId = await ensureTransferGroup(supabase);
   if (!groupId) return null;
   const cat = await supabase.from("categories").insert({ group_id: groupId, name: CARD_PAYMENT_CATEGORY, sort: 98 }).select("id").single();
+  return (cat.data?.id as string | undefined) ?? null;
+}
+
+/** The id of the built-in Lending category, in the Transfers group. Null if it could not be made. */
+export async function ensureLendingCategory(supabase: SupabaseClient): Promise<string | null> {
+  const found = await supabase.from("categories").select("id").eq("name", LENDING_CATEGORY).is("archived_at", null).limit(1).maybeSingle();
+  if (found.data?.id) return found.data.id as string;
+  const groupId = await ensureTransferGroup(supabase);
+  if (!groupId) return null;
+  const cat = await supabase.from("categories").insert({ group_id: groupId, name: LENDING_CATEGORY, sort: 97 }).select("id").single();
   return (cat.data?.id as string | undefined) ?? null;
 }

@@ -5,6 +5,7 @@ import { money, sum, type Money } from "@/lib/domain/money";
 import { savingsCredits } from "@/lib/engine/bonus";
 import type { ProjectionInput, ProjectionMonth } from "@/lib/engine/projection";
 import type { FundsData } from "./load";
+import type { Held } from "@/lib/lending/model";
 import { savingsByMonth } from "@/lib/budget/savings";
 
 /** The whole projection input for the forecast: salary, bonuses, budget lines, funds and overrides. */
@@ -19,9 +20,17 @@ export function forecastInput(d: FundsData, start: YearMonth, months = 60): Proj
     reimbursementOverrides: reimbursementOverrides(d.budget.reimbursements, d.budget.lines, d.budget.plans),
     allocations: d.budget.allocations,
     funds: d.funds,
-    fundStart: d.fundStart,
+    // The rules see lent money as still in its fund (so they do not refill the gap); forecastRows keeps it out of the balances.
+    fundStart: withHeld(d.fundStart, d.held),
     overrides: d.overrides,
   };
+}
+
+/** Fund balances with the lent money that is expected back counted in, as the forecast rules see them. */
+export function withHeld(start: Readonly<Record<string, Money>>, held: readonly Held[]): Record<string, Money> {
+  const out: Record<string, Money> = { ...start };
+  for (const h of held) out[h.fundId] = money((out[h.fundId] ?? 0) + h.amount);
+  return out;
 }
 
 export interface FundCell {
@@ -54,7 +63,9 @@ export interface ForecastRow {
 }
 
 /** Projection months as plain rows for the screens. A month's saved total = what the pool gave funds plus money credited straight to them. */
-export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: ReadonlySet<string>): ForecastRow[] {
+/** `held` = lent money still out of a fund: it is left out of that fund's balance until the month it is expected back. */
+export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: ReadonlySet<string>, held: readonly Held[] = []): ForecastRow[] {
+  const out = (fundId: string, month: YearMonth) => held.reduce((t, h) => (h.fundId === fundId && month < h.backMonth ? t + h.amount : t), 0);
   const credits = savingsCredits(run.flatMap((m) => m.bonuses));
   return run.map((m) => ({
     month: m.month,
@@ -69,7 +80,7 @@ export function forecastRows(run: readonly ProjectionMonth[], overrideMonths: Re
     tight: m.budget.tight.first || m.budget.tight.second || m.budget.over.first || m.budget.over.second,
     bonusSavings: credits.get(m.month) ?? money(0),
     funds: Object.fromEntries(
-      m.funds.funds.map((f) => [f.fundId, { amount: f.amount, bonus: money(f.bonus + f.plan), plan: f.plan, balance: f.balanceAfter, reasons: f.reasons }]),
+      m.funds.funds.map((f) => [f.fundId, { amount: f.amount, bonus: money(f.bonus + f.plan), plan: f.plan, balance: money(f.balanceAfter - out(f.fundId, m.month)), reasons: f.reasons }]),
     ),
   }));
 }

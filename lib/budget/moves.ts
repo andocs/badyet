@@ -24,6 +24,8 @@ export interface Move {
    * balance, which may have built up over earlier cutoffs: it is noted on both sides and no amount changes.
    */
   counted: boolean;
+  /** Said instead of "to X" / "from X" on the line, such as "lent to Sam". */
+  text?: string;
 }
 
 export interface MoveNote {
@@ -101,7 +103,7 @@ export function applyMoves(groupsIn: readonly GroupView[], moves: readonly Move[
   };
 
   const side = (place: Place, other: Place, amount: number, move: Move) => {
-    const text = `${amount < 0 ? "to" : "from"} ${nameOf(other)}`;
+    const text = move.text ?? `${amount < 0 ? "to" : "from"} ${nameOf(other)}`;
     const target = place.kind === "rto" ? rto : place.kind === "pool" ? lines.find((x) => x.line.id === place.lineId) : undefined;
     if (target) {
       note(target.line.id, text, amount, move.counted);
@@ -114,7 +116,7 @@ export function applyMoves(groupsIn: readonly GroupView[], moves: readonly Move[
     if (place.kind !== "wants" && place.kind !== "savings") return;
     const group = place.kind === "wants" ? wantsGroup : savingsGroup;
     if (!group) return;
-    const label = `${amount < 0 ? "Moved to" : "Moved from"} ${nameOf(other)}`;
+    const label = move.text ? `${move.text[0]!.toUpperCase()}${move.text.slice(1)}` : `${amount < 0 ? "Moved to" : "Moved from"} ${nameOf(other)}`;
     const list = (rows[group.id] ??= []);
     const key = `${label}|${move.counted}`;
     const found = list.find((r) => r.key === key);

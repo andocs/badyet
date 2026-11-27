@@ -17,7 +17,7 @@ export default async function V13Layout({ children }: { children: React.ReactNod
       // Captures the phone is holding until an account is chosen wait in the Inbox too, so they count.
       supabase.from("held_captures").select("hash", { count: "exact", head: true }),
       supabase.from("accounts").select("id, name").is("archived_at", null).order("sort"),
-      supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").order("sort"),
+      supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").neq("name", "Lending").order("sort"),
     ]);
     pending = (p.count ?? 0) + (h.error ? 0 : (h.count ?? 0));
     accounts = (a.data ?? []) as typeof accounts;

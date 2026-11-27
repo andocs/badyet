@@ -4,6 +4,12 @@ import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-nati
 import { isoDate } from '@/lib/domain/dates';
 import { money } from '@/lib/domain/money';
 import { relativeDay, timeLabel } from '@/lib/now/format';
+import { paybackEffect, pesoText } from '@/lib/lending/forms';
+import { dueChips, outstandingOf } from '@/lib/lending/model';
+import { NO_SOURCE, sourceOfKey } from '@/lib/lending/sources';
+import { confirmOthers, createLoan, recordPayback, type OtherWhat, type Result } from '@/lib/lending/write';
+import { Choices, DateField, Effect, LendFields, lendingEnv, Muted, newDraft, SourcePicker, type LendDraft } from '~/components/Lending';
+import { Field, Input } from '~/components/Sheet';
 import { manilaDate } from '@/lib/now/summary';
 import { todayManila } from '@/lib/plans/validate';
 import { GmailBanner } from '~/components/GmailBanner';
@@ -11,7 +17,7 @@ import { HeldCard, useHeldAccounts } from '~/components/HeldCards';
 import { InboxEditSheet } from '~/components/InboxEditSheet';
 import { Amount, Body, Card, Label, Notice, Screen } from '~/components/ui';
 import { useHeldItems } from '~/lib/CaptureRunner';
-import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxTxn } from '~/lib/inbox';
+import { confirmTransaction, ignoreTransaction, loadInbox, type Category, type InboxData, type InboxTxn } from '~/lib/inbox';
 import { supabase } from '~/lib/supabase';
 import { fonts, useTheme } from '~/lib/theme';
 import { useLoad } from '~/lib/useLoad';
@@ -49,7 +55,12 @@ function PendingCard({
   onIgnore,
   onEdit,
   accounts,
+  lending,
+  onFile,
 }: {
+  lending: InboxData['lending'];
+  /** Files the item as lending, a payback or a transfer to someone else. */
+  onFile: (t: InboxTxn, run: () => Promise<Result>) => void;
   accounts: { id: string; name: string }[];
   t: InboxTxn;
   categories: Category[];
@@ -61,14 +72,32 @@ function PendingCard({
 }) {
   const c = useTheme();
   // With Transfer picked: the account on the other side, when only this side sent a message.
-  const [otherId, setOtherId] = useState<string | null>(null);
+  // A capture rule that sends money to someone else has already picked Transfer and Others.
+  const presetOthers = t.amount < 0 && !!t.otherOwner && t.peerAccount === null;
+  const [otherId, setOtherId] = useState<string | null>(presetOthers ? 'others' : null);
   const [categoryId, setCategoryId] = useState<string | null>(t.categoryId);
   const [rule, setRule] = useState(t.guess === 'rule');
   const [note, setNote] = useState(t.note ?? '');
   const [billId, setBillId] = useState<string | null>(null);
   // "Transfer" is a button, not a category: a move between your own accounts.
-  const [asT, setAsT] = useState(false);
+  const [asT, setAsT] = useState(presetOthers);
   const isTransfer = t.kind === 'transfer';
+  // Lending: money out can be "Lending", money in can be a "Loan payback", and a transfer can go to "Others".
+  const [loanMode, setLoanMode] = useState(false);
+  const [draft, setDraft] = useState<LendDraft | null>(null);
+  const [loanId, setLoanId] = useState<string | null>(null);
+  const [rest, setRest] = useState<string | null>(null);
+  const [owner, setOwner] = useState(t.otherOwner ?? '');
+  const [what, setWhat] = useState<OtherWhat | null>(null);
+  const openLoans = lending?.openLoans ?? [];
+  const lend = lending && !isTransfer && loanMode && t.amount < 0 ? lending.lend : null;
+  const loan = lending && !isTransfer && loanMode && t.amount > 0
+    ? (openLoans.find((l) => l.id === loanId) ?? openLoans.find((l) => outstandingOf(l) === t.amount) ?? openLoans.find((l) => outstandingOf(l) >= t.amount) ?? openLoans[0] ?? null)
+    : null;
+  const toOthers = lending && !isTransfer && asT && t.amount < 0 && otherId === 'others' ? lending.lend : null;
+  const lendDraft = lending ? (draft ?? newDraft(lending.lend)) : null;
+  const restDue = rest ?? (lending ? dueChips(lending.lend.today, lending.lend.paydays).find((d) => d.date > lending.lend.today)!.date : '');
+  const special = loanMode || toOthers !== null;
   const chosen = categories.find((x) => x.id === categoryId)?.name;
   // A transfer-looking item waits a few minutes for its other side; meanwhile it can only be filed as a Transfer.
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -78,7 +107,23 @@ function PendingCard({
     return () => clearInterval(timer);
   }, [t.holdUntil]);
   const holding = t.holdUntil !== null && Date.parse(t.holdUntil) > nowMs;
-  const canConfirm = isTransfer || asT || (categoryId !== null && !holding);
+  const canConfirm = lend
+    ? lendDraft!.borrower.trim() !== '' && lendDraft!.dueOn !== ''
+    : loan
+      ? t.amount <= outstandingOf(loan)
+      : toOthers
+        ? owner.trim() !== '' && what !== null && (what !== 'spending' || categoryId !== null) && (what !== 'loan' || lendDraft!.dueOn !== '')
+        : isTransfer || asT || (categoryId !== null && !holding);
+  const confirmLabel = lend ? 'Confirm loan' : loan ? 'Confirm payback' : 'Confirm';
+  const confirm = () => {
+    if (lend) return onFile(t, () => createLoan(supabase, { txnId: t.id, borrower: lendDraft!.borrower, dueOn: lendDraft!.dueOn, from: sourceOfKey(lendDraft!.fromKey), note }, lendingEnv()));
+    if (loan) return onFile(t, () => recordPayback(supabase, { loanId: loan.id, txnId: t.id, nextDue: t.amount < outstandingOf(loan) ? restDue : null }, lendingEnv()));
+    if (toOthers)
+      return onFile(t, () =>
+        confirmOthers(supabase, { txnId: t.id, note, owner, what: what!, dueOn: lendDraft!.dueOn, categoryId: what === 'spending' ? categoryId : null, from: sourceOfKey(what === 'spending' ? NO_SOURCE : lendDraft!.fromKey) }, lendingEnv()),
+      );
+    onConfirm(t, isTransfer || asT ? null : categoryId, rule && !isTransfer && !asT, note, isTransfer || asT ? null : billId, asT, asT && otherId !== 'others' ? otherId : null);
+  };
 
   return (
     <Card>
@@ -97,9 +142,12 @@ function PendingCard({
       ) : (
         <>
           <View style={s.chips}>
-            <Chip label="↔ Transfer" on={asT} onPress={() => setAsT((v) => !v)} />
+            <Chip label="↔ Transfer" on={asT} onPress={() => { setLoanMode(false); setAsT((v) => !v); }} />
+            {lending && (t.amount < 0 || openLoans.length > 0) ? (
+              <Chip label={t.amount < 0 ? 'Lending' : 'Loan payback'} on={loanMode} onPress={() => { setAsT(false); setLoanMode((v) => !v); }} />
+            ) : null}
             {categories.map((x) => (
-              <Chip key={x.id} label={x.name} on={!asT && x.id === categoryId} onPress={() => { setAsT(false); setCategoryId(x.id); }} />
+              <Chip key={x.id} label={x.name} on={!asT && !loanMode && x.id === categoryId} onPress={() => { setAsT(false); setLoanMode(false); setCategoryId(x.id); }} />
             ))}
           </View>
           {asT ? (
@@ -110,21 +158,50 @@ function PendingCard({
                 {accounts.filter((a) => a.id !== t.accountId).map((a) => (
                   <Chip key={a.id} label={a.name} on={otherId === a.id} onPress={() => setOtherId(a.id)} />
                 ))}
+                {lending && t.amount < 0 ? <Chip label="Others (someone else's account)" on={otherId === 'others'} onPress={() => setOtherId('others')} /> : null}
               </View>
-              <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Pick one to add the other side too, if it did not send its own message.</Text>
+              {otherId === 'others' ? null : <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Pick one to add the other side too, if it did not send its own message.</Text>}
             </View>
           ) : null}
-          {holding ? (
+          {toOthers ? (
+            <View style={{ gap: 10 }}>
+              <Field label="Whose account is it?">
+                <Input value={owner} onChangeText={setOwner} maxLength={80} placeholder="Name, bank and last digits" accessibilityLabel="Whose account is it" />
+              </Field>
+              <Choices label="What is this?" options={[{ key: 'loan', label: 'A loan' }, { key: 'spending', label: 'Spending' }, { key: 'none', label: 'Not spending' }]} value={what} onPick={(k) => setWhat(k as OtherWhat)} />
+              {what === 'loan' ? <LendFields ctx={toOthers} draft={{ ...lendDraft!, borrower: owner }} onChange={setDraft} amount={Math.abs(t.amount)} askWho={false} /> : null}
+              {what === 'spending' ? (
+                <>
+                  <Choices label="Counts against" options={categories.filter((x) => x.name !== 'Credit card payment').map((x) => ({ key: x.id, label: x.name }))} value={categoryId} onPick={setCategoryId} />
+                  {chosen ? <Muted>{pesoText(t.amount)} counts as spending in {chosen}.</Muted> : null}
+                </>
+              ) : null}
+              {what === 'none' ? <SourcePicker ctx={toOthers} value={lendDraft!.fromKey} onChange={(fromKey) => setDraft({ ...lendDraft!, fromKey })} label="Take it from (optional)" /> : null}
+            </View>
+          ) : null}
+          {lend ? <LendFields ctx={lend} draft={lendDraft!} onChange={setDraft} amount={Math.abs(t.amount)} /> : null}
+          {loan ? (
+            <View style={{ gap: 10 }}>
+              <Choices label="Whose payback?" options={openLoans.map((l) => ({ key: l.id, label: `${l.borrower} · ${pesoText(outstandingOf(l))} owed` }))} value={loan.id} onPick={setLoanId} />
+              {t.amount < outstandingOf(loan) ? <DateField label={`When will the other ${pesoText(outstandingOf(loan) - t.amount)} come?`} value={restDue} onChange={setRest} ctx={lending!.lend} /> : null}
+              <Effect>
+                {t.amount > outstandingOf(loan)
+                  ? `This is more than ${loan.borrower} still owes (${pesoText(outstandingOf(loan))}).`
+                  : paybackEffect(loan.from, t.amount, outstandingOf(loan), loan.borrower, t.amount < outstandingOf(loan) && /^\d{4}-\d{2}-\d{2}$/.test(restDue) ? restDue : null)}
+              </Effect>
+            </View>
+          ) : null}
+          {holding && !special ? (
             <Text accessibilityRole="alert" style={{ color: c.ink, fontFamily: fonts.body, fontSize: 13 }}>
               May be a transfer: waiting for the other side until {timeLabel(t.holdUntil!)}. Tap Transfer now, or confirm it as {t.amount < 0 ? 'spending' : 'income'} after that.
             </Text>
           ) : null}
-          {t.guess && categoryId === t.categoryId ? (
+          {!special && t.guess && categoryId === t.categoryId ? (
             <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>
               Suggested from {t.guess === 'rule' ? 'your rule' : 'what you did before'}.
             </Text>
           ) : null}
-          {chosen && t.who !== 'Expense' ? (
+          {!special && chosen && t.who !== 'Expense' ? (
             <View style={s.row}>
               <Text
                 style={{
@@ -148,7 +225,7 @@ function PendingCard({
         </>
       )}
 
-      {!isTransfer && t.amount < 0 && bills.length > 0 ? (
+      {!isTransfer && !special && t.amount < 0 && bills.length > 0 ? (
         <View style={{ gap: 6 }}>
           <Text style={{ color: c.muted, fontFamily: fonts.body, fontSize: 12 }}>Pays a bill? It will show as sent on Now.</Text>
           <View style={s.chips}>
@@ -171,7 +248,7 @@ function PendingCard({
 
       <View style={s.row}>
         <Pressable
-          onPress={() => onConfirm(t, isTransfer || asT ? null : categoryId, rule && !isTransfer && !asT, note, isTransfer || asT ? null : billId, asT, asT ? otherId : null)}
+          onPress={confirm}
           disabled={!canConfirm}
           accessibilityRole="button"
           accessibilityState={{ disabled: !canConfirm }}
@@ -184,7 +261,7 @@ function PendingCard({
               fontSize: 15,
             }}
           >
-            {canConfirm ? 'Confirm' : holding && categoryId !== null ? 'Waiting for the other side' : 'Pick a category'}
+            {canConfirm ? confirmLabel : special ? 'Fill in the details' : holding && categoryId !== null ? 'Waiting for the other side' : 'Pick a category'}
           </Text>
         </Pressable>
         <Pressable onPress={() => onIgnore(t)} accessibilityRole="button" style={[s.btn, { backgroundColor: c.soft }]}>
@@ -292,6 +369,8 @@ export default function Inbox() {
                 categories={data.categories}
                 accounts={data.accounts}
                 bills={data.bills}
+                lending={data.lending}
+                onFile={(row, run) => void act(row, 'confirm', run)}
                 today={today}
                 onConfirm={(row, categoryId, rule, note, billId, asTransfer, otherAccountId) =>
                   act(row, 'confirm', () =>
@@ -333,7 +412,7 @@ export default function Inbox() {
                     }}
                   >
                     {t.account} · {when(t.occurredAt, today)}
-                    {t.status === 'pending' ? ' · to check' : t.categoryName ? ` · ${t.categoryName}` : ''}
+                    {t.status === 'pending' ? ' · to check' : t.loanTag ? ` · ${t.loanTag}` : t.otherOwner ? ` · to ${t.otherOwner} (others)` : t.categoryName ? ` · ${t.categoryName}` : ''}
                   </Text>
                 </View>
                 <Amount

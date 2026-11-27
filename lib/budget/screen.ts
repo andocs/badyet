@@ -7,6 +7,7 @@ import { buildGroups, monthFlag, type GroupView, type MonthFlag } from "./view";
 import { planFor, type PlanSpan } from "./plans";
 import { savingsByMonth } from "./savings";
 import { budgetMoves, type Move } from "./moves";
+import { lendingMoves } from "@/lib/lending/model";
 import { reimbursementOverrides, type ReimbursementStatus } from "./reimburse";
 
 /** ₱2,500 left in a month is "tight". */
@@ -100,5 +101,5 @@ export function buildBudgetScreen(data: BudgetData, opts: { fut: boolean; month?
   const eventLabel = new Map(data.salary.input.events.map((e) => [e.id, `${monthLabel(e.effectiveMonth)} raise`]));
   const topUpRaises = [...new Set(groups.flatMap((g) => g.lines.flatMap((l) => l.topUps.map((t) => eventLabel.get(t.eventId) ?? "a raise"))))];
 
-  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, payrollTotal, moves: shown ? budgetMoves(data.pools, data.paydays, shown.month) : [], reimbursements: shown && shown.month === data.period.month ? data.reimbursements : [], fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
+  return { hasStart, fut, month, year, nowRun, yearRun, yearWithout, shown, wantsAdj, groups, rest, takeHome, payrollTotal, moves: shown ? [...budgetMoves(data.pools, data.paydays, shown.month), ...lendingMoves(data.draws, data.paydays, shown.month)] : [], reimbursements: shown && shown.month === data.period.month ? data.reimbursements : [], fixed, flag: b ? monthFlag(b, money(TIGHT)) : null, topUpRaises, plan: { list: data.plans, selected, activeNow } };
 }

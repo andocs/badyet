@@ -20,13 +20,16 @@ export function InboxEditSheet({ t, accounts, categories, onClose, onSaved }: { 
   const [date, setDate] = useState(when.date);
   const [time, setTime] = useState(when.time);
   const [note, setNote] = useState(t.note ?? '');
+  const [otherOwner, setOtherOwner] = useState(t.otherOwner ?? '');
+  // Money out with no other account of yours on the far side may have gone to someone else.
+  const askOwner = !t.peerAccount && (isTransfer ? t.amount < 0 : direction === 'out');
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   const save = async () => {
     setBusy(true);
     setProblem(null);
-    const r = await editTransaction(supabase, { id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId, date, time, note });
+    const r = await editTransaction(supabase, { id: t.id, merchant, amount, direction, accountId, categoryId: isTransfer ? undefined : categoryId, date, time, note, ...(askOwner && otherOwner.trim() !== (t.otherOwner ?? '') ? { otherOwner } : {}) });
     setBusy(false);
     if ('error' in r) setProblem(r.error);
     else onSaved();
@@ -67,6 +70,11 @@ export function InboxEditSheet({ t, accounts, categories, onClose, onSaved }: { 
           </Field>
         </>
       )}
+      {askOwner ? (
+        <Field label="Others: whose account did it go to? (optional)">
+          <Input value={otherOwner} onChangeText={setOtherOwner} maxLength={80} placeholder="Only for someone else's account" />
+        </Field>
+      ) : null}
       <Field label="Date (YYYY-MM-DD)">
         <Input value={date} onChangeText={setDate} keyboardType="numbers-and-punctuation" placeholder="2026-11-25" />
       </Field>

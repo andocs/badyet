@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { addOtherSide, checkOtherAccount } from '@/lib/capture/other-side';
+import { loadLendingContext } from '@/lib/lending/context';
+import { loanTags } from '@/lib/lending/forms';
 import { ensureCardPaymentCategory, ensureTransferCategory, isMoveCategory } from '@/lib/capture/transfer-category';
 import { bestGuess, matchRule, normalizePattern, type MerchantRule } from '@/lib/inbox/rules';
 import { transferHoldUntil, type HoldAccount } from '@/lib/capture/hold';
@@ -26,6 +28,10 @@ export interface InboxTxn {
   note: string | null;
   /** ISO time until which this looks like one side of a transfer still waiting for its other side; null = no wait. */
   holdUntil: string | null;
+  /** "Lent to Sam" or "Paid back by Sam" when it belongs to a loan. */
+  loanTag?: string | null;
+  /** "Others": whose account the money went to (a capture rule may have filled it in). */
+  otherOwner?: string | null;
 }
 
 export interface InboxData {
@@ -35,6 +41,8 @@ export interface InboxData {
   bills: { id: string; name: string }[];
   /** Your live accounts, for changing which one an item is on. */
   accounts: { id: string; name: string }[];
+  /** What lending offers here; null until the database has the lending update (or it could not be read). */
+  lending: Awaited<ReturnType<typeof loadLendingContext>> | null;
 }
 
 export interface Row {
@@ -128,7 +136,7 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   await ensureTransferCategory(supabase).catch(() => null);
   await ensureCardPaymentCategory(supabase).catch(() => null);
   const [cats, acct, rulesRes, pendingRes, recentRes, historyRes, billsRes] = await Promise.all([
-    supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').order('sort'),
+    supabase.from('categories').select('id, name').is('archived_at', null).neq('name', 'Transfer').neq('name', 'Lending').order('sort'),
     supabase.from('accounts').select('id, name, institution, archived_at'),
     supabase.from('merchant_rules').select('id, pattern, category_id, account_id, priority'),
     supabase.from('transactions').select(COLS).eq('status', 'pending').order('occurred_at', { ascending: false }),
@@ -139,11 +147,17 @@ export async function loadInbox(supabase: SupabaseClient): Promise<InboxData> {
   for (const r of [cats, acct, rulesRes, pendingRes, recentRes, historyRes]) if (r.error) throw r.error;
   const categories = (cats.data ?? []) as Category[];
   const rows = [...((recentRes.data ?? []) as Row[]), ...((pendingRes.data ?? []) as Row[])];
+  // Lending is extra: if any of it cannot be read, the rest of the Inbox still loads.
+  const lending = await loadLendingContext(supabase).catch(() => null);
+  const tags = loanTags(lending?.loans ?? []);
+  const ownerRes = await supabase.from('transactions').select('id, other_owner').not('other_owner', 'is', null);
+  const owners = new Map(ownerRes.error ? [] : ((ownerRes.data ?? []) as { id: string; other_owner: string }[]).map((o) => [o.id, o.other_owner]));
   return {
+    lending: lending?.ready ? lending : null,
     categories,
     bills: billsRes.error ? [] : ((billsRes.data ?? []) as { id: string; name: string }[]),
     accounts: ((acct.data ?? []) as { id: string; name: string; archived_at: string | null }[]).filter((a) => !a.archived_at).map((a) => ({ id: a.id, name: a.name })),
-    txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]),
+    txns: buildInbox(rows, categories, (acct.data ?? []) as { id: string; name: string; institution: string | null; archived_at: string | null }[], (rulesRes.data ?? []) as RuleRow[], (historyRes.data ?? []) as { merchant: string | null; category_id: string | null }[]).map((t) => ({ ...t, loanTag: tags.get(t.id) ?? null, otherOwner: owners.get(t.id) ?? null })),
   };
 }
 

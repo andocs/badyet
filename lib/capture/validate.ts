@@ -110,6 +110,8 @@ export interface RuleFullInput {
   categoryId: string | null;
   fromAccountId: string | null;
   toAccountId: string | null;
+  /** "Others": a string (even empty) when the money arrives in someone else's account; left out or null otherwise. */
+  toOther?: string | null;
   autoConfirm: boolean;
 }
 
@@ -128,6 +130,7 @@ export interface RuleFullValue {
   categoryId: string | null;
   fromAccountId: string | null;
   toAccountId: string | null;
+  toOther?: string;
   autoConfirm: boolean;
 }
 
@@ -159,6 +162,9 @@ export function validateRuleFull(i: RuleFullInput): Result<RuleFullValue> {
   for (const id of [i.categoryId, i.fromAccountId, i.toAccountId]) if (id !== null && !UUID.test(id)) return { ok: false, error: 'Pick from the list.' };
   const moves = i.action === 'record' && (i.kind === 'transfer' || i.kind === 'payment');
   if (moves && i.fromAccountId !== null && i.fromAccountId === i.toAccountId) return { ok: false, error: 'Pick two different accounts.' };
+  const others = moves && typeof i.toOther === 'string';
+  const toOther = others ? i.toOther!.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  if (others && !toOther) return { ok: false, error: 'Say whose account the money arrives in.' };
   return {
     ok: true,
     value: {
@@ -175,7 +181,8 @@ export function validateRuleFull(i: RuleFullInput): Result<RuleFullValue> {
       kind: i.kind as RuleKind,
       categoryId: i.kind === 'spending' && i.action === 'record' ? i.categoryId : null,
       fromAccountId: moves ? i.fromAccountId : null,
-      toAccountId: moves ? i.toAccountId : null,
+      toAccountId: moves && !others ? i.toAccountId : null,
+      ...(others ? { toOther } : {}),
       autoConfirm: i.action === 'record' && i.autoConfirm,
     },
   };
@@ -199,6 +206,7 @@ export function ruleFullRow(v: RuleFullValue) {
     category_id: v.categoryId,
     from_account_id: v.fromAccountId,
     to_account_id: v.toAccountId,
+    ...(v.toOther ? { to_other: v.toOther } : {}),
     auto_confirm: v.autoConfirm,
   };
 }

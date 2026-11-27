@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isMoveCategory } from "@/lib/capture/transfer-category";
+import { isLoanTxn } from "@/lib/lending/write";
 import { parsePesos } from "@/lib/domain/money";
 
 /** What can be changed on an Inbox item. Dates and times are Philippine time, the way you read them. */
@@ -19,6 +20,8 @@ export interface EditInput {
   /** HH:mm, 24-hour. */
   time: string;
   note: string;
+  /** "Others": whose account the money went to. Left alone when not given; empty clears it. */
+  otherOwner?: string;
 }
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -37,6 +40,8 @@ export interface EditValue {
   /** ISO timestamp. */
   occurredAt: string;
   note: string | null;
+  /** undefined = leave it; null = clear it. */
+  otherOwner?: string | null;
 }
 
 export function validateEdit(input: EditInput): Checked<EditValue> {
@@ -56,7 +61,8 @@ export function validateEdit(input: EditInput): Checked<EditValue> {
   // Rolled over (a 31st that does not exist) or not a date at all.
   if (Number.isNaN(occurredAt.getTime()) || new Date(occurredAt.getTime() + 8 * 3_600_000).toISOString().slice(0, 10) !== input.date.trim()) return { ok: false, error: "That date does not exist." };
   const note = input.note.trim().slice(0, 200);
-  return { ok: true, value: { merchant: merchant === "" ? null : merchant, amount, direction: input.direction, accountId: input.accountId, categoryId, occurredAt: occurredAt.toISOString(), note: note === "" ? null : note } };
+  const owner = input.otherOwner === undefined ? undefined : input.otherOwner.trim().replace(/\s+/g, " ").slice(0, 80) || null;
+  return { ok: true, value: { ...(owner === undefined ? {} : { otherOwner: owner }), merchant: merchant === "" ? null : merchant, amount, direction: input.direction, accountId: input.accountId, categoryId, occurredAt: occurredAt.toISOString(), note: note === "" ? null : note } };
 }
 
 /** The date (YYYY-MM-DD) and time (HH:mm) of an ISO timestamp in Philippine time, for filling the form. */
@@ -74,15 +80,21 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
   const v = validateEdit(input);
   if (!v.ok) return { error: v.error };
   const e = v.value;
-  const row = await supabase.from("transactions").select("id, kind, status, transfer_peer_id").eq("id", input.id).maybeSingle();
+  const row = await supabase.from("transactions").select("id, kind, status, transfer_peer_id, amount").eq("id", input.id).maybeSingle();
   if (!row.data || row.data.status === "ignored") return { error: "That item was not found." };
+  const owner = e.otherOwner === undefined ? {} : { other_owner: e.otherOwner };
+
+  // A loan keeps its own amount, so that cannot drift from the money behind it.
+  if (row.data.kind === "transfer" && !row.data.transfer_peer_id && Math.abs(Number(row.data.amount)) !== e.amount && (await isLoanTxn(supabase, input.id))) {
+    return { error: "This is part of a loan. To change the amount, remove the loan on the Lending page and add it again." };
+  }
 
   if (row.data.kind === "transfer") {
     const peerId = row.data.transfer_peer_id as string | null;
     const legs = await supabase.from("transactions").select("id, amount").in("id", peerId ? [row.data.id, peerId] : [row.data.id]);
     if (legs.error || !legs.data || legs.data.length === 0) return { error: "Could not change that. Try again." };
     for (const leg of legs.data as { id: string; amount: number }[]) {
-      const r = await supabase.from("transactions").update({ amount: leg.amount < 0 ? -e.amount : e.amount, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note }).eq("id", leg.id);
+      const r = await supabase.from("transactions").update({ amount: leg.amount < 0 ? -e.amount : e.amount, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note, ...owner }).eq("id", leg.id);
       if (r.error) return { error: "Could not change that. Try again." };
     }
     return { ok: true };
@@ -102,6 +114,7 @@ export async function editTransaction(supabase: SupabaseClient, input: EditInput
     .update({
       amount: e.direction === "out" ? -e.amount : e.amount, kind: movesBetweenYours ? "transfer" : e.direction === "out" ? "expense" : "income", account_id: e.accountId, occurred_at: e.occurredAt, merchant: e.merchant, note: e.note,
       ...(e.categoryId !== undefined ? { category_id: e.categoryId } : {}),
+      ...owner,
     })
     .eq("id", row.data.id);
   return r.error ? { error: "Could not change that. Try again." } : { ok: true };

@@ -21,6 +21,7 @@ const MORE: { title: string; icon: IconName; href: Href }[] = [
   { title: 'Installments', icon: 'card-outline', href: '/plan/installments' },
   { title: 'Funds', icon: 'flag-outline', href: '/plan/funds' },
   { title: 'Forecast', icon: 'trending-up-outline', href: '/plan/forecast' },
+  { title: 'Lending', icon: 'people-outline', href: '/plan/lending' },
   { title: 'Rules', icon: 'git-branch-outline', href: '/rules' },
   { title: 'Settings', icon: 'settings-outline', href: '/settings' },
 ];
@@ -108,6 +109,7 @@ export default function TabsLayout() {
         <Tabs.Screen name="plan/checklist" options={HIDDEN} />
         <Tabs.Screen name="plan/funds" options={HIDDEN} />
         <Tabs.Screen name="plan/forecast" options={HIDDEN} />
+        <Tabs.Screen name="plan/lending" options={HIDDEN} />
         <Tabs.Screen name="settings" options={HIDDEN} />
       </Tabs>
       <MoreSheet open={open} onClose={() => setOpen(false)} />

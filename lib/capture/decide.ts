@@ -21,7 +21,7 @@ export interface TransferPlan {
 
 export type Decision =
   | { keep: false; reason: 'source-off' | 'under-minimum' | 'ignore-rule' }
-  | { keep: true; status: 'pending' | 'confirmed'; accountId: string | null; categoryId: string | null; ruleId: string | null; transfer?: TransferPlan; move?: HalfPlan };
+  | { keep: true; status: 'pending' | 'confirmed'; accountId: string | null; categoryId: string | null; ruleId: string | null; transfer?: TransferPlan; move?: HalfPlan; /** The money goes to someone else's account: whose. */ otherOwner?: string };
 
 /** A transfer or payment rule with only one of its two accounts set: what it does name, from this message's side. */
 export interface HalfPlan {
@@ -94,6 +94,12 @@ export function decide(c: Captured, config: SourceConfig, rules: readonly Captur
   if (matched.some((r) => r.action === 'ignore')) return { keep: false, reason: 'ignore-rule' };
 
   const rec = matched.find((r) => r.action === 'record');
+  // Sent to someone else's account: it always waits, so you can say whether it is a loan, spending or neither.
+  if (rec && (rec.kind === 'transfer' || rec.kind === 'payment') && rec.toOther && !rec.toAccountId && c.direction === 'out') {
+    const own = rec.fromAccountId ?? null;
+    return { keep: true, status: 'pending', accountId: own ?? config.accountId, categoryId: null, ruleId: rec.id, move: { own, other: null }, otherOwner: rec.toOther };
+  }
+
   const movesBetweenYours = rec !== undefined && (rec.kind === 'transfer' || rec.kind === 'payment') && !!rec.fromAccountId && !!rec.toAccountId && rec.fromAccountId !== rec.toAccountId;
   if (rec && movesBetweenYours) {
     return {

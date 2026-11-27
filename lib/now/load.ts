@@ -1,4 +1,6 @@
 import { loadReimbursements, reimbursementOverrides } from "@/lib/budget/reimburse";
+import { loadLending } from "@/lib/lending/load";
+import { cutoffDraws, draws, dueLoans, type Loan } from "@/lib/lending/model";
 import { monthEditsOf } from "@/lib/pay/month-edits";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addMonths, isoDate, type IsoDate, type YearMonth } from "@/lib/domain/dates";
@@ -54,6 +56,9 @@ export type NowData =
       payday: { amount: Money; cutoff: "first" | "second"; bonuses: string[]; accountId: string | null } | null;
       /** Categories the Planned vs spent panel shows; null = all. */
       nowCategories: string[] | null;
+      /** Loans whose expected day has arrived: each is asked about until you answer. */
+      dueLoans: Loan[];
+      paydays: { first: number; second: number };
     };
 
 interface SettingsRow { first_payday_day: number; second_payday_day: number; office_days: number[]; rto_amount: number }
@@ -191,7 +196,9 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
   const specs: PoolEntrySpec[] = poolEntries.map((e) => ({ kind: e.kind, amount: money(e.amount) }));
   // The office-day amount is never typed: it is the RTO lines' cutoff total divided by the usual office days in the cutoff.
   const dayBudget = rtoDayBudget(here.budget.rtoTotal[period.which === 1 ? "first" : "second"], usualOfficeDays(period, settings.office_days));
+  const lending = await loadLending(supabase);
   const view = buildNowView({
+    draws: cutoffDraws(draws(lending.loans, lending.outside), period),
     today,
     paydays,
     officeDays: settings.office_days,
@@ -262,5 +269,7 @@ export async function loadNow(supabase: SupabaseClient): Promise<NowData> {
           }
         : null,
     nowCategories: extra?.now_categories ?? null,
+    dueLoans: dueLoans(lending.loans, today),
+    paydays,
   };
 }

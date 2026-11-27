@@ -35,7 +35,7 @@ export default async function Forecast() {
   const run = runProjection(input, { includeExpected: true });
   const hasExpected = run.some((m) => m.expected);
   const without = hasExpected ? runProjection(input, { includeExpected: false }) : null;
-  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)));
+  const rows = forecastRows(run, new Set(d.overrides.map((o) => o.month)), d.held);
 
   const funds: FundMeta[] = d.funds.map((f, i) => ({ id: f.id, name: f.name, color: d.colors.get(f.id) ?? PALETTE[i % PALETTE.length]!, blurb: BLURB[f.rule], resets: f.rule === "reset" && f.id !== d.budget.salary.input.settings.savingsPlanFundId }));
   const name = new Map(d.funds.map((f) => [f.id, f.name]));
@@ -67,7 +67,7 @@ export default async function Forecast() {
         funds={funds}
         rows={rows}
         startTotal={sum(d.funds.map((f) => d.fundStart[f.id] ?? money(0)))}
-        withoutTotal={without ? totalBalance(forecastRows(without, new Set())[59]!) : null}
+        withoutTotal={without ? totalBalance(forecastRows(without, new Set(), d.held)[59]!) : null}
         overrides={overrides}
       />
     </main>

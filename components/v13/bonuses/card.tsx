@@ -16,7 +16,13 @@ interface Row { kind: DestKind; targetId: string | null; label: string | null; n
 const rowOf = (d: DestView): Row => ({ kind: d.kind, targetId: d.targetId, label: d.label, name: d.name, amount: (d.amount / 100).toFixed(2), done: d.done });
 
 /** One bonus for one year: gross to net, then where each peso goes (tick them off as you do it). */
-export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: BonusCard; funds: { id: string; name: string; color: string | null }[]; colors: Record<string, string>; baseMultiplier: number }) {
+export function BonusCardView({ card, funds, colors, baseMultiplier, lent }: { card: BonusCard; funds: { id: string; name: string; color: string | null }[]; colors: Record<string, string>; baseMultiplier: number; lent?: { text: string; amount: number }[] }) {
+  /** Money lent or sent from this bonus, and what has come back. */
+  const lentList = lent?.length ? (
+    <div className="v-lentlist">
+      {lent.map((n, i) => <div key={i} className={`v-xs ${n.amount < 0 ? "v-neg" : "v-pos"}`}><Money value={money(n.amount)} signed /> {n.text}</div>)}
+    </div>
+  ) : null;
   const [editing, setEditing] = useState(false);
   const [rows, setRows] = useState<Row[]>(() => card.dests.map(rowOf));
   const [add, setAdd] = useState({ mode: "fund" as "fund" | "custom", name: "", value: "", unit: "peso" as "peso" | "pct" });
@@ -126,6 +132,7 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
         </summary>
         <div className="v-in">
           {waterfall}
+          {lentList}
           {card.plannedNet !== null ? <div className={`v-vs ${d >= 0 ? "v-pos" : "v-warnt"}`}>Planned <Money value={card.plannedNet} /> · got <Money value={card.net} /> (<Money value={money(d)} signed />)</div> : null}
           <div className="v-row v-sp v-wrap" style={{ margin: "14px 0 4px" }}>
             <h3 style={{ margin: 0 }}>Where it went</h3>
@@ -168,6 +175,7 @@ export function BonusCardView({ card, funds, colors, baseMultiplier }: { card: B
         <h2 id={`t-${card.key}`}><span className="v-av" style={{ background: "var(--tint)", color: "var(--accent-text)" }}><V13Icon name="gift" /></span><span>{card.name}<span className="v-why">{ymLabel(card.month)} · lands in the {card.cutoff === "first" ? "1st" : "2nd"} cutoff</span></span></h2>
         <div className="v-row v-wrap" style={{ gap: 8 }}><span className={`v-pill ${card.recurrence === "once" ? "v-warn" : ""}`}>{card.recurrence === "once" ? "One-off" : "Yearly"}</span><span className="v-pill v-est">planned</span></div>
       </div>
+      {lentList}
       <div className="v-body">
         <div className="v-pane">
           {isCip ? (

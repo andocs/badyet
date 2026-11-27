@@ -1,6 +1,7 @@
 import { withRemoved } from "@/lib/capture/source-write";
 import { RulesView, type DeviceApp, type SeenSender } from "@/components/v13/rules";
 import { configsFromRows, rulesFromRows, type RuleRow, type SourceRow } from "@/lib/capture/sources";
+import { withRuleOthers } from "@/lib/capture/rule-other";
 import { patternsFromRows, type PatternRow } from "@/lib/capture/patterns";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,7 +15,7 @@ export default async function Rules() {
   const supabase = await createClient();
   if (!supabase) return <p className="v-main">Supabase is not configured.</p>;
   const [catRes, acctRes, srcRes, patRes, appsRes, sendersRes, dedupeRes, setRes] = await Promise.all([
-    supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").order("sort"),
+    supabase.from("categories").select("id, name").is("archived_at", null).neq("name", "Transfer").neq("name", "Lending").order("sort"),
     supabase.from("accounts").select("id, name, institution, last4").is("archived_at", null).order("sort"),
     supabase.from("capture_sources").select("source, enabled, packages, senders, account_id, category_id, auto_confirm, min_amount"),
     supabase.from("capture_patterns").select("id, source, template, direction").order("created_at"),
@@ -37,12 +38,13 @@ export default async function Rules() {
   const apps: DeviceApp[] = appRows.map((a) => ({ package: a.package, label: a.label, seen: a.seen === "notified" ? "notified" : "installed" }));
   const lastSynced = appRows.reduce<string | null>((m, a) => (m === null || a.updated_at > m ? a.updated_at : m), null);
   const senders: SeenSender[] = sendersRes.error ? [] : ((sendersRes.data ?? []) as { address: string; emails: number }[]).map((s) => ({ address: s.address, emails: Number(s.emails) }));
+  const ruleRows = await withRuleOthers(supabase, rulesRes.error ? [] : ((rulesRes.data ?? []) as unknown as RuleRow[]));
   const d = dedupeRes.error ? null : (dedupeRes.data as { window_minutes: number; match_source: boolean } | null);
 
   return (
     <main className="v-main">
       <RulesView
-        rules={rulesFromRows(rulesRes.error ? [] : ((rulesRes.data ?? []) as unknown as RuleRow[]))}
+        rules={rulesFromRows(ruleRows)}
         sources={configsFromRows(srcRes.error ? [] : await withRemoved(supabase, (srcRes.data ?? []) as SourceRow[]))}
         patterns={patRes.error ? [] : patternsFromRows((patRes.data ?? []) as PatternRow[])}
         accounts={(acctRes.data ?? []) as { id: string; name: string; institution: string | null; last4: string | null }[]}
