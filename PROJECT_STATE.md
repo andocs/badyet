@@ -7,10 +7,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 
 ## 2. Current phase & active slice
 
-- **Phase:** rev-59 merged
-- **Active slice / milestone:** rev-59 unified rules
+- **Phase:** 3 Revisions
+- **Active slice / milestone:** rev-60 lending
 - **Gate:** none
-- **Next action:** Next revision
+- **Next action:** Plan and mockup lending feature
 - **User to-do now:** Force-close and reopen the phone app (up to twice) for the OTA; try the new Rules page and the sample boxes with real Maya wallet and card messages; remove the duplicate HMO payslip line if still there; consider making the GitHub repo private
 
 ## 3. Execution log
