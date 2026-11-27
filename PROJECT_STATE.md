@@ -9,10 +9,10 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 ## 2. Current phase & active slice
 
 - **Phase:** 3 Revisions
-- **Active slice / milestone:** rev-61 form control standard
-- **Gate:** waiting
-- **Next action:** Approve merge and OTA for rev-61
-- **User to-do now:** Force-close and reopen the phone app twice to get the rev-60 update, then try one loan end to end
+- **Active slice / milestone:** rev-61 form control standard (done)
+- **Gate:** none
+- **Next action:** Try lending and the new dropdowns and calendars signed in and on the phone
+- **User to-do now:** Force-close and reopen the phone app twice to get the rev-61 update
 
 ## 3. Execution log
 
@@ -58,6 +58,7 @@ Project badyet-web: hosted personal budgeting web app converted from Google Shee
 - 2026-11-27 09:31 | rev-60 | Lending and Others built on web and phone; web 621 tests, phone 185, build and Android bundle pass | d259693
 - 2026-11-27 09:38 | rev-60 | Approved; migration applied (user); merged to main; OTA published fc2d446b | 78e8f1f
 - 2026-11-27 10:00 | rev-61 | Form control standard: ~45 browser dropdowns and all date fields replaced (web), phone dates and months picked; standard written under Decisions + test. Checks PASS | 00331f9
+- 2026-11-27 10:15 | rev-61 | Approved; merged to main; OTA published 8d183eea | 2657270
 
 ## 4. Open questions
 
