@@ -14,6 +14,7 @@ import type { PlaceableLine } from "@/lib/salary/load";
 import { eventEffect, salaryAt, type SalaryInput } from "@/lib/salary/view";
 import { Money } from "../money";
 import { MonthOfYear, MonthPicker } from "../pickers";
+import { Pick } from "../pick";
 
 type Kind = "merit" | "promotion" | "allowance" | "adjustment";
 const KINDS: [Kind, string, string][] = [
@@ -213,15 +214,15 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                   ) : null}
                   {kind === "allowance" ? (
                     <div className="v-two">
-                      <label className="v-field">How often
-                        <select value={alFreq} onChange={(e) => setAlFreq(e.target.value as "monthly" | "yearly")}><option value="monthly">Every month</option><option value="yearly">Once a year</option></select>
-                      </label>
+                      <div className="v-field">How often
+                        <Pick label="How often" value={alFreq} options={[{ value: "monthly", label: "Every month" }, { value: "yearly", label: "Once a year" }]} onChange={(v) => setAlFreq(v as "monthly" | "yearly")} />
+                      </div>
                       {alFreq === "yearly" ? (
                         <div className="v-field" style={{ gridColumn: "1 / -1" }}>Month it lands<MonthOfYear value={alMonth} label="Month it lands" onChange={setAlMonth} /></div>
                       ) : null}
-                      <label className="v-field">Lands in the
-                        <select value={alCutoff} onChange={(e) => setAlCutoff(e.target.value as PayCutoff)}><option value="first">1st cutoff</option><option value="second">2nd cutoff</option></select>
-                      </label>
+                      <div className="v-field">Lands in the
+                        <Pick label="Lands in the" value={alCutoff} options={[{ value: "first", label: "1st cutoff" }, { value: "second", label: "2nd cutoff" }]} onChange={(v) => setAlCutoff(v as PayCutoff)} />
+                      </div>
                     </div>
                   ) : null}
                   {kind === "allowance" || kind === "adjustment" ? (
@@ -266,12 +267,9 @@ export function RaiseWizard({ input, thisMonth, placeable, initialKind }: { inpu
                       </div>
                     </div>
                     {available.length > 0 ? (
-                      <label className="v-field"><span className="v-sr">Add a budget line</span>
-                        <select value="" onChange={(e) => e.target.value && setAllocs((x) => [...x, { lineId: e.target.value, mode: "amount", value: String(Math.max(0, Math.round(left / 100))) }])}>
-                          <option value="">Add a budget line…</option>
-                          {available.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}
-                        </select>
-                      </label>
+                      <div className="v-field"><span className="v-sr">Add a budget line</span>
+                        <Pick label="Add a budget line" value={null} placeholder="Add a budget line…" options={available.map((x) => ({ value: x.id, label: x.name }))} onChange={(lineId) => setAllocs((x) => [...x, { lineId, mode: "amount", value: String(Math.max(0, Math.round(left / 100))) }])} />
+                      </div>
                     ) : null}
                     <p className="v-xs v-muted" style={{ margin: 0 }}>These top-ups stay tied to this raise. If the raise changes or is removed, they change or go with it.</p>
                   </div>

@@ -13,6 +13,7 @@ import { TAX_ROWS } from "@/lib/pay/tax-table";
 import { salaryAt, type SalaryInput } from "@/lib/salary/view";
 import { Money } from "../money";
 import { MonthPicker } from "../pickers";
+import { Pick } from "../pick";
 
 interface Draft {
   key: string;
@@ -331,7 +332,7 @@ function Slip({ cutoff, slip, payday, drafts, salary, onAllowance, onChange, onM
         <div className="v-addl2">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="+ Add a line, e.g. Salary loan" aria-label={`New line name, ${name2}`} maxLength={60} />
           <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" placeholder="₱ amount" aria-label={`New line amount, ${name2}`} />
-          <select value={kind} onChange={(e) => setKind(e.target.value as "deduction" | "earning")} aria-label="Type"><option value="deduction">Deduction</option><option value="earning">Earning</option></select>
+          <span className="v-pickrow"><Pick label="Type" value={kind} options={[{ value: "deduction", label: "Deduction" }, { value: "earning", label: "Earning" }]} onChange={(v) => setKind(v as "deduction" | "earning")} /></span>
           <button type="button" className="v-btn v-sm v-pri" onClick={() => {
             const v = parsePesos(amount);
             if (!name.trim() || v === undefined || v <= 0) return;

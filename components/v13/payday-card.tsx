@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { payArrived, setNowCategories } from "@/app/(v13)/actions";
 import { Money } from "./money";
 import type { Money as MoneyValue } from "@/lib/domain/money";
+import { Pick } from "./pick";
 
 /** "Has the pay arrived?": records this cutoff's take-home as income on the account it went into. */
 export function PaydayCard({ amount, cutoff, bonuses, accountId, accounts }: { amount: MoneyValue; cutoff: "first" | "second"; bonuses: string[]; accountId: string | null; accounts: { id: string; name: string; kind: string }[] }) {
@@ -36,13 +37,10 @@ export function PaydayCard({ amount, cutoff, bonuses, accountId, accounts }: { a
         )}
       </p>
       <div className="v-row v-wrap" style={{ gap: 10 }}>
-        <label className="v-field v-grow">
+        <div className="v-field v-grow">
           Went into
-          <select value={account} onChange={(e) => setAccount(e.target.value)}>
-            <option value="">Pick an account</option>
-            {accounts.filter((a) => a.kind !== "credit").map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-          </select>
-        </label>
+          <Pick label="Went into" value={account || null} options={accounts.filter((a) => a.kind !== "credit").map((a) => ({ value: a.id, label: a.name }))} onChange={setAccount} placeholder="Pick an account" />
+        </div>
         <label className="v-field" style={{ width: 160 }}>
           Take-home
           <input inputMode="decimal" value={typed} placeholder="0.00" onChange={(e) => setTyped(e.target.value)} />

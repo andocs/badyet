@@ -11,6 +11,7 @@ import { useToast } from "../feedback";
 import { Money } from "../money";
 import { MonthPicker } from "../pickers";
 import type { FundMeta } from "./forecast-view";
+import { Pick } from "../pick";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const without = <T,>(o: Record<string, T>, id: string): Record<string, T> => Object.fromEntries(Object.entries(o).filter(([k]) => k !== id));
@@ -115,13 +116,9 @@ export function OverrideMonth({ month, funds, defaultOrder, sim, existing, month
           </div>
           <div className="v-note">Use the arrows to reorder. Pinned amounts come out of the pool first; the rest fill top to bottom.</div>
           <section className="v-card v-stack" style={{ marginTop: 14, gap: 8 }}>
-            <label className="v-field">This month&apos;s bonus savings go
-              <select value={overflow} onChange={(e) => setOverflow(e.target.value)}>
-                <option value="">Down this month&apos;s priority order (default)</option>
-                {funds.map((f) => <option key={f.id} value={f.id}>To {f.name} first, then by priority</option>)}
-                <option value="none">Nowhere (leave it unplaced)</option>
-              </select>
-            </label>
+            <div className="v-field">This month&apos;s bonus savings go
+              <Pick label="This month's bonus savings go" value={overflow} options={[{ value: "", label: "Down this month's priority order (default)" }, ...funds.map((x) => ({ value: x.id, label: `To ${x.name} first, then by priority` })), { value: "none", label: "Nowhere (leave it unplaced)" }]} onChange={setOverflow} />
+            </div>
             <div className="v-xs v-muted">{result.now.bonusUnplaced > 0 ? <><Money value={money(result.now.bonusUnplaced)} /> of bonus money is not placed in any fund this month.</> : "Each fund takes up to its cap and the rest flows to the next. Skipped and full funds are passed over."}</div>
           </section>
           <section className="v-card" style={{ marginTop: 14 }}>
@@ -230,9 +227,9 @@ export function OverrideBulk({ year, years, funds, rows, firstMonths }: { year: 
       {sel.size > 0 ? (
         <div className="v-actions" role="region" aria-label="Actions for selected months">
           <b>{sel.size} month{sel.size > 1 ? "s" : ""} ticked</b>
-          <label className="v-row" style={{ gap: 6 }}>Put <select value={topF} onChange={(e) => setTopF(e.target.value)}>{funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select> first <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => apply("first", topF)}>Apply</button></label>
-          <span className="v-row" style={{ gap: 6 }}>Pin <select value={pinF} onChange={(e) => setPinF(e.target.value)}>{funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select><input value={pinV} inputMode="decimal" aria-label="Pin amount" onChange={(e) => setPinV(e.target.value)} /><button type="button" className="v-btn v-sm" disabled={busy} onClick={() => { const v = parsePesos(pinV); if (v !== undefined) apply("pin", pinF, v); }}>Apply</button></span>
-          <span className="v-row" style={{ gap: 6 }}>Skip <select value={skipF} onChange={(e) => setSkipF(e.target.value)}>{funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}</select><button type="button" className="v-btn v-sm" disabled={busy} onClick={() => apply("skip", skipF)}>Apply</button></span>
+          <div className="v-row" style={{ gap: 6 }}>Put <span className="v-pickrow"><Pick label="Fund to put first" value={topF} options={funds.map((x) => ({ value: x.id, label: x.name }))} onChange={setTopF} /></span> first <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => apply("first", topF)}>Apply</button></div>
+          <span className="v-row" style={{ gap: 6 }}>Pin <span className="v-pickrow"><Pick label="Fund to pin" value={pinF} options={funds.map((x) => ({ value: x.id, label: x.name }))} onChange={setPinF} /></span><input value={pinV} inputMode="decimal" aria-label="Pin amount" onChange={(e) => setPinV(e.target.value)} /><button type="button" className="v-btn v-sm" disabled={busy} onClick={() => { const v = parsePesos(pinV); if (v !== undefined) apply("pin", pinF, v); }}>Apply</button></span>
+          <span className="v-row" style={{ gap: 6 }}>Skip <span className="v-pickrow"><Pick label="Fund to skip" value={skipF} options={funds.map((x) => ({ value: x.id, label: x.name }))} onChange={setSkipF} /></span><button type="button" className="v-btn v-sm" disabled={busy} onClick={() => apply("skip", skipF)}>Apply</button></span>
           <button type="button" className="v-btn v-sm" disabled={busy} onClick={() => run(() => resetMonths(list), "Reset to the default.")}>Reset to default</button>
           <button type="button" className="v-btn v-sm v-ghost" onClick={() => setSel(new Set())}>Clear ticks</button>
         </div>

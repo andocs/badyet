@@ -3,6 +3,7 @@
 import { createContext, useActionState, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { addExpense, type AddExpenseState } from "@/app/(v13)/actions";
 import { V13Icon } from "./icons";
+import { FormPick } from "./pick";
 
 export interface QuickAddAccount {
   id: string;
@@ -73,27 +74,14 @@ function QuickAddForm({ accounts, categories, onDone, onCancel }: { accounts: Qu
             <input name="merchant" maxLength={80} autoComplete="off" placeholder="Shop or note" />
           </label>
           <div className="v-two">
-            <label className="v-field">
+            <div className="v-field">
               Account
-              <select name="account" required defaultValue={accounts[0]?.id}>
-                {accounts.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="v-field">
+              <FormPick label="Account" name="account" defaultValue={accounts[0]?.id} options={accounts.map((x) => ({ value: x.id, label: x.name }))} />
+            </div>
+            <div className="v-field">
               Category
-              <select name="category" defaultValue="">
-                <option value="">No category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <FormPick label="Category" name="category" options={[{ value: "", label: "No category" }, ...categories.map((x) => ({ value: x.id, label: x.name }))]} />
+            </div>
           </div>
           {state.error ? (
             <p className="v-flag v-bad" role="alert">

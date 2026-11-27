@@ -12,6 +12,8 @@ import { manilaDate } from "@/lib/now/summary";
 import { Money } from "../money";
 import { LendFields, newDraft, type LendContext, type LendDraft } from "./fields";
 import { LoanActions, type PaybackContext } from "./loan-actions";
+import { Pick } from "../pick";
+import { DatePicker } from "../pickers";
 
 /** Money lent by hand: cash, or something already recorded that the app did not file as a loan. */
 function LendForm({ ctx, accounts, outgoing, onClose }: { ctx: LendContext; accounts: { id: string; name: string }[]; outgoing: PaybackChoice[]; onClose: () => void }) {
@@ -41,27 +43,21 @@ function LendForm({ ctx, accounts, outgoing, onClose }: { ctx: LendContext; acco
     <section className="v-card v-stack" style={{ gap: 10 }} aria-label="Lend money">
       <h2>Lend money</h2>
       {outgoing.length > 0 ? (
-        <label className="v-field">
+        <div className="v-field">
           Is it already recorded?
-          <select value={recorded} onChange={(e) => setRecorded(e.target.value)}>
-            <option value="">No, add it now</option>
-            {outgoing.map((o) => <option key={o.id} value={o.id}>{`${pesoText(o.amount)} from ${o.accountName}${o.merchant ? ` · ${o.merchant}` : ""} · ${relativeDay(manilaDate(o.occurredAt), ctx.today)}`}</option>)}
-          </select>
-        </label>
+          <Pick label="Is it already recorded?" value={recorded} onChange={setRecorded} options={[{ value: "", label: "No, add it now" }, ...outgoing.map((o) => ({ value: o.id, label: `${pesoText(o.amount)} from ${o.accountName}${o.merchant ? ` · ${o.merchant}` : ""} · ${relativeDay(manilaDate(o.occurredAt), ctx.today)}` }))]} />
+        </div>
       ) : null}
       {picked ? null : (
         <>
           <div className="v-grid2">
             <label className="v-field">Amount (₱)<input value={amount} inputMode="decimal" onChange={(e) => setAmount(e.target.value)} /></label>
-            <label className="v-field">Lent on<input type="date" value={date} max={ctx.today} onChange={(e) => setDate(e.target.value)} /></label>
+            <div className="v-field">Lent on<DatePicker label="Lent on" value={date} max={ctx.today} onChange={setDate} /></div>
           </div>
-          <label className="v-field">
+          <div className="v-field">
             Money left from
-            <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              <option value="">Cash that no account tracks</option>
-            </select>
-          </label>
+            <Pick label="Money left from" value={accountId} onChange={setAccountId} options={[...accounts.map((a) => ({ value: a.id, label: a.name })), { value: "", label: "Cash that no account tracks" }]} />
+          </div>
         </>
       )}
       <LendFields ctx={ctx} draft={draft} onChange={setDraft} amount={centavos} />

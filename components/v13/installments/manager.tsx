@@ -10,6 +10,8 @@ import { summarizePlan } from "@/lib/installments/summary";
 import { useConfirm, useToast } from "../feedback";
 import { V13Icon } from "../icons";
 import { Money } from "../money";
+import { Pick } from "../pick";
+import { DatePicker } from "../pickers";
 
 interface Option { id: string; name: string }
 
@@ -165,16 +167,16 @@ export function InstallmentsManager({ plans, accounts, today, missing }: { plans
                 <label className="v-field">Interest a year (%)<input value={draft.rate} inputMode="decimal" onChange={(e) => set({ rate: e.target.value })} /></label>
               </div>
               <div className="v-grid2">
-                <label className="v-field">First payment on<input type="date" value={draft.firstDueOn} onChange={(e) => set({ firstDueOn: e.target.value })} /></label>
+                <div className="v-field">First payment on<DatePicker label="First payment on" value={draft.firstDueOn} onChange={(v) => set({ firstDueOn: v })} /></div>
                 <div className="v-field">Paid from
                   <div className="v-seg" role="group" aria-label="Cutoff" style={{ width: "100%" }}>
                     {([["first", "1st cutoff"], ["second", "2nd cutoff"]] as const).map(([v, l]) => <button key={v} type="button" style={{ flex: 1 }} aria-pressed={draft.cutoff === v} onClick={() => set({ cutoff: v })}>{l}</button>)}
                   </div>
                 </div>
               </div>
-              <label className="v-field">Pays out of (optional)
-                <select value={draft.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Not tied to an account</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
-              </label>
+              <div className="v-field">Pays out of (optional)
+                <Pick label="Pays out of" value={draft.accountId} options={[{ value: "", label: "Not tied to an account" }, ...accounts.map((x) => ({ value: x.id, label: x.name }))]} onChange={(v) => set({ accountId: v })} />
+              </div>
               <div className="v-note" aria-live="polite">{preview}</div>
               {error ? <p className="v-flag v-bad" role="alert">{error}</p> : null}
               <div className="v-row">

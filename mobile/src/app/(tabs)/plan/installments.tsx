@@ -6,6 +6,7 @@ import { validateInstallment } from '@/lib/installments/input';
 import { loadInstallments, saveInstallment, deleteInstallment, type PlanRow } from '@/lib/installments/save';
 import { summarizePlan } from '@/lib/installments/summary';
 import { todayManila } from '@/lib/plans/validate';
+import { DateInput } from '~/components/DateInput';
 import { Field, Input, Sheet, SheetActions } from '~/components/Sheet';
 import { Body, Card, Chip, Notice, Screen } from '~/components/ui';
 import { useHide } from '~/lib/hide';
@@ -108,8 +109,8 @@ function PlanSheet({ draft, accounts, today, onClose, onSaved }: { draft: Draft;
       <Field label="Interest a year (%)">
         <Input value={d.rate} onChangeText={(v) => set('rate', v)} keyboardType="decimal-pad" />
       </Field>
-      <Field label="First payment on (YYYY-MM-DD)">
-        <Input value={d.firstDueOn} onChangeText={(v) => set('firstDueOn', v)} placeholder="2027-01-15" maxLength={10} autoCapitalize="none" />
+      <Field label="First payment on">
+        <DateInput label="First payment on" value={d.firstDueOn} onChange={(v) => set('firstDueOn', v)} />
       </Field>
       <Field label="Paid from">
         <View style={s.chips}>

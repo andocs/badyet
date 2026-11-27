@@ -1,54 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { YearMonth } from "@/lib/domain/dates";
+import { dateText, monthGrid, shiftMonth, WEEKDAY_LETTERS } from "@/lib/domain/calendar";
+import { Popover } from "./popover";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
 const labelOf = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
 const ymOf = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}` as YearMonth;
-
-/**
- * A small panel that opens under its field, like a calendar picker. It sits in the browser's top layer, so a dialog or a scrolling
- * sheet never clips it, and it closes when you tap outside, press Escape, scroll or resize.
- */
-function Popover({ anchor, open, onClose, label, children }: { anchor: React.RefObject<HTMLButtonElement | null>; open: boolean; onClose: () => void; label: string; children: React.ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    const btn = anchor.current;
-    if (!el || !btn) return;
-    if (!open) {
-      if (el.matches(":popover-open")) el.hidePopover();
-      return;
-    }
-    const place = () => {
-      const r = btn.getBoundingClientRect();
-      const width = Math.min(320, window.innerWidth - 16);
-      const height = el.offsetHeight || 340;
-      const left = Math.min(Math.max(8, r.left), window.innerWidth - width - 8);
-      const below = r.bottom + 6;
-      const top = below + height > window.innerHeight - 8 ? Math.max(8, r.top - height - 6) : below;
-      el.style.width = `${width}px`;
-      el.style.left = `${left}px`;
-      el.style.top = `${top}px`;
-    };
-    if (!el.matches(":popover-open")) el.showPopover();
-    place();
-    const onScroll = (e: Event) => { if (!el.contains(e.target as Node)) onClose(); };
-    window.addEventListener("scroll", onScroll, true);
-    window.addEventListener("resize", onClose);
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onClose);
-    };
-  }, [open, anchor, onClose]);
-  return (
-    <div ref={ref} popover="auto" role="dialog" aria-label={label} className="v-popp" onToggle={(e) => { if (e.newState === "closed") onClose(); }}>
-      {open ? children : null}
-    </div>
-  );
-}
 
 /**
  * Picks a month and year without dropdowns, like a calendar: a grid of months for the year, arrows to change the year, and the year
@@ -146,3 +106,55 @@ export function DayOfMonth({ value, onChange, min = 1, max = 28, label }: { valu
     </>
   );
 }
+
+/**
+ * A full date (use it instead of <input type="date">): a calendar in the same popover. The month's name opens a grid of months, with
+ * arrows to change the year. `value` is YYYY-MM-DD or "".
+ */
+export function DatePicker({ value, onChange, label, min, max, disabled, placeholder = "Pick a date" }: { value: string; onChange: (v: string) => void; label: string; min?: string; max?: string; disabled?: boolean; placeholder?: string }) {
+  const btn = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+  const [months, setMonths] = useState(false);
+  const startMonth = () => (value || (min && min > today() ? min : today())).slice(0, 7);
+  const [month, setMonth] = useState(startMonth);
+  const close = useCallback(() => { setOpen(false); setMonths(false); }, []);
+  const year = Number(month.slice(0, 4));
+  const allowed = (d: string) => (!min || d >= min) && (!max || d <= max);
+  const monthAllowed = (m: string) => (!min || m >= min.slice(0, 7)) && (!max || m <= max.slice(0, 7));
+  const step = (by: number) => setMonth(shiftMonth(month, months ? by * 12 : by));
+
+  return (
+    <>
+      <button ref={btn} type="button" className="v-pickbtn" disabled={disabled} aria-haspopup="dialog" aria-expanded={open} aria-label={`${label}: ${value ? dateText(value) : placeholder}. Change`}
+        onClick={() => { setMonth(startMonth()); setMonths(false); setOpen(true); }}>
+        <span className={value ? "" : "v-muted"}>{value ? dateText(value) : placeholder}</span>
+      </button>
+      <Popover anchor={btn} open={open} onClose={close} label={label}>
+        <div className="v-pophd">
+          <button type="button" className="v-iconbtn v-s" aria-label={months ? "Previous year" : "Previous month"} onClick={() => step(-1)}>‹</button>
+          <button type="button" className="v-yearbtn" aria-expanded={months} onClick={() => setMonths(!months)}>{months ? year : `${MON[Number(month.slice(5)) - 1]} ${year}`}</button>
+          <button type="button" className="v-iconbtn v-s" aria-label={months ? "Next year" : "Next month"} onClick={() => step(1)}>›</button>
+        </div>
+        {months ? (
+          <div className="v-pg v-months3" role="group" aria-label={`Month in ${year}`}>
+            {MON.map((m, i) => (
+              <button key={m} type="button" disabled={!monthAllowed(ymOf(year, i + 1))} aria-pressed={month === ymOf(year, i + 1)} onClick={() => { setMonth(ymOf(year, i + 1)); setMonths(false); }}>{m}</button>
+            ))}
+          </div>
+        ) : (
+          <div className="v-pg v-days" role="group" aria-label="Day">
+            {WEEKDAY_LETTERS.map((d, i) => <span key={i} className="v-dow" aria-hidden="true">{d}</span>)}
+            {monthGrid(month).map((d, i) =>
+              d === null ? <span key={`e${i}`} /> : (
+                <button key={d} type="button" disabled={!allowed(d)} aria-pressed={d === value} aria-current={d === today() ? "date" : undefined} aria-label={dateText(d)} onClick={() => { onChange(d); close(); }}>{Number(d.slice(8))}</button>
+              ),
+            )}
+          </div>
+        )}
+      </Popover>
+    </>
+  );
+}
+
+/** Today in Philippine time, which is the app's calendar. */
+const today = () => new Date(Date.now() + 8 * 3_600_000).toISOString().slice(0, 10);

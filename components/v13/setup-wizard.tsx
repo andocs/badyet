@@ -13,6 +13,7 @@ import { resolveSalaryTimeline } from "@/lib/engine/salary";
 import { V13Icon } from "./icons";
 import { Money } from "./money";
 import { DayOfMonth, MonthPicker } from "./pickers";
+import { Pick } from "./pick";
 
 const STEPS = ["Accounts", "Salary", "Paydays", "Budget", "Funds"];
 const ord = (n: number) => `${n}${n % 10 === 1 && n !== 11 ? "st" : n % 10 === 2 && n !== 12 ? "nd" : n % 10 === 3 && n !== 13 ? "rd" : "th"}`;
@@ -146,7 +147,7 @@ export function SetupWizard({ thisMonth, rerun, existing }: { thisMonth: YearMon
                 {accts.map((a, i) => (
                   <div key={i} className="v-rowf">
                     <label className="v-field">Name<input value={a.name} maxLength={30} aria-invalid={acctClash.has(i)} onChange={(e) => setAccts((x) => x.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)))} />{acctClash.has(i) ? <span className="v-flag v-bad" role="alert">You already have an account called {a.name.trim()}.</span> : null}</label>
-                    <label className="v-field">Type<select value={a.kind} onChange={(e) => setAccts((x) => x.map((y, j) => (j === i ? { ...y, kind: e.target.value } : y)))}>{ACCOUNT_KINDS.map((k) => <option key={k} value={k}>{k === "ewallet" ? "e-wallet" : k}</option>)}</select></label>
+                    <div className="v-field">Type<Pick label="Type" value={a.kind} options={ACCOUNT_KINDS.map((k) => ({ value: k, label: k === "ewallet" ? "e-wallet" : k }))} onChange={(v) => setAccts((x) => x.map((y, j) => (j === i ? { ...y, kind: v } : y)))} /></div>
                     <label className="v-field">Last 4<input value={a.last4} maxLength={4} inputMode="numeric" onChange={(e) => setAccts((x) => x.map((y, j) => (j === i ? { ...y, last4: e.target.value } : y)))} /></label>
                     <label className="v-field">{a.kind === "credit" ? "You owe today (₱)" : "Balance today (₱)"}<input value={a.balance} inputMode="decimal" onChange={(e) => setAccts((x) => x.map((y, j) => (j === i ? { ...y, balance: e.target.value } : y)))} /></label>
                     <button type="button" className="v-iconbtn v-s v-rm" aria-label={`Remove ${a.name || "account"}`} onClick={() => setAccts((x) => x.filter((_, j) => j !== i))}>×</button>
@@ -201,10 +202,10 @@ export function SetupWizard({ thisMonth, rerun, existing }: { thisMonth: YearMon
                     <button type="button" className="v-chk" role="checkbox" aria-checked={l.on} aria-label={`Use ${l.name || "this line"}`} onClick={() => setLine(i, { on: !l.on })}><V13Icon name="check" /></button>
                     <input value={l.name} maxLength={60} placeholder="Line name" aria-invalid={lineClash.has(i)} onChange={(e) => setLine(i, { name: e.target.value })} aria-label="Line name" />
                     <div className="v-ln2s">
-                      <select value={l.rule} onChange={(e) => setLine(i, { rule: e.target.value as Line["rule"] })} aria-label={`Rule for ${l.name}`}><option value="pct">% of pay</option><option value="fixed">Fixed ₱</option></select>
+                      <Pick label={`Rule for ${l.name}`} value={l.rule} options={[{ value: "pct", label: "% of pay" }, { value: "fixed", label: "Fixed ₱" }]} onChange={(v) => setLine(i, { rule: v as Line["rule"] })} />
                       <input value={l.value} inputMode="decimal" onChange={(e) => setLine(i, { value: e.target.value })} aria-label={`${l.rule === "pct" ? "Percent" : "Amount"} for ${l.name}`} />
-                      <select value={l.group} onChange={(e) => setLine(i, { group: e.target.value as Line["group"] })} aria-label={`Group for ${l.name}`}><option>Essentials</option><option>Wants</option><option>Savings</option></select>
-                      <select value={l.cutoff} onChange={(e) => setLine(i, { cutoff: e.target.value as LineCutoff })} aria-label={`Cutoff for ${l.name}`}><option value="both">Each cutoff</option><option value="first">1st cutoff only</option><option value="second">2nd cutoff only</option></select>
+                      <Pick label={`Group for ${l.name}`} value={l.group} options={["Essentials", "Wants", "Savings"].map((g) => ({ value: g, label: g }))} onChange={(v) => setLine(i, { group: v as Line["group"] })} />
+                      <Pick label={`Cutoff for ${l.name}`} value={l.cutoff} options={[{ value: "both", label: "Each cutoff" }, { value: "first", label: "1st cutoff only" }, { value: "second", label: "2nd cutoff only" }]} onChange={(v) => setLine(i, { cutoff: v as LineCutoff })} />
                     </div>
                     <p className="v-xs v-muted" style={{ margin: "2px 0 0", flexBasis: "100%" }}>{lineNote(l, take?.takeHome ?? null)}</p>
                     {lineClash.has(i) ? <p className="v-flag v-bad" role="alert" style={{ flexBasis: "100%", margin: 0 }}>You already have a budget line called {l.name.trim()}.</p> : null}

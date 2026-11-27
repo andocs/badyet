@@ -11,6 +11,7 @@ import { useConfirm, useToast } from "../feedback";
 import { MonthPicker } from "../pickers";
 import { Money } from "../money";
 import { V13Icon } from "../icons";
+import { Pick } from "../pick";
 
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const ymLabel = (m: string) => `${MON[Number(m.slice(5)) - 1]} ${m.slice(0, 4)}`;
@@ -254,9 +255,9 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
             <div className="v-stack" style={{ marginTop: 4 }}>
               <div className="v-grid2">
                 <label className="v-field">Name<input value={draft.name} maxLength={60} onChange={(e) => set({ name: e.target.value })} autoFocus /></label>
-                <label className="v-field">Category
-                  <select value={draft.categoryId} onChange={(e) => set({ categoryId: e.target.value })}>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-                </label>
+                <div className="v-field">Category
+                  <Pick label="Category" value={draft.categoryId} options={categories.map((x) => ({ value: x.id, label: x.name }))} onChange={(v) => set({ categoryId: v })} />
+                </div>
               </div>
               <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
                 <legend className="v-lbl">Rule</legend>
@@ -281,9 +282,9 @@ export function BudgetBoard({ groups: monthGroups, colors, categories, accounts,
                   <input value={draft.valueSecond} inputMode="decimal" placeholder={draft.value} onChange={(e) => set({ valueSecond: e.target.value })} />
                 </label>
               ) : null}
-              <label className="v-field">Goes to (optional)
-                  <select value={draft.accountId} onChange={(e) => set({ accountId: e.target.value })}><option value="">Nowhere, just a limit</option>{accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select>
-                </label>
+              <div className="v-field">Goes to (optional)
+                  <Pick label="Goes to" value={draft.accountId} options={[{ value: "", label: "Nowhere, just a limit" }, ...accounts.map((x) => ({ value: x.id, label: x.name }))]} onChange={(v) => set({ accountId: v })} />
+                </div>
               <fieldset style={{ border: "1px solid var(--line)", borderRadius: 10, padding: "12px 14px", margin: 0 }}>
                 <legend className="v-lbl" style={{ padding: "0 6px" }}>Reimbursed (optional)</legend>
                 <div className="v-xs v-muted" style={{ marginBottom: 8 }}>For a bill that is paid back to you each month. The deposit adds to what that cutoff has, so it frees up the money.</div>

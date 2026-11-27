@@ -15,6 +15,7 @@ import { isCustomSlot, isUnusedSlot, RULE_CHANNELS, RULE_KINDS, SOURCE_INFO, SOU
 import { addWord, ruleTitle, windowMinutes, windowParts } from "@/lib/rules/helpers";
 import { SourcesArea } from "./capture-rules";
 import { useConfirm, useToast } from "./feedback";
+import { Pick } from "./pick";
 
 export interface DeviceApp { package: string; label: string | null; seen: "installed" | "notified" }
 export interface SeenSender { address: string; emails: number }
@@ -316,29 +317,19 @@ function Editor({ rule, accounts, categories, apps, lastSynced, seenSenders, tes
           <>
             <Seg label="What it is" value={d.kind} options={RULE_KINDS.map((k) => ({ value: k, label: KIND_LABEL[k] }))} onChange={(v) => set("kind", v)} />
             {d.kind === "spending" ? (
-              <label className="v-field">Category
-                <select value={d.categoryId} onChange={(e) => set("categoryId", e.target.value)}>
-                  <option value="">Decide in the Inbox</option>
-                  {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </label>
+              <div className="v-field">Category
+                <Pick label="Category" value={d.categoryId} options={[{ value: "", label: "Decide in the Inbox" }, ...categories.map((x) => ({ value: x.id, label: x.name }))]} onChange={(v) => set("categoryId", v)} />
+              </div>
             ) : null}
             {moves ? (
               <>
                 <div className="v-grid2">
-                  <label className="v-field">Money leaves
-                    <select value={d.fromId} onChange={(e) => set("fromId", e.target.value)}>
-                      <option value="">Ask in the Inbox</option>
-                      {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                    </select>
-                  </label>
-                  <label className="v-field">Money arrives in
-                    <select value={d.toId} onChange={(e) => set("toId", e.target.value)}>
-                      <option value="">Ask in the Inbox</option>
-                      {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                      <option value="others">{"Others (someone else's account)"}</option>
-                    </select>
-                  </label>
+                  <div className="v-field">Money leaves
+                    <Pick label="Money leaves" value={d.fromId} options={[{ value: "", label: "Ask in the Inbox" }, ...accounts.map((x) => ({ value: x.id, label: x.name }))]} onChange={(v) => set("fromId", v)} />
+                  </div>
+                  <div className="v-field">Money arrives in
+                    <Pick label="Money arrives in" value={d.toId} options={[{ value: "", label: "Ask in the Inbox" }, ...accounts.map((x) => ({ value: x.id, label: x.name })), { value: "others", label: "Others (someone else's account)" }]} onChange={(v) => set("toId", v)} />
+                  </div>
                 </div>
                 {d.toId === "others" ? (
                   <label className="v-field">Whose account is it?
@@ -473,18 +464,12 @@ function SourceEditor({ cfg, patterns, accounts, categories, apps, lastSynced, s
 
       <Step n={4} title="What to do">
         <div className="v-grid2">
-          <label className="v-field">Account
-            <select value={accountId} onChange={(e) => setAccountId(e.target.value)}>
-              <option value="">Read from the message, ask if unclear</option>
-              {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </label>
-          <label className="v-field">Category
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
-              <option value="">Ask me in the Inbox</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </label>
+          <div className="v-field">Account
+            <Pick label="Account" value={accountId} options={[{ value: "", label: "Read from the message, ask if unclear" }, ...accounts.map((x) => ({ value: x.id, label: x.name }))]} onChange={setAccountId} />
+          </div>
+          <div className="v-field">Category
+            <Pick label="Category" value={categoryId} options={[{ value: "", label: "Ask me in the Inbox" }, ...categories.map((x) => ({ value: x.id, label: x.name }))]} onChange={setCategoryId} />
+          </div>
         </div>
         {accountId ? <div className="v-note">Everything from {info.label} will go to this account, whatever the message says. Leave it on automatic if one app speaks for several accounts, such as a wallet and its card.</div> : null}
         <div className="v-shared">
@@ -633,7 +618,7 @@ function DuplicateTab({ dedupe }: { dedupe: { windowMinutes: number; matchSource
         <div className="v-stack" style={{ gap: 6 }}>
           <div className="v-lab">Within</div>
           <div className="v-row">
-            <label className="v-field" style={{ width: 110 }}><span className="v-lab">Amount of time</span><input type="number" inputMode="numeric" min={1} max={unit === "hours" ? 4 : 240} step={1} value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
+            <label className="v-field" style={{ width: 110 }}><span className="v-lab">Amount of time</span><input inputMode="numeric" maxLength={3} value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
             <Seg label="Time unit" value={unit} options={[{ value: "min", label: "min" }, { value: "hours", label: "hours" }]} onChange={setUnit} />
           </div>
           <div className="v-xs v-muted">From 1 minute to 4 hours.</div>

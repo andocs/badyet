@@ -8,6 +8,7 @@ import { dueChips, outstandingOf, type Loan } from '@/lib/lending/model';
 import { NO_SOURCE, type SourceGroup } from '@/lib/lending/sources';
 import { postponeLoan, recordPayback, type Env, type Result } from '@/lib/lending/write';
 import { todayManila } from '@/lib/plans/validate';
+import { DateInput } from '~/components/DateInput';
 import { Field, Input } from '~/components/Sheet';
 import { Body, Card, Chip } from '~/components/ui';
 import { supabase } from '~/lib/supabase';
@@ -63,8 +64,8 @@ export function Effect({ children }: { children: string }) {
 
 export function DateField({ label, value, onChange, ctx, weeks = 2 }: { label: string; value: string; onChange: (v: string) => void; ctx: Pick<LendContext, 'today' | 'paydays'>; weeks?: 1 | 2 }) {
   return (
-    <Field label={`${label} (YYYY-MM-DD)`}>
-      <Input value={value} onChangeText={onChange} keyboardType="numbers-and-punctuation" placeholder="2026-12-10" accessibilityLabel={label} />
+    <Field label={label}>
+      <DateInput label={label} value={value} onChange={onChange} min={ctx.today} />
       <View style={s.chips}>
         {dueChips(ctx.today, ctx.paydays, weeks).map((d) => (
           <Chip key={d.label} label={d.label} on={value === d.date} onPress={() => onChange(d.date)} />

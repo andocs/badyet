@@ -7,6 +7,7 @@ import { ACCOUNT_COLORS } from "@/lib/accounts/v13";
 import type { FormState } from "@/lib/form-state";
 import { V13Icon } from "../icons";
 import { Money } from "../money";
+import { Pick } from "../pick";
 
 const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -268,9 +269,9 @@ export function PoolsCard({ pools, lines }: { pools: PoolView[]; lines: { id: st
           <div className="v-row v-sp"><h2 id="np">New pool</h2><button type="button" className="v-iconbtn v-s" onClick={() => dialog.current?.close()} aria-label="Close"><V13Icon name="x" /></button></div>
           <div className="v-frm">
             <label className="v-field">Name<input value={form.name} maxLength={40} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Car maintenance" /></label>
-            <label className="v-field">Funded each cutoff by
-              <select value={form.lineId} onChange={(e) => setForm({ ...form, lineId: e.target.value })}><option value="">No line (I add to it by hand)</option>{lines.map((l) => <option key={l.id} value={l.id}>{l.name}</option>)}</select>
-            </label>
+            <div className="v-field">Funded each cutoff by
+              <Pick label="Funded each cutoff by" value={form.lineId} options={[{ value: "", label: "No line (I add to it by hand)" }, ...lines.map((x) => ({ value: x.id, label: x.name }))]} onChange={(v) => setForm({ ...form, lineId: v })} />
+            </div>
             <label className="v-field">Keep up to (₱, optional)<input value={form.keep} inputMode="decimal" onChange={(e) => setForm({ ...form, keep: e.target.value })} /></label>
             <button type="button" className="v-btn v-pri" disabled={busy} onClick={() => {
               const keep = form.keep.trim() === "" ? null : parsePesos(form.keep);
@@ -314,7 +315,7 @@ export function CategoriesCard({ categories, groups }: { categories: CategoryVie
           <div className="v-row v-sp"><h2 id="cd">{f.id ? "Edit category" : "New category"}</h2><button type="button" className="v-iconbtn v-s" onClick={() => dialog.current?.close()} aria-label="Close"><V13Icon name="x" /></button></div>
           <div className="v-frm">
             <label className="v-field">Name<input value={f.name} maxLength={60} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>
-            <label className="v-field">Group<select value={f.groupId} onChange={(e) => setF({ ...f, groupId: e.target.value })}>{groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}</select></label>
+            <div className="v-field">Group<Pick label="Group" value={f.groupId} options={groups.map((x) => ({ value: x.id, label: x.name }))} onChange={(v) => setF({ ...f, groupId: v })} /></div>
             <div className="v-chips" role="group" aria-label="Colour">{ACCOUNT_COLORS.map((c) => <button key={c} type="button" className="v-swatch" style={{ background: c }} aria-pressed={f.color === c} aria-label={c} onClick={() => setF({ ...f, color: c })} />)}</div>
             <div className="v-row"><button type="button" className="v-btn v-pri v-grow" disabled={busy} onClick={() => act(() => saveCategory({ id: f.id, name: f.name, groupId: f.groupId, color: f.color }), () => dialog.current?.close())}>Save</button>
               {f.id ? <button type="button" className="v-btn" disabled={busy} onClick={() => act(() => archiveCategory(f.id!), () => dialog.current?.close())}>Archive</button> : null}</div>

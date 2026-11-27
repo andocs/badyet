@@ -7,6 +7,8 @@ import { dueBadge, paybackAmount, paybackEffect, paybackInput, pesoText, promptD
 import type { PaybackChoice } from "@/lib/lending/load";
 import { dueChips, outstandingOf, type Loan } from "@/lib/lending/model";
 import { DateChips } from "./fields";
+import { Pick } from "../pick";
+import { DatePicker } from "../pickers";
 
 export interface PaybackContext {
   /** Money in from the last weeks that no loan uses yet. */
@@ -47,13 +49,11 @@ export function LoanActions({ loan, ctx, onDone }: { loan: Loan; ctx: PaybackCon
     run(() => paybackLoan(paybackInput(loan.id, key, mode === "full" ? (owed / 100).toFixed(2) : amount, mode === "part" && part !== null && part < owed ? nextDue : null)));
 
   const arrived = (
-    <label className="v-field">
+    <div className="v-field">
       Where did the money arrive?
-      <select value={key} onChange={(e) => setReceived(e.target.value)}>
-        {options.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-      </select>
+      <Pick label="Where did the money arrive?" value={key} onChange={setReceived} options={options.map((o) => ({ value: o.key, label: o.label }))} />
       <span className="v-xs" style={{ fontWeight: 500 }}>Picking the Inbox item stops it being counted twice, or as income.</span>
-    </label>
+    </div>
   );
   const buttons = (label: string, onClick: () => void) => (
     <div className="v-row v-wrap" style={{ justifyContent: "flex-end", gap: 8 }}>
@@ -82,17 +82,17 @@ export function LoanActions({ loan, ctx, onDone }: { loan: Loan; ctx: PaybackCon
         <>
           {arrived}
           {fromInbox ? null : <label className="v-field">Amount received (₱)<input value={amount} inputMode="decimal" onChange={(e) => setAmount(e.target.value)} /></label>}
-          <label className="v-field">
+          <div className="v-field">
             {part !== null && part < owed ? `When will the other ${pesoText(owed - part)} come?` : "When will the rest come?"}
-            <input type="date" value={nextDue} min={ctx.today} onChange={(e) => setNextDue(e.target.value)} />
-          </label>
+            <DatePicker label="When the rest will come" value={nextDue} min={ctx.today} onChange={setNextDue} />
+          </div>
           {part !== null && part <= owed ? <div className="v-testbox"><div className="v-sm">{paybackEffect(loan.from, part, owed, loan.borrower, nextDue)}</div></div> : null}
           {buttons("Save", save)}
         </>
       ) : null}
       {mode === "postpone" ? (
         <>
-          <label className="v-field">When will {loan.borrower} pay you now?<input type="date" value={nextDue} min={ctx.today} onChange={(e) => setNextDue(e.target.value)} /></label>
+          <div className="v-field">When will {loan.borrower} pay you now?<DatePicker label="New expected date" value={nextDue} min={ctx.today} onChange={setNextDue} /></div>
           <DateChips ctx={ctx} value={nextDue} onPick={setNextDue} weeks={1} />
           <label className="v-field">Note (optional)<input value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} /></label>
           <div className="v-xs v-muted">A date is required. The card comes back on that day.</div>

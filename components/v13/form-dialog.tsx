@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { FormState } from "@/lib/form-state";
 import { V13Icon } from "./icons";
+import { Pick } from "./pick";
 
 /** A button that opens a small form in a sheet. The fields are passed in; the action is a server action. */
 export function FormDialog({
@@ -118,16 +119,10 @@ export function KindFields({ kinds }: { kinds: readonly string[] }) {
   const [kind, setKind] = useState(kinds[0]!);
   return (
     <>
-      <label className="v-field">
+      <div className="v-field">
         Kind
-        <select name="kind" value={kind} onChange={(e) => setKind(e.target.value)}>
-          {kinds.map((k) => (
-            <option key={k} value={k}>
-              {k === "ewallet" ? "E-wallet" : k.charAt(0).toUpperCase() + k.slice(1)}
-            </option>
-          ))}
-        </select>
-      </label>
+        <Pick label="Kind" value={kind} options={kinds.map((k) => ({ value: k, label: k === "ewallet" ? "E-wallet" : k.charAt(0).toUpperCase() + k.slice(1) }))} onChange={setKind} name="kind" />
+      </div>
       <label className="v-field">
         {kind === "credit" ? "Amount you owe now (₱)" : "Balance now (₱)"}
         <input name="opening" inputMode="decimal" autoComplete="off" placeholder="0.00" />

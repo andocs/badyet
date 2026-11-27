@@ -6,6 +6,7 @@ import { money, parsePesos } from "@/lib/domain/money";
 import { savingsPlanPerCutoff } from "@/lib/engine/payslip";
 import { useToast } from "../feedback";
 import { Money } from "../money";
+import { Pick } from "../pick";
 
 interface Fund { id: string; name: string }
 
@@ -56,12 +57,9 @@ export function SavingsPlanCard({ plan, funds, base }: { plan: { bp: number; amo
       {mode === "percent" ? <label className="v-field">Percent of your basic pay, each cutoff<input value={percent} inputMode="decimal" placeholder="6" onChange={(e) => setPercent(e.target.value)} /></label> : null}
       {mode === "amount" ? <label className="v-field">Amount taken each cutoff (₱)<input value={amount} inputMode="decimal" placeholder="2,000" onChange={(e) => setAmount(e.target.value)} /></label> : null}
       {mode !== "off" ? (
-        <label className="v-field">Counts as saved into
-          <select value={fundId} onChange={(e) => setFundId(e.target.value)}>
-            <option value="">No fund (just a payslip deduction)</option>
-            {funds.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-          </select>
-        </label>
+        <div className="v-field">Counts as saved into
+          <Pick label="Counts as saved into" value={fundId} options={[{ value: "", label: "No fund (just a payslip deduction)" }, ...funds.map((x) => ({ value: x.id, label: x.name }))]} onChange={setFundId} />
+        </div>
       ) : null}
       {perCutoff !== null ? (
         <div className="v-note" aria-live="polite">

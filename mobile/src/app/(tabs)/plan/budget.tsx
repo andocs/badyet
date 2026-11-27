@@ -9,6 +9,7 @@ import { loadBudget, type BudgetData } from '@/lib/budget/load';
 import { buildBudgetScreen, monthLabel } from '@/lib/budget/screen';
 import { addMonths, type YearMonth } from '@/lib/domain/dates';
 import { cutoffRefLabel, type PlanSpan } from '@/lib/budget/plans';
+import { MonthInput } from '~/components/DateInput';
 import { PlanSheet } from '~/components/PlanSheet';
 import { cutoffText, groupsForCutoff, ruleText, type GroupView, type LineView } from '@/lib/budget/view';
 import type { LineInput } from '@/lib/budget/line-input';
@@ -202,13 +203,13 @@ function LineEditor({
 
           <View style={s.two}>
             <View style={{ flex: 1 }}>
-              <Field label="Starts (YYYY-MM)">
-                <TextInput value={d.startsOn} onChangeText={(v) => set('startsOn', v)} placeholder="2027-03" placeholderTextColor={c.muted} autoCapitalize="none" style={input} />
+              <Field label="Starts">
+                <MonthInput label="Starts" value={d.startsOn} onChange={(v) => set('startsOn', v)} clearable placeholder="No start" />
               </Field>
             </View>
             <View style={{ flex: 1 }}>
-              <Field label="Ends (YYYY-MM)">
-                <TextInput value={d.endsOn} onChangeText={(v) => set('endsOn', v)} placeholder="optional" placeholderTextColor={c.muted} autoCapitalize="none" style={input} />
+              <Field label="Ends">
+                <MonthInput label="Ends" value={d.endsOn} onChange={(v) => set('endsOn', v)} clearable placeholder="No end" />
               </Field>
             </View>
           </View>

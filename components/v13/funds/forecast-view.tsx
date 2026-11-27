@@ -7,6 +7,7 @@ import { money } from "@/lib/domain/money";
 import { savedThisMonth, totalBalance, yearEnds, type ForecastRow } from "@/lib/funds/forecast";
 import { Money } from "../money";
 import { V13Icon } from "../icons";
+import { Pick } from "../pick";
 
 export interface FundMeta { id: string; name: string; color: string; blurb: string; /** Resets to zero each year. */ resets?: boolean }
 
@@ -96,12 +97,9 @@ export function ForecastView({ funds, rows: rowsIn, startTotal, withoutTotal, ov
               <Chart rows={rows} funds={shown} stacked={style === "s"} onPick={open} sel={sel} />
               <div className="v-row v-sp v-wrap v-sm v-muted" style={{ marginTop: 6 }}>
                 <span><span className="v-tri" style={{ display: "inline-block", marginRight: 6 }} />= a month with an override</span>
-                <label className="v-row" style={{ gap: 8 }}>Jump to
-                  <select className="v-lbl-in" value="" onChange={(e) => e.target.value && open(e.target.value)} style={{ minHeight: 36 }}>
-                    <option value="">Pick a month…</option>
-                    {rows.map((r) => <option key={r.month} value={r.month}>{label(r.month)}{r.override ? " (override)" : ""}</option>)}
-                  </select>
-                </label>
+                <div className="v-row" style={{ gap: 8 }}>Jump to
+                  <span className="v-pickrow"><Pick label="Jump to" value={null} placeholder="Pick a month…" options={rows.map((r) => ({ value: r.month, label: `${label(r.month)}${r.override ? " (override)" : ""}` }))} onChange={open} /></span>
+                </div>
               </div>
             </section>
           ) : (

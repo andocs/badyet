@@ -9,6 +9,7 @@ import { money } from "@/lib/domain/money";
 import { useConfirm, useToast } from "./feedback";
 import { Money } from "./money";
 import { useAct } from "./settings";
+import { Pick } from "./pick";
 
 /** Your own notification patterns: wording with placeholders, tried on a sample message. The phone turns each into a regex. */
 export function PatternsSection({ patterns: patternsIn, only, seed }: { patterns: CapturePattern[]; /** Show and add patterns for this source only (the source editor). */ only?: SourceKey; /** A first draft to fill the add form with (made from a sample). */ seed?: { template: string; sample: string; direction: "in" | "out" } }) {
@@ -53,18 +54,13 @@ export function PatternsSection({ patterns: patternsIn, only, seed }: { patterns
       <div className="v-cappanel">
         <div className="v-grid2">
           {only ? null : (
-            <label className="v-field">For
-              <select value={source} onChange={(e) => setSource(e.target.value as SourceKey)}>
-                {SOURCES.map((k) => <option key={k} value={k}>{SOURCE_INFO[k].label}</option>)}
-              </select>
-            </label>
+            <div className="v-field">For
+              <Pick label="For" value={source} options={SOURCES.map((k) => ({ value: k, label: SOURCE_INFO[k].label }))} onChange={(v) => setSource(v as SourceKey)} />
+            </div>
           )}
-          <label className="v-field">Money
-            <select value={direction} onChange={(e) => setDirection(e.target.value as "in" | "out")}>
-              <option value="in">Comes in</option>
-              <option value="out">Goes out</option>
-            </select>
-          </label>
+          <div className="v-field">Money
+            <Pick label="Money" value={direction} options={[{ value: "in", label: "Comes in" }, { value: "out", label: "Goes out" }]} onChange={(v) => setDirection(v as "in" | "out")} />
+          </div>
         </div>
         <label className="v-field">Wording<input value={template} maxLength={200} onChange={(e) => setTemplate(e.target.value)} placeholder="You received {amount} from {name}" /></label>
         <label className="v-field">Try it on a real message<textarea rows={2} value={sample} maxLength={400} onChange={(e) => setSample(e.target.value)} placeholder="Paste a notification here to see what the pattern reads" /></label>

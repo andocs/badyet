@@ -5,6 +5,7 @@ import { sendBill, unsendBill } from "@/app/(v13)/actions";
 import type { Bill } from "@/lib/now/summary";
 import { V13Icon } from "./icons";
 import { Money } from "./money";
+import { Pick } from "./pick";
 
 /** The cutoff's bills with Mark sent (pick the paying account, amount starts at the bill) and Undo. */
 export function BillList({ bills, accounts }: { bills: Bill[]; accounts: { id: string; name: string }[] }) {
@@ -52,13 +53,10 @@ export function BillList({ bills, accounts }: { bills: Bill[]; accounts: { id: s
           {openId === b.lineId ? (
             <div className="v-stack v-bl-f">
               <div className="v-row v-wrap" style={{ gap: 10 }}>
-                <label className="v-field v-grow">
+                <div className="v-field v-grow">
                   Paid from
-                  <select value={from} onChange={(e) => setFrom(e.target.value)}>
-                    <option value="">Pick an account</option>
-                    {accounts.map((a) => <option key={a.id} value={a.id}>{a.id === b.accountId ? `${a.name} (the bill's own account)` : a.name}</option>)}
-                  </select>
-                </label>
+                  <Pick label="Paid from" value={from} options={[{ value: "", label: "Pick an account" }, ...accounts.map((a) => ({ value: a.id, label: a.id === b.accountId ? `${a.name} (the bill's own account)` : a.name }))]} onChange={setFrom} />
+                </div>
                 <label className="v-field" style={{ width: 140 }}>
                   Amount
                   <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />

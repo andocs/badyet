@@ -11,6 +11,7 @@ import { ColorPick, FormDialog, KindFields, QrViewer } from "@/components/v13/fo
 import { AccountsBoard } from "@/components/v13/accounts/board";
 import { Money } from "@/components/v13/money";
 import { addAccount, editAccount, moveMoney, reconcileAccount, removeQr, uploadQr } from "./actions";
+import { FormPick } from "@/components/v13/pick";
 
 export const metadata = { title: "Accounts · Bad(yet)" };
 
@@ -88,18 +89,14 @@ export default async function Accounts({ searchParams }: { searchParams: Promise
             {view.length >= 2 ? (
               <FormDialog trigger="Move money" title="Move money" action={moveMoney} submitLabel="Move money">
                 <div className="v-two">
-                  <label className="v-field">
+                  <div className="v-field">
                     From
-                    <select name="from" defaultValue={view[0]!.id}>
-                      {view.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
-                  </label>
-                  <label className="v-field">
+                    <FormPick label="From" name="from" defaultValue={view[0]!.id} options={view.map((v) => ({ value: v.id, label: v.name }))} />
+                  </div>
+                  <div className="v-field">
                     To
-                    <select name="to" defaultValue={view[1]!.id}>
-                      {view.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
-                  </label>
+                    <FormPick label="To" name="to" defaultValue={view[1]!.id} options={view.map((v) => ({ value: v.id, label: v.name }))} />
+                  </div>
                 </div>
                 <label className="v-field">
                   Amount (₱)
